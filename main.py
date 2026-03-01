@@ -76,12 +76,12 @@ from pydantic import BaseModel
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
-STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
-STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
-FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
-BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
+ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "")
+STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai")
+BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "")
 
 # Persistent disk on Render — mount /data in render.yaml for this to survive restarts
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -146,6 +146,8 @@ def _verify_plan_stripe_sync(user_id: str) -> str:
         return "free"
 
 
+OWNER_EMAILS = {"grandrichlife727@gmail.com"}  # always sharp, no Stripe check needed
+
 async def _get_verified_plan(request: Request) -> str:
     """
     Verify a user's plan server-side against Stripe.
@@ -156,6 +158,10 @@ async def _get_verified_plan(request: Request) -> str:
     user_id = request.headers.get("x-user-id", "").strip()
     if not user_id:
         return "free"
+
+    # Owner bypass — always sharp, no Stripe check needed
+    if user_id in OWNER_EMAILS:
+        return "sharp"
 
     now = time.time()
     cached = _plan_cache.get(user_id)
