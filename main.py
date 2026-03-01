@@ -76,12 +76,12 @@ from pydantic import BaseModel
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "")
-STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai")
-BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "")
+ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
+STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
+BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 
 # Persistent disk on Render — mount /data in render.yaml for this to survive restarts
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -1259,19 +1259,56 @@ async def fetch_espn_injuries(sport_slug: str) -> list:
         for item in raw.get("injuries", []):
             athlete  = item.get("athlete", {})
             team_inf = item.get("team", {})
-            inj_type = item.get("injuries", [{}])[0] if item.get("injuries") else {}
-            status   = inj_type.get("status", "Unknown")
-            impact   = ("High" if any(w in status.lower() for w in ["out","ir","injured reserve"])
-                        else "Medium-High" if "doubtful" in status.lower()
-                        else "Medium" if "questionable" in status.lower() else "Low")
+            # ESPN injury structure varies — handle both formats
+            inj_list = item.get("injuries", [])
+            inj_type = inj_list[0] if inj_list else {}
+
+            # Normalize status from multiple possible fields
+            raw_status = (inj_type.get("status") or
+                          item.get("status") or
+                          athlete.get("status", {}).get("type", {}).get("description", "") or
+                          "Unknown")
+
+            # Map to standard frontend values
+            sl = raw_status.lower()
+            if any(w in sl for w in ["out", "ir ", "injured reserve", "inactive"]):
+                status = "Out"
+            elif "doubtful" in sl:
+                status = "Doubtful"
+            elif "questionable" in sl or "day-to-day" in sl or "dtd" in sl:
+                status = "Questionable"
+            elif any(w in sl for w in ["probable", "active", "full"]):
+                status = "Probable"
+            elif raw_status and raw_status != "Unknown":
+                status = raw_status  # keep as-is if we have something
+            else:
+                status = "Questionable"  # default to questionable rather than Unknown
+
+            impact = ("High" if status == "Out"
+                      else "High" if status == "Doubtful"
+                      else "Medium" if status == "Questionable"
+                      else "Low")
+
+            # Get injury description from multiple possible paths
+            injury_desc = (inj_type.get("longComment") or
+                           inj_type.get("shortComment") or
+                           inj_type.get("type", {}).get("description") or
+                           inj_type.get("description") or
+                           item.get("type", {}).get("description") or
+                           "Injury")
+
+            player_name = athlete.get("displayName") or athlete.get("fullName") or "Unknown Player"
+            if player_name == "Unknown":
+                continue  # skip entries with no player data
+
             injuries.append({
                 "id":      abs(hash(athlete.get("id","") + status)) % 100000,
-                "player":  athlete.get("displayName", "Unknown"),
+                "player":  player_name,
                 "team":    team_inf.get("abbreviation", ""),
                 "sport":   sport_slug.split("/")[-1].upper(),
                 "pos":     athlete.get("position", {}).get("abbreviation", ""),
                 "status":  status,
-                "injury":  inj_type.get("type", {}).get("description", "Unknown"),
+                "injury":  injury_desc,
                 "impact":  impact,
                 "game":    "",
                 "updated": "Live",
