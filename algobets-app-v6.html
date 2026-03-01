@@ -542,7 +542,7 @@ const isPro = () => {
 const fetchPlanStatus = async (userId) => {
     try {
         // Owner bypass
-        const email = getUserEmail ? getUserEmail() : null;
+        const email = userId || (getUserEmail ? getUserEmail() : null);
         if (email && OWNER_EMAILS.includes(email)) {
             return { plan: "sharp", isActive: true, expiresAt: null };
         }
@@ -1902,9 +1902,9 @@ function ArbMiddleView({ data, loading, userPlan, onPaywall }) {
 // ─── EDGES TAB ────────────────────────────────────────────────────────────────
 function EdgesTab({ userPlan, onPaywall, onAddToParlay, parlay }) {
     const [view, setView] = useState("ev");
-    const [evData, setEvData] = useState(DEMO_EV);
-    const [propsData, setPropsData] = useState(DEMO_PROPS);
-    const [arbData, setArbData] = useState(DEMO_ARBS);
+    const [evData, setEvData] = useState([]);
+    const [propsData, setPropsData] = useState([]);
+    const [arbData, setArbData] = useState([]);
     const [loading, setLoading] = useState(false);
     useEffect(() => {
         const fetchData = async () => {
@@ -2051,7 +2051,7 @@ function LeaderboardScreen({ onBack }) {
 // ─── LINE MOVEMENT SCREEN ─────────────────────────────────────────────────────
 function LineMovementScreen({ onBack }) {
     const [filter, setFilter] = useState("All");
-    const [lines, setLines] = useState(DEMO_LINES);
+    const [lines, setLines] = useState([]);
     const [loading, setLoading] = useState(false);
     useEffect(() => {
         const fetchLines = async () => {
@@ -2995,7 +2995,7 @@ function ManageSubscriptionButton() {
             const user = JSON.parse(localStorage.getItem("algobets_currentUser") || "{}");
             const res = await fetch(`${BACKEND}/api/create-portal-session`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "X-API-Key": BACKEND_API_KEY },
                 body: JSON.stringify({ userId: user.email || user.username }),
             });
             if (!res.ok)
@@ -3323,7 +3323,8 @@ function Page() {
     const [parlay, setParlay] = useState([]);
     const [scanning, setScanning] = useState(false);
     const [remainingPicks, setRemainingPicks] = useState(3);
-    const [userPlan, setUserPlan] = useState("free");
+    const _initialEmail = getUserEmail ? getUserEmail() : null;
+    const [userPlan, setUserPlan] = useState(_initialEmail && OWNER_EMAILS.includes(_initialEmail) ? "sharp" : (localStorage.getItem("algobets_plan") || "free"));
     const [showPaywall, setShowPaywall] = useState(false);
     const [shareTarget, setShareTarget] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
@@ -3402,11 +3403,12 @@ function Page() {
                 const status = await checkUserPlan(userId, (newPlan) => {
                     setUserPlan(newPlan);
                 });
-                setUserPlan(status.plan);
+                const finalPlan = OWNER_EMAILS.includes(userId) ? "sharp" : status.plan;
+                setUserPlan(finalPlan);
             }
             catch (err) {
                 console.warn("Plan check failed, using local:", err);
-                const plan = (user === null || user === void 0 ? void 0 : user.plan) || localStorage.getItem("algobets_plan") || "free";
+                const plan = OWNER_EMAILS.includes(userId) ? "sharp" : ((user === null || user === void 0 ? void 0 : user.plan) || localStorage.getItem("algobets_plan") || "free");
                 setUserPlan(plan);
             }
         }
