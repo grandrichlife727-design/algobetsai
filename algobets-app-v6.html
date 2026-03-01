@@ -526,9 +526,12 @@ const bookOdds = (bestOdds, offsets) => {
 //     The ONLY safe check is the backend /api/plan-status endpoint.
 //     isPro() below is used ONLY for optimistic UI while the backend check loads.
 //     All sensitive features must re-verify with checkUserPlan() before rendering.
+// Owner accounts — always Pro
+const OWNER_EMAILS = ["grandrichlife727@gmail.com"];
 const isPro = () => {
     try {
-        // ⚠️ This is an OPTIMISTIC read only — always verify server-side before gating real features
+        const email = getUserEmail ? getUserEmail() : null;
+        if (email && OWNER_EMAILS.includes(email)) return true;
         return localStorage.getItem("algobets_plan") === "pro" || localStorage.getItem("algobets_plan") === "sharp";
     }
     catch (_a) {
@@ -538,9 +541,14 @@ const isPro = () => {
 // Fetch plan status from backend (secure verification)
 const fetchPlanStatus = async (userId) => {
     try {
+        // Owner bypass
+        const email = getUserEmail ? getUserEmail() : null;
+        if (email && OWNER_EMAILS.includes(email)) {
+            return { plan: "sharp", isActive: true, expiresAt: null };
+        }
         const res = await fetch(`${BACKEND}/api/plan-status`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-API-Key": BACKEND_API_KEY },
             body: JSON.stringify({ userId: userId || getUserEmail() }),
         });
         if (!res.ok)
@@ -550,7 +558,6 @@ const fetchPlanStatus = async (userId) => {
     }
     catch (err) {
         console.warn("Failed to fetch plan status:", err);
-        // Fallback to localStorage during network issues
         const localPlan = localStorage.getItem("algobets_plan") || "free";
         return { plan: localPlan, isActive: localPlan !== "free", expiresAt: null };
     }
@@ -3431,10 +3438,15 @@ function Page() {
         setCurrentUser(user);
         await initApp(user);
         setAppState("app");
-        // Show onboarding for brand-new users (no prior scan or bet history)
+        // Show onboarding for brand-new FREE users only (skip for paid subscribers)
         const isNew = !localStorage.getItem("algobets_onboarding_done");
-        if (isNew) {
+        const userPlanLocal = localStorage.getItem("algobets_plan") || "free";
+        const isOwner = user && OWNER_EMAILS.includes(user.email || user.username);
+        if (isNew && userPlanLocal === "free" && !isOwner) {
             setShowOnboarding(true);
+        } else if (!isNew || userPlanLocal !== "free" || isOwner) {
+            // Mark done so it never shows again for paid users
+            localStorage.setItem("algobets_onboarding_done", "1");
         }
     };
     // Handle payment redirect
