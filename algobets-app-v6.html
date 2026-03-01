@@ -106,7 +106,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <!-- Babel standalone to transform JSX in the browser -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
   <!-- Google Identity Services for OAuth -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Facebook SDK for OAuth -->
@@ -115,7 +115,7 @@
 
 <body>
   <div id="root"></div>
-  <script type="text/babel">
+  <script type="text/babel" data-presets="react">
     const { useState, useEffect, useRef, useCallback } = React;
 
 
