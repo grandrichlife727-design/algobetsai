@@ -1904,9 +1904,9 @@ function EdgesTab({ userPlan, onPaywall, onAddToParlay, parlay }) {
             setLoading(true);
             try {
                 const [evRes, propsRes, arbRes] = await Promise.all([
-                    fetch(`${BACKEND}/api/ev-finder`),
-                    fetch(`${BACKEND}/api/player-props`),
-                    fetch(`${BACKEND}/api/arb-detect`),
+                    fetch(`${BACKEND}/api/ev-finder`, { headers: { "X-API-Key": BACKEND_API_KEY } }),
+                    fetch(`${BACKEND}/api/player-props`, { headers: { "X-API-Key": BACKEND_API_KEY } }),
+                    fetch(`${BACKEND}/api/arb-detect`, { headers: { "X-API-Key": BACKEND_API_KEY } }),
                 ]);
                 const [evJson, propsJson, arbJson] = await Promise.all([evRes.json(), propsRes.json(), arbRes.json()]);
                 if (evJson.results)
@@ -1934,9 +1934,7 @@ function EdgesTab({ userPlan, onPaywall, onAddToParlay, parlay }) {
         React.createElement("h2", { style: { fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 4 } }, "Edge Tools"),
         React.createElement("p", { style: { fontSize: 12, color: "#6b7280", marginBottom: 16 } }, "+EV bets, player props & arbitrage"),
         React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 16 } }, SUB_TABS.map(tab => (React.createElement("button", { key: tab.id, onClick: () => setView(tab.id), style: { flex: 1, background: view === tab.id ? "linear-gradient(135deg,#0891b2,#7c3aed)" : "rgba(255,255,255,0.05)", border: view === tab.id ? "none" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 0", color: view === tab.id ? "#fff" : "#9ca3af", fontSize: 13, fontWeight: 700, cursor: "pointer" } }, tab.label)))),
-        React.createElement("div", { style: { background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 16, display: "flex", gap: 8, alignItems: "center" } },
-            React.createElement("span", { style: { fontSize: 14 } }, "\uD83D\uDD27"),
-            React.createElement("p", { style: { fontSize: 11, color: "#a5b4fc" } }, "Demo data \u2014 connect backend for live results")),
+
         view === "ev" && React.createElement(EvFinderView, { data: evData, loading: loading, userPlan: userPlan, onPaywall: onPaywall }),
         view === "props" && React.createElement(PlayerPropsView, { data: propsData, loading: loading, userPlan: userPlan, onPaywall: onPaywall, onAddToParlay: onAddToParlay, parlay: parlay }),
         view === "arb" && React.createElement(ArbMiddleView, { data: arbData, loading: loading, userPlan: userPlan, onPaywall: onPaywall })));
@@ -2053,7 +2051,7 @@ function LineMovementScreen({ onBack }) {
             var _a;
             setLoading(true);
             try {
-                const res = await fetch(`${BACKEND}/api/line-movement`);
+                const res = await fetch(`${BACKEND}/api/line-movement`, { headers: { "X-API-Key": BACKEND_API_KEY } });
                 if (!res.ok)
                     throw new Error();
                 const data = await res.json();
