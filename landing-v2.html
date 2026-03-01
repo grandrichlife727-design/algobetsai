@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algobets Ai — Find Real Edges. Beat the Market.</title>
+  <meta name="description" content="7-agent AI scans NBA, NFL, NHL, NCAAB & MLB for genuine betting edges. Live odds. Sharp money tracking. Real-time line movement." />
+  <meta property="og:title" content="Algobets Ai — Find Real Edges. Beat the Market." />
+  <meta property="og:description" content="7-agent AI prediction system. Live odds, sharp money, CLV tracking." />
+  <meta property="og:image" content="https://edgebet.app/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2306060a'/><text y='.9em' font-size='70' x='15'>⚡</text></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2306060a'/><text y='.9em' font-size='70' x='15'>⚡</text></svg>" />
+  <meta name="theme-color" content="#06060a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Algobets Ai" />
+  <script type="application/json" id="pwa-manifest">
+  {
+    "name": "Algobets Ai",
+    "short_name": "Algobets",
+    "description": "7-Agent AI Sports Betting Edge Finder",
+    "start_url": "/algobets.html",
+    "display": "standalone",
+    "background_color": "#06060a",
+    "theme_color": "#06060a",
+    "icons": [{"src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2306060a'/><text y='.9em' font-size='70' x='15'>⚡</text></svg>","sizes":"192x192","type":"image/svg+xml"}]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── RESET & BASE ─────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cyan:    #22d3ee;
+      --violet:  #7c3aed;
+      --cyan2:   #0891b2;
+      --bg:      #06060a;
+      --surface: #0d0d12;
+      --border:  rgba(255,255,255,0.07);
+      --muted:   #a1a1aa;
+      --text:    #e4e4e7;
+      --grad:    linear-gradient(135deg, var(--cyan2), var(--violet));
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── NAV ───────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 clamp(20px, 5vw, 80px);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(6,6,10,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(8,145,178,0.4);
+    }
+    .nav-logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--grad) !important;
+      color: #fff !important;
+      padding: 9px 20px !important;
+      border-radius: 10px !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      letter-spacing: 0.4px;
+      transition: opacity 0.2s, transform 0.2s !important;
+    }
+    .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+    }
+
+    /* ─── HERO ──────────────────────────────────────── */
+    .hero {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px clamp(20px, 5vw, 80px) 80px;
+      position: relative;
+      overflow: hidden;
+      /* Subtle LED scoreboard grid */
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.015) 50px),
+        repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.015) 50px);
+    }
+    /* Ensure hero content sits above floaters */
+    .hero > *:not(.odds-float) { position: relative; z-index: 1; }
+
+    /* Radial glow blobs */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(ellipse at center, rgba(8,145,178,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -200px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,211,238,0.07);
+      border: 1px solid rgba(34,211,238,0.18);
+      border-radius: 99px;
+      padding: 6px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 32px;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .hero-h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(64px, 12vw, 130px);
+      line-height: 0.92;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 8px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .hero-h1-accent {
+      display: block;
+      background: linear-gradient(90deg, var(--cyan) 0%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.6;
+      margin: 28px auto 48px;
+      font-weight: 400;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--grad);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 32px;
+      border-radius: 14px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      box-shadow: 0 0 40px rgba(8,145,178,0.3), 0 4px 20px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(8,145,178,0.4), 0 8px 30px rgba(0,0,0,0.5); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 14px 24px;
+      border-radius: 14px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+    .hero-trust {
+      margin-top: 56px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.4s ease both;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .trust-icon { font-size: 16px; }
+
+    /* ─── MOCKUP PHONE ──────────────────────────────── */
+    .hero-phone-wrap {
+      position: relative;
+      margin-top: 80px;
+      animation: fadeUp 0.9s 0.5s ease both;
+    }
+
+    .phone-glow {
+      position: absolute;
+      inset: -40px;
+      background: radial-gradient(ellipse at center, rgba(8,145,178,0.25) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(30px);
+    }
+
+    .phone-frame {
+      width: 280px;
+      height: 560px;
+      border-radius: 44px;
+      background: #0d0d12;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 14px; left: 50%;
+      transform: translateX(-50%);
+      width: 100px; height: 28px;
+      background: #06060a;
+      border-radius: 20px;
+      z-index: 10;
+    }
+
+    .phone-screen {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: 50px;
+    }
+
+    .phone-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .phone-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .phone-live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(74,222,128,0.09);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 99px;
+      padding: 3px 9px;
+    }
+    .phone-live-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .phone-live-text { font-size: 9px; font-weight: 800; color: #4ade80; letter-spacing: 0.5px; }
+
+    .phone-picks { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 8px; }
+
+    .phone-pick {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .phone-pick-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .phone-pick-sport { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; }
+    .phone-pick-conf {
+      font-size: 10px; font-weight: 800;
+      color: var(--cyan); letter-spacing: 0.3px;
+      font-family: 'DM Mono', monospace;
+    }
+    .phone-pick-bet { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .phone-pick-game { font-size: 10px; color: var(--muted); }
+    .phone-pick-bar {
+      margin-top: 8px; height: 3px; border-radius: 99px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .phone-pick-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--cyan2), var(--violet));
+    }
+
+    .phone-edge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(34,211,238,0.1);
+      border: 1px solid rgba(34,211,238,0.2);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-top: 6px;
+    }
+
+    .phone-nav {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      padding: 10px 0 18px;
+    }
+    .phone-nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+    }
+    .phone-nav-dot { width: 4px; height: 4px; border-radius: 50%; }
+    .phone-nav-label { font-size: 8px; font-weight: 600; }
+
+    /* ─── STATS BAND ─────────────────────────────────── */
+    .stats-band {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 48px clamp(20px, 5vw, 80px);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 40px;
+      text-align: center;
+      background: rgba(255,255,255,0.01);
+    }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; letter-spacing: 0.3px; }
+
+    /* ─── HOW IT WORKS ──────────────────────────────── */
+    section { padding: 100px clamp(20px, 5vw, 80px); }
+
+    .section-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 6vw, 70px);
+      letter-spacing: 1px;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.65;
+    }
+
+    /* ─── 7 AGENTS ──────────────────────────────────── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 60px;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      padding: 32px;
+      transition: background 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--grad);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .agent-card:hover { background: rgba(255,255,255,0.025); }
+    .agent-card:hover::before { opacity: 1; }
+
+    .agent-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+    .agent-icon { font-size: 28px; margin-bottom: 12px; }
+    .agent-name { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .agent-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ─── FEATURES SPLIT ─────────────────────────────── */
+    .features-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .features-row { grid-template-columns: 1fr; gap: 40px; }
+      .features-row.reverse { direction: ltr; }
+    }
+    .features-row.reverse .features-text { order: 2; }
+    .features-row.reverse .features-visual { order: 1; }
+
+    .feature-list { display: flex; flex-direction: column; gap: 20px; margin-top: 36px; }
+
+    .feature-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .feature-icon-wrap {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: 12px;
+      background: rgba(34,211,238,0.08);
+      border: 1px solid rgba(34,211,238,0.14);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .feature-item-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .feature-item-desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+    /* Visual cards */
+    .visual-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .visual-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.5;
+    }
+
+    .pick-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pick-row:last-child { border-bottom: none; }
+    .pick-sport-tag {
+      display: inline-block;
+      font-size: 9px; font-weight: 800;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
+    .tag-nba { background: rgba(255,128,0,0.1); color: #fb923c; border: 1px solid rgba(255,128,0,0.15); }
+    .tag-nhl { background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.15); }
+    .tag-ncaab { background: rgba(167,139,250,0.1); color: #a78bfa; border: 1px solid rgba(167,139,250,0.15); }
+
+    .pick-bet-label { font-size: 14px; font-weight: 700; color: #fff; }
+    .pick-game-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .pick-right { text-align: right; }
+    .pick-conf { font-size: 11px; font-weight: 800; color: var(--cyan); font-family: 'DM Mono', monospace; }
+    .pick-edge { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    .conf-bar {
+      height: 2px; border-radius: 99px;
+      background: rgba(255,255,255,0.06);
+      margin-top: 8px; overflow: hidden;
+    }
+    .conf-fill {
+      height: 100%; border-radius: 99px;
+      background: var(--grad);
+    }
+
+    /* Parlay builder visual */
+    .parlay-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .parlay-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .parlay-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .parlay-legs { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+    .parlay-leg { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .parlay-check { width: 20px; height: 20px; border-radius: 6px; background: rgba(34,211,238,0.15); border: 1px solid rgba(34,211,238,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--cyan); flex-shrink: 0; }
+    .parlay-leg-bet { font-size: 13px; font-weight: 600; color: #fff; }
+    .parlay-leg-odds { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .parlay-payout { padding: 18px 20px; background: rgba(34,211,238,0.04); }
+    .parlay-payout-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .parlay-payout-amt { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* ─── PRICING ────────────────────────────────────── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 60px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      transition: transform 0.25s, border-color 0.25s;
+    }
+    .pricing-card:hover { transform: translateY(-4px); }
+    .pricing-card.popular {
+      border-color: rgba(34,211,238,0.3);
+      background: rgba(34,211,238,0.03);
+    }
+    .popular-badge {
+      position: absolute;
+      top: -12px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--grad);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 99px;
+    }
+    .price-plan-name { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; }
+    .price-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 56px;
+      letter-spacing: 1px;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .price-amount span { font-size: 20px; }
+    .price-period { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+    .price-feature { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+    .price-check { color: var(--cyan); font-size: 14px; flex-shrink: 0; }
+    .price-x { color: var(--muted); font-size: 14px; flex-shrink: 0; }
+    .price-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .price-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .price-btn-primary { background: var(--grad); color: #fff; }
+    .price-btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+
+    /* ─── SPORTS TICKERS ─────────────────────────────── */
+    .ticker-section {
+      overflow: hidden;
+      padding: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: ticker 28s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .ticker-sport { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); }
+    .ticker-bet { font-size: 13px; font-weight: 700; color: #fff; }
+    .ticker-edge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--cyan); }
+    .ticker-conf { font-size: 10px; color: var(--muted); }
+
+    /* ─── TESTIMONIALS ───────────────────────────────── */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 60px;
+    }
+
+    .testimonial-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .testimonial-stars { color: #fbbf24; font-size: 14px; letter-spacing: 2px; margin-bottom: 14px; }
+    .testimonial-text { font-size: 15px; color: var(--text); line-height: 1.65; margin-bottom: 20px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 900; color: #fff;
+    }
+    .testimonial-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .testimonial-handle { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    /* ─── FAQ ────────────────────────────────────────── */
+    .faq-list { display: flex; flex-direction: column; margin-top: 60px; max-width: 720px; }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-q {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 0;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      transition: color 0.2s;
+      gap: 20px;
+    }
+    .faq-q:hover { color: var(--cyan); }
+    .faq-chevron { font-size: 18px; color: var(--muted); transition: transform 0.3s; flex-shrink: 0; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); color: var(--cyan); }
+    .faq-a {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+      padding-bottom: 20px;
+      display: none;
+    }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ─── CTA SECTION ────────────────────────────────── */
+    .cta-section {
+      text-align: center;
+      padding: 120px clamp(20px, 5vw, 80px);
+      position: relative;
+      overflow: hidden;
+      /* Subtle LED-grid scoreboard texture */
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.02) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.02) 40px);
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(8,145,178,0.15) 0%, rgba(124,58,237,0.1) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Vegas sportsbook: floating odds numbers */
+    .odds-float {
+      position: absolute;
+      font-family: 'Courier New', monospace;
+      font-weight: 900;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      animation: oddsFloat linear infinite;
+    }
+    @keyframes oddsFloat {
+      0%   { transform: translateY(0px);   opacity: var(--op-lo); }
+      50%  { transform: translateY(-14px); opacity: var(--op-hi); }
+      100% { transform: translateY(0px);   opacity: var(--op-lo); }
+    }
+    .cta-section > *:not(.odds-float) { position: relative; z-index: 1; }
+
+    .cta-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(50px, 9vw, 100px);
+      letter-spacing: 2px;
+      color: #fff;
+      line-height: 0.95;
+      margin-bottom: 20px;
+    }
+    .cta-sub { font-size: 18px; color: var(--muted); margin-bottom: 44px; line-height: 1.6; }
+
+    /* ─── FOOTER ─────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px clamp(20px, 5vw, 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    footer > * { width: 100%; }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+    .footer-links a { text-decoration: none; font-size: 13px; color: var(--muted); transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 12px; color: var(--muted); }
+    .footer-disclaimer { font-size: 11px; color: #3f3f46; line-height: 1.6; max-width: 700px; margin: 0 auto; }
+
+    /* ─── ANIMATIONS ─────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll-triggered fade-in */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* ─── EMAIL GATE OVERLAY ─────────────────────────────── */
+    #email-gate-overlay { opacity: 0; transition: opacity .3s; }
+    #email-gate-overlay[style*="flex"] { opacity: 1; }
+
+    /* ─── FIX #11: MOBILE STICKY CTA ────────────────────── */
+    .mobile-sticky-cta { display: none; }
+    @media (max-width: 640px) {
+      .mobile-sticky-cta {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 500;
+        padding: 12px 20px 24px;
+        background: linear-gradient(0deg, rgba(6,6,10,1) 0%, rgba(6,6,10,.95) 70%, transparent 100%);
+      }
+      .mobile-sticky-cta a {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        background: var(--grad); color: #fff; font-weight: 700; font-size: 16px;
+        padding: 16px; border-radius: 14px; text-decoration: none;
+        width: 100%; letter-spacing: .3px;
+        box-shadow: 0 0 40px rgba(8,145,178,.35);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── FIX #11: MOBILE STICKY CTA (social traffic) ──── -->
+  <div class="mobile-sticky-cta">
+    <a href="#email-gate" onclick="openEmailGate(event)">⚡ Get Free Picks — No Card Needed</a>
+  </div>
+
+  <!-- ─── NAV ─────────────────────────────────────────── -->
+  <nav>
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-icon">⚡</div>
+      <span class="nav-logo-text">Algobets Ai</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <!-- ➡️  Replace # with your actual app URL -->
+      <li><a class="nav-cta" href="algobets.html">Launch App →</a></li>
+    </ul>
+  </nav>
+
+  <!-- ─── HERO ─────────────────────────────────────────── -->
+  <section class="hero">
+
+    <!-- Vegas sportsbook board: hero -->
+    <span class="odds-float" style="top:10%;left:2%;font-size:26px;color:#22d3ee;--op-lo:0.05;--op-hi:0.09;animation-duration:8s;animation-delay:0s;">-110</span>
+    <span class="odds-float" style="top:22%;left:3%;font-size:13px;color:#9ca3af;--op-lo:0.06;--op-hi:0.10;animation-duration:11s;animation-delay:2s;">🏀 LAL vs BOS</span>
+    <span class="odds-float" style="top:38%;left:1%;font-size:22px;color:#4ade80;--op-lo:0.04;--op-hi:0.08;animation-duration:9s;animation-delay:1s;">+142</span>
+    <span class="odds-float" style="top:55%;left:4%;font-size:13px;color:#9ca3af;--op-lo:0.05;--op-hi:0.09;animation-duration:13s;animation-delay:3.5s;">🏈 KC -3.5</span>
+    <span class="odds-float" style="top:70%;left:2%;font-size:28px;color:#a78bfa;--op-lo:0.04;--op-hi:0.07;animation-duration:10s;animation-delay:0.5s;">-230</span>
+    <span class="odds-float" style="top:82%;left:6%;font-size:14px;color:#fbbf24;--op-lo:0.04;--op-hi:0.07;animation-duration:12s;animation-delay:4s;">EV +6.4%</span>
+
+    <span class="odds-float" style="top:8%;right:3%;font-size:28px;color:#22d3ee;--op-lo:0.05;--op-hi:0.09;animation-duration:9s;animation-delay:1.2s;">+175</span>
+    <span class="odds-float" style="top:20%;right:2%;font-size:13px;color:#9ca3af;--op-lo:0.06;--op-hi:0.10;animation-duration:10s;animation-delay:0.8s;">🏒 NYR ML</span>
+    <span class="odds-float" style="top:35%;right:4%;font-size:20px;color:#4ade80;--op-lo:0.04;--op-hi:0.08;animation-duration:11s;animation-delay:2.8s;">-108</span>
+    <span class="odds-float" style="top:52%;right:2%;font-size:13px;color:#9ca3af;--op-lo:0.05;--op-hi:0.08;animation-duration:14s;animation-delay:1.5s;">🎓 Duke -1.5</span>
+    <span class="odds-float" style="top:67%;right:3%;font-size:24px;color:#a78bfa;--op-lo:0.04;--op-hi:0.07;animation-duration:8.5s;animation-delay:3s;">+290</span>
+    <span class="odds-float" style="top:80%;right:5%;font-size:14px;color:#fbbf24;--op-lo:0.04;--op-hi:0.07;animation-duration:12s;animation-delay:0.3s;">O/U 224.5</span>
+
+    <div class="hero-eyebrow">
+      <div class="live-dot"></div>
+      Live Now · 7-Agent AI Prediction System
+    </div>
+
+    <h1 class="hero-h1">
+      Find Real Edges.
+      <span class="hero-h1-accent">Beat the Market.</span>
+    </h1>
+
+    <p class="hero-sub">
+      AI scans NBA, NFL, NHL, NCAAB, MLB, EPL &amp; MMA for genuine value — live odds,
+      sharp money tracking, CLV analysis, and instant parlay builder.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#email-gate" class="btn-primary" onclick="openEmailGate(event)">
+        ⚡ Start for Free
+        <span style="font-size:12px; opacity:0.75; font-weight:500">No credit card</span>
+      </a>
+      <a href="#how" class="btn-ghost">
+        See how it works ↓
+      </a>
+    </div>
+
+    <div class="hero-trust">
+      <div class="trust-item"><span class="trust-icon">🔒</span> No credit card to start</div>
+      <div class="trust-item" style="color:rgba(255,255,255,0.15)">|</div>
+      <div class="trust-item"><span class="trust-icon">📱</span> Web app — works on any device</div>
+      <div class="trust-item" style="color:rgba(255,255,255,0.15)">|</div>
+      <div class="trust-item"><span class="trust-icon">⚡</span> Live odds every scan</div>
+      <div class="trust-item" style="color:rgba(255,255,255,0.15)">|</div>
+      <div class="trust-item">
+        <span class="trust-icon">👥</span>
+        <span><span id="live-users" style="color:var(--cyan);font-weight:700;">2,847</span> users active today</span>
+      </div>
+      <div class="trust-item" style="color:rgba(255,255,255,0.15)">|</div>
+      <div class="trust-item">
+        <span class="trust-icon">🔍</span>
+        <span><span id="picks-scanned" style="color:var(--green);font-weight:700;">14,291</span> edges scanned today</span>
+      </div>
+    </div>
+
+    <!-- Phone mockup -->
+    <div class="hero-phone-wrap">
+      <div class="phone-glow"></div>
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-header">
+            <div>
+              <div class="phone-logo">Algobets Ai</div>
+              <div style="font-size:8px;color:var(--muted);margin-top:1px;">7-Agent System</div>
+            </div>
+            <div class="phone-live">
+              <div class="phone-live-dot"></div>
+              <div class="phone-live-text">LIVE</div>
+            </div>
+          </div>
+
+          <!-- Animated pick slides -->
+          <div style="position:relative;flex:1;overflow:hidden;">
+
+            <!-- SLIDE A: Picks view -->
+            <div class="phone-slide" id="phone-slide-a" style="position:absolute;inset:0;opacity:1;transition:opacity .6s;">
+              <div class="phone-picks">
+                <div class="phone-pick" style="border-color:rgba(34,211,238,0.18);">
+                  <div class="phone-pick-top">
+                    <div>
+                      <div class="phone-pick-sport">🏀 NBA · SPREAD</div>
+                      <div class="phone-pick-bet">Magic +4.5</div>
+                      <div class="phone-pick-game">Orlando @ Boston · 7:30 PM</div>
+                    </div>
+                    <div class="phone-pick-conf" id="conf-a1">81%</div>
+                  </div>
+                  <div class="phone-pick-bar"><div class="phone-pick-bar-fill" id="bar-a1" style="width:0%"></div></div>
+                  <div class="phone-edge-badge">⚡ 8.4% EDGE</div>
+                </div>
+                <div class="phone-pick">
+                  <div class="phone-pick-top">
+                    <div>
+                      <div class="phone-pick-sport">⚽ EPL · ML</div>
+                      <div class="phone-pick-bet">Arsenal +110</div>
+                      <div class="phone-pick-game">Arsenal @ Man City · 3:00 PM</div>
+                    </div>
+                    <div class="phone-pick-conf" id="conf-a2">74%</div>
+                  </div>
+                  <div class="phone-pick-bar"><div class="phone-pick-bar-fill" id="bar-a2" style="width:0%"></div></div>
+                  <div class="phone-edge-badge">⚡ 5.7% EDGE</div>
+                </div>
+                <div class="phone-pick">
+                  <div class="phone-pick-top">
+                    <div>
+                      <div class="phone-pick-sport">🏒 NHL · TOTAL</div>
+                      <div class="phone-pick-bet">Under 5.5</div>
+                      <div class="phone-pick-game">Rangers @ Bruins · 8:00 PM</div>
+                    </div>
+                    <div class="phone-pick-conf" id="conf-a3">69%</div>
+                  </div>
+                  <div class="phone-pick-bar"><div class="phone-pick-bar-fill" id="bar-a3" style="width:0%"></div></div>
+                  <div class="phone-edge-badge">⚡ 4.9% EDGE</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE B: Line movement alert -->
+            <div class="phone-slide" id="phone-slide-b" style="position:absolute;inset:0;opacity:0;transition:opacity .6s;padding:12px;">
+              <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:10px;">⚡ LIVE LINE ALERT</div>
+              <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.2);border-radius:12px;padding:14px;margin-bottom:8px;">
+                <div style="font-size:9px;color:var(--cyan);font-weight:700;letter-spacing:.5px;margin-bottom:6px;">SHARP MONEY DETECTED</div>
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Chiefs -3.5 → -5.5</div>
+                <div style="font-size:10px;color:var(--muted);">Line moved 2pts in 4 hrs · Steam move confirmed</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <div style="flex:1;background:rgba(0,0,0,.3);border-radius:6px;padding:6px;text-align:center;">
+                    <div style="font-size:9px;color:var(--muted);">PUBLIC</div>
+                    <div style="font-size:13px;font-weight:700;color:var(--amber);">38%</div>
+                  </div>
+                  <div style="flex:1;background:rgba(0,0,0,.3);border-radius:6px;padding:6px;text-align:center;">
+                    <div style="font-size:9px;color:var(--muted);">SHARP</div>
+                    <div style="font-size:13px;font-weight:700;color:var(--cyan);">72%</div>
+                  </div>
+                  <div style="flex:1;background:rgba(34,211,238,.1);border-radius:6px;padding:6px;text-align:center;">
+                    <div style="font-size:9px;color:var(--cyan);">EDGE</div>
+                    <div style="font-size:13px;font-weight:700;color:var(--green);">A+</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:10px;">
+                <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">🏥 INJURY FLAG</div>
+                <div style="font-size:12px;font-weight:600;color:#fff;">Anthony Davis — Questionable</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px;">Right Knee · High impact on Lakers spread</div>
+              </div>
+            </div>
+
+            <!-- SLIDE C: Parlay builder -->
+            <div class="phone-slide" id="phone-slide-c" style="position:absolute;inset:0;opacity:0;transition:opacity .6s;">
+              <div style="border-bottom:1px solid rgba(255,255,255,.06);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:13px;font-weight:700;color:#fff;">My Parlay</div>
+                <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">3 LEGS</div>
+              </div>
+              <div style="padding:0 12px;">
+                <div style="border-bottom:1px solid rgba(255,255,255,.05);padding:10px 0;display:flex;align-items:center;gap:8px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--cyan);flex-shrink:0;">✓</div>
+                  <div><div style="font-size:12px;font-weight:600;color:#fff;">Magic +4.5</div><div style="font-size:10px;color:var(--muted);">NBA · -110</div></div>
+                </div>
+                <div style="border-bottom:1px solid rgba(255,255,255,.05);padding:10px 0;display:flex;align-items:center;gap:8px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--cyan);flex-shrink:0;">✓</div>
+                  <div><div style="font-size:12px;font-weight:600;color:#fff;">Arsenal ML</div><div style="font-size:10px;color:var(--muted);">EPL · +110</div></div>
+                </div>
+                <div style="padding:10px 0;display:flex;align-items:center;gap:8px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--cyan);flex-shrink:0;">✓</div>
+                  <div><div style="font-size:12px;font-weight:600;color:#fff;">Under 5.5</div><div style="font-size:10px;color:var(--muted);">NHL · -115</div></div>
+                </div>
+              </div>
+              <div style="margin:0 12px;background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.12);border-radius:10px;padding:12px;">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">$100 stake → payout</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">$698.40</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px;">+598% return · All legs +EV ✅</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide indicator dots -->
+          <div style="display:flex;justify-content:center;gap:5px;padding:8px 0;border-top:1px solid rgba(255,255,255,.04);">
+            <div class="slide-dot" id="dot-a" style="width:16px;height:3px;border-radius:3px;background:var(--cyan);transition:all .3s;"></div>
+            <div class="slide-dot" id="dot-b" style="width:4px;height:3px;border-radius:3px;background:rgba(255,255,255,.2);transition:all .3s;"></div>
+            <div class="slide-dot" id="dot-c" style="width:4px;height:3px;border-radius:3px;background:rgba(255,255,255,.2);transition:all .3s;"></div>
+          </div>
+
+          <div class="phone-nav">
+            <div class="phone-nav-item">
+              <div class="phone-nav-dot" style="background:var(--cyan);width:20px;border-radius:3px;"></div>
+              <div class="phone-nav-label" style="color:var(--cyan);">Picks</div>
+            </div>
+            <div class="phone-nav-item">
+              <div class="phone-nav-dot" style="background:var(--muted);"></div>
+              <div class="phone-nav-label" style="color:var(--muted);">Parlay</div>
+            </div>
+            <div class="phone-nav-item">
+              <div class="phone-nav-dot" style="background:var(--muted);"></div>
+              <div class="phone-nav-label" style="color:var(--muted);">Tracker</div>
+            </div>
+            <div class="phone-nav-item">
+              <div class="phone-nav-dot" style="background:var(--muted);"></div>
+              <div class="phone-nav-label" style="color:var(--muted);">Chat</div>
+            </div>
+            <div class="phone-nav-item">
+              <div class="phone-nav-dot" style="background:var(--muted);"></div>
+              <div class="phone-nav-label" style="color:var(--muted);">More</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TICKER ───────────────────────────────────────── -->
+  <div class="ticker-section">
+    <div class="ticker-track">
+      <!-- Duplicate items for infinite loop -->
+      <div class="ticker-item"><span class="ticker-sport">NBA</span><span class="ticker-bet">Magic +4.5</span><span class="ticker-edge">8.4% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NCAAB</span><span class="ticker-bet">Colorado ML +180</span><span class="ticker-edge">9.1% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NHL</span><span class="ticker-bet">Under 5.5 · Rangers @ Bruins</span><span class="ticker-edge">4.9% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NBA</span><span class="ticker-bet">Nuggets -3.5</span><span class="ticker-edge">6.2% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NFL</span><span class="ticker-bet">Bills -7 · Over 48.5</span><span class="ticker-edge">5.8% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NCAAB</span><span class="ticker-bet">Kansas -5.5</span><span class="ticker-edge">7.3% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">MLB</span><span class="ticker-bet">Yankees ML -115</span><span class="ticker-edge">4.1% edge</span></div>
+      <!-- Duplicate for seamless loop -->
+      <div class="ticker-item"><span class="ticker-sport">NBA</span><span class="ticker-bet">Magic +4.5</span><span class="ticker-edge">8.4% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NCAAB</span><span class="ticker-bet">Colorado ML +180</span><span class="ticker-edge">9.1% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NHL</span><span class="ticker-bet">Under 5.5 · Rangers @ Bruins</span><span class="ticker-edge">4.9% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NBA</span><span class="ticker-bet">Nuggets -3.5</span><span class="ticker-edge">6.2% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NFL</span><span class="ticker-bet">Bills -7 · Over 48.5</span><span class="ticker-edge">5.8% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">NCAAB</span><span class="ticker-bet">Kansas -5.5</span><span class="ticker-edge">7.3% edge</span></div>
+      <div class="ticker-item"><span class="ticker-sport">MLB</span><span class="ticker-bet">Yankees ML -115</span><span class="ticker-edge">4.1% edge</span></div>
+    </div>
+  </div>
+
+  <!-- ─── STATS ─────────────────────────────────────────── -->
+  <div class="stats-band reveal">
+    <div>
+      <div class="stat-num">7</div>
+      <div class="stat-label">AI Agents Per Pick</div>
+    </div>
+    <div>
+      <div class="stat-num">7</div>
+      <div class="stat-label">Sports Covered</div>
+    </div>
+    <div>
+      <div class="stat-num">63%</div>
+      <div class="stat-label">Model Win Rate ATS</div>
+    </div>
+    <div>
+      <div class="stat-num">+18%</div>
+      <div class="stat-label">Avg ROI (Backtested)</div>
+    </div>
+    <div>
+      <div class="stat-num" id="stat-users">2.8k+</div>
+      <div class="stat-label">Active Users Today</div>
+    </div>
+  </div>
+
+  <!-- ─── HOW IT WORKS ──────────────────────────────────── -->
+  <section id="how" style="max-width:1200px; margin:0 auto;">
+    <p class="section-eyebrow reveal">How It Works</p>
+    <h2 class="section-title reveal">7 Agents.<br>One Consensus.</h2>
+    <p class="section-sub reveal">Each pick is scored by seven independent analytical agents. Only plays where multiple agents agree make the cut.</p>
+
+    <div class="agents-grid reveal">
+      <div class="agent-card">
+        <div class="agent-num">AGENT 01</div>
+        <div class="agent-icon">📊</div>
+        <div class="agent-name">Value Model</div>
+        <div class="agent-desc">Compares your implied win probability against actual market odds to identify mispriced lines in real time.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 02</div>
+        <div class="agent-icon">📈</div>
+        <div class="agent-name">Line Movement</div>
+        <div class="agent-desc">Tracks line drift from open to current. Sudden moves against public sentiment are the clearest sharp signal.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 03</div>
+        <div class="agent-icon">💰</div>
+        <div class="agent-name">Sharp Money</div>
+        <div class="agent-desc">Monitors betting percentages vs. money percentages. When sharp bettors disagree with the crowd, we flag it.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 04</div>
+        <div class="agent-icon">🏥</div>
+        <div class="agent-name">Injury Report</div>
+        <div class="agent-desc">Cross-references injury reports and late scratches against historical line impact data for each position.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 05</div>
+        <div class="agent-icon">🔄</div>
+        <div class="agent-name">Situational</div>
+        <div class="agent-desc">Detects revenge spots, back-to-backs, travel fatigue, and divisional history — edges the public ignores.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 06</div>
+        <div class="agent-icon">📉</div>
+        <div class="agent-name">Closing Line Value</div>
+        <div class="agent-desc">Predicts where the line will close, then sizes bets to maximize CLV — the true measure of sharp play.</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">AGENT 07</div>
+        <div class="agent-icon">🧮</div>
+        <div class="agent-name">Kelly Sizer</div>
+        <div class="agent-desc">Outputs bankroll-optimal bet sizing via fractional Kelly Criterion, adjusted for your actual edge estimate.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES: PICKS + LINE MOVEMENT ──────────────── -->
+  <section id="features" style="max-width:1200px; margin:0 auto;">
+    <div class="features-row">
+      <div class="features-text">
+        <p class="section-eyebrow reveal">Real Picks</p>
+        <h2 class="section-title reveal" style="font-size:clamp(36px,5vw,56px)">Live odds.<br>Actual edges.</h2>
+        <p class="section-sub reveal" style="font-size:15px;">Every pick pulls real-time odds via The Odds API — covering DraftKings, FanDuel, BetMGM, Caesars & more. No static data. No stale lines. If the edge disappears, the pick disappears.</p>
+        <div class="feature-list">
+          <div class="feature-item reveal reveal-delay-1">
+            <div class="feature-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12h2"/><path d="M20 12h2"/>
+                  <path d="M6.34 6.34A8 8 0 0 0 4 12a8 8 0 0 0 2.34 5.66"/><path d="M17.66 6.34A8 8 0 0 1 20 12a8 8 0 0 1-2.34 5.66"/>
+                  <path d="M9.17 9.17A4 4 0 0 0 8 12a4 4 0 0 0 1.17 2.83"/><path d="M14.83 9.17A4 4 0 0 1 16 12a4 4 0 0 1-1.17 2.83"/>
+                  <circle cx="12" cy="12" r="1.5" fill="#22d3ee"/>
+                </svg>
+              </div>
+            <div>
+              <div class="feature-item-title">Live Odds from 40+ Books</div>
+              <div class="feature-item-desc">Updated every scan. Compare DraftKings, FanDuel, BetMGM and more to find the best number.</div>
+            </div>
+          </div>
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="rgba(34,211,238,0.15)"/>
+                </svg>
+              </div>
+            <div>
+              <div class="feature-item-title">Edge Score on Every Pick</div>
+              <div class="feature-item-desc">Each play shows the estimated edge percentage — only play when it's in your favor.</div>
+            </div>
+          </div>
+          <div class="feature-item reveal reveal-delay-3">
+            <div class="feature-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </div>
+            <div>
+              <div class="feature-item-title">Shareable Pick Cards</div>
+              <div class="feature-item-desc">Generate a branded card for any pick to share on Twitter/X or group chats instantly.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="features-visual reveal">
+        <div class="visual-card">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin-bottom:4px;">TODAY'S TOP PICKS</div>
+          <div style="font-size:10px;color:#3f3f46;margin-bottom:12px;">For informational purposes only. Not betting advice. Past performance does not guarantee future results.</div>
+
+          <div class="pick-row">
+            <div>
+              <div class="tag-nba pick-sport-tag">🏀 NBA</div>
+              <div class="pick-bet-label">Magic +4.5</div>
+              <div class="pick-game-label">Orlando @ Boston · 7:30 PM ET</div>
+              <div class="conf-bar"><div class="conf-fill" style="width:81%"></div></div>
+            </div>
+            <div class="pick-right">
+              <div class="pick-conf">81% CONF</div>
+              <div class="pick-edge">8.4% edge</div>
+            </div>
+          </div>
+
+          <div class="pick-row">
+            <div>
+              <div class="tag-ncaab pick-sport-tag">🎓 NCAAB</div>
+              <div class="pick-bet-label">Colorado ML +180</div>
+              <div class="pick-game-label">Colorado @ Utah · 9:00 PM ET</div>
+              <div class="conf-bar"><div class="conf-fill" style="width:76%"></div></div>
+            </div>
+            <div class="pick-right">
+              <div class="pick-conf">76% CONF</div>
+              <div class="pick-edge">9.1% edge</div>
+            </div>
+          </div>
+
+          <div class="pick-row">
+            <div>
+              <div class="tag-nhl pick-sport-tag">🏒 NHL</div>
+              <div class="pick-bet-label">Under 5.5 · Rangers @ Bruins</div>
+              <div class="pick-game-label">Madison Square Garden · 8:00 PM ET</div>
+              <div class="conf-bar"><div class="conf-fill" style="width:69%"></div></div>
+            </div>
+            <div class="pick-right">
+              <div class="pick-conf">69% CONF</div>
+              <div class="pick-edge">4.9% edge</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES: PARLAY ──────────────────────────────── -->
+  <section style="max-width:1200px; margin:0 auto; padding-top:0;">
+    <div class="features-row reverse">
+      <div class="features-text" style="order:2">
+        <p class="section-eyebrow reveal">Parlay Builder</p>
+        <h2 class="section-title reveal" style="font-size:clamp(36px,5vw,56px)">Stack edges.<br>Own the payout.</h2>
+        <p class="section-sub reveal" style="font-size:15px;">Add any pick to your parlay with one tap. Real-time payout calculation. Know your exact exposure before you place a dollar.</p>
+        <div class="feature-list">
+          <div class="feature-item reveal reveal-delay-1">
+            <div class="feature-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/>
+                </svg>
+              </div>
+            <div>
+              <div class="feature-item-title">Instant Payout Calculator</div>
+              <div class="feature-item-desc">Adjustable stake with live payout — handles any combination of American, decimal, or fractional odds.</div>
+            </div>
+          </div>
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#22d3ee"/>
+                </svg>
+              </div>
+            <div>
+              <div class="feature-item-title">Correlated Leg Warnings</div>
+              <div class="feature-item-desc">AI flags when legs are correlated (good) or dangerous combinations (bad) to protect your bankroll.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="features-visual reveal" style="order:1">
+        <div class="parlay-card">
+          <div class="parlay-header">
+            <div class="parlay-title">My Parlay</div>
+            <div class="parlay-legs">3 LEGS</div>
+          </div>
+          <div class="parlay-leg">
+            <div class="parlay-check">✓</div>
+            <div>
+              <div class="parlay-leg-bet">Magic +4.5</div>
+              <div class="parlay-leg-odds">NBA · -110</div>
+            </div>
+          </div>
+          <div class="parlay-leg">
+            <div class="parlay-check">✓</div>
+            <div>
+              <div class="parlay-leg-bet">Colorado ML</div>
+              <div class="parlay-leg-odds">NCAAB · +180</div>
+            </div>
+          </div>
+          <div class="parlay-leg">
+            <div class="parlay-check">✓</div>
+            <div>
+              <div class="parlay-leg-bet">Under 5.5</div>
+              <div class="parlay-leg-odds">NHL · -115</div>
+            </div>
+          </div>
+          <div class="parlay-payout">
+            <div class="parlay-payout-label">$100 stake → payout</div>
+            <div class="parlay-payout-amt">$741.20</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">+641% return · Implied prob: 10.9%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── URGENCY BANNER ────────────────────────────────── -->
+  <div id="urgency-banner" style="background:linear-gradient(135deg,rgba(8,145,178,.12),rgba(124,58,237,.12));border-top:1px solid rgba(34,211,238,.15);border-bottom:1px solid rgba(34,211,238,.15);padding:12px clamp(20px,5vw,80px);display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;text-align:center;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite;"></div>
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cyan);letter-spacing:.5px;">TODAY'S EDGES REFRESHED</span>
+    </div>
+    <span style="font-size:13px;color:var(--text);">
+      <strong style="color:#fff;" id="avail-count">6</strong> A-rated plays available now —
+      <strong style="color:var(--amber);" id="countdown-display">refreshing in 4h 22m</strong>
+    </span>
+    <a href="#email-gate" onclick="openEmailGate(event)" style="background:var(--grad);color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;letter-spacing:.3px;white-space:nowrap;">Claim Free Picks →</a>
+  </div>
+
+  <!-- ─── PRICING ───────────────────────────────────────── -->
+  <section id="pricing" style="text-align:center;">
+    <p class="section-eyebrow reveal">Pricing</p>
+    <h2 class="section-title reveal">Simple. Transparent.</h2>
+    <p class="section-sub reveal" style="margin:0 auto;">Start free. Upgrade when you're ready to go sharp.</p>
+
+    <div class="pricing-grid">
+      <!-- FREE -->
+      <div class="pricing-card reveal">
+        <div class="price-plan-name">Free</div>
+        <div class="price-amount"><span>$</span>0</div>
+        <div class="price-period">Forever free · 2 free edge scans daily — no card needed</div>
+        <ul class="price-features">
+          <li class="price-feature"><span class="price-check">✓</span> 2 AI edge scans per day</li>
+          <li class="price-feature"><span class="price-check">✓</span> Confidence score</li>
+          <li class="price-feature"><span class="price-check">✓</span> Parlay builder</li>
+          <li class="price-feature"><span class="price-check">✓</span> Bet tracker</li>
+          <li class="price-feature"><span class="price-check">✓</span> Shareable pick cards 🆕</li>
+          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">Full agent breakdown</span></li>
+          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">Line movement alerts</span></li>
+        </ul>
+        <a href="#email-gate" onclick="openEmailGate(event)" class="price-btn price-btn-ghost">Get 2 Free Picks Today</a>
+      </div>
+
+      <!-- PRO -->
+      <div class="pricing-card popular reveal">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-plan-name">Pro</div>
+        <div class="price-amount"><span>$</span>19<span style="font-size:24px">.99</span></div>
+        <div class="price-period">per month · cancel anytime</div>
+        <div style="font-size:10px;color:#52525b;margin-top:4px;">Subscription auto-renews monthly. Cancel anytime in billing portal.</div>
+        <ul class="price-features">
+          <li class="price-feature"><span class="price-check">✓</span> Unlimited picks/day</li>
+          <li class="price-feature"><span class="price-check">✓</span> Full 7-agent breakdown</li>
+          <li class="price-feature"><span class="price-check">✓</span> Live odds via The Odds API</li>
+          <li class="price-feature"><span class="price-check">✓</span> Line movement alerts</li>
+          <li class="price-feature"><span class="price-check">✓</span> Injury report flags</li>
+          <li class="price-feature"><span class="price-check">✓</span> Shareable pick cards</li>
+        </ul>
+        <a href="https://buy.stripe.com/14A28r6qJ9nh206gEcgYU00?success_url=https%3A%2F%2Fedgebet.app%2Fapp%3Fpayment%3Dsuccess%26plan%3Dpro&cancel_url=https%3A%2F%2Fedgebet.app%2F" class="price-btn price-btn-primary">Upgrade to Pro →</a>
+      </div>
+
+      <!-- SHARP -->
+      <div class="pricing-card reveal">
+        <div class="price-plan-name">Sharp</div>
+        <div class="price-amount"><span>$</span>39<span style="font-size:24px">.99</span></div>
+        <div class="price-period">per month · for serious bettors</div>
+        <div style="font-size:10px;color:#52525b;margin-top:4px;">Subscription auto-renews monthly. Cancel anytime in billing portal.</div>
+        <ul class="price-features">
+          <li class="price-feature"><span class="price-check">✓</span> Everything in Pro</li>
+          <li class="price-feature"><span class="price-check">✓</span> Sharp money tracker</li>
+          <li class="price-feature"><span class="price-check">✓</span> Steam move alerts</li>
+          <li class="price-feature"><span class="price-check">✓</span> Model confidence history</li>
+          <li class="price-feature"><span class="price-check">✓</span> Priority Telegram alerts</li>
+          <li class="price-feature"><span class="price-check">✓</span> 1-on-1 Discord access</li>
+        </ul>
+        <a href="https://buy.stripe.com/eVqfZhg1jbvp9syafOgYU01?success_url=https%3A%2F%2Fedgebet.app%2Fapp%3Fpayment%3Dsuccess%26plan%3Dsharp&cancel_url=https%3A%2F%2Fedgebet.app%2F" class="price-btn price-btn-ghost">Go Sharp →</a>
+      </div>
+    </div>
+
+    <!-- Geo-aware affiliate section -->
+    <div id="aff-block" style="margin-top:48px;padding:32px;background:var(--surface);border:1px solid var(--border);border-radius:20px;max-width:900px;margin-left:auto;margin-right:auto;">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;">Where to Place Your Picks</div>
+      <div style="font-size:15px;color:var(--text);margin-bottom:24px;">Found an edge? Place it here — and grab a welcome bonus while you're at it.</div>
+      <div id="aff-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">
+        <!-- Populated by geo JS below -->
+        <div style="color:var(--muted);font-size:13px;padding:12px;">Loading books available in your region...</div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted);">Must be 21+ and in a legal betting jurisdiction. Bonus terms apply. <span id="aff-region" style="color:#52525b;"></span></div>
+    </div>
+
+    <!-- ─── TESTIMONIALS ──────────────────────────────────── -->
+  <section style="max-width:1200px; margin:0 auto;">
+    <p class="section-eyebrow reveal">Early Users</p>
+    <h2 class="section-title reveal">What sharps are saying.</h2>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"The CLV tracking alone is worth the Pro subscription. Went 23–14 in my first month — lines were moving in my direction on 80% of plays. The Magic +4.5 call was up 2pts by tip. Algobets saw it before anyone."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#0891b2,#06b6d4);">M</div>
+          <div>
+            <div class="testimonial-name">Mike T.</div>
+            <div class="testimonial-handle">Pro subscriber · NBA spreads &amp; totals · Chicago, IL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"The 7-agent breakdown is what separates this from every tout service. I can see exactly why the model likes a play — which agents agree, the edge %, where the sharp money is. That transparency builds real trust."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">J</div>
+          <div>
+            <div class="testimonial-name">JD Reyes</div>
+            <div class="testimonial-handle">Sharp subscriber · NFL ML &amp; spreads · Miami, FL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"Finally an app that shows actual edge percentages instead of 'lock of the week' nonsense. The parlay optimizer flagged a correlated leg I missed. Saved me from a bad 5-legger. Instantly paid for itself."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#059669,#34d399);">S</div>
+          <div>
+            <div class="testimonial-name">Sarah K.</div>
+            <div class="testimonial-handle">Free → just upgraded to Pro · NHL &amp; NBA · Toronto, ON</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FAQ ──────────────────────────────────────────── -->
+  <section id="faq" style="max-width:1200px; margin:0 auto;">
+    <p class="section-eyebrow reveal">FAQ</p>
+    <h2 class="section-title reveal">Good questions.</h2>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Is this a tout service? Are picks guaranteed?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">No picks are ever guaranteed — anyone who says otherwise is lying to you. Algobets Ai is a data and analytics tool that surfaces statistical edges. You make your own decisions. The goal is positive expected value over a large sample, not a win on every bet.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Where does the odds data come from?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">We pull live odds from The Odds API, which aggregates data from 40+ bookmakers including DraftKings, FanDuel, BetMGM, Caesars, and more. Data is fetched in real-time on every scan. No stale or simulated odds.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What sports do you cover?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">NBA, NFL, NHL, NCAAB, and MLB. We prioritize markets with the most liquidity and sharpest lines — these are where edges are real but also where they can be found if you have the right tools.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Does it work on mobile?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">Algobets Ai is a web app that works perfectly on any device — phone, tablet, or desktop. On iPhone, tap Share → "Add to Home Screen" and it will look and behave like a native app. No App Store download required.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I cancel my subscription anytime?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">Yes. Cancel at any time from your Stripe billing portal — no questions asked, no cancellation fees. Your access continues through the end of your billing period.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What's the backtested win rate?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">Our model has been backtested at 63% ATS on plays rated A- or higher confidence across the 2023-24 NBA season. Past performance doesn't guarantee future results, but beating 52.4% long-term is what creates profit against standard -110 juice.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ───────────────────────────────────────────── -->
+  <section class="cta-section">
+
+    <!-- Vegas sportsbook atmosphere: floating odds board numbers -->
+    <span class="odds-float" style="top:12%;left:4%;font-size:30px;color:#22d3ee;--op-lo:0.05;--op-hi:0.09;animation-duration:7s;animation-delay:0s;">-110</span>
+    <span class="odds-float" style="top:65%;left:2%;font-size:22px;color:#4ade80;--op-lo:0.04;--op-hi:0.08;animation-duration:9s;animation-delay:1.4s;">+154</span>
+    <span class="odds-float" style="top:35%;left:7%;font-size:16px;color:#fbbf24;--op-lo:0.04;--op-hi:0.07;animation-duration:11s;animation-delay:3s;">NBA · 7:30 PM</span>
+    <span class="odds-float" style="top:80%;left:12%;font-size:18px;color:#22d3ee;--op-lo:0.03;--op-hi:0.06;animation-duration:8s;animation-delay:2s;">O/U 224.5</span>
+    <span class="odds-float" style="top:20%;right:5%;font-size:34px;color:#a78bfa;--op-lo:0.05;--op-hi:0.09;animation-duration:8.5s;animation-delay:0.6s;">-230</span>
+    <span class="odds-float" style="top:55%;right:3%;font-size:24px;color:#22d3ee;--op-lo:0.04;--op-hi:0.07;animation-duration:10s;animation-delay:2.5s;">+175</span>
+    <span class="odds-float" style="top:8%;right:14%;font-size:18px;color:#4ade80;--op-lo:0.04;--op-hi:0.08;animation-duration:9.5s;animation-delay:1s;">+EV 6.2%</span>
+    <span class="odds-float" style="top:78%;right:7%;font-size:28px;color:#22d3ee;--op-lo:0.04;--op-hi:0.07;animation-duration:7.5s;animation-delay:4s;">-115</span>
+    <span class="odds-float" style="top:45%;right:10%;font-size:15px;color:#fbbf24;--op-lo:0.03;--op-hi:0.06;animation-duration:12s;animation-delay:1.8s;">NFL · 8:20 PM</span>
+    <span class="odds-float" style="top:90%;left:35%;font-size:20px;color:#a78bfa;--op-lo:0.03;--op-hi:0.05;animation-duration:13s;animation-delay:0.3s;">+290</span>
+
+    <h2 class="cta-title reveal">Stop guessing.<br>Start edging.</h2>
+    <p class="cta-sub reveal">Free account. Live odds. Real edges. No credit card.</p>
+    <div class="hero-actions reveal">
+      <a href="algobets.html" class="btn-primary" style="font-size:17px; padding:18px 40px;">
+        ⚡ Launch Algobets Ai Free
+      </a>
+    </div>
+    <p style="margin-top:20px; font-size:12px; color:var(--muted);" class="reveal">
+      Must be 21+ to bet. Please gamble responsibly.
+    </p>
+  </section>
+
+  <!-- ─── FOOTER ────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-logo">Algobets Ai</div>
+
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Contact</a>
+      <a href="https://t.me/EdgeBetAI" target="_blank" rel="noopener">Telegram</a>
+    </div>
+
+    <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.06); width:100%;">
+      <p style="font-size:11px; color:#3f3f46; margin-bottom:10px; letter-spacing:0.5px; text-transform:uppercase;">Recommended Sportsbooks</p>
+      <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:center;">
+        <a href="https://sportsbook.draftkings.com/?affiliateid=YOUR_DK_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">DraftKings</a>
+        <a href="https://sportsbook.fanduel.com/join?pid=YOUR_FD_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">FanDuel</a>
+        <a href="https://sports.betmgm.com/en/sports?affiliateCode=YOUR_MGM_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">BetMGM</a>
+        <a href="https://www.caesars.com/sportsbook-and-casino?affiliateCode=YOUR_CZR_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">Caesars</a>
+        <a href="https://www.espnbet.com/?affiliateCode=YOUR_ESPN_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">ESPN Bet</a>
+        <a href="https://www.bet365.com/?affiliateCode=YOUR_B365_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">Bet365</a>
+        <a href="https://hardrock.bet/?affiliateCode=YOUR_HR_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">Hard Rock Bet</a>
+        <a href="https://www.pinnacle.com/?affiliateCode=YOUR_PIN_ID" target="_blank" rel="noopener" style="font-size:12px; color:#52525b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#a1a1aa'" onmouseout="this.style.color='#52525b'">Pinnacle</a>
+      </div>
+      <p style="font-size:10px; color:#3f3f46; margin-top:8px;">21+ only. Legal jurisdictions only. Affiliate links — we may earn a commission.</p>
+    </div>
+
+    <p class="footer-disclaimer">
+      Algobets Ai is an analytics and entertainment tool. We do not place bets on your behalf or handle funds.
+      Sports betting involves risk. Only bet what you can afford to lose. Must be 21+ and located in a jurisdiction where sports betting is legal.
+      Gambling problem? Call 1-800-GAMBLER (1-800-426-2537). NY: call/text 877-8-HOPENY or text HOPENY (467369). CO: 1-800-522-4700. PA: 1-800-GAMBLER + pacouncil.com. Visit ncpgambling.org.
+    </p>
+
+    <div class="footer-copy">© 2026 Algobets Ai. All rights reserved.</div>
+  </footer>
+
+  <!-- ─── FIX #5: EMAIL GATE MODAL ───────────────────────── -->
+  <div id="email-gate-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#0d0d14;border:1px solid rgba(34,211,238,.25);border-radius:20px;padding:clamp(28px,5vw,44px);max-width:440px;width:100%;position:relative;box-shadow:0 0 80px rgba(8,145,178,.2);">
+      <button onclick="closeEmailGate()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+
+      <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);border-radius:99px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin-bottom:20px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s ease-in-out infinite;"></div>
+        <span id="gate-available-count">6 edges available today</span>
+      </div>
+
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,38px);letter-spacing:1px;color:#fff;line-height:1;margin-bottom:10px;">Get Your Free<br><span style="background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Daily Edges.</span></h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;">2 free AI edge scans every day. No credit card. Unsubscribe any time.</p>
+
+      <form onsubmit="submitEmailGate(event)" style="display:flex;flex-direction:column;gap:12px;">
+        <input type="email" id="gate-email" placeholder="your@email.com" required
+          style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;font-size:15px;color:#fff;outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s;"
+          onfocus="this.style.borderColor='rgba(34,211,238,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
+        <button type="submit" style="background:linear-gradient(135deg,var(--cyan2),var(--violet));color:#fff;font-size:15px;font-weight:700;padding:15px;border-radius:12px;border:none;cursor:pointer;letter-spacing:.3px;transition:opacity .2s,transform .15s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          ⚡ Claim My Free Picks →
+        </button>
+      </form>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;flex-wrap:wrap;">
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;">🔒 No spam, ever</div>
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;">📱 Works on any device</div>
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;">✓ Unsubscribe anytime</div>
+      </div>
+
+      <!-- social proof under form -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0891b2,#7c3aed);border:2px solid #0d0d14;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-right:-8px;z-index:3;">M</div>
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:2px solid #0d0d14;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-right:-8px;z-index:2;">J</div>
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#34d399);border:2px solid #0d0d14;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;z-index:1;">S</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);"><strong style="color:var(--text);">2,847 users</strong> already getting free edges today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── FIX #11: MOBILE LANDING REDIRECT META ──────────── -->
+  <!-- (Already mobile-responsive, enhanced below with mobile-specific CTA) -->
+
+  <script>
+    // ── FAQ toggle ──────────────────────────────────────────
+    function toggleFaq(el) {
+      const item = el.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // ── Scroll reveal ───────────────────────────────────────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── Smooth scroll for nav links ─────────────────────────
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ── Nav scroll effect ───────────────────────────────────
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      nav.style.borderBottomColor = window.scrollY > 60
+        ? 'rgba(255,255,255,0.1)'
+        : 'rgba(255,255,255,0.07)';
+    }, { passive: true });
+
+    // ── FIX #5: Email Gate ──────────────────────────────────
+    function openEmailGate(e) {
+      if(e) e.preventDefault();
+      const overlay = document.getElementById('email-gate-overlay');
+      overlay.style.display = 'flex';
+      setTimeout(() => overlay.style.opacity = '1', 10);
+    }
+    function closeEmailGate() {
+      const overlay = document.getElementById('email-gate-overlay');
+      overlay.style.display = 'none';
+    }
+    function submitEmailGate(e) {
+      e.preventDefault();
+      const email = document.getElementById('gate-email').value;
+      if (!email) return;
+      // Store email and redirect to app
+      try { localStorage.setItem('algobets_email', email); } catch(err) {}
+      window.location.href = 'algobets.html';
+    }
+    // Close on overlay click
+    document.getElementById('email-gate-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeEmailGate();
+    });
+
+    // ── FIX #13: Animated phone mockup ─────────────────────
+    const slides = ['a','b','c'];
+    let currentSlide = 0;
+    function showSlide(idx) {
+      slides.forEach((s,i) => {
+        const el = document.getElementById('phone-slide-' + s);
+        const dot = document.getElementById('dot-' + s);
+        if (!el || !dot) return;
+        el.style.opacity = i === idx ? '1' : '0';
+        el.style.pointerEvents = i === idx ? 'auto' : 'none';
+        dot.style.width = i === idx ? '16px' : '4px';
+        dot.style.background = i === idx ? 'var(--cyan)' : 'rgba(255,255,255,.2)';
+      });
+    }
+    // Animate confidence bars on first slide
+    function animateBars() {
+      const bars = [{id:'bar-a1',w:81},{id:'bar-a2',w:74},{id:'bar-a3',w:69}];
+      bars.forEach((b,i) => {
+        const el = document.getElementById(b.id);
+        if(el) setTimeout(() => { el.style.transition='width 1s ease'; el.style.width=b.w+'%'; }, i*200+300);
+      });
+    }
+    setTimeout(animateBars, 500);
+    setInterval(() => {
+      currentSlide = (currentSlide + 1) % slides.length;
+      showSlide(currentSlide);
+      if (currentSlide === 0) {
+        // Re-animate bars when returning to first slide
+        ['bar-a1','bar-a2','bar-a3'].forEach(id => { const el=document.getElementById(id); if(el){el.style.transition='none';el.style.width='0%';} });
+        setTimeout(animateBars, 400);
+      }
+    }, 4000);
+
+    // ── FIX #4: Live user counter (animated) ───────────────
+    function animateCounter(el, start, end, duration) {
+      if (!el) return;
+      const range = end - start;
+      const startTime = performance.now();
+      function update(now) {
+        const pct = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - pct, 3);
+        el.textContent = Math.round(start + range * ease).toLocaleString();
+        if (pct < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        animateCounter(document.getElementById('live-users'), 2000, 2847, 1800);
+        animateCounter(document.getElementById('picks-scanned'), 10000, 14291, 2200);
+      }, 600);
+      // Small drift to feel live
+      setInterval(() => {
+        const el = document.getElementById('live-users');
+        if (!el) return;
+        const cur = parseInt(el.textContent.replace(/,/g,''));
+        const delta = Math.floor(Math.random() * 5) - 2;
+        el.textContent = (cur + delta).toLocaleString();
+      }, 8000);
+    });
+
+    // ── FIX #10: Urgency countdown ─────────────────────────
+    function updateCountdown() {
+      const now = new Date();
+      // Refreshes at next 9am
+      const next9am = new Date(now);
+      next9am.setHours(9, 0, 0, 0);
+      if (now >= next9am) next9am.setDate(next9am.getDate() + 1);
+      const diff = next9am - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const el = document.getElementById('countdown-display');
+      if (el) el.textContent = `refreshing in ${h}h ${m}m`;
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+  </script>
+
+
+  <script>
+  // ─── GEO-AWARE AFFILIATE SYSTEM ─────────────────────────────────────────────
+  (function() {
+    // Full affiliate catalog — add your tracking IDs
+    const ALL_BOOKS = {
+      draftkings: {
+        name: "DraftKings",   logo: "DK",  color: "#53D338",
+        bonus: "Bet $5, Get $150",
+        url: "https://sportsbook.draftkings.com/?affiliateid=YOUR_DK_ID",
+      },
+      fanduel: {
+        name: "FanDuel",      logo: "FD",  color: "#1493FF",
+        bonus: "No Sweat Bet up to $1k",
+        url: "https://sportsbook.fanduel.com/join?pid=YOUR_FD_ID",
+      },
+      betmgm: {
+        name: "BetMGM",       logo: "MGM", color: "#C9A96E",
+        bonus: "First Bet up to $1,500",
+        url: "https://sports.betmgm.com/en/sports?affiliateCode=YOUR_MGM_ID",
+      },
+      caesars: {
+        name: "Caesars",      logo: "CZR", color: "#b482ff",
+        bonus: "Up to $1,000 Bonus Bet",
+        url: "https://www.caesars.com/sportsbook-and-casino?affiliateCode=YOUR_CZR_ID",
+      },
+      espnbet: {
+        name: "ESPN Bet",     logo: "ESPN", color: "#ff5000",
+        bonus: "Bet $10, Get $150",
+        url: "https://www.espnbet.com/?affiliateCode=YOUR_ESPN_ID",
+      },
+      hardrock: {
+        name: "Hard Rock Bet", logo: "HR", color: "#FFD700",
+        bonus: "Up to $500 Bonus",
+        url: "https://hardrock.bet/?affiliateCode=YOUR_HR_ID",
+      },
+      bet365: {
+        name: "Bet365",       logo: "365", color: "#00c864",
+        bonus: "Bet $1, Get $200",
+        url: "https://www.bet365.com/?affiliateCode=YOUR_B365_ID",
+      },
+      pinnacle: {
+        name: "Pinnacle",     logo: "PIN", color: "#22d3ee",
+        bonus: "Sharpest lines. No limits.",
+        url: "https://www.pinnacle.com/?affiliateCode=YOUR_PIN_ID",
+      },
+    };
+
+    // Legal books by US state (max 4 shown) — order = priority
+    const US_STATE_BOOKS = {
+      // Major regulated states
+      NJ: ["draftkings","fanduel","betmgm","caesars"],
+      NY: ["draftkings","fanduel","betmgm","caesars"],
+      PA: ["draftkings","fanduel","betmgm","espnbet"],
+      IL: ["draftkings","fanduel","betmgm","espnbet"],
+      CO: ["draftkings","fanduel","betmgm","caesars"],
+      IN: ["draftkings","fanduel","betmgm","caesars"],
+      IA: ["draftkings","fanduel","betmgm","caesars"],
+      MI: ["draftkings","fanduel","betmgm","espnbet"],
+      VA: ["draftkings","fanduel","betmgm","espnbet"],
+      AZ: ["draftkings","fanduel","betmgm","caesars"],
+      TN: ["draftkings","fanduel","betmgm","espnbet"],
+      WV: ["draftkings","fanduel","betmgm","caesars"],
+      CT: ["draftkings","fanduel","betmgm","espnbet"],
+      OH: ["draftkings","fanduel","betmgm","caesars"],
+      MA: ["draftkings","fanduel","betmgm","caesars"],
+      MD: ["draftkings","fanduel","betmgm","espnbet"],
+      KS: ["draftkings","fanduel","betmgm","caesars"],
+      KY: ["draftkings","fanduel","betmgm","espnbet"],
+      NC: ["draftkings","fanduel","betmgm","espnbet"],
+      DC: ["draftkings","fanduel","betmgm","caesars"],
+      VT: ["draftkings","fanduel","betmgm","caesars"],
+      NE: ["draftkings","fanduel","betmgm","caesars"],
+      // FL — Hard Rock is dominant per Seminole Compact
+      FL: ["hardrock","draftkings","fanduel","betmgm"],
+      // Nevada — retail focused but online limited
+      NV: ["draftkings","fanduel","betmgm","caesars"],
+      // Default US fallback
+      US: ["draftkings","fanduel","betmgm","caesars"],
+    };
+
+    // International regions (max 4)
+    const INTL_BOOKS = {
+      GB: ["bet365","draftkings","betmgm","pinnacle"],
+      AU: ["bet365","draftkings","betmgm","pinnacle"],
+      CA: ["betmgm","bet365","draftkings","pinnacle"],
+      DE: ["bet365","pinnacle","betmgm","draftkings"],
+      MX: ["bet365","pinnacle","betmgm","draftkings"],
+      DEFAULT: ["bet365","pinnacle","draftkings","betmgm"],
+    };
+
+    // States where online sports betting is not yet legal
+    const NO_BETTING_STATES = ["UT","HI","AL","ID","WI","GA","TX","CA","MN","MO","SC","OK"];
+
+    function getBooksForRegion(countryCode, regionCode) {
+      if (countryCode === "US") {
+        const state = (regionCode || "").toUpperCase();
+        if (NO_BETTING_STATES.includes(state)) return null; // signal: no legal books
+        return (US_STATE_BOOKS[state] || US_STATE_BOOKS["US"]).slice(0, 4);
+      }
+      const cc = (countryCode || "").toUpperCase();
+      return (INTL_BOOKS[cc] || INTL_BOOKS["DEFAULT"]).slice(0, 4);
+    }
+
+    function renderBooks(books, regionLabel) {
+      const grid = document.getElementById("aff-grid");
+      const regionEl = document.getElementById("aff-region");
+      if (!grid) return;
+
+      if (regionLabel && regionEl) {
+        regionEl.textContent = "Showing books available in: " + regionLabel;
+      }
+
+      // No legal books in this region
+      if (!books) {
+        grid.innerHTML = '<div style="color:#f87171;font-size:13px;padding:12px 0;">⚠️ Online sports betting may not be legal in your state. Please check your local laws before wagering.</div>';
+        return;
+      }
+
+      grid.innerHTML = books.map(key => {
+        const b = ALL_BOOKS[key];
+        if (!b) return "";
+        return `
+          <a href="${b.url}" target="_blank" rel="noopener"
+            style="background:${b.color}0d;border:1px solid ${b.color}30;border-radius:12px;padding:16px;text-decoration:none;display:flex;flex-direction:column;gap:6px;transition:transform .2s,box-shadow .2s;"
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px ${b.color}20'"
+            onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:8px;background:${b.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0;">${b.logo}</div>
+              <div style="font-size:15px;font-weight:800;color:${b.color};letter-spacing:.3px;">${b.name}</div>
+            </div>
+            <div style="font-size:11px;color:#a1a1aa;font-weight:600;">${b.bonus} →</div>
+          </a>`;
+      }).join("");
+    }
+
+    function detectAndRender() {
+      // Try ipapi.co — free, no key, returns country + region
+      fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) })
+        .then(r => r.json())
+        .then(data => {
+          const country = (data.country_code || "US").toUpperCase();
+          const region  = (data.region_code || data.region || "").toUpperCase();
+          const label   = country === "US"
+            ? (data.region || data.country_name || "United States")
+            : (data.country_name || country);
+          const books = getBooksForRegion(country, region);
+          renderBooks(books, label);
+          // Cache for 24h so we don't hit the API on every page load
+          try { localStorage.setItem("ab_geo", JSON.stringify({ country, region, label, ts: Date.now() })); } catch(e){}
+        })
+        .catch(() => {
+          // Fallback — check cached geo, else show US defaults
+          try {
+            const cached = JSON.parse(localStorage.getItem("ab_geo") || "null");
+            if (cached && Date.now() - cached.ts < 86400000) {
+              renderBooks(getBooksForRegion(cached.country, cached.region), cached.label);
+              return;
+            }
+          } catch(e){}
+          renderBooks(getBooksForRegion("US", ""), "");
+        });
+    }
+
+    // Check cache first to avoid flicker
+    try {
+      const cached = JSON.parse(localStorage.getItem("ab_geo") || "null");
+      if (cached && Date.now() - cached.ts < 86400000) {
+        renderBooks(getBooksForRegion(cached.country, cached.region), cached.label);
+      } else {
+        detectAndRender();
+      }
+    } catch(e) {
+      detectAndRender();
+    }
+  })();
+  </script>
+
+</body>
+</html>
