@@ -76,12 +76,12 @@ from pydantic import BaseModel
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "")
-STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai")
-BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "")
+ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
+STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
+BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 
 # Persistent disk on Render — mount /data in render.yaml for this to survive restarts
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
