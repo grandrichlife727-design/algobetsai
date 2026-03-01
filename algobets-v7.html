@@ -127,7 +127,7 @@ const BACKEND_API_KEY = "c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa
 // ➡️ TODO #1: Replace with your Google Client ID
 //    console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 Client ID
 //    Authorized origins: add your domain (e.g. https://algobets.app)
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com";
 // ➡️ TODO #2: Replace with your Facebook App ID
 //    developers.facebook.com → My Apps → Create App → App Settings → App ID
 const FACEBOOK_APP_ID = "YOUR_FACEBOOK_APP_ID";
@@ -1736,6 +1736,11 @@ function EvFinderView({ data, loading, userPlan, onPaywall }) {
     if (loading)
         return React.createElement("div", { style: { padding: "40px 0", textAlign: "center" } },
             React.createElement("span", { style: { width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" } }));
+    if (!data || data.length === 0)
+        return React.createElement("div", { style: { padding: "60px 0", textAlign: "center" } },
+            React.createElement("p", { style: { fontSize: 32, marginBottom: 12 } }, "⚡"),
+            React.createElement("p", { style: { fontSize: 15, fontWeight: 700, color: "#9ca3af", marginBottom: 6 } }, "No +EV bets right now"),
+            React.createElement("p", { style: { fontSize: 12, color: "#4b5563" } }, "Backend offline or no edges found. Check back soon."));
     return (React.createElement("div", null, data.map((item, i) => {
         var _a;
         const isLocked = userPlan === "free" && i > 0;
@@ -1782,6 +1787,11 @@ function PlayerPropsView({ data, loading, userPlan, onPaywall, onAddToParlay, pa
     if (loading)
         return React.createElement("div", { style: { padding: "40px 0", textAlign: "center" } },
             React.createElement("span", { style: { width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" } }));
+    if (!data || data.length === 0)
+        return React.createElement("div", { style: { padding: "60px 0", textAlign: "center" } },
+            React.createElement("p", { style: { fontSize: 32, marginBottom: 12 } }, "🎯"),
+            React.createElement("p", { style: { fontSize: 15, fontWeight: 700, color: "#9ca3af", marginBottom: 6 } }, "No props available right now"),
+            React.createElement("p", { style: { fontSize: 12, color: "#4b5563" } }, "Backend offline or no props found. Check back soon."));
     return (React.createElement("div", null, data.map((item, i) => {
         const isLocked = userPlan === "free" && i > 0;
         const trendColor = item.trend === "hot" ? "#4ade80" : item.trend === "cold" ? "#f87171" : "#facc15";
@@ -1853,6 +1863,18 @@ function ArbMiddleView({ data, loading, userPlan, onPaywall }) {
         return React.createElement("div", { style: { padding: "40px 0", textAlign: "center" } },
             React.createElement("span", { style: { width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#22d3ee", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" } }));
     const isSharp = userPlan === "sharp";
+    if (!data || data.length === 0)
+        return React.createElement("div", null,
+            !isSharp && (React.createElement("div", { style: { background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 12, alignItems: "flex-start" } },
+                React.createElement("span", { style: { fontSize: 20, flexShrink: 0 } }, "\u26A0\uFE0F"),
+                React.createElement("div", null,
+                    React.createElement("p", { style: { fontSize: 13, fontWeight: 700, color: "#fb923c" } }, "Sharp Plan Only"),
+                    React.createElement("p", { style: { fontSize: 12, color: "#6b7280", marginTop: 2 } }, "Arbitrage & middle opportunities are available exclusively to Sharp subscribers."),
+                    React.createElement("button", { onClick: onPaywall, style: { marginTop: 8, background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 8, padding: "7px 14px", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" } }, "Upgrade to Sharp \u2192")))),
+            React.createElement("div", { style: { padding: "60px 0", textAlign: "center" } },
+                React.createElement("p", { style: { fontSize: 32, marginBottom: 12 } }, "\u265F"),
+                React.createElement("p", { style: { fontSize: 15, fontWeight: 700, color: "#9ca3af", marginBottom: 6 } }, "No arb opportunities right now"),
+                React.createElement("p", { style: { fontSize: 12, color: "#4b5563" } }, "Backend offline or no arbs found. Check back soon.")));
     return (React.createElement("div", null,
         !isSharp && (React.createElement("div", { style: { background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 12, alignItems: "flex-start" } },
             React.createElement("span", { style: { fontSize: 20, flexShrink: 0 } }, "\u26A0\uFE0F"),
