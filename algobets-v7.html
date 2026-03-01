@@ -1332,7 +1332,7 @@ function PicksTab({ picks, scanning, scanStage, onScan, remainingPicks, onAddToP
                 React.createElement("br", null),
                 "NBA, NHL & March Madness have games today."),
             React.createElement("button", { onClick: () => (userPlan === "free" && remainingPicks <= 0) ? onPaywall() : onScan(), style: { padding: "12px 28px", background: "linear-gradient(135deg,#0891b2,#7c3aed)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "\u26A1 Run My First Scan"))),
-        picks.length > 0 && (() => {
+        picks.length > 0 && false && (() => {
             const top = DEMO_PROPS[0];
             const parlayItem = propToParlayItem(top);
             const inParlay = parlay === null || parlay === void 0 ? void 0 : parlay.some(p => p.id === parlayItem.id);
@@ -1960,7 +1960,7 @@ function LeaderboardScreen({ onBack }) {
         { rank: 9, name: "EdgeAlert", record: "22-16", roi: "+10.4%", streak: "W3", sport: "NCAAB", badge: "9", verified: false },
         { rank: 10, name: "BetSmart10", record: "31-23", roi: "+9.1%", streak: "W2", sport: "NHL", badge: "10", verified: false },
     ];
-    const [leaders, setLeaders] = useState(DEMO_LEADERS);
+    const [leaders, setLeaders] = useState([]);
     const [lbLoading, setLbLoading] = useState(false);
     const [isLive, setIsLive] = useState(false);
     const [filter, setFilter] = useState("All");
@@ -1981,7 +1981,7 @@ function LeaderboardScreen({ onBack }) {
                     setIsLive(true);
                 }
             }
-            catch ( /* keep demo leaders */_b) { /* keep demo leaders */ }
+            catch (_b) { setLeaders([]); }
             finally {
                 setLbLoading(false);
             }
@@ -2440,7 +2440,7 @@ function ReferralScreen({ onBack, user }) {
 }
 // ─── INJURY FEED SCREEN ───────────────────────────────────────────────────────
 function InjuryFeedScreen({ onBack }) {
-    const [injuries, setInjuries] = useState(DEMO_INJURIES);
+    const [injuries, setInjuries] = useState([]);
     const [sport, setSport] = useState("All");
     const [lastUpdated, setLastUpdated] = useState(null);
     const [isLive, setIsLive] = useState(false);
@@ -3426,12 +3426,15 @@ function Page() {
         else {
             setRemainingPicks(parseInt(localStorage.getItem("algobets_remainingPicks") || "3", 10));
         }
-        // Load cached scan (valid for 30 min)
+        // Load cached scan (valid for 30 min, live scans only)
         try {
             const cached = JSON.parse(localStorage.getItem("algobets_lastScan") || "null");
-            if (cached && cached.picks && Date.now() - cached.timestamp < 30 * 60 * 1000) {
+            if (cached && cached.picks && cached.live && cached.v >= 2 && Date.now() - cached.timestamp < 30 * 60 * 1000) {
                 setPicks(cached.picks.map((p, i) => (Object.assign(Object.assign({}, p), { affiliateBoost: getPickAffiliate(p, i) }))));
                 setScanTimestamp(cached.timestamp);
+            } else if (cached && (!cached.live || !cached.v)) {
+                // Wipe old demo-polluted cache
+                localStorage.removeItem("algobets_lastScan");
             }
         }
         catch (_a) { }
@@ -3499,7 +3502,7 @@ function Page() {
                 throw new Error(`Backend ${res.status}`);
             const data = await res.json();
             // Backend returns fully-analyzed picks — no client-side odds processing needed
-            const picks = (data.consensus_picks || DEMO_PICKS).map((p, i) => ({
+            const picks = (data.consensus_picks || []).map((p, i) => ({
                 id: p.id || i + 1,
                 sport: p.sport || "NBA",
                 emoji: p.emoji || "🎯",
@@ -3518,14 +3521,14 @@ function Page() {
             setPicks(picks);
             setScanTimestamp(Date.now());
             setBackendAlive(true);
-            localStorage.setItem("algobets_lastScan", JSON.stringify({ picks, timestamp: Date.now() }));
+            localStorage.setItem("algobets_lastScan", JSON.stringify({ picks, timestamp: Date.now(), live: true, v: 2 }));
         }
         catch (err) {
-            console.warn("Scan failed, using demo picks:", err.message);
-            setPicks(DEMO_PICKS.map((p, i) => (Object.assign(Object.assign({}, p), { affiliateBoost: getPickAffiliate(p, i) }))));
+            console.warn("Scan failed:", err.message);
+            setPicks([]);
             setScanTimestamp(Date.now());
             setBackendAlive(false);
-            showToast("⚠️ Live scan unavailable — showing demo picks", "info", 4000);
+            showToast("⚠️ Live scan unavailable — backend offline", "error", 5000);
         }
         setScanStage(null);
         if (userPlan === "free") {
