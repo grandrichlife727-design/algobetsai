@@ -106,7 +106,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <!-- Babel standalone to transform JSX in the browser -->
-  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+  
   <!-- Google Identity Services for OAuth -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Facebook SDK for OAuth -->
@@ -115,7 +115,30 @@
 
 <body>
   <div id="root"></div>
-  <script type="text/babel" data-presets="react">
+  
+  <script>
+    function runApp() {
+      var code = document.getElementById('app-source').textContent;
+      try {
+        var transformed = Babel.transform(code, { presets: ['react'] }).code;
+        var script = document.createElement('script');
+        script.textContent = transformed;
+        document.body.appendChild(script);
+      } catch(e) {
+        document.getElementById('root').innerHTML = '<div style="color:red;padding:20px">Error: ' + e.message + '</div>';
+        console.error(e);
+      }
+    }
+    
+    var babelScript = document.createElement('script');
+    babelScript.src = 'https://unpkg.com/@babel/standalone@7.23.6/babel.min.js';
+    babelScript.onload = runApp;
+    babelScript.onerror = function() { 
+      document.getElementById('root').innerHTML = '<div style="color:red;padding:20px">Failed to load Babel</div>';
+    };
+    document.head.appendChild(babelScript);
+  </script>
+  <script type="text/plain" id="app-source">
     const { useState, useEffect, useRef, useCallback } = React;
 
 
@@ -5085,7 +5108,7 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<Page />);
-  </script>
+    </script>
 </body>
 
 </html>
