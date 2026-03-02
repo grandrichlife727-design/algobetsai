@@ -2007,11 +2007,11 @@ def build_consensus_pick(event: dict, sport_key: str,
             avg_point = sum(p for p, _ in entries) / len(entries)
             avg_price = sum(p for _, p in entries) / len(entries)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = (sum(american_to_prob(int(pr)) for _, pr in entries) / len(entries)) / 1.02
+            fair_prob = (sum(american_to_prob(int(pr)) for _, pr in entries) / len(entries)) / 1.045
             pin_spread = (pin_game.get("home_spread") if team == home
                           else pin_game.get("away_spread")) if pin_game else None
             clv_edge = calculate_clv_edge(int(avg_price), None, pin_spread, "spread", avg_point)
-            effective_edge = clv_edge if clv_edge is not None else (fair_prob - implied) * 100
+            effective_edge = clv_edge if clv_edge is not None else 1.0
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 sign = "+" if avg_point > 0 else ""
@@ -2038,11 +2038,11 @@ def build_consensus_pick(event: dict, sport_key: str,
         for team, prices in teams_h2h.items():
             avg_price = sum(prices) / len(prices)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = implied / 1.02
+            fair_prob = implied / 1.045
             pin_ml    = (pin_game.get("home_ml") if team == home
                          else pin_game.get("away_ml")) if pin_game else None
             clv_edge  = calculate_clv_edge(int(avg_price), pin_ml, None, "moneyline")
-            effective_edge = clv_edge if clv_edge is not None else (fair_prob - implied) * 100
+            effective_edge = clv_edge if clv_edge is not None else 1.0
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 best_pick = {
