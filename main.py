@@ -3224,7 +3224,7 @@ def _context_aware_reply(message: str, ctx: dict) -> str:
             reply += (
                 f"Best parlay candidates right now: "
                 + " + ".join(f"**{p['bet']}**" for p in a_picks[:3])
-                + f". Combined but remember: each leg must win independently."
+                + f" Combined but remember: each leg must win independently."
             )
         else:
             reply += "Not enough high-confidence picks right now to recommend a parlay."
