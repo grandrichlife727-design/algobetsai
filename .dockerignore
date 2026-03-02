@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.next
+.git
+.gitignore
+.env.local
+.env.*.local
+.vercel
+.DS_Store
+*.pem
+coverage
+.nyc_output
+dist
+build
