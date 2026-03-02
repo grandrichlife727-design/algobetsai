@@ -1,0 +1,15 @@
+main.py
+requirements.txt
+render.yaml
+Dockerfile
+.dockerignore
+algobets*.html
+*.py
+__pycache__
+.git
+.env
+.env.local
+node_modules
+.next
+build
+dist

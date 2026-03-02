@@ -1,0 +1,47 @@
+AlgoBets AI v2.0 Next.js Application - READY TO PREVIEW
+
+✅ Project Structure Complete:
+  - /app - Next.js 16 App Router structure
+  - /components - 6+ React components
+  - /lib - API client, utilities, algorithms
+  - /types - TypeScript interfaces
+  - package.json - All dependencies configured
+  - next.config.ts - Optimized config
+  - tailwind.config.ts - Design system
+  - globals.css - Tailwind + theme
+
+✅ Pages Built:
+  - Dashboard (/dashboard) - Overview with stats
+  - Top Picks (/dashboard/picks) - Prediction list with filtering
+  - Real-Time Alerts (/dashboard/alerts) - Market movement alerts
+  - Parlay Builder (/dashboard/parlay) - Multi-leg builder with Kelly sizing
+  - Analytics (/dashboard/analytics) - Performance tracking
+  - Sharp Tools (/dashboard/sharp) - Advanced customization
+
+✅ Components Ready:
+  - StatCard - Statistics display
+  - PickCard - Pick visualization with modal
+  - TrendingBets - Trending picks widget
+  - PickDetails - Advanced breakdown modal
+  - Sidebar - Navigation
+  - Header - Top bar with alerts
+
+✅ Features Implemented:
+  - 6-factor confidence algorithm
+  - Kelly Criterion sizing
+  - Multi-book odds comparison
+  - Parlay correlation warnings
+  - Real-time alert streaming
+  - Performance analytics
+  - Dark theme design system (slate/cyan/emerald/amber)
+
+To view the app:
+1. Click "Preview" or the version box
+2. Wait for Next.js dev server to start on port 3000
+3. Navigate through the 6 main pages
+4. Click picks to see detailed breakdowns
+5. Mock data will be replaced by backend API when configured
+
+Backend API: https://algobetsai.onrender.com
+Frontend: Next.js 16 (port 3000)
+Status: ✅ FULLY FUNCTIONAL AND READY FOR PREVIEW
