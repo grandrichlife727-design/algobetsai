@@ -608,17 +608,19 @@ app = FastAPI(title="Algobets Ai API", version="5.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS: allow all origins — the API key in headers is the real auth layer.
-# Locking down origins causes "live data unavailable" when the frontend is
-# served from any domain not in the list (local file, Netlify, Vercel, etc.)
-_cors_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
-if _cors_origins_env == "*":
-    app.add_middleware(CORSMiddleware, allow_origins=["*"],
-                       allow_methods=["GET", "POST"], allow_headers=["*"])
-else:
-    _allowed_list = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=_allowed_list,
-                       allow_methods=["GET", "POST"], allow_headers=["*"])
+# CORS: fully open — API key in headers is the real auth.
+# Must explicitly list allowed headers for preflight (OPTIONS) to pass.
+# allow_origins=["*"] with allow_credentials=False is required by browsers
+# when sending custom headers like X-API-Key from a different origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SQLite — Pick Logging + ROI Tracking
@@ -2675,8 +2677,14 @@ async def startup_event():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {"status": "ok", "service": "Algobets Ai API", "version": "5.0.0"}
+
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """Handle CORS preflight for all routes."""
+    return {}
 
 @app.get("/health")
 async def health():
