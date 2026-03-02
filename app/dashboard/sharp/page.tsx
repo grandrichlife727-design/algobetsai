@@ -2,171 +2,154 @@
 
 import { useState } from 'react'
 
-export default function SharpPage() {
+export default function SharpToolsPage() {
   const [weights, setWeights] = useState({
-    clvEdge: 25,
+    clv: 25,
     sharpMoney: 20,
     lineMovement: 20,
     consensus: 15,
     oddsQuality: 10,
-    injuryNews: 10,
+    news: 10
   })
 
   const handleWeightChange = (key: string, value: number) => {
-    setWeights(prev => ({ ...prev, [key]: value }))
+    const total = Object.values({ ...weights, [key]: value }).reduce((a, b) => a + b, 0)
+    if (total === 100) {
+      setWeights({ ...weights, [key]: value })
+    }
   }
 
-  const total = Object.values(weights).reduce((a, b) => a + b, 0)
+  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-100">Sharp Tools</h1>
-        <p className="text-slate-400 mt-1">Advanced customization for professional bettors</p>
+        <h1 className="text-4xl font-bold text-white mb-2">Sharp Tools</h1>
+        <p className="text-slate-400">Advanced customization for professional bettors</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Model Weights */}
-        <div className="lg:col-span-2">
-          <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-slate-100">Model Weights</h3>
-              <span className={`text-sm font-bold ${total === 100 ? 'text-emerald-400' : 'text-red-400'}`}>
-                Total: {total}%
-              </span>
-            </div>
+        <div className="bg-slate-900 rounded-lg border border-slate-800 p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Prediction Model Weights</h2>
+          <p className="text-sm text-slate-400 mb-6">Customize how each signal impacts confidence</p>
 
-            <div className="space-y-4">
-              {Object.entries(weights).map(([key, value]) => (
+          <div className="space-y-5">
+            {Object.entries(weights).map(([key, value]) => {
+              const labels: Record<string, string> = {
+                clv: 'CLV Edge',
+                sharpMoney: 'Sharp Money',
+                lineMovement: 'Line Movement',
+                consensus: 'Expert Consensus',
+                oddsQuality: 'Odds Quality',
+                news: 'Injury/News'
+              }
+
+              return (
                 <div key={key}>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-slate-300 capitalize">
-                      {key.replace(/([A-Z])/g, ' $1')}
-                    </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-white font-medium">{labels[key]}</label>
                     <input
                       type="number"
+                      min="0"
+                      max="100"
                       value={value}
-                      onChange={(e) => handleWeightChange(key, Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-                      className="w-16 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-100 text-right"
+                      onChange={(e) => handleWeightChange(key, Number(e.target.value))}
+                      className="w-16 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-center"
+                    />
+                    <span className="text-slate-400">%</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div 
+                      className="bg-cyan-500 h-2 rounded-full transition-all"
+                      style={{ width: `${value}%` }}
                     />
                   </div>
-                  
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={value}
-                    onChange={(e) => handleWeightChange(key, parseInt(e.target.value))}
-                    className="w-full"
-                  />
                 </div>
-              ))}
-            </div>
-
-            <button className="w-full mt-6 px-4 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/30 font-medium transition-colors">
-              Apply Weights
-            </button>
-          </div>
-        </div>
-
-        {/* Weight Distribution */}
-        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-          <h3 className="font-semibold text-slate-100 mb-4">Distribution</h3>
-          
-          <div className="space-y-3">
-            {Object.entries(weights).map(([key, value]) => (
-              <div key={key}>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-slate-400 capitalize text-xs">{key.replace(/([A-Z])/g, ' $1')}</span>
-                  <span className="text-slate-100 font-semibold">{value}%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500"
-                    style={{ width: `${value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* API Access */}
-      <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-        <h3 className="font-semibold text-slate-100 mb-4">API Access</h3>
-        
-        <div className="space-y-4">
-          <p className="text-slate-400">Use our API to integrate predictions into your own tools</p>
-          
-          <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 font-mono text-sm">
-            <p className="text-slate-300">GET /api/predictions?sport=NFL&league=Week15</p>
-            <p className="text-slate-500 mt-2">X-API-Key: <span className="text-cyan-400">algobets_...</span></p>
+              )
+            })}
           </div>
 
-          <button className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/30 font-medium transition-colors text-sm">
-            View Full API Documentation
+          <div className="mt-6 p-3 bg-slate-800 rounded">
+            <p className="text-sm text-slate-400">Total Weight</p>
+            <p className={`text-lg font-bold ${totalWeight === 100 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {totalWeight}%
+            </p>
+          </div>
+
+          <button className="w-full mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded font-medium">
+            Save Preset
           </button>
         </div>
-      </div>
 
-      {/* Devig Methods */}
-      <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-        <h3 className="font-semibold text-slate-100 mb-4">Devigging Methods</h3>
-        
-        <div className="space-y-3">
-          {[
-            { name: 'Additive (Recommended)', desc: 'Best for slight overrounds' },
-            { name: 'Multiplicative', desc: 'For larger implied probability adjustments' },
-            { name: 'Inverse', desc: 'Most mathematically pure' },
-          ].map((method) => (
-            <label key={method.name} className="flex items-start gap-3 p-4 rounded-lg bg-slate-800/50 border border-slate-700 cursor-pointer hover:border-slate-600">
-              <input type="radio" name="devig" defaultChecked={method.name === 'Additive'} className="mt-1" />
+        {/* API Access */}
+        <div className="space-y-4">
+          <div className="bg-slate-900 rounded-lg border border-slate-800 p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">API Documentation</h2>
+            
+            <div className="space-y-4">
               <div>
-                <p className="font-medium text-slate-100">{method.name}</p>
-                <p className="text-sm text-slate-400">{method.desc}</p>
+                <h3 className="text-sm font-semibold text-white mb-2">Endpoint</h3>
+                <code className="block bg-slate-800 p-3 rounded text-sm text-cyan-400 overflow-x-auto">
+                  GET /api/v1/picks
+                </code>
               </div>
-            </label>
-          ))}
-        </div>
-      </div>
 
-      {/* Leaderboard */}
-      <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-slate-100">Leaderboard</h3>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
-            <span className="text-slate-300">Show my picks</span>
-          </label>
-        </div>
-
-        <div className="space-y-2">
-          {[
-            { rank: 1, name: 'SharpPicks_', roi: '+47.2%', picks: 342 },
-            { rank: 2, name: 'ProBettor_88', roi: '+43.8%', picks: 289 },
-            { rank: 3, name: 'AlgoBets (You)', roi: '+18.3%', picks: 247, isYou: true },
-            { rank: 4, name: 'DataDriven', roi: '+15.7%', picks: 156 },
-            { rank: 5, name: 'LineWatcher', roi: '+12.4%', picks: 201 },
-          ].map((user) => (
-            <div
-              key={user.rank}
-              className={`p-3 rounded-lg flex items-center justify-between ${
-                user.isYou ? 'bg-cyan-500/20 border border-cyan-500/50' : 'bg-slate-800/50 border border-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold">
-                  {user.rank}
-                </span>
-                <span className="font-medium text-slate-100">{user.name}</span>
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-2">Authentication</h3>
+                <code className="block bg-slate-800 p-3 rounded text-sm text-slate-300 overflow-x-auto">
+                  Authorization: Bearer YOUR_API_KEY
+                </code>
               </div>
-              <div className="flex items-center gap-4 text-sm">
-                <span className="text-slate-400">{user.picks} picks</span>
-                <span className="text-emerald-400 font-semibold">{user.roi}</span>
+
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-2">Response Format</h3>
+                <code className="block bg-slate-800 p-3 rounded text-sm text-slate-300 text-xs overflow-x-auto font-mono">
+{`{
+  "picks": [{
+    "id": "pick_123",
+    "team": "Lakers",
+    "pick": "ML",
+    "confidence": 78.5,
+    "signals": {...},
+    "kelly_sizing": {...}
+  }]
+}`}
+                </code>
+              </div>
+
+              <button className="w-full px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded font-medium">
+                View Full API Docs
+              </button>
+            </div>
+          </div>
+
+          {/* Leaderboard */}
+          <div className="bg-slate-900 rounded-lg border border-slate-800 p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Community Leaderboard</h2>
+            <p className="text-sm text-slate-400 mb-4">Top performing models and custom weights</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-slate-800 rounded">
+                <div>
+                  <p className="font-medium text-white">Sharp Model v3</p>
+                  <p className="text-xs text-slate-500">ROI: +32.4%</p>
+                </div>
+                <button className="text-xs px-2 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded">
+                  Use
+                </button>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-800 rounded">
+                <div>
+                  <p className="font-medium text-white">Conservative Approach</p>
+                  <p className="text-xs text-slate-500">ROI: +18.9%</p>
+                </div>
+                <button className="text-xs px-2 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded">
+                  Use
+                </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>

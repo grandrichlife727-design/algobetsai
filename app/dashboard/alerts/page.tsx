@@ -1,130 +1,167 @@
 'use client'
 
-const mockAlerts = [
-  {
-    id: 1,
-    type: 'steam',
-    title: 'Steam Move Detected',
-    event: 'Cowboys -3.5 → -4',
-    description: 'Sharp money detected moving line at sharp books',
-    timestamp: '2 minutes ago',
-    severity: 'high',
-  },
-  {
-    id: 2,
-    type: 'rlm',
-    title: 'Reverse Line Movement',
-    event: 'Lakers Over 218.5 at -105 → -120',
-    description: 'Public money on Under but professionals on Over',
-    timestamp: '5 minutes ago',
-    severity: 'high',
-  },
-  {
-    id: 3,
-    type: 'odds_boost',
-    title: 'Odds Boost Available',
-    event: 'Chiefs -2 at +200 (DraftKings)',
-    description: 'Promotional boost available - highest current line',
-    timestamp: '8 minutes ago',
-    severity: 'medium',
-  },
-  {
-    id: 4,
-    type: 'line_move',
-    title: 'Significant Line Move',
-    event: '49ers +5 → +4.5',
-    description: 'Line moved 0.5 points across multiple books',
-    timestamp: '12 minutes ago',
-    severity: 'medium',
-  },
-  {
-    id: 5,
-    type: 'clv_hit',
-    title: 'CLV Edge Alert',
-    event: 'Celtics -7 opened at -6.5',
-    description: 'Potential closing line value opportunity detected',
-    timestamp: '15 minutes ago',
-    severity: 'low',
-  },
-]
+import { useState, useEffect } from 'react'
+
+interface Alert {
+  id: string
+  type: 'steam' | 'rlm' | 'odds_boost' | 'line_move'
+  title: string
+  description: string
+  timestamp: Date
+  severity: 'low' | 'medium' | 'high'
+}
 
 export default function AlertsPage() {
+  const [alerts, setAlerts] = useState<Alert[]>([])
+
+  useEffect(() => {
+    // Generate mock alerts
+    const mockAlerts: Alert[] = [
+      {
+        id: '1',
+        type: 'steam',
+        title: 'Strong Steam on Lakers ML',
+        description: 'Professional money detected: -2 → -1.5 in 15 minutes',
+        timestamp: new Date(Date.now() - 5 * 60000),
+        severity: 'high'
+      },
+      {
+        id: '2',
+        type: 'rlm',
+        title: 'Reverse Line Move on Celtics -7',
+        description: 'Sharp contrarian action: Line moved -1 against heavy public',
+        timestamp: new Date(Date.now() - 12 * 60000),
+        severity: 'high'
+      },
+      {
+        id: '3',
+        type: 'odds_boost',
+        title: 'Enhanced Odds: Cowboys Moneyline',
+        description: 'DraftKings boosting CWB ML from -110 to +120',
+        timestamp: new Date(Date.now() - 20 * 60000),
+        severity: 'medium'
+      },
+      {
+        id: '4',
+        type: 'line_move',
+        title: 'Significant Line Movement',
+        description: 'Warriors spread: -4 → -5.5 (Injury: Curry questionable)',
+        timestamp: new Date(Date.now() - 45 * 60000),
+        severity: 'medium'
+      },
+      {
+        id: '5',
+        type: 'steam',
+        title: 'Morning Steam',
+        description: 'Cardinals -3 moved to -3.5 as sharp action came in',
+        timestamp: new Date(Date.now() - 120 * 60000),
+        severity: 'low'
+      },
+    ]
+    setAlerts(mockAlerts)
+  }, [])
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high':
-        return 'bg-red-500/20 border-red-500/50 text-red-300'
-      case 'medium':
-        return 'bg-amber-500/20 border-amber-500/50 text-amber-300'
-      case 'low':
-        return 'bg-blue-500/20 border-blue-500/50 text-blue-300'
-      default:
-        return 'bg-slate-500/20 border-slate-500/50 text-slate-300'
+      case 'high': return 'bg-red-900 border-red-700 text-red-100'
+      case 'medium': return 'bg-amber-900 border-amber-700 text-amber-100'
+      case 'low': return 'bg-slate-800 border-slate-700 text-slate-300'
+      default: return 'bg-slate-800'
     }
   }
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'steam':
-        return '💨'
-      case 'rlm':
-        return '⚡'
-      case 'odds_boost':
-        return '📈'
-      case 'line_move':
-        return '📊'
-      case 'clv_hit':
-        return '🎯'
-      default:
-        return '🔔'
+      case 'steam': return '🔥'
+      case 'rlm': return '↩️'
+      case 'odds_boost': return '⚡'
+      case 'line_move': return '📊'
+      default: return '📢'
     }
   }
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'steam': return 'Steam'
+      case 'rlm': return 'RLM'
+      case 'odds_boost': return 'Boost'
+      case 'line_move': return 'Line Move'
+      default: return 'Alert'
+    }
+  }
+
+  const formatTime = (date: Date) => {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
+    
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    
+    return date.toLocaleDateString()
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-100">Real-Time Alerts</h1>
-        <p className="text-slate-400 mt-1">Live market movements and opportunities</p>
+        <h1 className="text-4xl font-bold text-white mb-2">Real-Time Alerts</h1>
+        <p className="text-slate-400">Steam moves, RLM, odds boosts, and significant line movements</p>
       </div>
 
+      {/* Alert Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+          <p className="text-slate-400 text-sm">Today</p>
+          <p className="text-2xl font-bold text-white">{alerts.length}</p>
+        </div>
+        <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+          <p className="text-slate-400 text-sm">High Priority</p>
+          <p className="text-2xl font-bold text-red-400">{alerts.filter(a => a.severity === 'high').length}</p>
+        </div>
+        <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+          <p className="text-slate-400 text-sm">Medium Priority</p>
+          <p className="text-2xl font-bold text-amber-400">{alerts.filter(a => a.severity === 'medium').length}</p>
+        </div>
+        <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+          <p className="text-slate-400 text-sm">Last Alert</p>
+          <p className="text-sm font-semibold text-cyan-400">{formatTime(alerts[0]?.timestamp || new Date())}</p>
+        </div>
+      </div>
+
+      {/* Alerts List */}
       <div className="space-y-3">
-        {mockAlerts.map((alert) => (
+        {alerts.map(alert => (
           <div
             key={alert.id}
-            className={`rounded-lg border p-4 ${getSeverityColor(alert.severity)} backdrop-blur-sm hover:shadow-lg transition-shadow cursor-pointer`}
+            className={`rounded-lg border p-4 ${getSeverityColor(alert.severity)}`}
           >
             <div className="flex items-start gap-4">
-              <div className="text-2xl">{getTypeIcon(alert.type)}</div>
-              
+              <span className="text-2xl">{getTypeIcon(alert.type)}</span>
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold">{alert.title}</h3>
-                  <span className="text-xs opacity-75">{alert.timestamp}</span>
+                  <span className="text-xs font-medium px-2 py-1 bg-black/20 rounded">
+                    {getTypeLabel(alert.type)}
+                  </span>
                 </div>
-                
-                <p className="font-mono text-sm font-bold mb-1">{alert.event}</p>
                 <p className="text-sm opacity-90">{alert.description}</p>
+                <p className="text-xs opacity-75 mt-2">{formatTime(alert.timestamp)}</p>
               </div>
-              
-              <button className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors whitespace-nowrap">
-                Take Action
-              </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Alert Settings */}
-      <div className="mt-8 rounded-lg border border-slate-700 bg-slate-900/50 p-6">
-        <h3 className="font-semibold text-slate-100 mb-4">Alert Preferences</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['Steam Moves', 'RLM', 'Odds Boosts', 'Line Moves', 'CLV Alerts', 'Injury News'].map((pref) => (
-            <label key={pref} className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
-              <span className="text-slate-300">{pref}</span>
-            </label>
-          ))}
+      {/* Empty State */}
+      {alerts.length === 0 && (
+        <div className="text-center py-12 bg-slate-900 rounded-lg border border-slate-800">
+          <p className="text-slate-400">No alerts at this time</p>
+          <p className="text-slate-500 text-sm mt-2">Alerts will appear here when market activity is detected</p>
         </div>
-      </div>
+      )}
     </div>
   )
 }
