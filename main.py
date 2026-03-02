@@ -2007,7 +2007,7 @@ def build_consensus_pick(event: dict, sport_key: str,
             avg_point = sum(p for p, _ in entries) / len(entries)
             avg_price = sum(p for _, p in entries) / len(entries)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = (sum(american_to_prob(int(pr)) for _, pr in entries) / len(entries)) / 1.045
+            fair_prob = (sum(american_to_prob(int(pr)) for _, pr in entries) / len(entries)) / 1.02
             pin_spread = (pin_game.get("home_spread") if team == home
                           else pin_game.get("away_spread")) if pin_game else None
             clv_edge = calculate_clv_edge(int(avg_price), None, pin_spread, "spread", avg_point)
@@ -2038,7 +2038,7 @@ def build_consensus_pick(event: dict, sport_key: str,
         for team, prices in teams_h2h.items():
             avg_price = sum(prices) / len(prices)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = implied / 1.045
+            fair_prob = implied / 1.02
             pin_ml    = (pin_game.get("home_ml") if team == home
                          else pin_game.get("away_ml")) if pin_game else None
             clv_edge  = calculate_clv_edge(int(avg_price), pin_ml, None, "moneyline")
@@ -2060,7 +2060,7 @@ def build_consensus_pick(event: dict, sport_key: str,
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
-    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 1.5
+    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.5
     if best_edge < min_edge or best_pick is None:
         return None
 
