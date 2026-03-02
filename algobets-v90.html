@@ -126,6 +126,17 @@ const { useState, useEffect, useRef, useCallback } = React;
 const BACKEND = "https://algobetsai.onrender.com";
 // ➡️ Paste your BACKEND_API_KEY here (same value set in Render env vars)
 const BACKEND_API_KEY = "c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b";
+// Boot diagnostics — open browser console to see connection status
+console.info("[AlgoBets] Backend:", BACKEND);
+// Wake Render from sleep on page load (cold starts take 50-60s)
+(async () => {
+  try {
+    const r = await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(65000) });
+    console.info("[AlgoBets] /health →", r.status, r.ok ? "✅ Backend alive" : "⚠️ Bad status");
+  } catch(e) {
+    console.error("[AlgoBets] /health failed →", e.message);
+  }
+})();
 // ─── OAUTH CONFIG ─────────────────────────────────────────────────────────────
 // ➡️ TODO #1: Replace with your Google Client ID
 //    console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 Client ID
@@ -717,13 +728,13 @@ function ShareCard({ pick, onClose }) {
         ctx.beginPath();
         ctx.roundRect(24, 22, 36, 36, 8);
         ctx.fill();
-        ctx.font = "bold 20px sans-serif";
+        ctx.font = "bold 20px 'IBM Plex Mono', monospace";
         ctx.fillText("⚡", 30, 48);
         // Brand name
-        ctx.font = "800 17px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.font = "800 17px 'Syne', sans-serif";
         ctx.fillStyle = "#00e5ff";
         ctx.fillText("Algobets Ai", 68, 38);
-        ctx.font = "500 11px monospace";
+        ctx.font = "500 11px 'IBM Plex Mono', monospace";
         ctx.fillStyle = "#4a5568";
         ctx.fillText("7-AGENT AI PICKS", 68, 54);
         // Sport + date pill (top right)
@@ -733,12 +744,12 @@ function ShareCard({ pick, onClose }) {
         ctx.beginPath();
         ctx.roundRect(W - 120, 24, 96, 24, 6);
         ctx.fill();
-        ctx.font = "700 11px monospace";
+        ctx.font = "700 11px 'IBM Plex Mono', monospace";
         ctx.fillStyle = "#8b95a8";
         ctx.fillText(`${pick.sport} · ${dateStr}`, W - 114, 40);
         // ── Main content area ────────────────────────────────────────────────────
         // Game label
-        ctx.font = "400 13px -apple-system, sans-serif";
+        ctx.font = "400 13px 'Inter', sans-serif";
         ctx.fillStyle = "#8b95a8";
         // Truncate game name if too long
         const gameTxt = pick.game.length > 52 ? pick.game.slice(0, 49) + "..." : pick.game;
@@ -753,13 +764,13 @@ function ShareCard({ pick, onClose }) {
         ctx.fillStyle = "#b388ff";
         ctx.fillText(betTypeLabel, 36, 114);
         // BET — hero text
-        ctx.font = "800 34px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.font = "800 34px 'Syne', sans-serif";
         ctx.fillStyle = "#ffffff";
         const betTxt = pick.bet.length > 28 ? pick.bet.slice(0, 25) + "..." : pick.bet;
         ctx.fillText(betTxt, 28, 162);
         // ODDS — right aligned, colored
         const oddsColor = ((_a = pick.odds) === null || _a === void 0 ? void 0 : _a.startsWith("+")) ? "#00e676" : "#ff5252";
-        ctx.font = "900 30px monospace";
+        ctx.font = "900 30px 'IBM Plex Mono', monospace";
         ctx.fillStyle = oddsColor;
         const oddsW = ctx.measureText(pick.odds || "").width;
         ctx.fillText(pick.odds || "", W - oddsW - 28, 162);
@@ -778,10 +789,10 @@ function ShareCard({ pick, onClose }) {
         ];
         stats.forEach((s, i) => {
             const x = 28 + i * 185;
-            ctx.font = "600 10px monospace";
+            ctx.font = "600 10px 'IBM Plex Mono', monospace";
             ctx.fillStyle = "#4a5568";
             ctx.fillText(s.label, x, 206);
-            ctx.font = "800 16px monospace";
+            ctx.font = "800 16px 'IBM Plex Mono', monospace";
             ctx.fillStyle = s.color;
             ctx.fillText(s.value, x, 228);
         });
@@ -806,11 +817,11 @@ function ShareCard({ pick, onClose }) {
         ctx.lineTo(W - 28, 268);
         ctx.stroke();
         // Left: "Get free picks" CTA
-        ctx.font = "600 11px -apple-system, sans-serif";
+        ctx.font = "600 11px 'Inter', sans-serif";
         ctx.fillStyle = "#4a5568";
         ctx.fillText("Get free AI picks →", 28, 292);
         // Right: referral URL — styled to stand out subtly
-        ctx.font = "700 12px monospace";
+        ctx.font = "700 12px 'IBM Plex Mono', monospace";
         ctx.fillStyle = "#00e5ff";
         const urlW = ctx.measureText(refUrl).width;
         ctx.fillText(refUrl, W - urlW - 28, 292);
@@ -820,15 +831,15 @@ function ShareCard({ pick, onClose }) {
         ctx.roundRect(W - urlW - 36, 278, urlW + 16, 20, 4);
         ctx.fill();
         // Redraw text on top of pill
-        ctx.font = "700 12px monospace";
+        ctx.font = "700 12px 'IBM Plex Mono', monospace";
         ctx.fillStyle = "#00e5ff";
         ctx.fillText(refUrl, W - urlW - 28, 292);
         // ── Footer ────────────────────────────────────────────────────────────────
-        ctx.font = "400 10px sans-serif";
+        ctx.font = "400 10px 'Inter', sans-serif";
         ctx.fillStyle = "#1f2937";
         ctx.fillText("Not financial advice. Bet responsibly. 18+ only.", 28, 360);
         // Ref code small text (far right footer)
-        ctx.font = "600 10px monospace";
+        ctx.font = "600 10px 'IBM Plex Mono', monospace";
         ctx.fillStyle = "#1f2937";
         const refLbl = `ref: ${refCode}`;
         ctx.fillText(refLbl, W - ctx.measureText(refLbl).width - 28, 360);
@@ -872,7 +883,7 @@ function ShareCard({ pick, onClose }) {
             React.createElement("canvas", { ref: canvasRef, style: { width: "100%", borderRadius: 12, marginBottom: 12, border: "1px solid rgba(255,255,255,0.07)", display: "block" } }),
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.15)", borderRadius: 10, padding: "9px 14px", marginBottom: 14 } },
                 React.createElement("span", { style: { fontSize: 12, color: "#4a5568", flexShrink: 0 } }, "Your link:"),
-                React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: "#00e5ff", fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, fullRefUrl),
+                React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, fullRefUrl),
                 React.createElement("button", { onClick: copyLink, style: { background: copiedLink ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.08)", border: `1px solid ${copiedLink ? "#00e676" : "rgba(255,255,255,0.12)"}`, borderRadius: 7, padding: "4px 10px", color: copiedLink ? "#00e676" : "#8b95a8", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 } }, copiedLink ? "✓" : "Copy")),
             React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 } },
                 React.createElement("button", { onClick: download, style: { padding: "11px 8px", background: "linear-gradient(135deg,#006f9e,#4a0080)", border: "none", borderRadius: 12, color: "#f0f2f5", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 } },
@@ -979,7 +990,7 @@ function PaywallModal({ onClose, onUnlock }) {
                         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
                             React.createElement("span", { style: { fontSize: 15, fontWeight: 800, color: "#f0f2f5" } }, plan.name),
                             React.createElement("div", { style: { textAlign: "right" } },
-                                React.createElement("span", { style: { fontSize: 18, fontWeight: 900, color: "#00e5ff", fontFamily: "monospace" } }, getDisplayPrice(plan)),
+                                React.createElement("span", { style: { fontSize: 18, fontWeight: 900, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace" } }, getDisplayPrice(plan)),
                                 billing === "annual" && ANNUAL_PRICES[plan.id] && (React.createElement("div", { style: { fontSize: 10, color: "#00e676" } }, ANNUAL_PRICES[plan.id].note)))),
                         React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 4 } }, plan.features.slice(0, 4).map(f => (React.createElement("span", { key: f, style: { fontSize: 10, color: selected === plan.id ? "#8b95a8" : "#8b95a8" } },
                             "\u2713 ",
@@ -1013,7 +1024,7 @@ function PaywallModal({ onClose, onUnlock }) {
                     React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
                         React.createElement("span", { style: { fontSize: 16, fontWeight: 800, color: "#f0f2f5" } }, plan.name),
                         React.createElement("div", { style: { textAlign: "right" } },
-                            React.createElement("span", { style: { fontSize: 20, fontWeight: 900, color: "#00e5ff", fontFamily: "monospace" } }, getDisplayPrice(plan)),
+                            React.createElement("span", { style: { fontSize: 20, fontWeight: 900, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace" } }, getDisplayPrice(plan)),
                             billing === "annual" && ANNUAL_PRICES[plan.id] && (React.createElement("div", { style: { fontSize: 10, color: "#00e676", marginTop: 1 } }, ANNUAL_PRICES[plan.id].note)))),
                     React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, plan.features.slice(0, 4).map(f => (React.createElement("span", { key: f, style: { fontSize: 11, color: "#8b95a8" } },
                         "\u2713 ",
@@ -1067,7 +1078,7 @@ function AgentStatusTicker() {
         const t = setTimeout(() => setIdx(i => i + 1), 600);
         return () => clearTimeout(t);
     }, [idx]);
-    return (React.createElement("span", { style: { fontSize: 10, color: "#00e5ff", fontFamily: "monospace", letterSpacing: 0.3 } },
+    return (React.createElement("span", { style: { fontSize: 10, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 0.3 } },
         "Agent ",
         idx + 1,
         "/7 \u00B7 ",
@@ -1108,14 +1119,14 @@ function PickCard({ pick, onAddToParlay, inParlay, userPlan, onPaywall, onShare,
         isTopPick && React.createElement("div", { className: "top-pick-banner" },
             React.createElement("span", { style: { fontSize: 12 } }, "🏆"),
             React.createElement("span", { style: { fontSize: 10, fontWeight: 900, color: "#00e5ff", letterSpacing: 1.2, textTransform: "uppercase" } }, "Top Pick Today"),
-            React.createElement("span", { style: { marginLeft: "auto", fontSize: 9, color: "rgba(0,229,255,0.5)", fontFamily: "monospace" } }, new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}))
+            React.createElement("span", { style: { marginLeft: "auto", fontSize: 9, color: "rgba(0,229,255,0.5)", fontFamily: "'IBM Plex Mono', monospace" } }, new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}))
         ),
         React.createElement("div", { style: { padding: "14px 16px 12px" } },
             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 } },
                 React.createElement("div", { style: { flex: 1, minWidth: 0 } },
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, marginBottom: 7, flexWrap: "wrap" } },
                         React.createElement("span", { style: { fontSize: 13 } }, pick.emoji),
-                        React.createElement("span", { style: { fontSize: 9, fontWeight: 800, color: "#8b95a8", letterSpacing: 1, textTransform: "uppercase", fontFamily: "monospace" } }, pick.sport),
+                        React.createElement("span", { style: { fontSize: 9, fontWeight: 800, color: "#8b95a8", letterSpacing: 1, textTransform: "uppercase", fontFamily: "'IBM Plex Mono', monospace" } }, pick.sport),
                         pick.betType && React.createElement("span", { style: { fontSize: 9, fontWeight: 600, color: "#4a5568", textTransform: "uppercase", letterSpacing: 0.5 } }, `· ${pick.betType}`),
                         pick.rlm && React.createElement("span", { className: "badge badge-rlm" }, "RLM"),
                         pick.steam && React.createElement("span", { className: "badge badge-steam" }, "STEAM"),
@@ -1142,10 +1153,10 @@ function PickCard({ pick, onAddToParlay, inParlay, userPlan, onPaywall, onShare,
                     isLocked ? React.createElement("div", { style: { width: 52, height: 52, background: "rgba(255,255,255,0.05)", borderRadius: 12, filter: "blur(4px)" } }) :
                     React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grade-badge", style: { borderColor: `${gradeColor}40`, background: `${gradeColor}0e` } },
-                            React.createElement("span", { style: { fontSize: 18, fontWeight: 900, color: gradeColor, lineHeight: 1, fontFamily: "monospace" } }, grade),
+                            React.createElement("span", { style: { fontSize: 18, fontWeight: 900, color: gradeColor, lineHeight: 1, fontFamily: "'IBM Plex Mono', monospace" } }, grade),
                             React.createElement("span", { style: { fontSize: 7, color: `${gradeColor}80`, letterSpacing: 0.8, marginTop: 1 } }, "GRADE")
                         ),
-                        React.createElement("div", { style: { fontFamily: "monospace", fontSize: 15, fontWeight: 700, color: oddsPositive ? "#00e676" : "#f0f2f5", letterSpacing: -0.5 } }, fmtOdds(pick.odds))
+                        React.createElement("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, fontWeight: 700, color: oddsPositive ? "#00e676" : "#f0f2f5", letterSpacing: -0.5 } }, fmtOdds(pick.odds))
                     )
                 )
             ),
@@ -1211,7 +1222,7 @@ function PickCard({ pick, onAddToParlay, inParlay, userPlan, onPaywall, onShare,
                 return React.createElement("div", { style: { marginBottom: 14 } },
                     React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 7 } },
                         React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: "#4a5568", textTransform: "uppercase", letterSpacing: 0.8 } }, "Public vs Sharp"),
-                        React.createElement("span", { style: { fontFamily: "monospace", fontSize: 10, color: "#00e5ff", fontWeight: 700 } }, `${sharp}% sharp`)
+                        React.createElement("span", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#00e5ff", fontWeight: 700 } }, `${sharp}% sharp`)
                     ),
                     React.createElement("div", { style: { position: "relative", height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" } },
                         React.createElement("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: `${pub}%`, background: "rgba(255,255,255,0.1)", borderRadius: 99 } }),
@@ -1227,7 +1238,7 @@ function PickCard({ pick, onAddToParlay, inParlay, userPlan, onPaywall, onShare,
                         const odds = bookOdds(pick.odds,[0,-5,-10])[idx] || bookOdds(pick.odds,[0,-5,-10])[0];
                         return React.createElement("a", { key: key, href: b.url, target: "_blank", rel: "noopener noreferrer", className: "odds-box", style: { flex: 1, borderColor: `${b.color}30`, background: `${b.color}0a` } },
                             React.createElement("p", { style: { fontSize: 8, color: "#4a5568", fontWeight: 700, marginBottom: 3 } }, b.logo),
-                            React.createElement("p", { style: { fontFamily: "monospace", fontSize: 13, fontWeight: 900, color: b.color } }, odds)
+                            React.createElement("p", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 900, color: b.color } }, odds)
                         );
                     })
                 )
@@ -1312,7 +1323,7 @@ function PicksTab({ picks, scanning, scanStage, onScan, remainingPicks, onAddToP
                     React.createElement("span", { style: { fontSize: 12, color: "#8b95a8" } },
                         React.createElement("span", { style: { color: "#f0f2f5", fontWeight: 700 } }, "6 A-rated plays"),
                         " available now")),
-                React.createElement("span", { style: { fontSize: 11, color: "#8b95a8", fontFamily: "monospace" } },
+                React.createElement("span", { style: { fontSize: 11, color: "#8b95a8", fontFamily: "'IBM Plex Mono', monospace" } },
                     "\u21BB ",
                     h,
                     "h ",
@@ -1359,11 +1370,11 @@ function PicksTab({ picks, scanning, scanStage, onScan, remainingPicks, onAddToP
                     React.createElement("rect", { x: "17", y: "11", width: "5", height: "17", rx: "2", fill: "url(#sigE)", opacity: "0.78" }),
                     React.createElement("rect", { x: "24", y: "4", width: "5", height: "24", rx: "2", fill: "url(#sigE)" }),
                     React.createElement("polyline", { points: "1,14 5,14 7,8 10,20 13,12 16,16 19,10 22,16 25,6 29,6", fill: "none", stroke: "#00e5ff", strokeWidth: "1.3", strokeLinecap: "round", strokeLinejoin: "round", opacity: "0.6" }))),
-            React.createElement("p", { style: { fontSize: 16, fontWeight: 700, color: "#8b95a8", marginBottom: 8 } }, "Scanning for live edges..."),
+            React.createElement("p", { style: { fontSize: 16, fontWeight: 700, color: "#f0f2f5", marginBottom: 8 } }, "Ready to find edges"),
             React.createElement("p", { style: { fontSize: 13, color: "#4a5568", lineHeight: 1.6, marginBottom: 20 } },
                 "Connecting to live odds across 8 books.",
                 React.createElement("br", null),
-                "This takes 10–15 seconds on first load."),
+                "⏱ First scan may take 30–60s while servers wake."),
             React.createElement("button", { onClick: onScan, style: { padding: "12px 28px", background: "linear-gradient(135deg,#006f9e,#4a0080)", border: "none", borderRadius: 12, color: "#f0f2f5", fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "\u26A1 Scan Now"))),
         picks.length > 0 && false && (() => {
             const top = DEMO_PROPS[0];
@@ -1476,7 +1487,7 @@ function ParlayTab({ parlay, onRemove, onClear, userPlan, onPaywall }) {
                             pick.confidence,
                             "% conf"))),
                 React.createElement("div", { style: { textAlign: "right" } },
-                    React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: ((_b = pick.odds) === null || _b === void 0 ? void 0 : _b.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "monospace" } }, pick.odds)),
+                    React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: ((_b = pick.odds) === null || _b === void 0 ? void 0 : _b.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "'IBM Plex Mono', monospace" } }, pick.odds)),
                 React.createElement("button", { onClick: () => onRemove(pick.id), style: { background: "none", border: "none", cursor: "pointer", color: "#8b95a8", padding: 4 } },
                     React.createElement(SVG, { d: I.x, size: 16 }))));
         }),
@@ -1488,7 +1499,7 @@ function ParlayTab({ parlay, onRemove, onClear, userPlan, onPaywall }) {
             React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, [10, 25, 50, 100].map(v => (React.createElement("button", { key: v, onClick: () => { setStake(v); setCustomStake(""); }, style: { flex: 1, padding: "9px 0", borderRadius: 10, background: activeStake === v && !customStake ? "linear-gradient(135deg,#006f9e,#4a0080)" : "rgba(255,255,255,0.06)", border: activeStake === v && !customStake ? "none" : "1px solid rgba(255,255,255,0.09)", color: "#f0f2f5", fontWeight: 700, fontSize: 13, cursor: "pointer" } },
                 "$",
                 v)))),
-            React.createElement("input", { type: "number", value: customStake, onChange: e => setCustomStake(e.target.value), placeholder: "Custom amount...", style: { width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", color: "#f0f2f5", fontSize: 14, fontFamily: "monospace" } })),
+            React.createElement("input", { type: "number", value: customStake, onChange: e => setCustomStake(e.target.value), placeholder: "Custom amount...", style: { width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", color: "#f0f2f5", fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" } })),
         React.createElement("div", { style: { background: "linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1))", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 16, padding: "20px", marginBottom: 14, textAlign: "center" } },
             React.createElement("p", { style: { fontSize: 12, color: "#8b95a8", marginBottom: 4 } }, "Potential Payout"),
             React.createElement("p", { style: { fontSize: 40, fontWeight: 900, color: "#00e5ff", letterSpacing: -1, lineHeight: 1 } },
@@ -1683,11 +1694,11 @@ function TrackerTab() {
                     React.createElement("div", { style: { textAlign: "right" } },
                         React.createElement("button", { onClick: () => remove(bet.id), style: { background: "none", border: "none", cursor: "pointer", color: "#4a5568", marginBottom: 6, display: "block", marginLeft: "auto" } },
                             React.createElement(SVG, { d: I.x, size: 14 })),
-                        React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: ((_a = bet.odds) === null || _a === void 0 ? void 0 : _a.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "monospace" } }, bet.odds),
+                        React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: ((_a = bet.odds) === null || _a === void 0 ? void 0 : _a.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "'IBM Plex Mono', monospace" } }, bet.odds),
                         React.createElement("div", { style: { fontSize: 12, color: "#8b95a8" } },
                             "$",
                             bet.stake),
-                        bet.outcome !== "pending" && (React.createElement("div", { style: { fontSize: 13, fontWeight: 900, color: ret >= 0 ? "#00e676" : "#ff5252", marginTop: 4, fontFamily: "monospace" } },
+                        bet.outcome !== "pending" && (React.createElement("div", { style: { fontSize: 13, fontWeight: 900, color: ret >= 0 ? "#00e676" : "#ff5252", marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" } },
                             ret >= 0 ? "+" : "",
                             "$",
                             Math.abs(ret).toFixed(0)))))));
@@ -1796,7 +1807,7 @@ function EvFinderView({ data, loading, userPlan, onPaywall }) {
                     React.createElement("p", { style: { fontSize: 13, fontWeight: 800, color: "#00e5ff", marginTop: 2 } }, item.bet)),
                 React.createElement("div", { style: { background: `${evColor}18`, border: `1px solid ${evColor}40`, borderRadius: 10, padding: "6px 10px", textAlign: "center", flexShrink: 0 } },
                     React.createElement("p", { style: { fontSize: 9, color: evColor, fontWeight: 700, letterSpacing: 0.5 } }, "EV"),
-                    React.createElement("p", { style: { fontSize: 18, fontWeight: 900, color: evColor, fontFamily: "monospace" } },
+                    React.createElement("p", { style: { fontSize: 18, fontWeight: 900, color: evColor, fontFamily: "'IBM Plex Mono', monospace" } },
                         "+",
                         item.ev,
                         "%"))),
@@ -1807,7 +1818,7 @@ function EvFinderView({ data, loading, userPlan, onPaywall }) {
                 { label: "Kelly %", value: `${item.kelly}%` },
             ].map(({ label, value }) => (React.createElement("div", { key: label, style: { background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: "6px 8px", textAlign: "center" } },
                 React.createElement("p", { style: { fontSize: 9, color: "#8b95a8", marginBottom: 2 } }, label),
-                React.createElement("p", { style: { fontSize: 12, fontWeight: 700, color: "#f0f2f5", fontFamily: "monospace" } }, value))))),
+                React.createElement("p", { style: { fontSize: 12, fontWeight: 700, color: "#f0f2f5", fontFamily: "'IBM Plex Mono', monospace" } }, value))))),
             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
                 React.createElement("span", { style: { fontSize: 11, background: "#6366f118", border: "1px solid #6366f140", borderRadius: 99, padding: "3px 10px", color: "#a5b4fc", fontWeight: 600 } }, item.tag),
                 React.createElement("a", { href: ((_a = AFFILIATES[item.sbookKey]) === null || _a === void 0 ? void 0 : _a.url) || "#", target: "_blank", rel: "noopener noreferrer", style: { fontSize: 12, fontWeight: 700, background: `${item.sbookColor}18`, border: `1px solid ${item.sbookColor}40`, borderRadius: 8, padding: "5px 12px", color: item.sbookColor, textDecoration: "none" } },
@@ -1857,7 +1868,7 @@ function PlayerPropsView({ data, loading, userPlan, onPaywall, onAddToParlay, pa
                         item.line)),
                 React.createElement("div", { style: { textAlign: "right" } },
                     React.createElement("p", { style: { fontSize: 11, color: "#8b95a8" } }, "Odds"),
-                    React.createElement("p", { style: { fontSize: 16, fontWeight: 800, color: "#00e5ff", fontFamily: "monospace" } }, item.odds))),
+                    React.createElement("p", { style: { fontSize: 16, fontWeight: 800, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace" } }, item.odds))),
             React.createElement("div", { style: { marginBottom: 12 } },
                 React.createElement("p", { style: { fontSize: 10, fontWeight: 700, color: "#8b95a8", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 } },
                     "Last 5 Results vs ",
@@ -1935,7 +1946,7 @@ function ArbMiddleView({ data, loading, userPlan, onPaywall }) {
                         React.createElement("span", { style: { fontSize: 11, fontWeight: 800, background: `${typeColor}18`, border: `1px solid ${typeColor}40`, borderRadius: 6, padding: "3px 8px", color: typeColor } }, typeLabel),
                         React.createElement("div", { style: { textAlign: "right" } },
                             React.createElement("p", { style: { fontSize: 10, color: "#8b95a8" } }, "Profit"),
-                            React.createElement("p", { style: { fontSize: 16, fontWeight: 900, color: profitColor, fontFamily: "monospace" } },
+                            React.createElement("p", { style: { fontSize: 16, fontWeight: 900, color: profitColor, fontFamily: "'IBM Plex Mono', monospace" } },
                                 "+",
                                 item.profit,
                                 "%")))),
@@ -1948,7 +1959,7 @@ function ArbMiddleView({ data, loading, userPlan, onPaywall }) {
                             l.book),
                         React.createElement("p", { style: { fontSize: 13, fontWeight: 700, color: "#f0f2f5" } }, l.bet)),
                     React.createElement("div", { style: { textAlign: "right" } },
-                        React.createElement("p", { style: { fontSize: 14, fontWeight: 800, color: l.color, fontFamily: "monospace" } }, l.odds),
+                        React.createElement("p", { style: { fontSize: 14, fontWeight: 800, color: l.color, fontFamily: "'IBM Plex Mono', monospace" } }, l.odds),
                         React.createElement("p", { style: { fontSize: 10, color: "#8b95a8" } },
                             "$",
                             stake.toFixed(0),
@@ -2336,7 +2347,7 @@ function BankrollCalcScreen({ onBack }) {
                 { label: "Odds (American)", val: odds, set: setOdds, ph: "e.g. -110 or +150", type: "text" },
             ].map(({ label, val, set, ph, type }) => (React.createElement("div", { key: label, style: { marginBottom: 14 } },
                 React.createElement("p", { style: { fontSize: 12, color: "#8b95a8", fontWeight: 600, marginBottom: 6 } }, label),
-                React.createElement("input", { type: type, value: val, onChange: e => set(e.target.value), placeholder: ph, style: { width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px 14px", color: "#f0f2f5", fontSize: 15, fontFamily: "monospace" } })))),
+                React.createElement("input", { type: type, value: val, onChange: e => set(e.target.value), placeholder: ph, style: { width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px 14px", color: "#f0f2f5", fontSize: 15, fontFamily: "'IBM Plex Mono', monospace" } })))),
             React.createElement("div", { style: { background: r.edgeExists ? "rgba(34,211,238,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${r.edgeExists ? "rgba(34,211,238,0.25)" : "rgba(248,113,113,0.25)"}`, borderRadius: 14, padding: "14px 16px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" } },
                 React.createElement("div", null,
                     React.createElement("p", { style: { fontSize: 11, color: "#8b95a8", marginBottom: 2 } }, "Expected Value"),
@@ -2359,7 +2370,7 @@ function BankrollCalcScreen({ onBack }) {
                     React.createElement("p", { style: { fontSize: 14, fontWeight: 800, color: "#f0f2f5" } }, label),
                     React.createElement("p", { style: { fontSize: 11, color: "#8b95a8", marginTop: 2 } }, note)),
                 React.createElement("div", { style: { textAlign: "right" } },
-                    React.createElement("p", { style: { fontSize: 20, fontWeight: 900, color, fontFamily: "monospace" } },
+                    React.createElement("p", { style: { fontSize: 20, fontWeight: 900, color, fontFamily: "'IBM Plex Mono', monospace" } },
                         "$",
                         amt),
                     React.createElement("p", { style: { fontSize: 11, color: "#8b95a8" } },
@@ -2490,7 +2501,7 @@ function ReferralScreen({ onBack, user }) {
             React.createElement("p", { style: { fontSize: 11, fontWeight: 700, color: "#8b95a8", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 } }, "Your Referral Link"),
             React.createElement("div", { style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "14px 16px", marginBottom: 10 } },
                 React.createElement("p", { style: { fontSize: 10, color: "#8b95a8", marginBottom: 4 } }, "REFERRAL CODE"),
-                React.createElement("p", { style: { fontSize: 22, fontWeight: 900, color: "#00e5ff", fontFamily: "monospace", letterSpacing: 3 } }, referralCode)),
+                React.createElement("p", { style: { fontSize: 22, fontWeight: 900, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 3 } }, referralCode)),
             React.createElement("div", { style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 } },
                 React.createElement("p", { style: { flex: 1, fontSize: 11, color: "#8b95a8", wordBreak: "break-all", lineHeight: 1.5 } }, referralLink),
                 React.createElement("button", { onClick: copy, style: { background: copied ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.08)", border: `1px solid ${copied ? "#00e676" : "rgba(255,255,255,0.12)"}`, borderRadius: 8, padding: "7px 12px", color: copied ? "#00e676" : "#f0f2f5", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 } }, copied ? "✓ Copied" : "Copy")),
@@ -3331,7 +3342,7 @@ function OnboardingCarousel({ onDone }) {
             ].map((e, i) => (React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 10, padding: "10px 14px", background: `${e.color}08`, border: `1px solid ${e.color}20`, borderRadius: 12, animation: `fadein 0.3s ease ${i * 0.08}s both` } },
                 React.createElement("div", { style: { flex: "0 0 90px" } },
                     React.createElement("p", { style: { fontSize: 10, color: "#8b95a8", marginBottom: 2 } }, e.label),
-                    React.createElement("p", { style: { fontSize: 18, fontWeight: 900, color: e.color, fontFamily: "monospace" } },
+                    React.createElement("p", { style: { fontSize: 18, fontWeight: 900, color: e.color, fontFamily: "'IBM Plex Mono', monospace" } },
                         e.edge > 0 ? "+" : "",
                         e.edge,
                         "%")),
@@ -3572,15 +3583,41 @@ function Page() {
         }
         setScanning(true);
         setScanStage("waking");
-        // Pre-ping /health to wake Render from sleep before the real scan call
-        try { await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(5000) }); } catch(_) {}
-        const stageTimer1 = setTimeout(() => setScanStage("scanning"), 2500);
-        const stageTimer2 = setTimeout(() => setScanStage("analyzing"), 6000);
-        try {
+        const stageTimer1 = setTimeout(() => setScanStage("scanning"), 8000);
+        const stageTimer2 = setTimeout(() => setScanStage("analyzing"), 20000);
+        // Helper to attempt one scan fetch
+        const attemptScan = async (timeoutMs) => {
             const controller = new AbortController();
-            const t = setTimeout(() => controller.abort(), 45000); // 45s — allows for Render cold start
-            const userId = getUserEmail() || "";
-            const res = await fetch(`${BACKEND}/scan`, { method: "GET", signal: controller.signal, headers: { "X-API-Key": BACKEND_API_KEY, "X-User-Id": userId } });
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const userId = getUserEmail() || "";
+                const res = await fetch(`${BACKEND}/scan`, { method: "GET", signal: controller.signal, headers: { "X-API-Key": BACKEND_API_KEY, "X-User-Id": userId } });
+                clearTimeout(t);
+                return res;
+            } catch(e) {
+                clearTimeout(t);
+                throw e;
+            }
+        };
+        let res;
+        try {
+            // First attempt — 70s
+            res = await attemptScan(70000);
+        } catch(firstErr) {
+            // If timeout on first try, show warming message and retry once
+            if (firstErr.name === "AbortError") {
+                showToast("⏳ Backend is warming up — retrying...", "info", 5000);
+                setScanStage("waking");
+                try {
+                    res = await attemptScan(60000);
+                } catch(retryErr) {
+                    throw retryErr;
+                }
+            } else {
+                throw firstErr;
+            }
+        }
+        try {
             clearTimeout(t);
             clearTimeout(stageTimer1);
             clearTimeout(stageTimer2);
@@ -3621,14 +3658,35 @@ function Page() {
             localStorage.setItem("algobets_lastScan", JSON.stringify({ picks, timestamp: Date.now(), live: true, v: 2 }));
         }
         catch (err) {
-            console.warn("Scan failed:", err.message);
-            setPicks([]);
+            const isTimeout = err.name === "AbortError";
+            const isCors = err.message && err.message.includes("Failed to fetch");
+            console.error("[AlgoBets] Scan failed:", {
+                error: err.message,
+                type: isTimeout ? "TIMEOUT (>65s)" : isCors ? "CORS/NETWORK" : "OTHER",
+                backend: BACKEND,
+                tip: isTimeout ? "Backend is taking too long — check Render dashboard for crashes" : isCors ? "CORS or network issue — check Render CORS config and that backend is running" : "Unexpected error — see stack trace below",
+            });
+            console.error(err);
+            // Try to restore last cached scan so UI isn't empty
+            try {
+                const cached = JSON.parse(localStorage.getItem("algobets_lastScan") || "null");
+                if (cached && cached.picks && cached.picks.length > 0) {
+                    setPicks(cached.picks.map((p, i) => ({ ...p, affiliateBoost: getPickAffiliate(p, i) })));
+                    showToast("⚠️ Backend unreachable — showing last cached picks.", "error", 7000);
+                } else {
+                    setPicks([]);
+                    showToast("⚠️ Live data unavailable — backend is offline. Try again shortly.", "error", 7000);
+                }
+            } catch(_) {
+                setPicks([]);
+                showToast("⚠️ Live data unavailable — backend is offline. Try again shortly.", "error", 7000);
+            }
             setScanTimestamp(null);
             setBackendAlive(false);
-            showToast("⚠️ Live data unavailable — backend is offline. Try again shortly.", "error", 7000);
         }
         setScanStage(null);
-        if (userPlan === "free") {
+        // Only decrement picks counter on successful live scans, not failures
+        if (userPlan === "free" && backendAlive !== false) {
             const newRem = Math.max(0, remainingPicks - 1);
             setRemainingPicks(newRem);
             localStorage.setItem("algobets_remainingPicks", newRem.toString());
@@ -4065,16 +4123,16 @@ function Page() {
                     React.createElement("div", { style: { flex: 1, minWidth: 0 } },
                         React.createElement("p", { style: { fontSize: 12, fontWeight: 700, color: "#f0f2f5", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.bet),
                         React.createElement("p", { style: { fontSize: 10, color: "#8b95a8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.game)),
-                    React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: ((_a = p.odds) === null || _a === void 0 ? void 0 : _a.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "monospace", flexShrink: 0 } }, p.odds),
+                    React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: ((_a = p.odds) === null || _a === void 0 ? void 0 : _a.startsWith("+")) ? "#00e676" : "#ff5252", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 } }, p.odds),
                     React.createElement("button", { onClick: () => setParlay(pl => pl.filter(x => x.id !== p.id)), style: { background: "none", border: "none", cursor: "pointer", color: "#4a5568", padding: 2, flexShrink: 0 } }, "\u2715")));
             })),
             React.createElement("div", { style: { background: "linear-gradient(135deg,rgba(8,145,178,0.1),rgba(124,58,237,0.1))", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 } },
                 React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } },
                     React.createElement("span", { style: { fontSize: 11, color: "#8b95a8" } }, "Combined Odds"),
-                    React.createElement("span", { style: { fontSize: 16, fontWeight: 900, color: "#00e5ff", fontFamily: "monospace" } }, combinedAmerican)),
+                    React.createElement("span", { style: { fontSize: 16, fontWeight: 900, color: "#00e5ff", fontFamily: "'IBM Plex Mono', monospace" } }, combinedAmerican)),
                 React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } },
                     React.createElement("span", { style: { fontSize: 11, color: "#8b95a8" } }, "Decimal"),
-                    React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#8b95a8", fontFamily: "monospace" } },
+                    React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#8b95a8", fontFamily: "'IBM Plex Mono', monospace" } },
                         combinedDec.toFixed(2),
                         "x"))),
             React.createElement("button", { onClick: () => setActiveTab("parlay"), style: { width: "100%", padding: "11px", background: "linear-gradient(135deg,#006f9e,#4a0080)", border: "none", borderRadius: 10, color: "#f0f2f5", fontWeight: 700, fontSize: 13, cursor: "pointer" } }, "Build Parlay \u2192")));
