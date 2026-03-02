@@ -69,7 +69,6 @@ from pydantic import BaseModel
 ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
 STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
 BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 
@@ -612,12 +611,17 @@ app = FastAPI(title="Algobets Ai API", version="5.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-_ALLOWED_ORIGINS = [o.strip() for o in os.getenv(
-    "ALLOWED_ORIGINS",
-    "https://algobets.app,https://algobets.ai,https://edgebet.app"
-).split(",") if o.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=_ALLOWED_ORIGINS,
-                   allow_methods=["GET","POST"], allow_headers=["*"])
+# CORS: allow all origins — the API key in headers is the real auth layer.
+# Locking down origins causes "live data unavailable" when the frontend is
+# served from any domain not in the list (local file, Netlify, Vercel, etc.)
+_cors_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+if _cors_origins_env == "*":
+    app.add_middleware(CORSMiddleware, allow_origins=["*"],
+                       allow_methods=["GET", "POST"], allow_headers=["*"])
+else:
+    _allowed_list = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
+    app.add_middleware(CORSMiddleware, allow_origins=_allowed_list,
+                       allow_methods=["GET", "POST"], allow_headers=["*"])
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SQLite — Pick Logging + ROI Tracking
@@ -2684,6 +2688,11 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+@app.get("/ping")
+async def ping():
+    """Ultra-lightweight wake-up endpoint — no DB, no processing."""
+    return {"ok": True}
 
 
 @app.get("/api/elo-ratings")
