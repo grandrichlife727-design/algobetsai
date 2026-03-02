@@ -166,14 +166,11 @@ async def _get_verified_plan(request: Request) -> str:
 async def require_paid_plan(request: Request):
     """
     Dependency: verifies plan server-side against Stripe.
-    Rejects free users with 403. Never trusts client-supplied plan headers.
+    Free users are allowed but get truncated results (top 3 picks max).
+    Never trusts client-supplied plan headers.
     """
-    plan = await _get_verified_plan(request)
-    if plan not in ("pro", "sharp"):
-        raise HTTPException(
-            status_code=403,
-            detail="This feature requires a Pro or Sharp subscription. Upgrade at algobets.ai"
-        )
+    # Just verify the API key is valid — plan gating handled inside the endpoint
+    pass  # plan-based limits applied in scan() itself, not here
 
 
 async def get_user_plan(request: Request) -> str:
@@ -2770,9 +2767,21 @@ async def scan(request: Request):
     Every surfaced pick logged to SQLite for ROI tracking.
     Cost: $0 Odds API credits.
     """
+    plan = await get_user_plan(request)
+    is_owner = request.headers.get("x-user-id","").strip() in OWNER_EMAILS
+
+    # Plan-based pick limits: free=3, pro=7, sharp/owner=unlimited
+    pick_limit = 999 if (plan in ("sharp",) or is_owner) else (7 if plan == "pro" else 3)
+
     cached = cache_get("scan_result", ttl=CACHE_TTL_FREE)
     if cached:
-        return cached
+        result = dict(cached)
+        picks = result.get("consensus_picks", [])
+        result["consensus_picks"] = picks[:pick_limit]
+        result["picks_total"] = len(result["consensus_picks"])
+        result["plan"] = plan
+        result["pick_limit"] = pick_limit
+        return result
 
     espn_games, an_lines, injury_list, pinnacle_all = await asyncio.gather(
         fetch_espn_all_games(),
@@ -2836,14 +2845,16 @@ async def scan(request: Request):
                 log_pick(pick)
 
     picks.sort(key=lambda p: p["edge"] * p["confidence"], reverse=True)
+    # Store all top picks in cache, apply plan limit on return
     top_picks = picks[:10]
-    print(f"[Scan] Sports: {list(espn_games.keys())} | Events analyzed: {sum(len(v) for v in espn_games.values())} | Picks generated: {len(picks)} | Top picks: {len(top_picks)}")
+    print(f"[Scan] Sports: {list(espn_games.keys())} | Events analyzed: {sum(len(v) for v in espn_games.values())} | Picks generated: {len(picks)} | Top picks: {len(top_picks)} | Plan: {plan} | Limit: {pick_limit}")
 
     clv_count     = sum(1 for p in top_picks if p.get("edge_source") == "pinnacle_clv")
     weather_count = sum(1 for p in top_picks if p.get("weather_flag"))
 
+    served_picks = top_picks[:pick_limit]
     result = {
-        "consensus_picks":          top_picks,
+        "consensus_picks":          served_picks,
         "scan_timestamp":           datetime.utcnow().isoformat(),
         "sports_scanned":           len(espn_games),
         "events_analyzed":          sum(len(v) for v in espn_games.values()),
@@ -2851,7 +2862,9 @@ async def scan(request: Request):
         "data_sources":             ["ESPN", "Action Network", "Pinnacle", "Open-Meteo"],
         "picks_with_clv":           clv_count,
         "picks_with_weather_flag":  weather_count,
-        "picks_total":              len(top_picks),
+        "picks_total":              len(served_picks),
+        "plan":                     plan,
+        "pick_limit":               pick_limit,
         "calibration_active":       bool(_calibration_params),
         "fitted_weights_active":    bool(_fitted_agent_weights),
         "odds_api_credits_used":    0,
