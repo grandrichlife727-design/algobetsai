@@ -130,11 +130,21 @@ const BACKEND_API_KEY = "c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa
 console.info("[AlgoBets] Backend:", BACKEND);
 // Wake Render from sleep on page load (cold starts take 50-60s)
 (async () => {
+  console.info("[AlgoBets] Waking backend at:", BACKEND);
   try {
-    const r = await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(65000) });
-    console.info("[AlgoBets] /health →", r.status, r.ok ? "✅ Backend alive" : "⚠️ Bad status");
+    // /ping is ultra-lightweight (no DB hit) — use it for wake-up
+    const r = await fetch(`${BACKEND}/ping`, { signal: AbortSignal.timeout(65000) });
+    if (r.ok) {
+      console.info("[AlgoBets] ✅ Backend alive");
+    } else {
+      // Fallback to /health
+      const r2 = await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(10000) });
+      console.info("[AlgoBets] /health →", r2.status, r2.ok ? "✅" : "⚠️ Bad status");
+    }
   } catch(e) {
-    console.error("[AlgoBets] /health failed →", e.message);
+    console.error("[AlgoBets] ❌ Backend unreachable:", e.message);
+    console.error("Possible causes: (1) Render service is down, (2) CORS blocked, (3) API key mismatch");
+    console.error("Check: https://dashboard.render.com → your service → Logs");
   }
 })();
 // ─── OAUTH CONFIG ─────────────────────────────────────────────────────────────
