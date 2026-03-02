@@ -184,7 +184,7 @@ async def get_user_plan(request: Request) -> str:
 
 # ─── Cache TTLs ───────────────────────────────────────────────────────────────
 CACHE_TTL          = 1800   # 30 min — Odds API (EV/arb) — keeps lines fresh
-CACHE_TTL_FREE     = 1800   # 30 min — ESPN / Action Network
+CACHE_TTL_FREE     = 480    # 8 min — ESPN / Action Network (short so game states stay fresh)
 CACHE_TTL_PINNACLE = 1800   # 30 min — Pinnacle lines (free but rate-limit cautious)
 CACHE_TTL_INJURIES = 900    # 15 min — injuries
 CACHE_TTL_PROPS    = 3600   # 1 hr   — player props
@@ -515,78 +515,84 @@ def pinnacle_devig(prices: list[int]) -> list[float]:
 # ─── v5: Ensemble confidence scorer ───────────────────────────────────────────
 def ensemble_confidence_score(signals: dict) -> int:
     """
-    Combines multiple weak signals into a calibrated confidence score.
-    Uses a weighted ensemble approach similar to gradient boosting.
+    Calibrated confidence scorer based on signal quality and availability.
     
-    Signals dict expected keys:
-      clv_edge, sharp_pct, public_pct, line_move_pts, elo_edge,
-      rest_advantage, steam_velocity, injury_impact, weather_adj,
-      agent_agreement, kelly_units
+    Key design principles:
+    1. CLV vs Pinnacle is the ONLY reliable edge signal — weight it heavily
+    2. Sharp money data must be real (from Action Network), not estimated
+    3. Be skeptical by default — a pick with only CLV and no confirmation
+       should score modestly, not confidently
+    4. Diminishing returns: stacking weak signals doesn't multiply edge
     
-    Returns integer confidence 50-95.
+    Returns integer confidence 52-88 (never extreme — honesty is key).
     """
-    score = 50.0  # baseline
-    
-    # CLV edge is the primary signal (gold standard)
-    clv = signals.get("clv_edge", 0) or 0
-    if clv >= 8:   score += 18
-    elif clv >= 6: score += 14
-    elif clv >= 4: score += 10
-    elif clv >= 2: score += 6
-    elif clv >= 0: score += 2
-    # else: negative CLV suppresses
-    
-    # Sharp money (secondary signal, high weight)
-    sharp = signals.get("sharp_pct", 50) or 50
-    if sharp >= 75:  score += 12
-    elif sharp >= 65: score += 8
-    elif sharp >= 55: score += 4
-    
-    # Reverse line movement bonus
-    pub = signals.get("public_pct", 50) or 50
-    rlm = pub < 40 and sharp > 60
-    if rlm: score += 7
-    
-    # Steam move (high confidence signal)
-    steam_vel = signals.get("steam_velocity", 0) or 0
-    if steam_vel > 0.7: score += 8
-    elif steam_vel > 0.4: score += 4
-    
-    # Favorable line movement
+    clv       = signals.get("clv_edge", 0) or 0
+    sharp     = signals.get("sharp_pct", 50) or 50
+    pub       = signals.get("public_pct", 50) or 50
     line_move = signals.get("line_move_pts", 0) or 0
-    if line_move > 1.5:   score += 7
-    elif line_move > 0.5: score += 4
-    
-    # Elo edge
-    elo = signals.get("elo_edge", 0) or 0
-    if elo >= 5:    score += 6
-    elif elo >= 3:  score += 3
-    elif elo >= 1:  score += 1
-    elif elo < -2:  score -= 4
-    
-    # Rest advantage
-    rest = signals.get("rest_advantage", 0) or 0
-    score += rest * 1.5  # ±5 pts max
-    
-    # Agent agreement multiplier
-    agreement = signals.get("agent_agreement", 0.5) or 0.5
-    score += (agreement - 0.5) * 12  # ±6 pts
-    
-    # Kelly criterion signal
-    kelly_u = signals.get("kelly_units", 0) or 0
-    if kelly_u >= 2: score += 4
-    elif kelly_u >= 1: score += 2
-    
-    # Injury penalty
-    injury = signals.get("injury_impact", 0) or 0
-    score -= injury * 8  # high impact injury = -8 pts
-    
-    # Weather penalty (for totals)
+    elo       = signals.get("elo_edge", 0) or 0
+    steam_vel = signals.get("steam_velocity", 0) or 0
+    injury    = signals.get("injury_impact", 0) or 0
     weather_adj = signals.get("weather_adj", 0) or 0
-    score += weather_adj  # already negative for bad weather
+    agreement = signals.get("agent_agreement", 0.5) or 0.5
+    kelly_u   = signals.get("kelly_units", 0) or 0
+    has_live_data = signals.get("has_live_data", False)  # True if AN data is real
+
+    # ── PRIMARY SIGNAL: CLV Edge ──────────────────────────────────────────────
+    # This is the only signal with demonstrated predictive validity.
+    # Without Pinnacle data, we are essentially guessing.
+    if clv >= 7:    clv_pts = 22
+    elif clv >= 5:  clv_pts = 16
+    elif clv >= 3:  clv_pts = 10
+    elif clv >= 2:  clv_pts = 6
+    elif clv > 0:   clv_pts = 2
+    else:           clv_pts = -5   # negative CLV is a bad sign
     
-    # Clamp
-    return min(95, max(50, int(round(score))))
+    # Baseline: 52 + CLV contribution
+    score = 52.0 + clv_pts
+
+    # ── SECONDARY SIGNAL: Sharp Money (only valuable if real data) ────────────
+    if has_live_data:
+        rlm = pub < 38 and sharp > 62  # genuine reverse line move
+        steam = sharp > 72 and steam_vel > 0.5  # steam confirmed by velocity
+        
+        if steam:            score += 10   # strong confirmation
+        elif rlm:            score += 7    # public vs sharp divergence
+        elif sharp >= 65:    score += 4    
+        elif sharp >= 58:    score += 2    
+        elif sharp < 35:     score -= 3    # sharp fading our side
+    else:
+        # No real data — estimated 50/50 adds nothing, slight penalty for uncertainty
+        score -= 2
+
+    # ── TERTIARY: Line movement confirmation ──────────────────────────────────
+    # Only meaningful if >= 1 full point and in our direction
+    if line_move >= 2.0:    score += 6    # strong confirmation
+    elif line_move >= 1.0:  score += 3    
+    elif line_move >= 0.5:  score += 1    
+
+    # ── SUPPORTING: Elo model agreement ──────────────────────────────────────
+    # Elo is a very rough independent signal — treat it as weak confirmation only
+    if elo >= 6:      score += 4
+    elif elo >= 3:    score += 2
+    elif elo < -3:    score -= 3   # Elo strongly disagrees
+
+    # ── PENALTIES: Injury and weather ─────────────────────────────────────────
+    score -= injury * 10      # high impact = -10 pts
+    score += weather_adj      # already negative for adverse conditions
+
+    # ── KELLY SIZE CONFIRMATION ────────────────────────────────────────────────
+    # Large Kelly suggests edge is real, small Kelly suggests noise
+    if kelly_u >= 2.5: score += 3
+    elif kelly_u >= 1: score += 1
+    elif kelly_u < 0.3: score -= 2  # Kelly says don't bet
+
+    # ── AGENT AGREEMENT ────────────────────────────────────────────────────────
+    # More agents firing = more signal convergence (but only +/- small amount)
+    score += (agreement - 0.5) * 8   # max ±4 pts
+
+    # Clamp to honest range — never claim >88% confidence without extraordinary evidence
+    return min(88, max(52, int(round(score))))
 
 
 _fitted_agent_weights: dict = {}
@@ -1509,7 +1515,32 @@ async def fetch_espn_games(sport_slug: str) -> list:
                     ]})
             bookmakers = [{"key": "espn_consensus", "title": "ESPN Consensus", "markets": markets}]
 
-            status = comp.get("status", {}).get("type", {})
+            status     = comp.get("status", {}).get("type", {})
+            state      = status.get("state", "pre")
+            completed  = status.get("completed", False)
+
+            # Skip finished games (state=post or completed=True)
+            if state == "post" or completed:
+                continue
+
+            # Skip games that have already started (state=in means live)
+            # We only want pre-game picks with open lines
+            if state == "in":
+                continue
+
+            # Double-check by commence_time — skip anything that started > 5 min ago
+            # (handles edge cases where state hasn't updated yet)
+            game_date = game.get("date", "")
+            if game_date:
+                try:
+                    from datetime import timezone
+                    gdt = datetime.fromisoformat(game_date.replace("Z", "+00:00"))
+                    now_aware = datetime.now(timezone.utc)
+                    if gdt < now_aware - timedelta(minutes=5):
+                        continue
+                except Exception:
+                    pass
+
             events.append({
                 "id":          game.get("id", ""),
                 "sport_slug":  sport_slug,
@@ -1518,7 +1549,7 @@ async def fetch_espn_games(sport_slug: str) -> list:
                 "home_abbr":   home.get("team", {}).get("abbreviation", ""),
                 "away_abbr":   away.get("team", {}).get("abbreviation", ""),
                 "commence_time": game.get("date", ""),
-                "state":       status.get("state", "pre"),
+                "state":       state,
                 "bookmakers":  bookmakers,
                 "espn_spread": spread,
                 "espn_total":  over_under,
@@ -2055,8 +2086,14 @@ def agent_value(market_prob: float, fair_prob: float,
         edge = (fair_prob - market_prob) * 100
         source = "vig_removal"
 
-    grade = ("A+" if edge >= 8 else "A" if edge >= 6 else "B+" if edge >= 4 else
-             "B"  if edge >= 2 else "C" if edge >= 0 else "F")
+    # Grade based on CLV edge (CLV-based grades are reliable; vig-removal grades are indicative only)
+    if pinnacle_clv is not None:
+        grade = ("A+" if edge >= 7 else "A" if edge >= 5 else "B+" if edge >= 3.5 else
+                 "B"  if edge >= 2.5 else "C+" if edge >= 1.5 else "C" if edge >= 0 else "F")
+    else:
+        # Vig-removal edges inflate — apply harsher grade curve
+        grade = ("B+" if edge >= 6 else "B" if edge >= 4 else "C+" if edge >= 2 else
+                 "C"  if edge >= 0 else "F")
     return {
         "grade": grade, "edge_pct": round(edge, 2),
         "label": f"Value: {grade}",
@@ -2221,15 +2258,17 @@ def agent_kelly(edge_pct: float, odds: int) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_veto_checks(a2: dict, a3: dict, a4: dict,
-                    best_edge: float, bet_side: str) -> tuple[bool, list]:
+                    best_edge: float, bet_side: str,
+                    edge_source: str = "vig_removal") -> tuple[bool, list]:
     """
     Returns (veto_triggered: bool, reasons: list[str]).
 
-    Veto conditions — any one of these kills the pick:
-      V1 (Injury):    key player is OUT on the bet side           [Agent 4]
-      V2 (Line):      line moved ≥2 pts AGAINST us                [Agent 2]
-      V3 (Public trap): >65% public + sharp handle <40%           [Agent 3]
-      V4 (No edge):   CLV/edge < 0 even after all signals         [Agent 1 proxy]
+    Veto conditions:
+      V1 (Injury):     key player is OUT on the bet side           [Agent 4]
+      V2 (Line):       line moved ≥1.5 pts AGAINST us              [Agent 2]
+      V3 (Public trap): >70% public + sharp handle <35%            [Agent 3]
+      V4 (No edge):    negative or near-zero effective edge        [Agent 1]
+      V5 (Data quality): no Pinnacle + no real sharp data = skip   [Quality gate]
     """
     reasons = []
 
@@ -2237,20 +2276,27 @@ def run_veto_checks(a2: dict, a3: dict, a4: dict,
     if a4.get("veto"):
         reasons.append(f"V1-Injury: {a4['veto_reason']}")
 
-    # V2 — Line moved hard against us (market is telling us we're wrong)
+    # V2 — Line moved against us (market correcting our pick)
     diff = a2.get("diff", 0)
-    if not a2.get("favorable") and abs(diff) >= 2.0:
+    if not a2.get("favorable") and abs(diff) >= 1.5:
         reasons.append(f"V2-LineMove: moved {diff:+.1f}pts against bet side")
 
-    # V3 — Public trap: heavy public action with low sharp interest
+    # V3 — Public trap: everyone piling on, sharps absent
     pub  = a3.get("public_pct", 50)
     shrp = a3.get("sharp_pct", 50)
-    if pub > 75 and shrp < 30:
+    if pub > 70 and shrp < 35:
         reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
 
-    # V4 — Edge too thin (below minimum threshold after signal weighting)
-    if best_edge < 0.5:
-        reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.5% minimum")
+    # V4 — Effective edge below threshold
+    if best_edge < 0:
+        reasons.append(f"V4-NegativeEdge: edge {best_edge:.1f}% is negative")
+
+    # V5 — Data quality gate: if we have neither Pinnacle CLV nor real sharp data,
+    # the pick is essentially random — veto it to avoid noise
+    has_pinnacle = edge_source == "pinnacle_clv"
+    has_real_sharp = a3.get("source") == "live"
+    if not has_pinnacle and not has_real_sharp:
+        reasons.append("V5-NoData: no Pinnacle CLV and no real sharp data available")
 
     return len(reasons) > 0, reasons
 
@@ -2301,6 +2347,10 @@ def build_consensus_pick(event: dict, sport_key: str,
     best_edge = -999
     best_pick = None
 
+    # Pre-extract sharp/public data for edge quality scoring
+    an_sharp_pct  = (an_game.get("sharp_pct", 50) or 50) if an_game else 50
+    an_public_pct = (an_game.get("public_pct", 50) or 50) if an_game else 50
+
     if spread_prices:
         teams = {}
         for team, point, price in spread_prices:
@@ -2309,25 +2359,38 @@ def build_consensus_pick(event: dict, sport_key: str,
             avg_point = sum(p for p, _ in entries) / len(entries)
             avg_price = sum(p for _, p in entries) / len(entries)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = (sum(american_to_prob(int(pr)) for _, pr in entries) / len(entries)) / 1.045
+            fair_prob = implied - 0.023
+            bet_side_cur = "away" if team == away else "home"
             pin_spread = (pin_game.get("home_spread") if team == home
                           else pin_game.get("away_spread")) if pin_game else None
             clv_edge = calculate_clv_edge(int(avg_price), None, pin_spread, "spread", avg_point)
-            effective_edge = clv_edge if clv_edge is not None else 1.0
+            if clv_edge is None:
+                # No Pinnacle data — use vig removal but heavily discount
+                raw_edge = (fair_prob - implied) * 100
+                effective_edge = raw_edge * 0.4  # vig-removal signal is weak
+            else:
+                effective_edge = clv_edge
+                # Boost edge when sharp money agrees with CLV direction
+                if an_game:
+                    sharp_agrees = (bet_side_cur == "home" and an_sharp_pct > 60) or                                    (bet_side_cur == "away" and an_sharp_pct < 40)
+                    if sharp_agrees:
+                        effective_edge *= 1.25  # 25% boost when sharp/CLV aligned
+                    # Penalize when we're fading sharp money
+                    elif (bet_side_cur == "home" and an_sharp_pct < 35) or                          (bet_side_cur == "away" and an_sharp_pct > 65):
+                        effective_edge *= 0.6  # 40% haircut when against sharp flow
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 sign = "+" if avg_point > 0 else ""
                 best_pick = {
                     "game": game_label, "home_team": home, "away_team": away,
                     "bet": f"{team} {sign}{avg_point:.1f}", "betType": "spread",
-                    "bet_side": "away" if team == away else "home",
+                    "bet_side": bet_side_cur,
                     "odds": int(avg_price), "bet_point": avg_point,
                     "opening_point": an_game.get("opening_spread") if an_game else avg_point,
                     "current_point": an_game.get("current_spread") if an_game else avg_point,
                     "fair_prob": fair_prob, "implied_prob": implied,
                     "clv_edge": clv_edge, "pinnacle_line": pin_spread,
                     "edge_source": "pinnacle_clv" if clv_edge is not None else "vig_removal",
-                    # Timing parity: record when both ESPN and Pinnacle lines were captured
                     "espn_line":            avg_point,
                     "espn_line_fetched_at": datetime.utcnow().isoformat(),
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
@@ -2340,29 +2403,44 @@ def build_consensus_pick(event: dict, sport_key: str,
         for team, prices in teams_h2h.items():
             avg_price = sum(prices) / len(prices)
             implied   = american_to_prob(int(avg_price))
-            fair_prob = implied / 1.045
+            fair_prob = implied - 0.023
+            bet_side_cur = "away" if team == away else "home"
             pin_ml    = (pin_game.get("home_ml") if team == home
                          else pin_game.get("away_ml")) if pin_game else None
             clv_edge  = calculate_clv_edge(int(avg_price), pin_ml, None, "moneyline")
-            effective_edge = clv_edge if clv_edge is not None else 1.0
+            if clv_edge is None:
+                effective_edge = (fair_prob - implied) * 100 * 0.4
+            else:
+                effective_edge = clv_edge
+                # ML CLV is noisier at extreme odds — discount dogs heavily
+                if abs(int(avg_price)) > 200:
+                    effective_edge *= 0.7  # large underdogs/favorites are harder to beat CLV on
+                # Sharp alignment boost/penalty
+                if an_game:
+                    ml_sharp_pct = an_game.get("ml_public_pct", 50) or 50
+                    sharp_agrees = (bet_side_cur == "home" and ml_sharp_pct < 45) or                                    (bet_side_cur == "away" and ml_sharp_pct > 55)
+                    if sharp_agrees:
+                        effective_edge *= 1.2
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 best_pick = {
                     "game": game_label, "home_team": home, "away_team": away,
                     "bet": f"{team} ML", "betType": "moneyline",
-                    "bet_side": "away" if team == away else "home",
+                    "bet_side": bet_side_cur,
                     "odds": int(avg_price), "bet_point": None,
                     "opening_point": None, "current_point": None,
                     "fair_prob": fair_prob, "implied_prob": implied,
                     "clv_edge": clv_edge, "pinnacle_line": pin_ml,
                     "edge_source": "pinnacle_clv" if clv_edge is not None else "vig_removal",
-                    # Timing parity
                     "espn_line":            avg_price,
                     "espn_line_fetched_at": datetime.utcnow().isoformat(),
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
-    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.5
+    # Minimum edge thresholds - be strict to avoid noise picks
+    # CLV edge under 2.5% is within measurement error (line timing differences)
+    # Vig-removal edge is even noisier — require 4% minimum
+    min_edge = 2.5 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 4.0
     if best_edge < min_edge or best_pick is None:
         return None
 
@@ -2380,7 +2458,8 @@ def build_consensus_pick(event: dict, sport_key: str,
     a7 = agent_kelly(best_edge, best_pick["odds"])
 
     # ── VETO CHECK ────────────────────────────────────────────────────────────
-    vetoed, veto_reasons = run_veto_checks(a2, a3, a4, best_edge, best_pick["bet_side"])
+    vetoed, veto_reasons = run_veto_checks(a2, a3, a4, best_edge, best_pick["bet_side"],
+                                            edge_source=best_pick.get("edge_source","vig_removal"))
     if vetoed:
         print(f"[VETO] {game_label} — {best_pick['bet']} suppressed: {veto_reasons}")
         return None
@@ -2412,7 +2491,7 @@ def build_consensus_pick(event: dict, sport_key: str,
 
     # ── v5: Ensemble confidence using all signals ─────────────────────────────
     ensemble_signals = {
-        "clv_edge":        best_edge,
+        "clv_edge":        best_pick.get("clv_edge") or best_edge,  # use raw CLV not boosted edge
         "sharp_pct":       a3.get("sharp_pct", 50),
         "public_pct":      a3.get("public_pct", 50),
         "line_move_pts":   abs(a2.get("diff", 0)) if a2.get("favorable") else 0,
@@ -2423,6 +2502,7 @@ def build_consensus_pick(event: dict, sport_key: str,
         "weather_adj":     weather_adj,
         "agent_agreement": agent_agreement,
         "kelly_units":     a7.get("units", 0),
+        "has_live_data":   a3.get("source") == "live",  # True only if Action Network returned real data
     }
     raw_confidence_ensemble = ensemble_confidence_score(ensemble_signals)
 
@@ -2433,19 +2513,28 @@ def build_consensus_pick(event: dict, sport_key: str,
     clv_bonus      = 5 if best_pick.get("edge_source") == "pinnacle_clv" else 0
     elo_bonus      = min(8, max(-5, int((elo_edge or 0) * 1.2)))
 
-    raw_confidence_v4 = min(95, max(50, int(
-        best_edge * w.get("value", 3.5) +
-        a3["signal_strength"] * w.get("public_money", 15.0) +
-        a6["signal_strength"] * w.get("fade_public", 10.0) +
-        a5["score"]           * w.get("situational", 8.0) +
-        (w.get("line_movement", 5.5) if a2["favorable"] else 0) +
+    # Use actual CLV edge directly instead of best_edge (which is boosted by alignment)
+    raw_clv = best_pick.get("clv_edge") or 0
+    raw_confidence_v4 = min(88, max(52, int(
+        raw_clv * w.get("value", 3.5) +
+        a3["signal_strength"] * w.get("public_money", 12.0) * (1.0 if a3.get("source") == "live" else 0.4) +
+        a6["signal_strength"] * w.get("fade_public", 8.0)  * (1.0 if a3.get("source") == "live" else 0.4) +
+        a5["score"]           * w.get("situational", 6.0) +
+        (w.get("line_movement", 5.0) if a2["favorable"] else 0) +
         steam_bonus + clv_bonus + elo_bonus +
-        agent_agreement * 10 +
-        55 - injury_penalty
+        agent_agreement * 8 +
+        52 - injury_penalty  # lowered baseline from 55 to 52
     )))
 
-    # Blend: 60% ensemble + 40% legacy for robustness during ramp-up
-    raw_confidence = min(95, max(50, int(raw_confidence_ensemble * 0.6 + raw_confidence_v4 * 0.4 + weather_adj)))
+    # Blend strategy: weight ensemble more heavily when we have real CLV data
+    has_pinnacle = best_pick.get("edge_source") == "pinnacle_clv"
+    if has_pinnacle:
+        # Good data: trust ensemble 75%, legacy 25%
+        blend_w = 0.75
+    else:
+        # No Pinnacle: be more conservative, blend 50/50 and apply discount
+        blend_w = 0.50
+    raw_confidence = min(88, max(52, int(raw_confidence_ensemble * blend_w + raw_confidence_v4 * (1 - blend_w))))
 
     # ── Platt calibration ─────────────────────────────────────────────────────
     calibrated_prob = calibrate_confidence(raw_confidence)
@@ -2704,9 +2793,26 @@ async def scan(request: Request):
         ]
         weather_results = await asyncio.gather(*weather_tasks, return_exceptions=True)
 
+        now_scan = datetime.utcnow()
         for event, weather in zip(events[:8], weather_results):
             if isinstance(weather, Exception):
                 weather = None
+
+            # Safety net: skip any game that has started or finished
+            evt_state = event.get("state", "pre")
+            if evt_state in ("in", "post"):
+                continue
+            evt_time = event.get("commence_time", "")
+            if evt_time:
+                try:
+                    from datetime import timezone
+                    gdt = datetime.fromisoformat(evt_time.replace("Z", "+00:00")).replace(tzinfo=None)
+                    if gdt < now_scan - timedelta(minutes=5):
+                        print(f"[Scan] Skipping already-started game: {event.get('away_team')} @ {event.get('home_team')} ({evt_time})")
+                        continue
+                except Exception:
+                    pass
+
             an_game = match_an_game(an_sport_games,
                                     event.get("home_team",""), event.get("away_team",""))
             pick = build_consensus_pick(
