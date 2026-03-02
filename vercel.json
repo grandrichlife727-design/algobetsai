@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "public": "public",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@algobets_api_url"
+  },
+  "envPrefix": "NEXT_PUBLIC_"
+}

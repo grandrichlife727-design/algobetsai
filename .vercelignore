@@ -1,15 +1,33 @@
+# Python backend files - not needed for Next.js deployment
 main.py
 requirements.txt
+pyproject.toml
+pyproject.lock
 render.yaml
 Dockerfile
+docker-compose.yml
 .dockerignore
 algobets*.html
 *.py
+src/
+api/
+venv/
 __pycache__
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Git and environment
 .git
+.gitignore
 .env
 .env.local
+.env.*.local
+
+# Node artifacts to exclude from deployment
 node_modules
 .next
 build
 dist
+.turbo
+.cache
