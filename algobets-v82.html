@@ -1367,7 +1367,8 @@ function PicksTab({ picks, scanning, scanStage, onScan, remainingPicks, onAddToP
                         borderRadius: 10, padding: "9px", color: inParlay ? "#22d3ee" : "#fff",
                         fontSize: 12, fontWeight: 700, cursor: "pointer" } }, inParlay ? "✓ Added to Parlay" : "+ Add to Parlay")));
         })(),
-        filtered.map((pick, i) => (React.createElement(PickCard, { key: pick.id || i, pick: pick, onAddToParlay: onAddToParlay, inParlay: parlayIds.has(pick.id), userPlan: userPlan, onPaywall: onPaywall, onShare: onShare, onTrack: onTrack }))),
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 16 } },
+            filtered.map((pick, i) => (React.createElement(PickCard, { key: pick.id || i, pick: pick, onAddToParlay: onAddToParlay, inParlay: parlayIds.has(pick.id), userPlan: userPlan, onPaywall: onPaywall, onShare: onShare, onTrack: onTrack })))),
         picks.length > 0 && (React.createElement("div", { style: { marginTop: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px" } },
             React.createElement("p", { style: { fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 } }, "\uD83D\uDCCD Where to Bet \u2014 Best Welcome Bonuses"),
             React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8 } }, getLegalBooks().map(key => {
