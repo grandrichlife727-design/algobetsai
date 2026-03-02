@@ -10,12 +10,12 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: '📊' },
-  { href: '/picks', label: 'Top Picks', icon: '🎯' },
-  { href: '/alerts', label: 'Alerts', icon: '🔔' },
-  { href: '/parlay', label: 'Parlay Builder', icon: '🎲' },
-  { href: '/analytics', label: 'Analytics', icon: '📈' },
-  { href: '/sharp', label: 'Sharp Tools', icon: '⚙️' },
+  { href: '/dashboard', label: 'Dashboard', icon: 'D' },
+  { href: '/dashboard/picks', label: 'Top Picks', icon: 'P' },
+  { href: '/dashboard/alerts', label: 'Alerts', icon: 'A' },
+  { href: '/dashboard/parlay', label: 'Parlay Builder', icon: 'B' },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: 'G' },
+  { href: '/dashboard/sharp', label: 'Sharp Tools', icon: 'S' },
 ]
 
 export function Sidebar({ open, onToggle }: SidebarProps) {
@@ -55,7 +55,9 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            const isActive = item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}
