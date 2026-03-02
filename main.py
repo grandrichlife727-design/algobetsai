@@ -1943,8 +1943,8 @@ def run_veto_checks(a2: dict, a3: dict, a4: dict,
     # V3 — Public trap: heavy public action with low sharp interest
     pub  = a3.get("public_pct", 50)
     shrp = a3.get("sharp_pct", 50)
-    if pub > 75 and shrp < 30:
-        reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
+if pub > 75 and shrp < 30:
+   reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
 
     # V4 — Edge too thin (below minimum threshold after signal weighting)
     if best_edge < 0.5:
@@ -2011,8 +2011,8 @@ def build_consensus_pick(event: dict, sport_key: str,
             pin_spread = (pin_game.get("home_spread") if team == home
                           else pin_game.get("away_spread")) if pin_game else None
             clv_edge = calculate_clv_edge(int(avg_price), None, pin_spread, "spread", avg_point)
-            effective_edge = clv_edge if clv_edge is not None else (fair_prob - implied) * 100
-            if effective_edge > best_edge:
+effective_edge = clv_edge if clv_edge is not None else 1.0
+if effective_edge > best_edge:
                 best_edge = effective_edge
                 sign = "+" if avg_point > 0 else ""
                 best_pick = {
@@ -2042,8 +2042,8 @@ def build_consensus_pick(event: dict, sport_key: str,
             pin_ml    = (pin_game.get("home_ml") if team == home
                          else pin_game.get("away_ml")) if pin_game else None
             clv_edge  = calculate_clv_edge(int(avg_price), pin_ml, None, "moneyline")
-            effective_edge = clv_edge if clv_edge is not None else (fair_prob - implied) * 100
-            if effective_edge > best_edge:
+effective_edge = clv_edge if clv_edge is not None else 1.0
+if effective_edge > best_edge:
                 best_edge = effective_edge
                 best_pick = {
                     "game": game_label, "home_team": home, "away_team": away,
@@ -2060,7 +2060,7 @@ def build_consensus_pick(event: dict, sport_key: str,
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
-    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.5
+min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.5
     if best_edge < min_edge or best_pick is None:
         return None
 
