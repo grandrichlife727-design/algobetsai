@@ -1066,17 +1066,21 @@ def seed_bootstrap_picks():
                                     if a != agent and rng.random() < 0.4]
                 result = "win" if rng.random() < win_rate else "loss"
                 rows.append((
-                    f"bootstrap_{agent}_{i}",
-                    "NBA", f"Bootstrap Game {agent} {i}", "TeamA", "TeamB",
-                    f"Bootstrap {agent}", "spread", "away",
-                    -110, 3.0, 65, 65, 0.65,
-                    0.55, 0.52,
-                    None, None, None, None, None,
-                    None, None,
-                    json.dumps(fired), json.dumps([]), 1,
-                    "bootstrap_prior", "",
-                    result, 0.0 if result == "win" else -1.0,
-                    datetime.utcnow().isoformat(),
+                    f"bootstrap_{agent}_{i}",       # pick_id
+                    "NBA",                           # sport
+                    f"Bootstrap Game {agent} {i}",  # game
+                    "TeamA", "TeamB",                # home_team, away_team
+                    f"Bootstrap {agent}",            # bet
+                    "spread", "away",                # bet_type, bet_side
+                    -110, 3.0, 65, 65, 0.65,        # odds, edge, confidence, confidence_raw, confidence_calibrated
+                    0.55, 0.52,                      # fair_prob, implied_prob
+                    None, None, None, None, None,    # pinnacle_line, pinnacle_fetched_at, espn_line, espn_line_fetched_at, clv_edge
+                    None,                            # clv_pinnacle_close
+                    None, None,                      # weather_flag, weather_details
+                    json.dumps(fired), json.dumps([]), 1,  # agents_fired, agents_vetoed, veto_passed
+                    "bootstrap_prior", "",           # data_source, game_time
+                    result, 0.0 if result == "win" else -1.0,  # result, pnl
+                    datetime.utcnow().isoformat(),   # resolved_at
                 ))
 
         with get_db() as db:
@@ -1086,7 +1090,7 @@ def seed_bootstrap_picks():
                  odds, edge, confidence, confidence_raw, confidence_calibrated,
                  fair_prob, implied_prob,
                  pinnacle_line, pinnacle_fetched_at, espn_line, espn_line_fetched_at, clv_edge,
-                 weather_flag, weather_details,
+                 clv_pinnacle_close, weather_flag, weather_details,
                  agents_fired, agents_vetoed, veto_passed,
                  data_source, game_time,
                  result, pnl, resolved_at)
@@ -1461,43 +1465,59 @@ async def fetch_espn_games(sport_slug: str) -> list:
             r.raise_for_status()
             raw = r.json()
 
+        from datetime import timezone as _tz
+        now_utc = datetime.now(_tz.utc)
         events = []
         for game in raw.get("events", []):
-            comp        = game.get("competitions", [{}])[0]
-            competitors = comp.get("competitors", [])
-            if len(competitors) < 2:
-                continue
-            home = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
-            away = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
-            home_team = home.get("team", {}).get("displayName", "")
-            away_team = away.get("team", {}).get("displayName", "")
+            try:
+                comps = game.get("competitions") or []
+                if not comps:
+                    continue
+                comp = comps[0]
+                if not comp or not isinstance(comp, dict):
+                    continue
+                competitors = comp.get("competitors") or []
+                if len(competitors) < 2:
+                    continue
+                home = next((c for c in competitors if c and c.get("homeAway") == "home"), competitors[0])
+                away = next((c for c in competitors if c and c.get("homeAway") == "away"), competitors[1])
+                if not home or not away:
+                    continue
+                home_team = (home.get("team") or {}).get("displayName", "")
+                away_team = (away.get("team") or {}).get("displayName", "")
+                if not home_team or not away_team:
+                    continue
 
-            odds_raw   = comp.get("odds", [{}])[0] if comp.get("odds") else {}
-            spread     = odds_raw.get("spread")
-            over_under = odds_raw.get("overUnder")
-            home_ml    = odds_raw.get("homeTeamOdds", {}).get("moneyLine")
-            away_ml    = odds_raw.get("awayTeamOdds", {}).get("moneyLine")
+                # Skip finished or live games
+                status    = (comp.get("status") or {}).get("type") or {}
+                state     = status.get("state", "pre")
+                completed = status.get("completed", False)
+                if state in ("post", "in") or completed:
+                    continue
 
-            markets = []
-            if home_ml and away_ml:
-                markets.append({"key": "h2h", "outcomes": [
-                    {"name": home_team, "price": int(home_ml)},
-                    {"name": away_team, "price": int(away_ml)},
-                ]})
-            if spread is not None:
-                markets.append({"key": "spreads", "outcomes": [
-                    {"name": home_team, "point": -float(spread), "price": -110},
-                    {"name": away_team, "point":  float(spread), "price": -110},
-                ]})
-            if over_under is not None:
-                markets.append({"key": "totals", "outcomes": [
-                    {"name": "Over",  "point": float(over_under), "price": -110},
-                    {"name": "Under", "point": float(over_under), "price": -110},
-                ]})
+                # Skip games that started > 5 min ago
+                game_date = game.get("date", "")
+                if game_date:
+                    try:
+                        gdt = datetime.fromisoformat(game_date.replace("Z", "+00:00"))
+                        if gdt < now_utc - timedelta(minutes=5):
+                            continue
+                    except Exception:
+                        pass
 
-            # If ESPN has no odds data, synthesize fair-value prices so agents can still run
-            if not markets:
+                odds_list = comp.get("odds") or []
+                odds_raw  = (odds_list[0] if odds_list else None) or {}
+                spread     = odds_raw.get("spread")
+                over_under = odds_raw.get("overUnder")
+                home_ml    = (odds_raw.get("homeTeamOdds") or {}).get("moneyLine")
+                away_ml    = (odds_raw.get("awayTeamOdds") or {}).get("moneyLine")
+
                 markets = []
+                if home_ml and away_ml:
+                    markets.append({"key": "h2h", "outcomes": [
+                        {"name": home_team, "price": int(home_ml)},
+                        {"name": away_team, "price": int(away_ml)},
+                    ]})
                 if spread is not None:
                     markets.append({"key": "spreads", "outcomes": [
                         {"name": home_team, "point": -float(spread), "price": -110},
@@ -1508,55 +1528,31 @@ async def fetch_espn_games(sport_slug: str) -> list:
                         {"name": "Over",  "point": float(over_under), "price": -110},
                         {"name": "Under", "point": float(over_under), "price": -110},
                     ]})
-                # No spread/total at all — synthesize neutral ML so the game is at least evaluated
                 if not markets:
                     markets.append({"key": "h2h", "outcomes": [
                         {"name": home_team, "price": -110},
                         {"name": away_team, "price": -110},
                     ]})
-            bookmakers = [{"key": "espn_consensus", "title": "ESPN Consensus", "markets": markets}]
 
-            status     = comp.get("status", {}).get("type", {})
-            state      = status.get("state", "pre")
-            completed  = status.get("completed", False)
-
-            # Skip finished games (state=post or completed=True)
-            if state == "post" or completed:
+                bookmakers = [{"key": "espn_consensus", "title": "ESPN Consensus", "markets": markets}]
+                events.append({
+                    "id":            game.get("id", ""),
+                    "sport_slug":    sport_slug,
+                    "home_team":     home_team,
+                    "away_team":     away_team,
+                    "home_abbr":     (home.get("team") or {}).get("abbreviation", ""),
+                    "away_abbr":     (away.get("team") or {}).get("abbreviation", ""),
+                    "commence_time": game_date,
+                    "state":         state,
+                    "bookmakers":    bookmakers,
+                    "espn_spread":   spread,
+                    "espn_total":    over_under,
+                    "espn_home_ml":  home_ml,
+                    "espn_away_ml":  away_ml,
+                })
+            except Exception as _game_err:
+                print(f"[ESPN] {sport_slug} game parse error: {_game_err}")
                 continue
-
-            # Skip games that have already started (state=in means live)
-            # We only want pre-game picks with open lines
-            if state == "in":
-                continue
-
-            # Double-check by commence_time — skip anything that started > 5 min ago
-            # (handles edge cases where state hasn't updated yet)
-            game_date = game.get("date", "")
-            if game_date:
-                try:
-                    from datetime import timezone
-                    gdt = datetime.fromisoformat(game_date.replace("Z", "+00:00"))
-                    now_aware = datetime.now(timezone.utc)
-                    if gdt < now_aware - timedelta(minutes=5):
-                        continue
-                except Exception:
-                    pass
-
-            events.append({
-                "id":          game.get("id", ""),
-                "sport_slug":  sport_slug,
-                "home_team":   home_team,
-                "away_team":   away_team,
-                "home_abbr":   home.get("team", {}).get("abbreviation", ""),
-                "away_abbr":   away.get("team", {}).get("abbreviation", ""),
-                "commence_time": game.get("date", ""),
-                "state":       state,
-                "bookmakers":  bookmakers,
-                "espn_spread": spread,
-                "espn_total":  over_under,
-                "espn_home_ml": home_ml,
-                "espn_away_ml": away_ml,
-            })
 
         cache_set(cache_key, events)
         return events
