@@ -1943,7 +1943,7 @@ def run_veto_checks(a2: dict, a3: dict, a4: dict,
     # V3 — Public trap: heavy public action with low sharp interest
     pub  = a3.get("public_pct", 50)
     shrp = a3.get("sharp_pct", 50)
-    if pub > 65 and shrp < 40:
+    if pub > 75 and shrp < 30:
         reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
 
     # V4 — Edge too thin (below minimum threshold after signal weighting)
@@ -2060,7 +2060,7 @@ def build_consensus_pick(event: dict, sport_key: str,
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
-    min_edge = 1.5 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 2.5
+    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 1.5
     if best_edge < min_edge or best_pick is None:
         return None
 
