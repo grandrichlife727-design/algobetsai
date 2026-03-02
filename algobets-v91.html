@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoBets AI v91 - Premium Sports Prediction</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            --primary: #00d9ff;
+            --primary-dark: #00a8cc;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --border: #475569;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a { color: inherit; text-decoration: none; }
+        button { cursor: pointer; border: none; font-family: inherit; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* ROOT LAYOUT */
+        #root {
+            display: flex;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            padding: 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            text-align: left;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+            padding-left: 13px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 64px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: var(--bg-primary);
+        }
+
+        .search-box {
+            flex: 0.3;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--primary);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* DASHBOARD STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .stat-delta {
+            font-size: 12px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-delta.positive {
+            color: var(--success);
+        }
+
+        .stat-delta.negative {
+            color: var(--error);
+        }
+
+        /* PICKS CONTAINER */
+        .picks-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 20px;
+        }
+
+        .pick-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pick-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .pick-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .pick-title {
+            flex: 1;
+        }
+
+        .pick-league {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .pick-matchup {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .confidence-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            background: conic-gradient(var(--primary) 0deg, var(--primary) var(--confidence-angle), var(--bg-tertiary) var(--confidence-angle), var(--bg-tertiary) 360deg);
+            border: 3px solid var(--border);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .confidence-circle::before {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+        }
+
+        .confidence-value {
+            position: relative;
+            z-index: 1;
+            color: var(--primary);
+        }
+
+        .pick-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pick-selection {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--primary);
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .signal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .signal-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .signal-tag.strong {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .signal-tag.moderate {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .signal-tag.weak {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .odds-comparison {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .odds-book {
+            text-align: center;
+        }
+
+        .book-name {
+            color: var(--text-tertiary);
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .odds-value {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        .pick-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .kelly-sizing {
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary);
+            color: var(--bg-primary);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .breakdown-name {
+            font-weight: 500;
+        }
+
+        .breakdown-bar {
+            flex: 1;
+            margin: 0 12px;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .breakdown-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .breakdown-value {
+            color: var(--primary);
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        /* GRID LAYOUTS */
+        @media (max-width: 1400px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 240px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .picks-container { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .top-bar { padding: 0 16px; }
+            .search-box { display: none; }
+        }
+
+        /* LOADING ANIMATION */
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        /* TOOLTIP */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+            gap: 24px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const React = window.React;
+        const { useState, useEffect, useRef } = React;
+
+        // ===== PREDICTION ENGINE =====
+        class PredictionEngine {
+            static calculateConfidence(pick) {
+                const weights = {
+                    clv: 0.25,
+                    sharpPublic: 0.20,
+                    lineMovement: 0.20,
+                    consensus: 0.15,
+                    oddsQuality: 0.10,
+                    injuryNews: 0.10
+                };
+
+                const scores = {
+                    clv: this.calculateCLV(pick) * 100,
+                    sharpPublic: this.calculateSharpPublicScore(pick) * 100,
+                    lineMovement: this.calculateLineMovement(pick) * 100,
+                    consensus: this.calculateConsensus(pick) * 100,
+                    oddsQuality: this.calculateOddsQuality(pick) * 100,
+                    injuryNews: this.calculateInjuryImpact(pick) * 100
+                };
+
+                const weightedScore = Object.keys(weights).reduce((sum, key) => {
+                    return sum + (scores[key] * weights[key]);
+                }, 0);
+
+                return {
+                    confidence: Math.min(99, Math.max(52, Math.round(weightedScore))),
+                    breakdown: scores,
+                    signals: this.extractSignals(scores, pick)
+                };
+            }
+
+            static calculateCLV(pick) {
+                const closingOdds = pick.closingOdds || -110;
+                const modelOdds = this.convertToOdds(pick.estimatedWinProb);
+                const clvPercent = (closingOdds - modelOdds) / Math.abs(closingOdds);
+                return Math.max(0, Math.min(1, 0.5 + clvPercent * 0.5));
+            }
+
+            static calculateSharpPublicScore(pick) {
+                const sharpMoney = pick.sharpAction || 0.6;
+                const publicOdds = pick.publicFavor || 0.4;
+                const agreement = sharpMoney > publicOdds ? 0.8 : 0.5;
+                return agreement;
+            }
+
+            static calculateLineMovement(pick) {
+                const openLine = pick.openLine || 0;
+                const currentLine = pick.currentLine || 0;
+                const movement = Math.abs(currentLine - openLine);
+                return Math.max(0, Math.min(1, movement / 3));
+            }
+
+            static calculateConsensus(pick) {
+                const consensus = pick.expertConsensus || 0.65;
+                return consensus;
+            }
+
+            static calculateOddsQuality(pick) {
+                const pinnacleOdds = pick.pinnacleOdds || -110;
+                const dkOdds = pick.dkOdds || -115;
+                const spread = Math.abs(pinnacleOdds - dkOdds);
+                return Math.max(0, 1 - (spread / 50));
+            }
+
+            static calculateInjuryImpact(pick) {
+                const keyInjuries = pick.injuryCount || 0;
+                const recencyHours = pick.newsRecencyHours || 24;
+                const freshness = Math.max(0, 1 - (recencyHours / 48));
+                return (1 - (keyInjuries * 0.15)) * freshness;
+            }
+
+            static convertToOdds(winProb) {
+                if (winProb >= 0.5) {
+                    return -(winProb * 100) / (1 - winProb);
+                } else {
+                    return (100 * (1 - winProb)) / winProb;
+                }
+            }
+
+            static extractSignals(scores, pick) {
+                const signals = [];
+                
+                if (scores.clv > 65) signals.push({ name: 'Strong CLV Edge', strength: 'strong' });
+                if (scores.sharpPublic > 75) signals.push({ name: 'Sharp Agreement', strength: 'strong' });
+                if (scores.lineMovement > 70) signals.push({ name: 'Significant Line Move', strength: 'moderate' });
+                if (scores.consensus > 70) signals.push({ name: 'Expert Consensus', strength: 'strong' });
+                if (scores.oddsQuality > 75) signals.push({ name: 'Best Available Odds', strength: 'moderate' });
+                if (scores.injuryNews > 80) signals.push({ name: 'No Key Injuries', strength: 'moderate' });
+                
+                return signals.slice(0, 4);
+            }
+
+            static calculateKellyFraction(probability, odds, kellySetting = 0.25) {
+                const oddsDecimal = this.oddsToDecimal(odds);
+                const b = oddsDecimal - 1;
+                const p = probability / 100;
+                const q = 1 - p;
+                
+                const kellyFull = (b * p - q) / b;
+                const kellyQuarter = kellyFull * kellySetting;
+                
+                return {
+                    full: Math.max(0, Math.round(kellyFull * 100)),
+                    quarter: Math.max(0, Math.round(kellyQuarter * 100))
+                };
+            }
+
+            static oddsToDecimal(odds) {
+                if (odds > 0) {
+                    return 1 + (odds / 100);
+                } else {
+                    return 1 + (100 / Math.abs(odds));
+                }
+            }
+        }
+
+        // ===== MOCK DATA GENERATOR =====
+        function generateMockPicks() {
+            const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'CFB', 'CBB'];
+            const teams = ['Lakers', '49ers', 'Cowboys', 'Warriors', 'Chiefs', 'Celtics', 'Braves', 'Dodgers'];
+            const picks = [];
+
+            for (let i = 0; i < 8; i++) {
+                const sport = sports[Math.floor(Math.random() * sports.length)];
+                const team1 = teams[Math.floor(Math.random() * teams.length)];
+                const team2 = teams[Math.floor(Math.random() * teams.length)];
+                const estimatedWinProb = 0.52 + Math.random() * 0.35;
+                const odds = -110 - Math.floor(Math.random() * 30);
+
+                const pick = {
+                    id: i,
+                    sport,
+                    matchup: `${team1} vs ${team2}`,
+                    selection: `${team1} ${Math.random() > 0.5 ? 'Win' : 'Over 48.5'}`,
+                    estimatedWinProb,
+                    odds,
+                    closingOdds: odds + (Math.random() - 0.5) * 10,
+                    currentLine: Math.random() > 0.5 ? -5.5 : -6.5,
+                    openLine: Math.random() > 0.5 ? -5 : -6,
+                    sharpAction: 0.5 + Math.random() * 0.4,
+                    publicFavor: 0.3 + Math.random() * 0.3,
+                    expertConsensus: 0.55 + Math.random() * 0.3,
+                    pinnacleOdds: odds,
+                    dkOdds: odds - 5,
+                    injuryCount: Math.floor(Math.random() * 3),
+                    newsRecencyHours: Math.random() * 36,
+                    dkOdds: odds - (5 + Math.floor(Math.random() * 5)),
+                    fanduelOdds: odds - (3 + Math.floor(Math.random() * 4)),
+                    timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString()
+                };
+
+                const analysis = PredictionEngine.calculateConfidence(pick);
+                pick.confidence = analysis.confidence;
+                pick.breakdown = analysis.breakdown;
+                pick.signals = analysis.signals;
+                pick.kelly = PredictionEngine.calculateKellyFraction(pick.confidence, pick.odds);
+
+                picks.push(pick);
+            }
+
+            return picks.sort((a, b) => b.confidence - a.confidence);
+        }
+
+        // ===== COMPONENTS =====
+        function ConfidenceGauge({ confidence }) {
+            const angle = (confidence / 100) * 360;
+            return (
+                <div 
+                    className="confidence-circle" 
+                    style={{ '--confidence-angle': `${angle}deg` }}
+                >
+                    <span className="confidence-value">{confidence}%</span>
+                </div>
+            );
+        }
+
+        function PickCard({ pick, onDetailsClick }) {
+            return (
+                <div className="pick-card">
+                    <div className="pick-header">
+                        <div className="pick-title">
+                            <div className="pick-league">{pick.sport}</div>
+                            <div className="pick-matchup">{pick.matchup}</div>
+                        </div>
+                        <ConfidenceGauge confidence={pick.confidence} />
+                    </div>
+
+                    <div className="pick-body">
+                        <div className="pick-selection">
+                            {pick.selection}
+                        </div>
+
+                        <div className="signal-tags">
+                            {pick.signals.map((signal, idx) => (
+                                <span key={idx} className={`signal-tag ${signal.strength}`}>
+                                    ✓ {signal.name}
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className="odds-comparison">
+                            <div className="odds-book">
+                                <div className="book-name">Pinnacle</div>
+                                <div className="odds-value">{pick.pinnacleOdds}</div>
+                            </div>
+                            <div className="odds-book">
+                                <div className="book-name">DraftKings</div>
+                                <div className="odds-value">{pick.dkOdds}</div>
+                            </div>
+                            <div className="odds-book">
+                                <div className="book-name">FanDuel</div>
+                                <div className="odds-value">{pick.fanduelOdds}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pick-footer">
+                        <span className="kelly-sizing">Kelly: {pick.kelly.quarter}% (¼)</span>
+                        <div className="action-buttons">
+                            <button className="icon-btn" onClick={() => onDetailsClick(pick)}>📊</button>
+                            <button className="icon-btn">❤️</button>
+                            <button className="icon-btn">📋</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function DetailsModal({ pick, onClose }) {
+            if (!pick) return null;
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <div className="modal-title">{pick.matchup}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                    {pick.sport} • {new Date(pick.timestamp).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <button className="close-btn" onClick={onClose}>✕</button>
+                        </div>
+
+                        <div className="modal-body">
+                            <div className="section-title">Prediction Breakdown</div>
+                            {Object.entries(pick.breakdown).map(([key, value]) => {
+                                const labels = {
+                                    clv: 'Closing Line Value',
+                                    sharpPublic: 'Sharp vs Public',
+                                    lineMovement: 'Line Movement',
+                                    consensus: 'Expert Consensus',
+                                    oddsQuality: 'Odds Quality',
+                                    injuryNews: 'Injury/News Freshness'
+                                };
+                                return (
+                                    <div key={key} className="breakdown-item">
+                                        <span className="breakdown-name">{labels[key]}</span>
+                                        <div className="breakdown-bar">
+                                            <div className="breakdown-fill" style={{ width: `${value}%` }}></div>
+                                        </div>
+                                        <span className="breakdown-value">{Math.round(value)}%</span>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="section-title" style={{ marginTop: '24px' }}>Kelly Criterion Sizing</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: '6px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Full Kelly</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)' }}>{pick.kelly.full}%</div>
+                                </div>
+                                <div style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: '6px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>¼ Kelly (Recommended)</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--secondary)' }}>{pick.kelly.quarter}%</div>
+                                </div>
+                            </div>
+
+                            <div className="section-title">All Signals</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {pick.signals.map((signal, idx) => (
+                                    <div key={idx} className={`signal-tag ${signal.strength}`} style={{ padding: '8px 12px', borderRadius: '6px', display: 'block' }}>
+                                        ✓ {signal.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function DashboardStats({ picks }) {
+            const totalPicks = picks.length;
+            const avgConfidence = Math.round(picks.reduce((sum, p) => sum + p.confidence, 0) / totalPicks);
+            const strongPicks = picks.filter(p => p.confidence >= 75).length;
+            const projectedROI = ((picks.length * 0.55 - picks.length * 0.45) * 100).toFixed(1);
+
+            return (
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <div className="stat-label">Total Picks</div>
+                        <div className="stat-value">{totalPicks}</div>
+                        <div className="stat-delta positive">+3 this week</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-label">Avg Confidence</div>
+                        <div className="stat-value">{avgConfidence}%</div>
+                        <div className="stat-delta positive">+2% from last</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-label">Elite Picks (75%+)</div>
+                        <div className="stat-value">{strongPicks}</div>
+                        <div className="stat-delta positive">{Math.round((strongPicks / totalPicks) * 100)}% of total</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-label">Projected ROI</div>
+                        <div className="stat-value">+{projectedROI}%</div>
+                        <div className="stat-delta positive">¼ Kelly sizing</div>
+                    </div>
+                </div>
+            );
+        }
+
+        function Page() {
+            const [currentView, setCurrentView] = useState('picks');
+            const [picks, setPicks] = useState([]);
+            const [selectedPick, setSelectedPick] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            useEffect(() => {
+                const mockPicks = generateMockPicks();
+                setPicks(mockPicks);
+                setLoading(false);
+            }, []);
+
+            const filteredPicks = picks.filter(pick =>
+                pick.matchup.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                pick.sport.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (loading) {
+                return (
+                    <div className="app-container">
+                        <div className="sidebar">
+                            <div className="sidebar-header">
+                                <div className="logo">⚡ AlgoBets AI</div>
+                            </div>
+                        </div>
+                        <div className="main-content">
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="loader"></div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="app-container">
+                    {/* SIDEBAR */}
+                    <div className="sidebar">
+                        <div className="sidebar-header">
+                            <div className="logo">⚡ AlgoBets AI</div>
+                        </div>
+                        <div className="nav-menu">
+                            <button 
+                                className={`nav-item ${currentView === 'picks' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('picks')}
+                            >
+                                📊 Top Picks
+                            </button>
+                            <button 
+                                className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('dashboard')}
+                            >
+                                📈 Dashboard
+                            </button>
+                            <button 
+                                className={`nav-item ${currentView === 'parlay' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('parlay')}
+                            >
+                                🎯 Parlay Builder
+                            </button>
+                            <button 
+                                className={`nav-item ${currentView === 'alerts' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('alerts')}
+                            >
+                                🔔 Alerts
+                            </button>
+                            <button 
+                                className={`nav-item ${currentView === 'history' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('history')}
+                            >
+                                📋 History
+                            </button>
+                        </div>
+                        <div style={{ padding: '16px', borderTop: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                            <div style={{ marginBottom: '8px' }}>Premium Plan</div>
+                            <div style={{ fontSize: '10px' }}>Last sync: 2 min ago</div>
+                        </div>
+                    </div>
+
+                    {/* MAIN CONTENT */}
+                    <div className="main-content">
+                        {/* TOP BAR */}
+                        <div className="top-bar">
+                            <div className="top-bar-left">
+                                <div style={{ fontSize: '16px', fontWeight: '600' }}>
+                                    {currentView === 'picks' && 'Top Picks'}
+                                    {currentView === 'dashboard' && 'Dashboard'}
+                                    {currentView === 'parlay' && 'Parlay Builder'}
+                                    {currentView === 'alerts' && 'Real-Time Alerts'}
+                                    {currentView === 'history' && 'Performance History'}
+                                </div>
+                                {currentView === 'picks' && (
+                                    <>
+                                        <div className="view-toggle">
+                                            <button className="view-btn active">All</button>
+                                            <button className="view-btn">Elite (75%+)</button>
+                                            <button className="view-btn">Live</button>
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            className="search-box" 
+                                            placeholder="Search picks..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </>
+                                )}
+                            </div>
+                            <div className="top-bar-right">
+                                <button className="btn-secondary">⚙️ Settings</button>
+                                <button className="btn-primary">+ New Parlay</button>
+                            </div>
+                        </div>
+
+                        {/* CONTENT AREA */}
+                        <div className="content-area">
+                            {currentView === 'dashboard' && (
+                                <>
+                                    <DashboardStats picks={picks} />
+                                    <div style={{ marginTop: '24px' }}>
+                                        <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Recent Picks</div>
+                                        <div className="picks-container">
+                                            {picks.slice(0, 4).map(pick => (
+                                                <PickCard 
+                                                    key={pick.id} 
+                                                    pick={pick} 
+                                                    onDetailsClick={setSelectedPick}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {currentView === 'picks' && (
+                                <div className="picks-container">
+                                    {filteredPicks.length > 0 ? (
+                                        filteredPicks.map(pick => (
+                                            <PickCard 
+                                                key={pick.id} 
+                                                pick={pick} 
+                                                onDetailsClick={setSelectedPick}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">🔍</div>
+                                            <div className="empty-state-text">No picks found</div>
+                                            <div style={{ fontSize: '12px' }}>Try a different search term</div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {currentView === 'parlay' && (
+                                <div className="empty-state">
+                                    <div className="empty-state-icon">🎯</div>
+                                    <div className="empty-state-text">Parlay Builder</div>
+                                    <div style={{ fontSize: '12px', marginBottom: '16px' }}>Coming in next release - build optimized parlays with kelly criterion</div>
+                                    <button className="btn-primary">Notify Me</button>
+                                </div>
+                            )}
+
+                            {currentView === 'alerts' && (
+                                <div className="empty-state">
+                                    <div className="empty-state-icon">🔔</div>
+                                    <div className="empty-state-text">No Alerts</div>
+                                    <div style={{ fontSize: '12px', marginBottom: '16px' }}>You'll be notified of steam moves, reverse line moves, and odds boosts</div>
+                                    <button className="btn-primary">Enable Alerts</button>
+                                </div>
+                            )}
+
+                            {currentView === 'history' && (
+                                <div className="empty-state">
+                                    <div className="empty-state-icon">📋</div>
+                                    <div className="empty-state-text">Performance History</div>
+                                    <div style={{ fontSize: '12px' }}>Track your picks, wins, losses, and CLV metrics</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* DETAILS MODAL */}
+                    {selectedPick && (
+                        <DetailsModal pick={selectedPick} onClose={() => setSelectedPick(null)} />
+                    )}
+                </div>
+            );
+        }
+
+        // ===== RENDER =====
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Page />);
+    </script>
+</body>
+</html>
