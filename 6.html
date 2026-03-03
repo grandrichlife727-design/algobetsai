@@ -803,6 +803,7 @@ async function doScan(silent = false) {
       backendGet(`/api/ev-finder?_=${bust}`),
       backendGet(`/api/arb-detect?_=${bust}`),
     ]);
+    console.log('[Algobets] Scan complete. Picks found:', picksRes.status === 'fulfilled' ? (Array.isArray(picksRes.value) ? picksRes.value.length : (picksRes.value.consensus_picks ? picksRes.value.consensus_picks.length : 'unknown')) : 'failed');
 
     const now = Date.now();
 
