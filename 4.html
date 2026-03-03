@@ -874,16 +874,19 @@ async function doScan(silent = false) {
 function renderPicks() {
   const el = document.getElementById('picklist');
 
-  // Get tomorrow's date range for filtering
+  // Get today/tomorrow as LOCAL date strings (YYYY-MM-DD) — NOT UTC, avoids timezone bugs
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
   const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
+  const todayStr = localDateStr(now);
   const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
-  const tomorrowStr = tomorrow.toISOString().slice(0,10);
+  const tomorrowStr = localDateStr(tomorrow);
 
   const pts = PICKS.filter(p => {
-    // Day filter
+    // Day filter — convert game time to local date for comparison
     if (p.gameTimeRaw) {
-      const gameDate = new Date(p.gameTimeRaw).toISOString().slice(0,10);
+      const gameDate = localDateStr(new Date(p.gameTimeRaw));
       if (dayMode === 'tomorrow' && gameDate !== tomorrowStr) return false;
       if (dayMode === 'today' && gameDate !== todayStr) return false;
     }
