@@ -76,7 +76,7 @@ from pydantic import BaseModel
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-ODDS_API_KEY    = os.getenv("ODDS_API_KEY", os.getenv("THE_ODDS_API_KEY", "")).strip()
+ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
 STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
@@ -308,8 +308,13 @@ _ALLOWED_ORIGINS = [o.strip() for o in os.getenv(
     "ALLOWED_ORIGINS",
     "https://algobets.app,https://algobets.ai,https://edgebet.app"
 ).split(",") if o.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=_ALLOWED_ORIGINS,
-                   allow_methods=["GET","POST"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # open — frontend is a static file, no cookie auth
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SQLite — Pick Logging + ROI Tracking
@@ -1936,28 +1941,19 @@ def run_veto_checks(a2: dict, a3: dict, a4: dict,
         reasons.append(f"V1-Injury: {a4['veto_reason']}")
 
     # V2 — Line moved hard against us (market is telling us we're wrong)
-    # LOWERED from 2.0 to 2.5 pts for more permissive testing
     diff = a2.get("diff", 0)
-    if not a2.get("favorable") and abs(diff) >= 2.5:
+    if not a2.get("favorable") and abs(diff) >= 2.0:
         reasons.append(f"V2-LineMove: moved {diff:+.1f}pts against bet side")
 
     # V3 — Public trap: heavy public action with low sharp interest
-    # LOWERED from 75/30 to 80/25 for more permissive testing
     pub  = a3.get("public_pct", 50)
     shrp = a3.get("sharp_pct", 50)
-    if pub > 80 and shrp < 25:
+    if pub > 75 and shrp < 30:
         reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
 
     # V4 — Edge too thin (below minimum threshold after signal weighting)
-<<<<<<< HEAD
-    # Only veto if edge is truly negative/zero — let marginal picks through for display
-    if best_edge < 0.1:
-        reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.1% minimum")
-=======
-    # LOWERED from 0.5 to 0.3 for more permissive testing
-    if best_edge < 0.3:
-        reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.3% minimum")
->>>>>>> bd10b3c7751ebc8a68edbde42a0eaa0b2c1e570f
+    if best_edge < 0.5:
+        reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.5% minimum")
 
     return len(reasons) > 0, reasons
 
@@ -2020,9 +2016,7 @@ def build_consensus_pick(event: dict, sport_key: str,
             pin_spread = (pin_game.get("home_spread") if team == home
                           else pin_game.get("away_spread")) if pin_game else None
             clv_edge = calculate_clv_edge(int(avg_price), None, pin_spread, "spread", avg_point)
-            # If no Pinnacle CLV, compute real vig-removal edge instead of hardcoding 1.0
-            vig_edge = round((fair_prob - implied) * 100, 2)
-            effective_edge = clv_edge if clv_edge is not None else max(vig_edge, 0.1)
+            effective_edge = clv_edge if clv_edge is not None else 1.0
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 sign = "+" if avg_point > 0 else ""
@@ -2053,9 +2047,7 @@ def build_consensus_pick(event: dict, sport_key: str,
             pin_ml    = (pin_game.get("home_ml") if team == home
                          else pin_game.get("away_ml")) if pin_game else None
             clv_edge  = calculate_clv_edge(int(avg_price), pin_ml, None, "moneyline")
-            # If no Pinnacle CLV, compute real vig-removal edge instead of hardcoding 1.0
-            vig_edge_h2h = round((fair_prob - implied) * 100, 2)
-            effective_edge = clv_edge if clv_edge is not None else max(vig_edge_h2h, 0.1)
+            effective_edge = clv_edge if clv_edge is not None else 1.0
             if effective_edge > best_edge:
                 best_edge = effective_edge
                 best_pick = {
@@ -2073,12 +2065,7 @@ def build_consensus_pick(event: dict, sport_key: str,
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
-<<<<<<< HEAD
-    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.1
-=======
-    # LOWERED minimum edges from 1.0/0.5 to 0.7/0.3 for more permissive testing
-    min_edge = 0.7 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.3
->>>>>>> bd10b3c7751ebc8a68edbde42a0eaa0b2c1e570f
+    min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.5
     if best_edge < min_edge or best_pick is None:
         return None
 
@@ -2183,15 +2170,9 @@ def build_consensus_pick(event: dict, sport_key: str,
         "weather_details": weather_details,
         "model_breakdown": {
             "value":         a1["label"] + (" [CLV]" if a1["clv_based"] else " [est]"),
-            # pinnacle_clv key used by frontend explain text renderer
-            "pinnacle_clv":  (f"CLV edge +{best_pick.get('clv_edge', best_edge):.1f}% vs Pinnacle's "
-                              f"closing line of {best_pick.get('pinnacle_line', 'N/A')}"
-                              if a1["clv_based"] else None),
             "line_movement": a2["label"],
-            "sharp_money":   f"{a3['sharp_pct']:.0f}% sharp handle ({a3['source']})",
             "public_money":  f"{a3['public_pct']:.0f}% public ({a3['source']})",
             "sharp_action":  f"{a3['sharp_pct']:.0f}% sharp",
-            "confirms":      ", ".join(agents_fired) if agents_fired else "None",
             "injury_report": a4["notes"],
             "situational":   a5["notes"][0] if a5["notes"] else "Standard spot",
             "kelly_size":    a7["label"],
@@ -2206,7 +2187,6 @@ def build_consensus_pick(event: dict, sport_key: str,
         "veto_passed":   True,
         "agent_agreement_pct": round(agent_agreement * 100),
         "steam": a3["steam"], "rlm": a3["rlm"], "sharpPct": a3["sharp_pct"],
-        "publicPct": a3["public_pct"],
         "fair_prob":    best_pick["fair_prob"],
         "implied_prob": best_pick["implied_prob"],
         "data_source":  "espn+actionnetwork+pinnacle",
@@ -2302,7 +2282,8 @@ async def quota():
     }
 
 
-@app.get("/scan", dependencies=[Depends(verify_api_key), Depends(require_paid_plan)])
+@app.get("/scan", dependencies=[Depends(verify_api_key)])
+# Note: plan check done inside handler so owner emails are never blocked
 @limiter.limit("10/minute")
 async def scan(request: Request):
     # Tiered rate: sharp=60/min, pro=30/min, free blocked by require_paid_plan
@@ -2315,17 +2296,14 @@ async def scan(request: Request):
     Every surfaced pick logged to SQLite for ROI tracking.
     Cost: $0 Odds API credits.
     """
-    # Respect refresh=true param from frontend (cache-bust)
-    force_refresh = request.query_params.get("refresh", "").lower() == "true"
-    if not force_refresh:
-        cached = cache_get("scan_result", ttl=CACHE_TTL_FREE)
-        if cached:
-            return cached
+    # Owner emails always get full access; others need pro/sharp
+    _scan_plan = await get_user_plan(request)
+    if _scan_plan not in ("pro", "sharp", "owner"):
+        raise HTTPException(status_code=403, detail="Pro or Sharp subscription required.")
 
-    # On forced refresh, clear upstream caches so we pull fresh ESPN/AN/Pinnacle data
-    if force_refresh:
-        for k in ["espn_all_games", "action_network_lines", "pinnacle_all", "scan_result"]:
-            _cache.pop(k, None)
+    cached = cache_get("scan_result", ttl=CACHE_TTL_FREE)
+    if cached:
+        return cached
 
     espn_games, an_lines, injury_list, pinnacle_all = await asyncio.gather(
         fetch_espn_all_games(),
@@ -2374,8 +2352,6 @@ async def scan(request: Request):
     picks.sort(key=lambda p: p["edge"] * p["confidence"], reverse=True)
     top_picks = picks[:10]
     print(f"[Scan] Sports: {list(espn_games.keys())} | Events analyzed: {sum(len(v) for v in espn_games.values())} | Picks generated: {len(picks)} | Top picks: {len(top_picks)}")
-    if len(picks) == 0:
-        print("[Scan] WARNING: No picks generated. Check if all events are being vetoed or ESPN/Pinnacle data is missing.")
 
     clv_count     = sum(1 for p in top_picks if p.get("edge_source") == "pinnacle_clv")
     weather_count = sum(1 for p in top_picks if p.get("weather_flag"))
