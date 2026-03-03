@@ -91,8 +91,10 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 stripe.api_key = STRIPE_SECRET
 
-def verify_api_key(x_api_key: str = Header(default="")):
-    if BACKEND_API_KEY and x_api_key != BACKEND_API_KEY:
+def verify_api_key(request: Request, x_api_key: str = Header(default="")):
+    # Accept key from header OR ?api_key= query param (proxy fallback strips headers)
+    key = x_api_key or request.query_params.get("api_key", "")
+    if BACKEND_API_KEY and key != BACKEND_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
@@ -155,7 +157,7 @@ async def _get_verified_plan(request: Request) -> str:
     Falls back to free if no identity is provided or Stripe is down.
     Uses an in-memory TTL cache to avoid per-request Stripe calls.
     """
-    user_id = request.headers.get("x-user-id", "").strip()
+    user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
     if not user_id:
         return "free"
 
@@ -304,15 +306,11 @@ app = FastAPI(title="Algobets Ai API", version="4.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-_ALLOWED_ORIGINS = [o.strip() for o in os.getenv(
-    "ALLOWED_ORIGINS",
-    "https://algobets.app,https://algobets.ai,https://edgebet.app"
-).split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # open — frontend is a static file, no cookie auth
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
