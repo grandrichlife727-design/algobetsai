@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AlgoBets AI — Picks</title>
+
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --card: #12182a;
+    --accent: #4ade80;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --danger: #ef4444;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: Inter, system-ui, Arial, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 24px;
+  }
+
+  h1 {
+    margin-bottom: 6px;
+  }
+
+  .subhead {
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .status {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    transition: transform .15s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+  }
+
+  .matchup {
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .pick {
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .meta {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .error {
+    color: var(--danger);
+  }
+
+  .refresh {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 22px;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>AlgoBets AI</h1>
+    <div class="subhead">
+      AI-rated edges • Real market odds • Auto-updated
+    </div>
+
+    <div id="status" class="status">Loading picks…</div>
+
+    <div id="grid" class="grid"></div>
+
+    <div class="refresh">
+      Updates every 8 minutes
+    </div>
+  </div>
+
+<script>
+const API_URL = "/api/picks"; // change if needed
+const REFRESH_MS = 8 * 60 * 1000;
+
+async function loadPicks() {
+  const status = document.getElementById("status");
+  const grid = document.getElementById("grid");
+
+  try {
+    status.textContent = "Fetching latest edges…";
+
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("API error");
+
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = `
+        <div class="empty">
+          No +EV picks right now.<br/>
+          The model is waiting for an edge.
+        </div>
+      `;
+      status.textContent = "Live — no edges currently";
+      return;
+    }
+
+    grid.innerHTML = data.map(p => `
+      <div class="card">
+        <div class="matchup">
+          ${p.away_team} @ ${p.home_team}
+        </div>
+
+        <div class="pick">
+          ${p.pick}
+        </div>
+
+        <div class="meta">
+          Edge: ${formatPct(p.edge)}<br/>
+          Confidence: ${formatPct(p.confidence)}<br/>
+          Odds: ${p.odds ?? "-"}
+        </div>
+      </div>
+    `).join("");
+
+    status.textContent = `Live — ${data.length} edges found`;
+
+  } catch (err) {
+    console.error(err);
+    status.innerHTML = `<span class="error">Connection issue — retrying…</span>`;
+  }
+}
+
+function formatPct(val) {
+  if (val === undefined || val === null) return "-";
+  return (val * 100).toFixed(1) + "%";
+}
+
+// initial load
+loadPicks();
+
+// auto refresh
+setInterval(loadPicks, REFRESH_MS);
+</script>
+</body>
+</html>
