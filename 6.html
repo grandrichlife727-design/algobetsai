@@ -814,7 +814,7 @@ async function doScan(silent = false) {
         .filter(p => {
           if (!p.gameTimeRaw) return true;
           const gt = new Date(p.gameTimeRaw).getTime();
-          return gt > now - 3 * 60 * 60 * 1000; // keep games started within last 3hrs (live) + all future
+          return gt > now - 12 * 60 * 60 * 1000; // keep games started within last 12hrs (live) + all future
         })
         .sort((a, b) => b.ev - a.ev);
     }
