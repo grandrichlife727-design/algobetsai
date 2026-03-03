@@ -1,7 +1,7 @@
 """
 Algobets Ai — FastAPI Backend  v4.0
 =====================================
-UPGRADES IN THIS VERSION
+UPGRADES IN THIS VERSION1
 ─────────────────────────
 1. PINNACLE CLV MODEL  (v3)
    Scrapes Pinnacle's live spread/ML from their public API (no key needed).
