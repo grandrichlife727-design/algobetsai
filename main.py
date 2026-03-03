@@ -1,7 +1,7 @@
 """
 Algobets Ai — FastAPI Backend  v4.0
 =====================================
-UPGRADES IN THIS VERSION1
+UPGRADES IN THIS VERSION
 ─────────────────────────
 1. PINNACLE CLV MODEL  (v3)
    Scrapes Pinnacle's live spread/ML from their public API (no key needed).
@@ -1181,9 +1181,10 @@ async def fetch_espn_games(sport_slug: str) -> list:
                     {"name": away_team, "price": int(away_ml)},
                 ]})
             if spread is not None:
+                _hpt = float(spread)   # ESPN gives home spread directly (neg = home fav)
                 markets.append({"key": "spreads", "outcomes": [
-                    {"name": home_team, "point": -float(spread), "price": -110},
-                    {"name": away_team, "point":  float(spread), "price": -110},
+                    {"name": home_team, "point":  _hpt, "price": -110},
+                    {"name": away_team, "point": -_hpt, "price": -110},
                 ]})
             if over_under is not None:
                 markets.append({"key": "totals", "outcomes": [
@@ -1195,9 +1196,10 @@ async def fetch_espn_games(sport_slug: str) -> list:
             if not markets:
                 markets = []
                 if spread is not None:
+                    _hpt2 = float(spread)
                     markets.append({"key": "spreads", "outcomes": [
-                        {"name": home_team, "point": -float(spread), "price": -110},
-                        {"name": away_team, "point":  float(spread), "price": -110},
+                        {"name": home_team, "point":  _hpt2, "price": -110},
+                        {"name": away_team, "point": -_hpt2, "price": -110},
                     ]})
                 if over_under is not None:
                     markets.append({"key": "totals", "outcomes": [
@@ -2019,10 +2021,9 @@ def build_consensus_pick(event: dict, sport_key: str,
             effective_edge = clv_edge if clv_edge is not None else 1.0
             if effective_edge > best_edge:
                 best_edge = effective_edge
-                sign = "+" if avg_point > 0 else ""
                 best_pick = {
                     "game": game_label, "home_team": home, "away_team": away,
-                    "bet": f"{team} {sign}{avg_point:.1f}", "betType": "spread",
+                    "bet": f"{team} {avg_point:+.1f}".replace("+", "+").replace(".0 ", " ").replace(".0"", """),  "betType": "spread",
                     "bet_side": "away" if team == away else "home",
                     "odds": int(avg_price), "bet_point": avg_point,
                     "opening_point": an_game.get("opening_spread") if an_game else avg_point,
