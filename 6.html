@@ -692,6 +692,8 @@ function setApiStatus(state) {
 function normalizePick(p, idx) {
   const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
   const conf = parseFloat(p.confidence || 50);
+  // confidence is 0-95 integer from backend (not 0-1 float) — don't multiply by 100
+  const confPct = conf > 1 ? Math.round(conf) : Math.round(conf * 100);
   const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
 
   const chips = [];
@@ -703,9 +705,10 @@ function normalizePick(p, idx) {
   if (!chips.length)   chips.push({t:'ev', l:`+EV ${ev}%`});
 
   const mb = p.model_breakdown || {};
+  const agentsFired = (p.agents_fired || []).join(', ');
   const explain = mb.pinnacle_clv
     ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money || ''}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
-    : `<strong>${p.bet}</strong> at ${p.odds||'—'} on <strong>${bookLabel(p.best_book||'')}</strong> has +${ev}% edge over true probability.`;
+    : `<strong>${p.bet}</strong> at ${p.odds||'—'} has +${ev}% edge. ${mb.value||''} ${agentsFired ? 'Agents: ' + agentsFired + '.' : ''} ${mb.line_movement||''}`;
 
   let timeStr = p.game_time || '';
   if (timeStr) {
@@ -723,11 +726,11 @@ function normalizePick(p, idx) {
     bet:  p.bet  || '—',
     odds: p.odds || '—',
     ev,
-    conf: Math.round(conf * 100),
+    conf: confPct,
     book: bookLabel(p.best_book || ''),
     sh:   Math.round(p.sharpPct  || 0),
     pu:   Math.round(p.publicPct || 0),
-    lm:   p.lineMove   || 0,
+    lm:   (typeof p.lineMove === 'number') ? p.lineMove : (parseFloat((p.lineMove||'').match(/[\d.]+/)?.[0]||0) * ((p.lineMove||'').includes('▼') ? -1 : 1)),
     elo:  p.elo_edge   || 0,
     chips,
     explain,
