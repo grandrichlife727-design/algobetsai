@@ -210,7 +210,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <button class="tab active" onclick="showTab('picks')" id="tab-picks">Picks <span class="tab-badge" id="tc-picks">0</span></button>
   <button class="tab" onclick="showTab('ev')" id="tab-ev">+EV Finder <span class="tab-badge" id="tc-ev">0</span></button>
   <button class="tab" onclick="showTab('arb')" id="tab-arb">Arb Detect <span class="tab-badge" id="tc-arb">0</span></button>
-  <button class="tab" onclick="showTab('injuries')" id="tab-injuries">Injuries <span class="tab-badge" id="tc-inj">—</span></button>
   <button class="tab" onclick="showTab('perf')" id="tab-perf">Performance</button>
   <button class="tab" onclick="showTab('parlay')" id="tab-parlay">Parlay Builder <span class="tab-badge red" id="tc-parlay" style="display:none">0</span></button>
 </div>
@@ -256,21 +255,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <div id="pane-arb" style="display:none">
     <div class="sec-hdr"><span class="sec-title" id="arb-count">— arbs</span><span class="sec-meta">Source: The Odds API</span></div>
     <div class="arb-list" id="arblist"><div class="empty"><div class="empty-icon">⚖️</div><div class="empty-title">No arbs right now</div><div class="empty-sub">Arbs are rare. Check back after line moves.</div></div></div>
-  </div>
-
-  <!-- INJURIES -->
-  <div id="pane-injuries" style="display:none">
-    <div class="sec-hdr"><span class="sec-title" id="inj-count">— injuries</span><span class="sec-meta">ESPN · refreshed every 15min</span></div>
-    <div class="filters" id="inj-filters">
-      <button class="filter-btn active" onclick="setInjFilter('all',this)">All Sports</button>
-      <button class="filter-btn" onclick="setInjFilter('NBA',this)">🏀 NBA</button>
-      <button class="filter-btn" onclick="setInjFilter('NFL',this)">🏈 NFL</button>
-      <button class="filter-btn" onclick="setInjFilter('NHL',this)">🏒 NHL</button>
-      <button class="filter-btn" onclick="setInjFilter('MLB',this)">⚾ MLB</button>
-      <div class="filter-sep"></div>
-      <button class="filter-btn" onclick="setInjFilter('High',this)">🔴 High Impact Only</button>
-    </div>
-    <div class="inj-list" id="injlist"><div class="empty"><div class="empty-icon">🏥</div><div class="empty-title">Injuries not loaded</div><div class="empty-sub">Hit Scan Now to load the injury feed.</div></div></div>
   </div>
 
   <!-- PERFORMANCE -->
@@ -326,10 +310,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
     <span>+EV</span>
   </button>
-  <button class="mob-tab" id="mob-injuries" onclick="showTab('injuries')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    <span>Injuries</span>
-  </button>
   <button class="mob-tab" id="mob-parlay" onclick="showTab('parlay')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     <span>Parlay</span>
@@ -355,7 +335,7 @@ const DEBUG = true; // set false to hide debug panel
 let PICKS=[], EVDATA=[], ARBDATA=[], INJURIES=[];
 let PARLAY=[];
 let activeFilter='all', activeInjFilter='all', activeTab='picks';
-let lastRefresh=null, scanning=false, perfLoaded=false, injLoaded=false;
+let lastRefresh=null, scanning=false, perfLoaded=false;
 let refreshTimer=null, nextRefreshAt=null, tickerInterval=null;
 
 // ── DEBUG LOG ─────────────────────────────────────────────────────────────────
@@ -434,7 +414,7 @@ function decToAmerican(dec) {
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
-const PANES = ['picks','ev','arb','injuries','perf','parlay'];
+const PANES = ['picks','ev','arb','perf','parlay'];
 function showTab(tab) {
   activeTab = tab;
   PANES.forEach(p => {
@@ -443,7 +423,6 @@ function showTab(tab) {
     const mt = document.getElementById('mob-' + p);  if (mt) mt.classList.toggle('active', p === tab);
   });
   if (tab === 'perf' && !perfLoaded) loadPerf();
-  if (tab === 'injuries' && !injLoaded) loadInjuries();
   if (tab === 'parlay') renderParlayPane();
 }
 
@@ -451,11 +430,6 @@ function setFilter(f, el) {
   activeFilter = f;
   document.querySelectorAll('#sport-filters .filter-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active'); renderPicks();
-}
-function setInjFilter(f, el) {
-  activeInjFilter = f;
-  document.querySelectorAll('#inj-filters .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active'); renderInjuries();
 }
 
 // ── FETCH — direct first, proxy fallback ──────────────────────────────────────
@@ -631,7 +605,6 @@ async function doScan(silent=false) {
   }
 
   renderPicks(); renderEV(); renderArb();
-  if (activeTab === 'injuries') renderInjuries();
   if (activeTab === 'parlay') renderParlayPane();
 
   btn.classList.remove('busy');
@@ -758,35 +731,7 @@ function renderArb() {
     + '</div>').join('');
 }
 
-// ── INJURIES ──────────────────────────────────────────────────────────────────
-async function loadInjuries() {
-  if (injLoaded) return;
-  try {
-    const data = await backendGet('/api/injuries');
-    INJURIES = data.injuries || data || [];
-    injLoaded = true;
-    document.getElementById('tc-inj').textContent = INJURIES.length || '—';
-  } catch(e) { INJURIES = []; }
-  renderInjuries();
-}
 
-function renderInjuries() {
-  const el = document.getElementById('injlist');
-  const f = activeInjFilter;
-  const list = INJURIES.filter(inj => {
-    if (f === 'all')  return true;
-    if (f === 'High') return inj.impact === 'High';
-    return (inj.sport || '').toUpperCase().includes(f.toUpperCase());
-  });
-  document.getElementById('inj-count').textContent = list.length + ' injur' + (list.length !== 1 ? 'ies' : 'y');
-  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div><div class="empty-title">No injuries match this filter</div></div>'; return; }
-  el.innerHTML = list.map(inj => '<div class="inj-card">'
-    + '<div class="inj-dot ' + (inj.impact || 'Low') + '"></div>'
-    + '<div class="inj-info"><div class="inj-name">' + (inj.player || 'Unknown') + '</div>'
-    + '<div class="inj-meta">' + (inj.team || '') + ' · ' + (inj.pos || '') + ' · ' + (inj.sport || '') + ' · ' + (inj.injury || 'Injury') + '</div></div>'
-    + '<div class="inj-badge ' + (inj.status || 'Questionable') + '">' + (inj.status || 'Questionable') + '</div>'
-    + '</div>').join('');
-}
 
 // ── PERFORMANCE ───────────────────────────────────────────────────────────────
 async function loadPerf() {
