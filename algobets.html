@@ -810,7 +810,7 @@ async function doScan(silent = false) {
   try {
     // Hit all three backend endpoints in parallel
     const [picksRes, evRes, arbRes] = await Promise.allSettled([
-      backendGet('/scan'),
+      backendGet('/scan?refresh=true'),
       backendGet('/api/ev-finder'),
       backendGet('/api/arb-detect'),
     ]);

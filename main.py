@@ -3247,16 +3247,24 @@ async def scan(request: Request):
     plan = await get_user_plan(request)
     is_owner = request.headers.get("x-user-id", "").strip() in OWNER_EMAILS
     pick_limit = 999 if (plan in ("sharp",) or is_owner) else (7 if plan == "pro" else 3)
+    force_refresh = request.query_params.get("refresh") == "true"
 
-    cached = cache_get("scan_result_v7", ttl=CACHE_TTL_FREE)
-    if cached:
-        result = dict(cached)
-        picks = result.get("consensus_picks", [])
-        result["consensus_picks"] = picks[:pick_limit]
-        result["picks_total"] = len(result["consensus_picks"])
-        result["plan"] = plan
-        result["pick_limit"] = pick_limit
-        return result
+    if not force_refresh:
+        cached = cache_get("scan_result_v7", ttl=CACHE_TTL_FREE)
+        if cached:
+            # Filter out picks for games that have already started
+            now_utc = datetime.utcnow()
+            picks = [
+                p for p in cached.get("consensus_picks", [])
+                if not p.get("game_time") or
+                datetime.fromisoformat(p["game_time"].replace("Z", "")).replace(tzinfo=None) > now_utc
+            ]
+            result = dict(cached)
+            result["consensus_picks"] = picks[:pick_limit]
+            result["picks_total"] = len(result["consensus_picks"])
+            result["plan"] = plan
+            result["pick_limit"] = pick_limit
+            return result
 
     # ── FETCH ALL DATA CONCURRENTLY ──────────────────────────────────────────
     # Odds API is the MASTER event list. ESPN used for injuries only.
