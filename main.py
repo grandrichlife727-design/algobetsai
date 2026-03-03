@@ -2053,7 +2053,6 @@ async def fetch_odds(sport: str, markets: str = "h2h,spreads,totals") -> list:
             r = await client.get(f"{ODDS_BASE}/sports/{sport}/odds", params={
                 "apiKey": ODDS_API_KEY, "regions": "us", "markets": markets,
                 "oddsFormat": "american", "dateFormat": "iso",
-                "bookmakers": ODDS_BOOKMAKERS,
             })
             r.raise_for_status()
             rem  = r.headers.get("x-requests-remaining")
