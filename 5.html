@@ -558,7 +558,11 @@ async function doScan(silent=false) {
   if (pR.status === 'fulfilled') {
     const raw = pR.value;
     const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
+    dbg('Picks raw response keys: ' + Object.keys(pR.value).join(', '), 'warn');
     dbg('Picks raw count: ' + arr.length, arr.length ? 'ok' : 'warn');
+    if (!arr.length && pR.value.detail) dbg('Backend msg: ' + pR.value.detail, 'err');
+    if (!arr.length && pR.value.error)  dbg('Backend err: ' + pR.value.error,  'err');
+    if (!arr.length && pR.value.message) dbg('Backend msg: ' + pR.value.message, 'warn');
     PICKS = arr
       .map(p => normPick(p))
       .filter(p => !p.gameTimeRaw || new Date(p.gameTimeRaw).getTime() > now - 3 * 3600 * 1000)
