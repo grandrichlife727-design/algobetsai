@@ -1936,20 +1936,28 @@ def run_veto_checks(a2: dict, a3: dict, a4: dict,
         reasons.append(f"V1-Injury: {a4['veto_reason']}")
 
     # V2 — Line moved hard against us (market is telling us we're wrong)
+    # LOWERED from 2.0 to 2.5 pts for more permissive testing
     diff = a2.get("diff", 0)
-    if not a2.get("favorable") and abs(diff) >= 2.0:
+    if not a2.get("favorable") and abs(diff) >= 2.5:
         reasons.append(f"V2-LineMove: moved {diff:+.1f}pts against bet side")
 
     # V3 — Public trap: heavy public action with low sharp interest
+    # LOWERED from 75/30 to 80/25 for more permissive testing
     pub  = a3.get("public_pct", 50)
     shrp = a3.get("sharp_pct", 50)
-    if pub > 75 and shrp < 30:
+    if pub > 80 and shrp < 25:
         reasons.append(f"V3-PublicTrap: {pub:.0f}% public, only {shrp:.0f}% sharp handle")
 
     # V4 — Edge too thin (below minimum threshold after signal weighting)
+<<<<<<< HEAD
     # Only veto if edge is truly negative/zero — let marginal picks through for display
     if best_edge < 0.1:
         reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.1% minimum")
+=======
+    # LOWERED from 0.5 to 0.3 for more permissive testing
+    if best_edge < 0.3:
+        reasons.append(f"V4-ThinEdge: edge {best_edge:.1f}% below 0.3% minimum")
+>>>>>>> bd10b3c7751ebc8a68edbde42a0eaa0b2c1e570f
 
     return len(reasons) > 0, reasons
 
@@ -2065,7 +2073,12 @@ def build_consensus_pick(event: dict, sport_key: str,
                     "pinnacle_fetched_at":  pin_game.get("pinnacle_fetched_at") if pin_game else None,
                 }
 
+<<<<<<< HEAD
     min_edge = 1.0 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.1
+=======
+    # LOWERED minimum edges from 1.0/0.5 to 0.7/0.3 for more permissive testing
+    min_edge = 0.7 if best_pick and best_pick.get("edge_source") == "pinnacle_clv" else 0.3
+>>>>>>> bd10b3c7751ebc8a68edbde42a0eaa0b2c1e570f
     if best_edge < min_edge or best_pick is None:
         return None
 
@@ -2361,6 +2374,8 @@ async def scan(request: Request):
     picks.sort(key=lambda p: p["edge"] * p["confidence"], reverse=True)
     top_picks = picks[:10]
     print(f"[Scan] Sports: {list(espn_games.keys())} | Events analyzed: {sum(len(v) for v in espn_games.values())} | Picks generated: {len(picks)} | Top picks: {len(top_picks)}")
+    if len(picks) == 0:
+        print("[Scan] WARNING: No picks generated. Check if all events are being vetoed or ESPN/Pinnacle data is missing.")
 
     clv_count     = sum(1 for p in top_picks if p.get("edge_source") == "pinnacle_clv")
     weather_count = sum(1 for p in top_picks if p.get("weather_flag"))
