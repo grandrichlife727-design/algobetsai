@@ -64,71 +64,70 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
 
 /* TOPBAR */
-.topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;min-height:52px}
-.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1}
-.tabs::-webkit-scrollbar{display:none}
-.tab{padding:8px 14px;border:none;background:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap;border-bottom:2px solid transparent;position:relative}
-.tab.active{color:var(--text);border-bottom-color:var(--cyan)}
-.tab:hover:not(.active){color:var(--text)}
-.topbar-right{display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid var(--border)}
-.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);padding:3px 8px;border-radius:99px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:center;gap:8px;min-height:52px}
+.topbar-logo{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.topbar-logo span{color:var(--cyan)}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);padding:3px 8px;border-radius:99px;white-space:nowrap}
 .pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
-.scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans)}
+.scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
 .scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
-.loading-bar{height:1px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
+.loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
 @keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
 
 /* MAIN */
 .main{display:flex;flex-direction:column;min-height:100vh}
-.content{padding:20px;flex:1}
+/* Add bottom padding on mobile so content isn't hidden behind nav */
+.content{padding:16px;flex:1;padding-bottom:80px}
+@media(min-width:901px){.content{padding:20px;padding-bottom:20px}}
 
 /* HERO STATS */
 .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
 .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
 .stat.s-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
 .stat.s-cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
 .stat.s-violet::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
-.stat-val{font-size:22px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
-.stat-label{font-size:11px;color:var(--sub);margin-top:5px}
+.stat-val{font-size:20px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+.stat-label{font-size:10px;color:var(--sub);margin-top:4px}
+@media(max-width:400px){.hero-stats{grid-template-columns:1fr 1fr}.stat:last-child{display:none}.stat-val{font-size:17px}}
 
 /* PAGE HEADER */
-.page-hdr{margin-bottom:18px}
+.page-hdr{margin-bottom:16px}
 .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px}.page-title span{color:var(--cyan)}
 .page-sub{font-size:12px;color:var(--sub);margin-top:3px}
 
 /* FILTERS */
-.filters{display:flex;gap:5px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.filters{display:flex;gap:5px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}
 .filters::-webkit-scrollbar{display:none}
-.filter{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans)}
+.filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
 
 /* SECTION */
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:4px}
 .sec-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
 .sec-meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
 
-/* PICK CARD — redesigned, cleaner */
+/* PICK CARD */
 .picks-list{display:flex;flex-direction:column;gap:8px}
 .pick{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s;animation:fadein .35s ease both}
 .pick:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.3)}
 .pick.grade-a{border-left:2px solid var(--cyan)}.pick.grade-b{border-left:2px solid var(--violet)}.pick.grade-c{border-left:2px solid var(--amber)}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-.pick-inner{padding:12px 14px 12px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
-.pick-left{}
-.pick-sport-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.sport-tag{background:rgba(255,255,255,.05);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sub)}
-.game-label{font-size:11px;color:var(--sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.game-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
-.grade-tag{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 5px;border-radius:4px}
+.pick-inner{padding:12px 12px 12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.pick-sport-row{display:flex;align-items:center;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.sport-tag{background:rgba(255,255,255,.05);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sub);white-space:nowrap}
+.game-label{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.game-time{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.grade-tag{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 5px;border-radius:4px;white-space:nowrap}
 .grade-tag.a{background:rgba(0,212,255,.1);color:var(--cyan)}.grade-tag.b{background:rgba(155,121,255,.1);color:var(--violet)}.grade-tag.c{background:rgba(255,183,0,.1);color:var(--amber)}
 
-.pick-bet{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
-.pick-odds-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pick-bet{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px;word-break:break-word}
+.pick-odds-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .pick-odds{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)}
 .pick-book{font-size:11px;color:var(--sub)}
 .pick-book-link{font-size:11px;color:var(--sub);text-decoration:none;transition:color .12s}
@@ -140,18 +139,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .chip.rlm{background:rgba(155,121,255,.08);color:var(--violet)}.chip.elo{background:rgba(255,183,0,.08);color:var(--amber)}
 .chip.ev{background:rgba(0,229,160,.08);color:var(--green)}
 
-.pick-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.pick-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
 .ev-circle{position:relative}
 .ev-circle svg{display:block}
 
-.pick-actions{display:flex;gap:5px;align-items:center;padding:8px 14px 10px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.08)}
-.btn-how{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans)}
+.pick-actions{display:flex;gap:5px;align-items:center;padding:8px 12px 10px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.08);flex-wrap:wrap}
+.btn-how{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-how:hover{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.3)}
-.btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans)}
+.btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-parlay:hover{background:rgba(255,255,255,.08);color:var(--text)}
-.pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 14px 12px 16px;display:none}
+.pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
-.explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans)}
+.explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
 .explain-toggle:hover{color:var(--sub)}
 
 /* SIGNAL BARS (expert mode) */
@@ -163,23 +162,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .sig-num{font-size:10px;font-family:var(--mono);color:var(--sub);width:32px;text-align:right;flex-shrink:0}
 
 /* EV TABLE */
-.ev-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.ev-hdr{display:grid;grid-template-columns:1fr 100px 80px 80px;gap:0;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-.ev-row{display:grid;grid-template-columns:1fr 100px 80px 80px;gap:0;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s;cursor:default}
+.ev-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;overflow-x:auto}
+.ev-hdr{display:grid;grid-template-columns:1fr 90px 80px 80px;gap:0;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;min-width:340px}
+.ev-row{display:grid;grid-template-columns:1fr 90px 80px 80px;gap:0;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s;cursor:default;min-width:340px}
 .ev-row:last-child{border-bottom:none}
 .ev-row:hover{background:rgba(255,255,255,.02)}
-.ev-bet{font-size:13px;font-weight:600;margin-bottom:2px}
+.ev-bet{font-size:13px;font-weight:600;margin-bottom:2px;word-break:break-word}
 .ev-game{font-size:11px;color:var(--sub)}
 .ev-pct{font-family:var(--mono);font-weight:700;font-size:14px}
 .ev-book{font-size:11px;font-weight:600}
 .ev-odds{font-family:var(--mono);font-size:13px;font-weight:600}
-.ev-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
-.ev-tag.live{background:rgba(0,229,160,.1);color:var(--green);font-family:var(--mono)}
 
 /* ARB */
 .arb-card{background:var(--card);border:1px solid rgba(0,229,160,.1);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:fadein .3s ease both}
 .arb-profit{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)}
 .arb-legs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:400px){.arb-legs{grid-template-columns:1fr}}
 .leg{background:rgba(0,0,0,.15);border-radius:8px;padding:10px;border:1px solid var(--border)}
 .leg-book{font-size:9px;color:var(--muted);font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .leg-bet{font-size:13px;font-weight:700;margin-bottom:3px}
@@ -200,11 +198,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .parlay-empty{font-size:13px;color:var(--sub)}
 
 /* BOOST */
-.boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;max-width:460px}
+.boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:460px}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+@media(max-width:480px){.field-grid{grid-template-columns:1fr}}
 .field{display:flex;flex-direction:column;gap:5px}
 .field-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
-.field-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-size:15px;font-weight:700;font-family:var(--mono);outline:none;transition:border-color .12s}
+.field-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:15px;font-weight:700;font-family:var(--mono);outline:none;transition:border-color .12s;width:100%}
 .field-input:focus{border-color:rgba(0,212,255,.3)}
 .boost-result{background:rgba(155,121,255,.05);border:1px solid rgba(155,121,255,.15);border-radius:8px;padding:14px;margin-top:12px;display:none}
 .boost-result.on{display:block}
@@ -213,15 +212,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .bst-val{font-size:14px;font-weight:700;font-family:var(--mono)}
 .bst-lbl{font-size:10px;color:var(--muted);margin-top:2px}
 .examples-list{margin-top:14px;display:flex;flex-direction:column;gap:5px}
-.ex-btn{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:7px;padding:8px 12px;cursor:pointer;transition:background .12s;text-align:left;width:100%;font-family:var(--sans)}
+.ex-btn{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:7px;padding:8px 12px;cursor:pointer;transition:background .12s;text-align:left;width:100%;font-family:var(--sans);gap:8px}
 .ex-btn:hover{background:rgba(255,255,255,.05)}
+.ex-btn span:last-child{flex-shrink:0}
 
 /* PERFORMANCE */
 .perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
 @media(max-width:580px){.perf-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:360px){.perf-grid{grid-template-columns:1fr 1fr}}
 .perf-chart{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
 .bars{display:flex;align-items:flex-end;gap:5px;height:56px;margin-top:12px}
-.bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:opacity .2s}
+.bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:opacity .2s;cursor:pointer}
 .bar:hover{opacity:.7}
 .bar-labels{display:flex;gap:5px;margin-top:5px}
 .bar-lbl{flex:1;text-align:center;font-size:10px;color:var(--muted)}
@@ -247,11 +248,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .modal-close{width:100%;margin-top:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:13px;font-weight:600;padding:9px;cursor:pointer;font-family:var(--sans)}
 
 /* MOBILE NAV */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 4px calc(env(safe-area-inset-bottom) + 8px);z-index:200;display:flex;justify-content:space-around}
-@media(min-width:901px){.mobile-nav{display:none!important}}
-.mnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--sub);font-size:10px;font-weight:600;padding:6px 14px;cursor:pointer;border-radius:8px;font-family:var(--sans);transition:color .12s}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:6px 4px;padding-bottom:calc(env(safe-area-inset-bottom) + 6px);z-index:200}
+@media(max-width:900px){.mobile-nav{display:flex;justify-content:space-around}}
+.mnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--sub);font-size:9px;font-weight:600;padding:5px 10px;cursor:pointer;border-radius:8px;font-family:var(--sans);transition:color .12s;flex:1;min-width:0}
 .mnav-btn.active{color:var(--cyan)}
-.mnav-btn svg{width:18px;height:18px;opacity:.6}.mnav-btn.active svg{opacity:1}
+.mnav-btn svg{width:18px;height:18px;opacity:.6;flex-shrink:0}.mnav-btn.active svg{opacity:1}
 
 /* LOADING SKELETON */
 .skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
@@ -262,33 +263,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .empty-icon{font-size:28px;margin-bottom:10px}
 .empty-title{font-size:14px;font-weight:700;color:var(--sub);margin-bottom:5px}
 .empty-sub{font-size:12px;color:var(--muted)}
-.error-banner{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--sub);margin-bottom:16px;display:none}
+.error-banner{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--sub);margin-bottom:16px;display:none;line-height:1.5}
 .error-banner.on{display:block}
 
 /* TOAST */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--cyan);color:#000;padding:7px 16px;border-radius:99px;font-weight:700;font-size:12px;z-index:9999;opacity:0;transition:all .2s;pointer-events:none}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--cyan);color:#000;padding:7px 16px;border-radius:99px;font-weight:700;font-size:12px;z-index:9999;opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* MODE TOGGLE */
-.mode-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.mode-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .mode-group{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:3px;gap:2px}
-.mode-btn{padding:4px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
+.mode-btn{padding:5px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
 .mode-btn.active{background:var(--card);color:var(--text)}
 .mode-hint{font-size:11px;color:var(--muted)}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
-.api-dot{width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .api-dot.ok{background:var(--green)}.api-dot.err{background:var(--red)}.api-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+.api-lbl{font-size:10px;color:var(--muted)}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--muted);border-radius:99px}
 
-/* RESPONSIVE */
-@media(max-width:600px){.hero-stats{grid-template-columns:repeat(3,1fr)}.stat-val{font-size:18px}}
-@media(max-width:420px){.hero-stats{grid-template-columns:1fr 1fr}.stat:last-child{display:none}}
 </style>
 </head>
 <body>
@@ -357,13 +356,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
-    <div style="font-size:15px;font-weight:700;letter-spacing:-.3px;margin-right:auto">Algo<span style="color:var(--cyan)">bets AI</span></div>
-    <div class="api-status"><div class="api-dot loading" id="api-dot"></div><span id="api-lbl" style="font-size:10px;color:var(--muted)">Connecting</span></div>
-    <div class="live-pill"><div class="pulse"></div>LIVE</div>
-    <button class="scan-btn" id="scan-btn" onclick="doScan()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      Scan Now
-    </button>
+    <div class="topbar-logo">Algo<span>bets AI</span></div>
+    <div class="topbar-right">
+      <div class="api-status">
+        <div class="api-dot loading" id="api-dot"></div>
+        <span class="api-lbl" id="api-lbl">Connecting</span>
+      </div>
+      <div class="live-pill"><div class="pulse"></div>LIVE</div>
+      <button class="scan-btn" id="scan-btn" onclick="doScan()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Scan Now
+      </button>
+    </div>
   </div>
   <div class="loading-bar" id="load-bar"></div>
 
@@ -372,8 +376,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <!-- PICKS -->
     <div id="v-picks">
       <div class="page-hdr">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
-          <div style="font-size:26px;font-weight:800;letter-spacing:-.6px">Algobets <span style="color:var(--cyan)">AI</span></div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <div style="font-size:24px;font-weight:800;letter-spacing:-.6px">Algobets <span style="color:var(--cyan)">AI</span></div>
           <div style="font-size:11px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);border-radius:4px;padding:2px 7px;font-family:var(--mono)">BETA</div>
         </div>
         <div class="page-sub">Self-sharpening model · Pinnacle CLV benchmarked · Updated every 8 minutes</div>
@@ -405,16 +409,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <span class="sec-meta" id="picks-refreshed">—</span>
       </div>
       <div class="picks-list" id="picklist">
-        <!-- skeleton -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
-          <div class="skeleton" style="height:12px;width:40%;"></div>
-          <div class="skeleton" style="height:18px;width:65%;"></div>
-          <div class="skeleton" style="height:10px;width:30%;"></div>
+          <div class="skeleton" style="height:12px;width:40%"></div>
+          <div class="skeleton" style="height:18px;width:65%"></div>
+          <div class="skeleton" style="height:10px;width:30%"></div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
-          <div class="skeleton" style="height:12px;width:35%;"></div>
-          <div class="skeleton" style="height:18px;width:55%;"></div>
-          <div class="skeleton" style="height:10px;width:28%;"></div>
+          <div class="skeleton" style="height:12px;width:35%"></div>
+          <div class="skeleton" style="height:18px;width:55%"></div>
+          <div class="skeleton" style="height:10px;width:28%"></div>
         </div>
       </div>
     </div>
@@ -471,9 +474,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
             <div><div class="bst-val" id="bc-edge" style="color:var(--amber)">+$0</div><div class="bst-lbl">Edge vs normal</div></div>
           </div>
         </div>
-        <div class="examples-list" id="boost-examples">
-          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Try an example</div>
-        </div>
+        <div class="examples-list" id="boost-examples"></div>
       </div>
     </div>
 
@@ -545,21 +546,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const ODDS_KEY = '316ba9e3bd49f1c65f604a292e1962a8';
-const ODDS_BASE = 'https://api.the-odds-api.com/v4';
-const BACKEND_URL = 'https://algobetsai.onrender.com'; // your Render backend
+const BACKEND = 'https://algobetsai.onrender.com';
+const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
 
-// Sports to scan — ordered by priority
 const SPORTS = [
-  {key:'basketball_nba',  label:'NBA 🏀', sk:'nba'},
-  {key:'basketball_ncaab', label:'NCAAB 🎓', sk:'basketball_ncaab'},
-  {key:'icehockey_nhl',   label:'NHL 🏒', sk:'nhl'},
-  {key:'baseball_mlb',    label:'MLB ⚾', sk:'mlb'},
-  {key:'soccer_epl',      label:'EPL ⚽', sk:'epl'},
+  {key:'basketball_nba',   label:'NBA 🏀'},
+  {key:'basketball_ncaab', label:'NCAAB 🎓'},
+  {key:'icehockey_nhl',    label:'NHL 🏒'},
+  {key:'baseball_mlb',     label:'MLB ⚾'},
+  {key:'soccer_epl',       label:'EPL ⚽'},
 ];
-
-// Book priority for best-odds
-const BOOKS = ['pinnacle','draftkings','fanduel','betmgm','caesars','pointsbet','bet365'];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
@@ -571,6 +567,7 @@ let ARBDATA = [];
 let lastRefresh = null;
 let isScanning = false;
 let currentTab = 'picks';
+let usingDemo = false; // always false — no demo data
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -579,21 +576,10 @@ function americanToDecimal(odds) {
   return o > 0 ? (o / 100) + 1 : 1 + (100 / Math.abs(o));
 }
 
-function decimalToAmerican(d) {
-  if (d >= 2) return '+' + Math.round((d - 1) * 100);
-  return Math.round(-100 / (d - 1)).toString();
-}
-
 function impliedProb(odds) {
   const o = parseInt(odds);
   if (isNaN(o)) return 0.5;
   return o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100);
-}
-
-function devig(prob1, prob2) {
-  // Multiplicative devig
-  const total = prob1 + prob2;
-  return prob1 / total;
 }
 
 function calcEV(odds, fairProb) {
@@ -605,7 +591,7 @@ function evColor(ev) {
   return ev >= 6 ? 'var(--cyan)' : ev >= 3 ? 'var(--violet)' : 'var(--amber)';
 }
 
-function evRing(ev, sz = 52) {
+function evRing(ev, sz = 50) {
   const r = sz / 2 - 5, c = sz / 2;
   function arc(a1, a2) {
     const R = a => a * Math.PI / 180;
@@ -620,7 +606,7 @@ function evRing(ev, sz = 52) {
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="flex-shrink:0">
     <path d="${arc(-90, 270)}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4" stroke-linecap="round"/>
     ${ev > 0 ? `<path d="${arc(-90, end)}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` : ''}
-    <text x="${c}" y="${c+1}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="JetBrains Mono,monospace">+${ev}%</text>
+    <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="JetBrains Mono,monospace">+${ev}%</text>
     <text x="${c}" y="${c+10}" text-anchor="middle" dominant-baseline="middle" fill="#3d4554" font-size="7" font-family="Space Grotesk,sans-serif">EV</text>
   </svg>`;
 }
@@ -640,29 +626,27 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('on'), 2200);
 }
 
-function sportLabel(key) {
-  const s = SPORTS.find(x => x.key === key);
-  return s ? s.label : key.toUpperCase();
-}
-
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
   return map[bk] || bk;
 }
 
-// ─── BACKEND API ─────────────────────────────────────────────────────────────
-const BACKEND = 'https://algobetsai.onrender.com';
-const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
-
-async function backendGet(path) {
-  const res = await fetch(`${BACKEND}${path}`, {
-    headers: {
-      'x-api-key': BACKEND_KEY,
-      'x-user-id': 'grandrichlife727@gmail.com'
-    }
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+// ─── BACKEND ─────────────────────────────────────────────────────────────────
+async function backendGet(path, timeout = 20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(`${BACKEND}${path}`, {
+      headers: {'x-api-key': BACKEND_KEY, 'x-user-id': 'grandrichlife727@gmail.com'},
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 function setApiStatus(state) {
@@ -673,9 +657,9 @@ function setApiStatus(state) {
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
 }
 
-// Map backend pick format → frontend format
+// ─── NORMALIZERS ──────────────────────────────────────────────────────────────
 function normalizePick(p, idx) {
-  const ev = parseFloat(p.edge || p.ev || 0);
+  const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
   const conf = parseFloat(p.confidence || 50);
   const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
 
@@ -684,104 +668,65 @@ function normalizePick(p, idx) {
   if (p.steam)    chips.push({t:'steam', l:'STEAM'});
   if (p.rlm)      chips.push({t:'rlm',   l:'RLM'});
   if (p.elo_edge) chips.push({t:'elo',   l:`ELO +${p.elo_edge}%`});
-  if (p.soft_book_lag) chips.push({t:'ev', l:`LAG +${p.lag_pct||0}%`});
-  if (!chips.length) chips.push({t:'ev',  l:`+EV ${ev}%`});
+  if (p.soft_book_lag) chips.push({t:'ev', l:`LAG`});
+  if (!chips.length)   chips.push({t:'ev', l:`+EV ${ev}%`});
 
-  // Build human explanation from model_breakdown
   const mb = p.model_breakdown || {};
   const explain = mb.pinnacle_clv
-    ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
-    : buildExplain(p.bet||'', p.game||'', ev, grade, p.best_book||'', p.odds||'', p.fair_prob||0.5);
+    ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money || ''}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
+    : `<strong>${p.bet}</strong> at ${p.odds||'—'} on <strong>${bookLabel(p.best_book||'')}</strong> has +${ev}% edge over true probability.`;
 
-  // Format time
   let timeStr = p.game_time || '';
   if (timeStr) {
-    try {
-      timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-    } catch(e) {}
+    try { timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}); } catch(e){}
   }
 
   return {
-    id:    idx + 1,
+    id:   idx + 1,
     grade,
     sport: `${p.emoji||''} ${p.sport||''}`.trim(),
-    sk:    p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
-    game:  p.game  || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
-    time:  timeStr,
+    sk:   p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
+    game: p.game || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
+    time: timeStr,
     gameTimeRaw: p.game_time || null,
-    bet:   p.bet   || '—',
-    odds:  p.odds  || '—',
+    bet:  p.bet  || '—',
+    odds: p.odds || '—',
     ev,
-    conf:  Math.round(conf * 100),
-    book:  bookLabel(p.best_book || ''),
-    sh:    Math.round(p.sharpPct  || 0),
-    pu:    Math.round(p.publicPct || 0),
-    lm:    p.lineMove   || 0,
-    elo:   p.elo_edge   || 0,
-    sig:   chips.length,
+    conf: Math.round(conf * 100),
+    book: bookLabel(p.best_book || ''),
+    sh:   Math.round(p.sharpPct  || 0),
+    pu:   Math.round(p.publicPct || 0),
+    lm:   p.lineMove   || 0,
+    elo:  p.elo_edge   || 0,
     chips,
     explain,
   };
 }
 
-function normalizeEV(e, idx) {
+function normalizeEV(e) {
   return {
-    bet:   e.bet  || '—',
-    game:  e.game || '—',
-    sport: e.sport || '',
-    ev:    parseFloat(e.ev || 0),
-    best:  e.bookOdds ? (e.books_compared ? `${e.books_compared} books` : '—') : '—',
-    bo:    e.bookOdds  || '—',
-    book:  '—', // best book not directly in ev response
+    bet:  e.bet  || '—',
+    game: e.game || '—',
+    ev:   Math.round(parseFloat(e.ev || 0) * 10) / 10,
+    best: e.books_compared ? `${e.books_compared} books` : '—',
+    bo:   e.bookOdds || '—',
   };
 }
 
-function normalizeArb(a, idx) {
+function normalizeArb(a) {
   const sides = a.sides || [];
   return {
     sport: `${a.emoji||''} ${a.sport||''}`.trim(),
-    game:  a.game  || '—',
-    p:     parseFloat(a.profit_pct || 0),
-    lA: {
-      bk:    sides[0]?.book  || '—',
-      bt:    sides[0]?.bet   || '—',
-      od:    sides[0]?.odds  || '—',
-      stake: sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—',
-    },
-    lB: {
-      bk:    sides[1]?.book  || '—',
-      bt:    sides[1]?.bet   || '—',
-      od:    sides[1]?.odds  || '—',
-      stake: sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—',
-    },
+    game:  a.game || '—',
+    p:     Math.round(parseFloat(a.profit_pct || 0) * 100) / 100,
+    lA: {bk:sides[0]?.book||'—', bt:sides[0]?.bet||'—', od:sides[0]?.odds||'—', stake:sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—'},
+    lB: {bk:sides[1]?.book||'—', bt:sides[1]?.bet||'—', od:sides[1]?.odds||'—', stake:sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—'},
   };
 }
 
-// ─── DEMO FALLBACK ────────────────────────────────────────────────────────────
-function loadDemoFallback() {
-  if (PICKS.length > 0) return;
-  // Use relative times so demo data never looks stale
-  const now = new Date();
-  const t1 = new Date(now.getTime() + 2*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-  const t2 = new Date(now.getTime() + 4*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-  const t3 = new Date(now.getTime() + 6*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-  PICKS = [
-    {id:1,grade:'a',sport:'NBA 🏀',game:'Celtics vs Knicks',time:t1,bet:'Boston Celtics ML',odds:'-118',ev:7.4,conf:82,book:'DraftKings',sh:71,pu:33,lm:1.5,elo:4.2,sig:3,sk:'basketball_nba',
-     chips:[{t:'clv',l:'CLV +7.4%'},{t:'steam',l:'STEAM'},{t:'elo',l:'ELO +4.2%'}],
-     explain:'<strong>Strong play.</strong> Boston is getting mispriced at -118. The true line should be around -108 based on Pinnacle\'s model. 71% of sharp money is on the Celtics. Bet at DraftKings.'},
-    {id:2,grade:'a',sport:'NCAAB 🎓',game:'Duke vs North Carolina',time:t2,bet:'Duke Blue Devils -4.5',odds:'-108',ev:5.8,conf:78,book:'FanDuel',sh:68,pu:41,lm:2.0,elo:3.1,sig:3,sk:'basketball_ncaab',
-     chips:[{t:'clv',l:'CLV +5.8%'},{t:'rlm',l:'RLM'},{t:'elo',l:'ELO +3.1%'}],
-     explain:'<strong>Solid value.</strong> Duke -4.5 at -108 beats the fair line of -114. Sharp money is on the Blue Devils. Reverse line move detected.'},
-    {id:3,grade:'b',sport:'NHL 🏒',game:'Panthers vs Bruins',time:t3,bet:'Florida Panthers ML',odds:'+102',ev:4.2,conf:67,book:'BetMGM',sh:60,pu:38,lm:0.5,elo:2.2,sig:2,sk:'icehockey_nhl',
-     chips:[{t:'clv',l:'CLV +4.2%'},{t:'rlm',l:'RLM'}],
-     explain:'Panthers at +102 have value — fair price is -103. Getting plus money on a slight favorite is the textbook definition of closing line value.'},
-  ];
-  document.getElementById('s-edge').textContent = '+5.8%';
-  document.getElementById('s-count').textContent = PICKS.length;
-  document.getElementById('nb-picks').textContent = PICKS.length;
-}
 
 
+// ─── SCAN ─────────────────────────────────────────────────────────────────────
 async function doScan(silent = false) {
   if (isScanning) return;
   isScanning = true;
@@ -789,9 +734,17 @@ async function doScan(silent = false) {
   const btn = document.getElementById('scan-btn');
   const loadBar = document.getElementById('load-bar');
   btn.classList.add('loading');
-  btn.textContent = 'Scanning…';
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning…';
   loadBar.classList.add('on');
   setApiStatus('loading');
+
+  // FIX: Always clear stale data before fetching
+  PICKS = [];
+  EVDATA = [];
+  ARBDATA = [];
+  usingDemo = false;
+  document.getElementById('demo-banner').classList.remove('on');
+  document.getElementById('err-banner').classList.remove('on');
 
   if (!silent) {
     document.getElementById('picklist').innerHTML = `
@@ -808,35 +761,31 @@ async function doScan(silent = false) {
   }
 
   try {
-    // Hit all three backend endpoints in parallel
+    // FIX: Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
+    const bust = Date.now();
     const [picksRes, evRes, arbRes] = await Promise.allSettled([
-      backendGet('/scan?refresh=true'),
-      backendGet('/api/ev-finder'),
-      backendGet('/api/arb-detect'),
+      backendGet(`/scan?refresh=true&_=${bust}`),
+      backendGet(`/api/ev-finder?_=${bust}`),
+      backendGet(`/api/arb-detect?_=${bust}`),
     ]);
 
-    // Process picks — filter out games that have already started
+    const now = Date.now();
+
     if (picksRes.status === 'fulfilled') {
       const raw = picksRes.value;
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
-      const now = Date.now();
       PICKS = arr
-        .map(normalizePick)
-        .filter(p => {
-          if (!p.gameTimeRaw) return true; // keep if no time info
-          return new Date(p.gameTimeRaw).getTime() > now;
-        });
-      PICKS.sort((a, b) => b.ev - a.ev);
+        .map((p, i) => normalizePick(p, i))
+        .filter(p => !p.gameTimeRaw || new Date(p.gameTimeRaw).getTime() > now)
+        .sort((a, b) => b.ev - a.ev);
     }
 
-    // Process EV
     if (evRes.status === 'fulfilled') {
       const raw = evRes.value;
       const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
       EVDATA = arr.map(normalizeEV).sort((a, b) => b.ev - a.ev);
     }
 
-    // Process Arb
     if (arbRes.status === 'fulfilled') {
       const raw = arbRes.value;
       const arr = Array.isArray(raw) ? raw : (raw.results || raw.arbs || raw.data || []);
@@ -845,36 +794,35 @@ async function doScan(silent = false) {
 
     lastRefresh = Date.now();
 
-    // Update stats
     if (PICKS.length) {
       const avgEV = Math.round(PICKS.reduce((s, p) => s + p.ev, 0) / PICKS.length * 10) / 10;
       document.getElementById('s-edge').textContent = '+' + avgEV + '%';
       document.getElementById('s-count').textContent = PICKS.length;
+      document.getElementById('nb-picks').textContent = PICKS.length;
     } else {
       document.getElementById('s-edge').textContent = '—';
       document.getElementById('s-count').textContent = '0';
+      document.getElementById('nb-picks').textContent = '0';
     }
-    document.getElementById('nb-picks').textContent = PICKS.length;
 
-    const errBanner = document.getElementById('err-banner');
     if (PICKS.length === 0 && EVDATA.length === 0) {
-      errBanner.textContent = '⚠ No picks found right now — the model may be warming up or no edges exist at this moment. Try again in a few minutes.';
+      const errBanner = document.getElementById('err-banner');
+      const allFailed = [picksRes, evRes, arbRes].every(r => r.status === 'rejected');
+      errBanner.textContent = allFailed
+        ? '⚠ Backend is offline or warming up. Try Scan Now again in 30 seconds.'
+        : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.';
       errBanner.classList.add('on');
-      loadDemoFallback();
-    } else {
-      errBanner.classList.remove('on');
     }
 
     setApiStatus('ok');
-    if (!silent && PICKS.length > 0) showToast('✓ Found ' + PICKS.length + ' edges');
+    if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
 
   } catch(err) {
     console.error('Scan error:', err);
     setApiStatus('err');
     const errBanner = document.getElementById('err-banner');
-    errBanner.textContent = '⚠ Could not reach backend. Check your connection or try again.';
+    errBanner.textContent = '⚠ Could not reach backend. Check your connection and hit Scan Now to retry.';
     errBanner.classList.add('on');
-    loadDemoFallback();
   }
 
   renderPicks();
@@ -893,14 +841,14 @@ function renderPicks() {
   const pts = PICKS.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
-    return p.sk === filter;
+    return p.sk === filter || p.sk.includes(filter);
   });
 
   document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
 
   if (!pts.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or scan again.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
     return;
   }
 
@@ -913,13 +861,13 @@ function renderPicks() {
       <div class="sig-row"><span class="sig-lbl">Elo</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,p.elo*12)}%;background:var(--amber)"></div></div><span class="sig-num" style="color:var(--amber)">+${p.elo}%</span></div>
     </div>` : '';
 
-    return `<div class="pick grade-${p.grade}" style="animation-delay:${i * .05}s">
+    return `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   <div class="pick-inner">
     <div class="pick-left">
       <div class="pick-sport-row">
         <span class="sport-tag">${p.sport}</span>
-        <span class="game-label">${p.game}</span>
         <span class="grade-tag ${p.grade}">${p.grade.toUpperCase()}</span>
+        <span class="game-label">${p.game}</span>
         <span class="game-time">${p.time}</span>
       </div>
       <div class="pick-bet">${p.bet}</div>
@@ -930,9 +878,7 @@ function renderPicks() {
       <div class="chips">${chips}</div>
       ${bars}
     </div>
-    <div class="pick-right">
-      ${evRing(p.ev)}
-    </div>
+    <div class="pick-right">${evRing(p.ev)}</div>
   </div>
   <div class="pick-explain${mode === 'simple' ? ' on' : ''}" id="exp-${p.id}">${p.explain}</div>
   <div class="pick-actions">
@@ -956,14 +902,14 @@ function renderEV() {
   const el = document.getElementById('evlist');
   document.getElementById('ev-count').textContent = `${EVDATA.length} +EV bet${EVDATA.length !== 1 ? 's' : ''} found`;
   if (!EVDATA.length) {
-    el.innerHTML = `<div class="empty" style="padding:32px"><div class="empty-icon">📊</div><div class="empty-title">No +EV bets right now</div><div class="empty-sub">Hit Scan to refresh.</div></div>`;
+    el.innerHTML = `<div class="empty" style="padding:32px"><div class="empty-icon">📊</div><div class="empty-title">No +EV bets right now</div><div class="empty-sub">Hit Scan Now to refresh.</div></div>`;
     return;
   }
   el.innerHTML = EVDATA.slice(0, 20).map(e => `
     <div class="ev-row">
       <div><div class="ev-bet">${e.bet}</div><div class="ev-game">${e.game}</div></div>
       <div class="ev-pct" style="color:${evColor(e.ev)}">+${e.ev}%</div>
-      <div class="ev-book" style="color:var(--text)">${bookLabel(e.best)}</div>
+      <div class="ev-book" style="color:var(--text)">${e.best}</div>
       <div class="ev-odds" style="color:var(--cyan)">${e.bo}</div>
     </div>`).join('');
 }
@@ -978,16 +924,16 @@ function renderArb() {
   }
   el.innerHTML = ARBDATA.map((a, i) => `
     <div class="arb-card" style="animation-delay:${i*.06}s">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div>
           <div style="font-size:11px;color:var(--sub);margin-bottom:3px">${a.sport} · ${a.game}</div>
           <div class="arb-profit">+${a.p}% guaranteed profit</div>
         </div>
-        <div style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:4px 10px;font-family:var(--mono)">LOCK</div>
+        <div style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:4px 10px;font-family:var(--mono);white-space:nowrap">LOCK</div>
       </div>
       <div class="arb-legs">
-        <div class="leg"><div class="leg-book">${a.lA.bk}</div><div class="leg-bet">${a.lA.bt}</div><div class="leg-odds">${a.lA.od}</div><div class="leg-stake">Stake: $${a.lA.stake}</div></div>
-        <div class="leg"><div class="leg-book">${a.lB.bk}</div><div class="leg-bet">${a.lB.bt}</div><div class="leg-odds">${a.lB.od}</div><div class="leg-stake">Stake: $${a.lB.stake}</div></div>
+        <div class="leg"><div class="leg-book">${a.lA.bk}</div><div class="leg-bet">${a.lA.bt}</div><div class="leg-odds">${a.lA.od}</div><div class="leg-stake">Stake: ${a.lA.stake}</div></div>
+        <div class="leg"><div class="leg-book">${a.lB.bk}</div><div class="leg-bet">${a.lB.bt}</div><div class="leg-odds">${a.lB.od}</div><div class="leg-stake">Stake: ${a.lB.stake}</div></div>
       </div>
     </div>`).join('');
 }
@@ -1009,38 +955,32 @@ function addParlay(id) {
   showToast(`+ ${p.bet}`);
 }
 
-function clearParlay() {
-  legs = [];
-  updateParlay();
-}
+function clearParlay() { legs = []; updateParlay(); }
 
 function updateParlay() {
   const n = legs.length;
   const nb = document.getElementById('nb-parlay');
   nb.textContent = n;
   nb.style.display = n > 0 ? '' : 'none';
-
   const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay()">×</button></div>`).join('');
   const emptyEl = document.getElementById('parlay-empty');
   const legsEl = document.getElementById('parlay-legs');
   if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
   if (legsEl) legsEl.innerHTML = html;
-
   const resEl = document.getElementById('parlay-result');
   if (n >= 2) {
     let tot = 1;
-    legs.forEach(l => { const o = parseInt(l.odds.replace('+', '')); const d = o > 0 ? (o/100)+1 : 1-(100/Math.abs(o)); tot *= d; });
+    legs.forEach(l => { const o = parseInt(l.odds.replace('+','')); const d = o > 0 ? (o/100)+1 : 1-(100/Math.abs(o)); tot *= d; });
     const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
-    const w = Math.round((tot - 1) * 100);
     document.getElementById('parlay-odds').textContent = ao;
-    document.getElementById('parlay-win').textContent = `$${w}`;
+    document.getElementById('parlay-win').textContent = `$${Math.round((tot-1)*100)}`;
     if (resEl) resEl.style.display = '';
   } else {
     if (resEl) resEl.style.display = 'none';
   }
 }
 
-// ─── BOOST CHECKER ───────────────────────────────────────────────────────────
+// ─── BOOST ────────────────────────────────────────────────────────────────────
 const BOOST_EXAMPLES = [
   {nm:'DraftKings: Celtics ML Boost', normal:'-120', boost:'+100', stake:50},
   {nm:'FanDuel: Chiefs -3 Boost', normal:'-110', boost:'-100', stake:50},
@@ -1048,8 +988,8 @@ const BOOST_EXAMPLES = [
 ];
 
 function loadBoostExamples() {
-  const el = document.getElementById('boost-examples');
-  el.innerHTML = `<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Try an example</div>` +
+  document.getElementById('boost-examples').innerHTML =
+    `<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Try an example</div>` +
     BOOST_EXAMPLES.map(e => `<button class="ex-btn" onclick="loadBoost('${e.normal}','${e.boost}','${e.stake}')">
       <span style="font-size:12px;font-weight:600;color:var(--text)">${e.nm}</span>
       <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">${e.normal} → ${e.boost}</span>
@@ -1069,25 +1009,22 @@ function calcBoost() {
   const s = parseFloat(document.getElementById('bc-stake').value) || 100;
   const f = document.getElementById('bc-fair').value;
   if (!n || !b) return;
-
   const pFair = f ? impliedProb(f) : impliedProb(n);
   const ev = calcEV(b, pFair);
   const dn = americanToDecimal(n), db = americanToDecimal(b);
   const winN = (dn - 1) * s, winB = (db - 1) * s;
   const edge = winB - winN;
-
-  const res = document.getElementById('bc-result');
-  document.getElementById('bc-ev').textContent = `${ev >= 0 ? '+' : ''}${Math.round(ev * 10) / 10}%`;
+  document.getElementById('bc-ev').textContent = `${ev >= 0 ? '+' : ''}${Math.round(ev*10)/10}%`;
   document.getElementById('bc-ev').style.color = ev >= 0 ? 'var(--green)' : 'var(--red)';
   document.getElementById('bc-verdict').textContent = ev >= 2 ? '✓ Take this boost — it\'s +EV' : ev >= 0 ? '⚠ Marginal — depends on your edge' : '✗ Skip this boost — it\'s -EV';
   document.getElementById('bc-verdict').style.color = ev >= 2 ? 'var(--green)' : ev >= 0 ? 'var(--amber)' : 'var(--red)';
   document.getElementById('bc-win').textContent = `$${Math.round(winB)}`;
   document.getElementById('bc-lose').textContent = `-$${s}`;
   document.getElementById('bc-edge').textContent = `${edge >= 0 ? '+' : ''}$${Math.round(edge)}`;
-  res.classList.add('on');
+  document.getElementById('bc-result').classList.add('on');
 }
 
-// ─── HOW-TO MODAL ─────────────────────────────────────────────────────────────
+// ─── MODAL ────────────────────────────────────────────────────────────────────
 const BOOK_URLS = {DraftKings:'https://sportsbook.draftkings.com',FanDuel:'https://sportsbook.fanduel.com',BetMGM:'https://sports.betmgm.com',Caesars:'https://sportsbook.caesars.com',PointsBet:'https://www.pointsbet.com',Pinnacle:'https://www.pinnacle.com',Bet365:'https://www.bet365.com'};
 
 function bookLink(name) {
@@ -1131,7 +1068,7 @@ function go(name) {
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
-  window.scrollTo({top: 0, behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function setMode(m) {
@@ -1151,12 +1088,9 @@ function setFilter(el, k) {
 
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
 function startAutoRefresh() {
-  // Refresh every 8 minutes
-  setInterval(() => {
-    if (!isScanning) doScan(true);
-  }, 8 * 60 * 1000);
-
-  // Update time labels every 30s
+  // Refresh every 8 minutes in background
+  setInterval(() => { if (!isScanning) doScan(true); }, 8 * 60 * 1000);
+  // Update "Updated X ago" label every 30s
   setInterval(() => {
     const el = document.getElementById('picks-refreshed');
     if (el && lastRefresh) el.textContent = `Updated ${timeAgo(lastRefresh)}`;
