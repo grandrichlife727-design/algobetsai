@@ -368,7 +368,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
       </div>
-      <div class="live-pill"><div class="pulse"></div>LIVE</div>
+      <div class="live-pill" id="live-pill" style="display:none"><div class="pulse"></div>LIVE</div>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         Scan Now
@@ -670,9 +670,20 @@ async function backendGet(path, timeout = 25000) {
 function setApiStatus(state) {
   const dot = document.getElementById('api-dot');
   const lbl = document.getElementById('api-lbl');
+  const pill = document.getElementById('live-pill');
+  const apiStatus = document.querySelector('.api-status');
   dot.className = 'api-dot ' + state;
-  lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Error' : 'Loading';
-  lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
+  if (state === 'ok') {
+    // Show only the LIVE pill, hide the api-status text
+    if (apiStatus) apiStatus.style.display = 'none';
+    if (pill) pill.style.display = '';
+  } else {
+    // Show api-status with loading/error, hide live pill
+    if (apiStatus) apiStatus.style.display = '';
+    if (pill) pill.style.display = 'none';
+    lbl.textContent = state === 'err' ? 'Error' : 'Loading';
+    lbl.style.color = state === 'err' ? 'var(--red)' : 'var(--muted)';
+  }
 }
 
 // ─── NORMALIZERS ──────────────────────────────────────────────────────────────
@@ -779,14 +790,10 @@ async function doScan(silent = false) {
   try {
     // FIX: Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
     const bust = Date.now();
-    const dateParam = dayMode === 'tomorrow' ? (() => {
-      const d = new Date(); d.setDate(d.getDate()+1);
-      return d.toISOString().slice(0,10);
-    })() : new Date().toISOString().slice(0,10);
     const [picksRes, evRes, arbRes] = await Promise.allSettled([
-      backendGet(`/scan?refresh=true&date=${dateParam}&_=${bust}`),
-      backendGet(`/api/ev-finder?date=${dateParam}&_=${bust}`),
-      backendGet(`/api/arb-detect?date=${dateParam}&_=${bust}`),
+      backendGet(`/scan?refresh=true&_=${bust}`),
+      backendGet(`/api/ev-finder?_=${bust}`),
+      backendGet(`/api/arb-detect?_=${bust}`),
     ]);
 
     const now = Date.now();
@@ -799,8 +806,7 @@ async function doScan(silent = false) {
         .filter(p => {
           if (!p.gameTimeRaw) return true;
           const gt = new Date(p.gameTimeRaw).getTime();
-          if (dayMode === 'tomorrow') return true; // show all returned picks for tomorrow
-          return gt > now - 3 * 60 * 60 * 1000; // today: keep live + upcoming
+          return gt > now - 3 * 60 * 60 * 1000; // keep games started within last 3hrs (live) + all future
         })
         .sort((a, b) => b.ev - a.ev);
     }
@@ -867,7 +873,21 @@ async function doScan(silent = false) {
 // ─── RENDER PICKS ─────────────────────────────────────────────────────────────
 function renderPicks() {
   const el = document.getElementById('picklist');
+
+  // Get tomorrow's date range for filtering
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowStr = tomorrow.toISOString().slice(0,10);
+
   const pts = PICKS.filter(p => {
+    // Day filter
+    if (p.gameTimeRaw) {
+      const gameDate = new Date(p.gameTimeRaw).toISOString().slice(0,10);
+      if (dayMode === 'tomorrow' && gameDate !== tomorrowStr) return false;
+      if (dayMode === 'today' && gameDate !== todayStr) return false;
+    }
+    // Sport filter
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
     return p.sk === filter || p.sk.includes(filter);
@@ -877,7 +897,10 @@ function renderPicks() {
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
 
   if (!pts.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
+    const msg = dayMode === 'tomorrow'
+      ? `<div class="empty"><div class="empty-icon">🌙</div><div class="empty-title">No tomorrow picks yet</div><div class="empty-sub">Lines for tomorrow's games open later tonight. Check back after 8 PM or hit Scan Now.</div></div>`
+      : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
+    el.innerHTML = msg;
     return;
   }
 
@@ -1112,7 +1135,7 @@ function setDay(el, d) {
   document.querySelectorAll('.day-toggle .filter').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
   dayMode = d;
-  doScan();
+  renderPicks(); // just re-filter, no new scan needed
 }
 
 function setFilter(el, k) {
