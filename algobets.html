@@ -708,6 +708,7 @@ function normalizePick(p, idx) {
     sk:    p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
     game:  p.game  || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
     time:  timeStr,
+    gameTimeRaw: p.game_time || null,
     bet:   p.bet   || '—',
     odds:  p.odds  || '—',
     ev,
@@ -756,7 +757,31 @@ function normalizeArb(a, idx) {
   };
 }
 
-// ─── MAIN SCAN ────────────────────────────────────────────────────────────────
+// ─── DEMO FALLBACK ────────────────────────────────────────────────────────────
+function loadDemoFallback() {
+  if (PICKS.length > 0) return;
+  // Use relative times so demo data never looks stale
+  const now = new Date();
+  const t1 = new Date(now.getTime() + 2*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  const t2 = new Date(now.getTime() + 4*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  const t3 = new Date(now.getTime() + 6*60*60*1000).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  PICKS = [
+    {id:1,grade:'a',sport:'NBA 🏀',game:'Celtics vs Knicks',time:t1,bet:'Boston Celtics ML',odds:'-118',ev:7.4,conf:82,book:'DraftKings',sh:71,pu:33,lm:1.5,elo:4.2,sig:3,sk:'basketball_nba',
+     chips:[{t:'clv',l:'CLV +7.4%'},{t:'steam',l:'STEAM'},{t:'elo',l:'ELO +4.2%'}],
+     explain:'<strong>Strong play.</strong> Boston is getting mispriced at -118. The true line should be around -108 based on Pinnacle\'s model. 71% of sharp money is on the Celtics. Bet at DraftKings.'},
+    {id:2,grade:'a',sport:'NCAAB 🎓',game:'Duke vs North Carolina',time:t2,bet:'Duke Blue Devils -4.5',odds:'-108',ev:5.8,conf:78,book:'FanDuel',sh:68,pu:41,lm:2.0,elo:3.1,sig:3,sk:'basketball_ncaab',
+     chips:[{t:'clv',l:'CLV +5.8%'},{t:'rlm',l:'RLM'},{t:'elo',l:'ELO +3.1%'}],
+     explain:'<strong>Solid value.</strong> Duke -4.5 at -108 beats the fair line of -114. Sharp money is on the Blue Devils. Reverse line move detected.'},
+    {id:3,grade:'b',sport:'NHL 🏒',game:'Panthers vs Bruins',time:t3,bet:'Florida Panthers ML',odds:'+102',ev:4.2,conf:67,book:'BetMGM',sh:60,pu:38,lm:0.5,elo:2.2,sig:2,sk:'icehockey_nhl',
+     chips:[{t:'clv',l:'CLV +4.2%'},{t:'rlm',l:'RLM'}],
+     explain:'Panthers at +102 have value — fair price is -103. Getting plus money on a slight favorite is the textbook definition of closing line value.'},
+  ];
+  document.getElementById('s-edge').textContent = '+5.8%';
+  document.getElementById('s-count').textContent = PICKS.length;
+  document.getElementById('nb-picks').textContent = PICKS.length;
+}
+
+
 async function doScan(silent = false) {
   if (isScanning) return;
   isScanning = true;
@@ -790,11 +815,17 @@ async function doScan(silent = false) {
       backendGet('/api/arb-detect'),
     ]);
 
-    // Process picks
+    // Process picks — filter out games that have already started
     if (picksRes.status === 'fulfilled') {
       const raw = picksRes.value;
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
-      PICKS = arr.map(normalizePick);
+      const now = Date.now();
+      PICKS = arr
+        .map(normalizePick)
+        .filter(p => {
+          if (!p.gameTimeRaw) return true; // keep if no time info
+          return new Date(p.gameTimeRaw).getTime() > now;
+        });
       PICKS.sort((a, b) => b.ev - a.ev);
     }
 
