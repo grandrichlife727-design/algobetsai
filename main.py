@@ -3096,25 +3096,28 @@ def build_consensus_pick(event: dict, sport_key: str,
 # ═══════════════════════════════════════════════════════════════════════════════
 
 async def _warm_cache():
-    await asyncio.sleep(15)
+    # Wait 90s on startup — lets the first real user request complete
+    # before the warmer also hits the Odds API (avoids burst 429s on free plan)
+    await asyncio.sleep(90)
     while True:
         try:
             print("[warmer v7] Refreshing Odds API + Action Network + ESPN injuries...")
-            await asyncio.gather(
-                fetch_all_odds("h2h,spreads"),   # primary: events + multi-book odds
-                fetch_action_network_lines(),     # sharp/public %
-                fetch_all_espn_injuries(),        # injuries
-                return_exceptions=True,
-            )
+            # Stagger 3s between each source to avoid burst rate limiting
+            await fetch_all_odds("h2h,spreads")
+            await asyncio.sleep(3)
+            await fetch_action_network_lines()
+            await asyncio.sleep(3)
+            await fetch_all_espn_injuries()
             print("[warmer v7] Data refreshed.")
         except Exception as e:
             print(f"[warmer] Error: {e}")
-        await asyncio.sleep(CACHE_TTL_FREE)
+        # 30 min interval on free plan to conserve Odds API monthly quota
+        await asyncio.sleep(1800)
 
 
 async def _clv_capture_loop():
     """Runs every 10 minutes — captures Pinnacle closing lines for picks approaching game time."""
-    await asyncio.sleep(60)  # give warmer a head start
+    await asyncio.sleep(180)  # give warmer a head start on free plan
     while True:
         try:
             await capture_closing_lines()
