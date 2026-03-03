@@ -1,175 +1,142 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 import os
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 
-app = FastAPI()
+import requests
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# -----------------------------
-# CORS (important for your HTML)
-# -----------------------------
+# =========================
+# App Setup
+# =========================
+
+app = FastAPI(title="AlgoBets AI API", version="1.0")
+
+# --- CORS (required for your frontend) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # tighten later if you want
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -----------------------------
-# CONFIG
-# -----------------------------
-CASUAL_RULES = {
-    "min_ev": 0.01,
-    "min_confirms": 0,
-    "require_pinnacle": False,
-}
+# =========================
+# Environment
+# =========================
 
-SHARP_RULES = {
-    "min_ev": 0.03,
-    "min_confirms": 1,
-    "require_pinnacle": True,
-}
+ODDS_API_KEY = os.getenv("ODDS_API_KEY")  # set on Render later
 
-MIN_DAILY_PICKS = 3
+# =========================
+# Health Checks
+# =========================
 
+@app.get("/")
+def root():
+    return {
+        "status": "AlgoBets AI live",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
-# -----------------------------
-# DEBUG HELPER
-# -----------------------------
-def debug(stage, items):
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+# =========================
+# Helpers
+# =========================
+
+def american_to_prob(odds: int) -> float:
+    """Convert American odds to implied probability."""
+    if odds > 0:
+        return 100 / (odds + 100)
+    return abs(odds) / (abs(odds) + 100)
+
+def calculate_edge(model_prob: float, market_odds: int) -> float:
+    """Model edge vs market."""
+    market_prob = american_to_prob(market_odds)
+    return model_prob - market_prob
+
+# =========================
+# Odds Fetch (safe fallback)
+# =========================
+
+def fetch_odds_safe():
+    """
+    Attempts real odds pull.
+    Falls back to mock data if API key missing.
+    """
+
+    if not ODDS_API_KEY:
+        return None
+
     try:
-        print(f"[SCAN DEBUG] {stage}: {len(items)}")
-    except Exception:
-        pass
+        url = "https://api.the-odds-api.com/v4/sports/basketball_nba/odds"
+        params = {
+            "apiKey": ODDS_API_KEY,
+            "regions": "us",
+            "markets": "spreads",
+            "oddsFormat": "american",
+        }
 
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        return r.json()
 
-# -----------------------------
-# MOCK ODDS DATA (safe starter)
-# Replace later with real Odds API
-# -----------------------------
-def get_mock_events():
-    teams = [
+    except Exception as e:
+        print("Odds API error:", e)
+        return None
+
+# =========================
+# Mock Model (replace later)
+# =========================
+
+def run_mock_model():
+    """Temporary model until your real one is wired."""
+    games = [
         ("Lakers", "Warriors"),
         ("Celtics", "Heat"),
         ("Bucks", "Knicks"),
-        ("Suns", "Mavericks"),
-        ("Nuggets", "Clippers"),
     ]
-
-    events = []
-    now = datetime.utcnow()
-
-    for i, (home, away) in enumerate(teams):
-        events.append({
-            "id": i + 1,
-            "sport": "basketball_nba",
-            "home_team": home,
-            "away_team": away,
-            "commence_time": (now + timedelta(hours=6 + i)).isoformat(),
-            "ev": random.uniform(-0.02, 0.06),
-            "confirms": random.randint(0, 2),
-            "has_pinnacle": random.choice([True, False]),
-            "odds": random.choice([-120, -110, +105, +120]),
-        })
-
-    return events
-
-
-# -----------------------------
-# FALLBACK PICKS (prevents empty UX)
-# -----------------------------
-def generate_fallback_picks(events):
-    leans = []
-
-    for e in events:
-        if e.get("ev", 0) > 0:
-            pick = {
-                "game": f"{e['away_team']} @ {e['home_team']}",
-                "sport": e["sport"],
-                "pick": e["home_team"],
-                "confidence": 0.52,
-                "tier": "lean",
-                "start_time": e["commence_time"],
-                "odds": e["odds"],
-            }
-            leans.append(pick)
-
-    return sorted(leans, key=lambda x: -x["confidence"])
-
-
-# -----------------------------
-# MAIN SCAN ENDPOINT
-# -----------------------------
-@app.get("/scan")
-async def scan(request: Request):
-    mode = request.query_params.get("mode", "casual")
-    rules = SHARP_RULES if mode == "sharp" else CASUAL_RULES
-
-    # -----------------------------
-    # STEP 1 — get events
-    # -----------------------------
-    events = get_mock_events()
-    debug("raw_events", events)
 
     picks = []
 
-    # -----------------------------
-    # STEP 2 — filter events
-    # -----------------------------
-    for e in events:
-        ev = e.get("ev", 0)
-        confirms = e.get("confirms", 0)
-        has_pinnacle = e.get("has_pinnacle", False)
+    for home, away in games:
+        model_prob = random.uniform(0.52, 0.60)
+        market_odds = -110
+        edge = calculate_edge(model_prob, market_odds)
 
-        # EV filter
-        if ev < rules["min_ev"]:
-            continue
+        # only return +EV picks
+        if edge > 0.02:
+            picks.append({
+                "home_team": home,
+                "away_team": away,
+                "pick": f"{away} +3.5",
+                "edge": round(edge, 4),
+                "confidence": round(model_prob, 4),
+                "odds": market_odds,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
 
-        # confirms filter
-        if confirms < rules["min_confirms"]:
-            continue
+    return picks
 
-        # pinnacle filter
-        if rules["require_pinnacle"] and not has_pinnacle:
-            continue
+# =========================
+# MAIN PICKS ENDPOINT (CRITICAL)
+# =========================
 
-        pick = {
-            "game": f"{e['away_team']} @ {e['home_team']}",
-            "sport": e["sport"],
-            "pick": e["home_team"],
-            "confidence": round(0.55 + ev, 3),
-            "tier": "sharp" if mode == "sharp" else "value",
-            "start_time": e["commence_time"],
-            "odds": e["odds"],
-        }
+@app.get("/api/picks")
+def get_picks():
+    """
+    Primary endpoint used by your frontend.
+    Always returns a JSON list.
+    """
 
-        picks.append(pick)
+    # try real odds first (future ready)
+    odds_data = fetch_odds_safe()
 
-    debug("after_filters", picks)
+    # TODO later: plug real model here using odds_data
 
-    # -----------------------------
-    # STEP 3 — guarantee casual picks
-    # -----------------------------
-    if mode == "casual" and len(picks) < MIN_DAILY_PICKS:
-        fallback = generate_fallback_picks(events)
-        needed = MIN_DAILY_PICKS - len(picks)
-        picks.extend(fallback[:needed])
+    # for now use stable mock model
+    picks = run_mock_model()
 
-    debug("final", picks)
-
-    return {
-        "mode": mode,
-        "count": len(picks),
-        "picks": picks,
-        "generated_at": datetime.utcnow().isoformat(),
-    }
-
-
-# -----------------------------
-# HEALTH CHECK (for Render)
-# -----------------------------
-@app.get("/")
-async def root():
-    return {"status": "AlgoBets AI backend running"}
+    return picks
