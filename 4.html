@@ -30,11 +30,11 @@
   --sans: 'Space Grotesk', sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;overflow-x:hidden}
 
 /* LAYOUT */
-.shell{display:grid;grid-template-columns:200px 1fr;min-height:100vh;max-width:1280px;margin:0 auto}
+.shell{display:grid;grid-template-columns:200px 1fr;min-height:100vh;max-width:1280px;margin:0 auto;overflow:hidden}
 @media(max-width:900px){.shell{grid-template-columns:1fr}}
 
 /* SIDEBAR */
@@ -65,8 +65,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.topbar-logo{font-size:20px;font-weight:800;letter-spacing:-.5px;white-space:nowrap}
 .topbar-logo span{color:var(--cyan)}
+.topbar-beta{font-size:10px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);border-radius:4px;padding:2px 7px;font-family:var(--mono);margin-left:6px;vertical-align:middle}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}.live-pill{display:none}}
 .live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);padding:3px 8px;border-radius:99px;white-space:nowrap}
@@ -79,9 +80,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 @keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
 
 /* MAIN */
-.main{display:flex;flex-direction:column;min-height:100vh}
+.main{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;min-width:0}
 /* Add bottom padding on mobile so content isn't hidden behind nav */
-.content{padding:14px;flex:1;padding-bottom:90px}
+.content{padding:14px;flex:1;padding-bottom:90px;max-width:100%;overflow-x:hidden}
 @media(min-width:901px){.content{padding:20px;padding-bottom:20px}}
 
 /* HERO STATS */
@@ -361,7 +362,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
-    <div class="topbar-logo">Algo<span>bets AI</span></div>
+    <div class="topbar-logo">Algo<span>bets AI</span><span class="topbar-beta">BETA</span></div>
     <div class="topbar-right">
       <div class="api-status">
         <div class="api-dot loading" id="api-dot"></div>
@@ -381,10 +382,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <!-- PICKS -->
     <div id="v-picks">
       <div class="page-hdr">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap">
-          <div style="font-size:24px;font-weight:800;letter-spacing:-.6px">Algobets <span style="color:var(--cyan)">AI</span></div>
-          <div style="font-size:11px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);border-radius:4px;padding:2px 7px;font-family:var(--mono)">BETA</div>
-        </div>
         <div class="page-sub">Self-sharpening model · Pinnacle CLV benchmarked · Updated every 8 minutes</div>
       </div>
       <div class="hero-stats">
@@ -399,6 +396,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
           <button class="mode-btn" id="m-expert" onclick="setMode('expert')">Expert</button>
         </div>
         <span class="mode-hint" id="mode-hint">Plain English</span>
+      </div>
+      <div class="day-toggle" style="display:flex;gap:5px;margin-bottom:10px">
+        <button class="filter active" id="day-today" onclick="setDay(this,'today')">📅 Today</button>
+        <button class="filter" id="day-tomorrow" onclick="setDay(this,'tomorrow')">🌙 Tomorrow</button>
       </div>
       <div class="filters">
         <div class="filter active" onclick="setFilter(this,'all')">All Sports</div>
@@ -565,6 +566,7 @@ const SPORTS = [
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
 let filter = 'all';
+let dayMode = 'today';
 let legs = [];
 let PICKS = [];
 let EVDATA = [];
@@ -777,10 +779,14 @@ async function doScan(silent = false) {
   try {
     // FIX: Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
     const bust = Date.now();
+    const dateParam = dayMode === 'tomorrow' ? (() => {
+      const d = new Date(); d.setDate(d.getDate()+1);
+      return d.toISOString().slice(0,10);
+    })() : new Date().toISOString().slice(0,10);
     const [picksRes, evRes, arbRes] = await Promise.allSettled([
-      backendGet(`/scan?refresh=true&_=${bust}`),
-      backendGet(`/api/ev-finder?_=${bust}`),
-      backendGet(`/api/arb-detect?_=${bust}`),
+      backendGet(`/scan?refresh=true&date=${dateParam}&_=${bust}`),
+      backendGet(`/api/ev-finder?date=${dateParam}&_=${bust}`),
+      backendGet(`/api/arb-detect?date=${dateParam}&_=${bust}`),
     ]);
 
     const now = Date.now();
@@ -790,7 +796,12 @@ async function doScan(silent = false) {
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
       PICKS = arr
         .map((p, i) => normalizePick(p, i))
-        .filter(p => !p.gameTimeRaw || new Date(p.gameTimeRaw).getTime() > now)
+        .filter(p => {
+          if (!p.gameTimeRaw) return true;
+          const gt = new Date(p.gameTimeRaw).getTime();
+          if (dayMode === 'tomorrow') return true; // show all returned picks for tomorrow
+          return gt > now - 3 * 60 * 60 * 1000; // today: keep live + upcoming
+        })
         .sort((a, b) => b.ev - a.ev);
     }
 
@@ -1095,6 +1106,13 @@ function setMode(m) {
   document.getElementById('m-expert').classList.toggle('active', m === 'expert');
   document.getElementById('mode-hint').textContent = m === 'simple' ? 'Plain English' : 'Full signal data';
   renderPicks();
+}
+
+function setDay(el, d) {
+  document.querySelectorAll('.day-toggle .filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  dayMode = d;
+  doScan();
 }
 
 function setFilter(el, k) {
