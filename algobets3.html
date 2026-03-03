@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Algobets AI — Smart Picks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #070a10;
+  --surface: #0d1117;
+  --card: #111720;
+  --border: rgba(255,255,255,.06);
+  --border2: rgba(255,255,255,.12);
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,.08);
+  --cyan-glow: rgba(0,212,255,.18);
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,.07);
+  --red: #ff4d6a;
+  --red-dim: rgba(255,77,106,.07);
+  --amber: #ffb700;
+  --amber-dim: rgba(255,183,0,.08);
+  --violet: #9b79ff;
+  --muted: #3d4554;
+  --sub: #6b7280;
+  --text: #e2e8f0;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;overflow-x:hidden}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-columns:200px 1fr;min-height:100vh;max-width:1280px;margin:0 auto}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
+
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+@media(max-width:900px){.sidebar{display:none}}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:16px;height:16px}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:-.4px}
+.logo-text b{color:var(--cyan)}
+.nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+.sidebar-bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
+.resp-notice{font-size:10px;color:var(--muted);line-height:1.55;padding:8px 8px 0}
+
+/* BOOK AFFILIATE LINKS */
+.book-link{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;text-decoration:none;transition:background .12s;margin-bottom:2px}
+.book-link:hover{background:rgba(255,255,255,.04)}
+.book-icon{width:28px;height:28px;border-radius:7px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.book-info{flex:1;min-width:0}
+.book-name{font-size:12px;font-weight:600;color:var(--text)}
+.book-promo{font-size:10px;color:var(--green);margin-top:1px}
+.book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;min-height:52px}
+.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;border:none;background:none;color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap;border-bottom:2px solid transparent;position:relative}
+.tab.active{color:var(--text);border-bottom-color:var(--cyan)}
+.tab:hover:not(.active){color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid var(--border)}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);padding:3px 8px;border-radius:99px}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 14px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans)}
+.scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
+.loading-bar{height:1px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
+.loading-bar.on{display:block}
+@keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh}
+.content{padding:20px;flex:1}
+
+/* HERO STATS */
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.stat.s-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.stat.s-cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.stat.s-violet::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
+.stat-val{font-size:22px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+.stat-label{font-size:11px;color:var(--sub);margin-top:5px}
+
+/* PAGE HEADER */
+.page-hdr{margin-bottom:18px}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.4px}.page-title span{color:var(--cyan)}
+.page-sub{font-size:12px;color:var(--sub);margin-top:3px}
+
+/* FILTERS */
+.filters{display:flex;gap:5px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.filters::-webkit-scrollbar{display:none}
+.filter{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans)}
+.filter:hover{border-color:var(--border2);color:var(--text)}
+.filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+
+/* SECTION */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.sec-meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+/* PICK CARD — redesigned, cleaner */
+.picks-list{display:flex;flex-direction:column;gap:8px}
+.pick{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s;animation:fadein .35s ease both}
+.pick:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.pick.grade-a{border-left:2px solid var(--cyan)}.pick.grade-b{border-left:2px solid var(--violet)}.pick.grade-c{border-left:2px solid var(--amber)}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.pick-inner{padding:12px 14px 12px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+.pick-left{}
+.pick-sport-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sport-tag{background:rgba(255,255,255,.05);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sub)}
+.game-label{font-size:11px;color:var(--sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.grade-tag{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 5px;border-radius:4px}
+.grade-tag.a{background:rgba(0,212,255,.1);color:var(--cyan)}.grade-tag.b{background:rgba(155,121,255,.1);color:var(--violet)}.grade-tag.c{background:rgba(255,183,0,.1);color:var(--amber)}
+
+.pick-bet{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.pick-odds-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pick-odds{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)}
+.pick-book{font-size:11px;color:var(--sub)}
+.pick-book-link{font-size:11px;color:var(--sub);text-decoration:none;transition:color .12s}
+.pick-book-link:hover{color:var(--cyan)}
+
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.chip.clv{background:rgba(0,212,255,.08);color:var(--cyan)}.chip.steam{background:rgba(255,77,106,.08);color:var(--red)}
+.chip.rlm{background:rgba(155,121,255,.08);color:var(--violet)}.chip.elo{background:rgba(255,183,0,.08);color:var(--amber)}
+.chip.ev{background:rgba(0,229,160,.08);color:var(--green)}
+
+.pick-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.ev-circle{position:relative}
+.ev-circle svg{display:block}
+
+.pick-actions{display:flex;gap:5px;align-items:center;padding:8px 14px 10px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.08)}
+.btn-how{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans)}
+.btn-how:hover{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.3)}
+.btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans)}
+.btn-parlay:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 14px 12px 16px;display:none}
+.pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
+.explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans)}
+.explain-toggle:hover{color:var(--sub)}
+
+/* SIGNAL BARS (expert mode) */
+.sig-bars{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.sig-row{display:flex;align-items:center;gap:6px}
+.sig-lbl{font-size:9px;color:var(--muted);width:46px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}
+.sig-track{flex:1;height:2px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.sig-fill{height:100%;border-radius:99px}
+.sig-num{font-size:10px;font-family:var(--mono);color:var(--sub);width:32px;text-align:right;flex-shrink:0}
+
+/* EV TABLE */
+.ev-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ev-hdr{display:grid;grid-template-columns:1fr 100px 80px 80px;gap:0;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.ev-row{display:grid;grid-template-columns:1fr 100px 80px 80px;gap:0;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s;cursor:default}
+.ev-row:last-child{border-bottom:none}
+.ev-row:hover{background:rgba(255,255,255,.02)}
+.ev-bet{font-size:13px;font-weight:600;margin-bottom:2px}
+.ev-game{font-size:11px;color:var(--sub)}
+.ev-pct{font-family:var(--mono);font-weight:700;font-size:14px}
+.ev-book{font-size:11px;font-weight:600}
+.ev-odds{font-family:var(--mono);font-size:13px;font-weight:600}
+.ev-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
+.ev-tag.live{background:rgba(0,229,160,.1);color:var(--green);font-family:var(--mono)}
+
+/* ARB */
+.arb-card{background:var(--card);border:1px solid rgba(0,229,160,.1);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:fadein .3s ease both}
+.arb-profit{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)}
+.arb-legs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.leg{background:rgba(0,0,0,.15);border-radius:8px;padding:10px;border:1px solid var(--border)}
+.leg-book{font-size:9px;color:var(--muted);font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.leg-bet{font-size:13px;font-weight:700;margin-bottom:3px}
+.leg-odds{font-size:12px;font-family:var(--mono);font-weight:700;color:var(--cyan)}
+.leg-stake{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+
+/* PARLAY BUILDER */
+.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:480px}
+.parlay-leg{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.parlay-leg:last-child{border-bottom:none}
+.pl-bet{font-size:13px;font-weight:600}
+.pl-odds{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-top:1px}
+.pl-rm{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
+.parlay-result{background:var(--green-dim);border:1px solid rgba(0,229,160,.12);border-radius:8px;padding:12px;margin-top:12px}
+.pl-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.pl-row:last-of-type{margin-bottom:0}
+.pl-val{font-family:var(--mono);font-weight:700;color:var(--green)}
+.parlay-clear{width:100%;margin-top:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:12px;font-weight:600;padding:6px;cursor:pointer;font-family:var(--sans)}
+.parlay-empty{font-size:13px;color:var(--sub)}
+
+/* BOOST */
+.boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;max-width:460px}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.field-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-size:15px;font-weight:700;font-family:var(--mono);outline:none;transition:border-color .12s}
+.field-input:focus{border-color:rgba(0,212,255,.3)}
+.boost-result{background:rgba(155,121,255,.05);border:1px solid rgba(155,121,255,.15);border-radius:8px;padding:14px;margin-top:12px;display:none}
+.boost-result.on{display:block}
+.boost-ev{font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+.boost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;text-align:center}
+.bst-val{font-size:14px;font-weight:700;font-family:var(--mono)}
+.bst-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.examples-list{margin-top:14px;display:flex;flex-direction:column;gap:5px}
+.ex-btn{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:7px;padding:8px 12px;cursor:pointer;transition:background .12s;text-align:left;width:100%;font-family:var(--sans)}
+.ex-btn:hover{background:rgba(255,255,255,.05)}
+
+/* PERFORMANCE */
+.perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:580px){.perf-grid{grid-template-columns:repeat(2,1fr)}}
+.perf-chart{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:56px;margin-top:12px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:opacity .2s}
+.bar:hover{opacity:.7}
+.bar-labels{display:flex;gap:5px;margin-top:5px}
+.bar-lbl{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.agent-tbl{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.agent-row{display:grid;grid-template-columns:1fr 100px 60px;gap:0;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
+.agent-row:last-child{border-bottom:none}
+.agent-hdr{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:7px 14px}
+
+/* HOW-TO MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.on{opacity:1;pointer-events:all}
+@media(min-width:640px){.overlay{align-items:center}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px 14px 0 0;padding:22px;width:100%;max-width:520px;transform:translateY(30px);transition:transform .25s;max-height:85vh;overflow-y:auto}
+.modal.on{transform:translateY(0)}
+@media(min-width:640px){.modal{border-radius:14px;transform:scale(.95)}.modal.on{transform:scale(1)}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:3px}
+.modal-sub{font-size:11px;color:var(--sub);margin-bottom:18px;font-family:var(--mono)}
+.act-step{display:flex;gap:10px;margin-bottom:14px;align-items:flex-start}
+.act-num{width:22px;height:22px;border-radius:50%;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);color:var(--cyan);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.act-text{font-size:13px;color:var(--sub);line-height:1.55}.act-text strong{color:var(--text)}
+.act-text a{color:var(--cyan);text-decoration:none}.act-text a:hover{text-decoration:underline}
+.act-note{background:var(--amber-dim);border:1px solid rgba(255,183,0,.15);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--sub);line-height:1.55;margin-top:14px}
+.modal-close{width:100%;margin-top:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:13px;font-weight:600;padding:9px;cursor:pointer;font-family:var(--sans)}
+
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 4px calc(env(safe-area-inset-bottom) + 8px);z-index:200;display:flex;justify-content:space-around}
+@media(min-width:901px){.mobile-nav{display:none!important}}
+.mnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--sub);font-size:10px;font-weight:600;padding:6px 14px;cursor:pointer;border-radius:8px;font-family:var(--sans);transition:color .12s}
+.mnav-btn.active{color:var(--cyan)}
+.mnav-btn svg{width:18px;height:18px;opacity:.6}.mnav-btn.active svg{opacity:1}
+
+/* LOADING SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
+@keyframes skeleton{0%{background-position:100%}100%{background-position:-100%}}
+
+/* EMPTY / ERROR */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:28px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.empty-sub{font-size:12px;color:var(--muted)}
+.error-banner{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--sub);margin-bottom:16px;display:none}
+.error-banner.on{display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--cyan);color:#000;padding:7px 16px;border-radius:99px;font-weight:700;font-size:12px;z-index:9999;opacity:0;transition:all .2s;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* MODE TOGGLE */
+.mode-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.mode-group{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:3px;gap:2px}
+.mode-btn{padding:4px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
+.mode-btn.active{background:var(--card);color:var(--text)}
+.mode-hint{font-size:11px;color:var(--muted)}
+
+/* API STATUS */
+.api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
+.api-dot{width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.api-dot.ok{background:var(--green)}.api-dot.err{background:var(--red)}.api-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:99px}
+
+/* RESPONSIVE */
+@media(max-width:600px){.hero-stats{grid-template-columns:repeat(3,1fr)}.stat-val{font-size:18px}}
+@media(max-width:420px){.hero-stats{grid-template-columns:1fr 1fr}.stat:last-child{display:none}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="logo-text">Algo<b>bets AI</b></div>
+  </div>
+  <span class="nav-section">Picks</span>
+  <button class="nav-item active" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    Today's Edges <span class="nav-badge" id="nb-picks">0</span>
+  </button>
+  <button class="nav-item" onclick="go('ev')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    +EV Finder
+  </button>
+  <button class="nav-item" onclick="go('arb')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    Arbitrage
+  </button>
+  <button class="nav-item" onclick="go('parlay')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+    Parlay Builder <span class="nav-badge" style="display:none" id="nb-parlay">0</span>
+  </button>
+  <span class="nav-section">Tools</span>
+  <button class="nav-item" onclick="go('boost')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Boost Checker
+  </button>
+  <button class="nav-item" onclick="go('perf')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    Track Record
+  </button>
+  <div class="sidebar-bot">
+    <span class="nav-section" style="padding-top:4px">Open an Account</span>
+    <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#53D338;color:#000">DK</div>
+      <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#1493FF;color:#fff">FD</div>
+      <div class="book-info"><div class="book-name">FanDuel</div><div class="book-promo">$1,000 No Sweat Bet</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#C9A96E;color:#000">MGM</div>
+      <div class="book-info"><div class="book-name">BetMGM</div><div class="book-promo">First Bet up to $1,500</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#003087;color:#fff">CZ</div>
+      <div class="book-info"><div class="book-name">Caesars</div><div class="book-promo">Get up to $1,000 back</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <div class="resp-notice">🛡️ Gamble responsibly &middot; <strong>1-800-522-4700</strong></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div style="font-size:15px;font-weight:700;letter-spacing:-.3px;margin-right:auto">Algo<span style="color:var(--cyan)">bets AI</span></div>
+    <div class="api-status"><div class="api-dot loading" id="api-dot"></div><span id="api-lbl" style="font-size:10px;color:var(--muted)">Connecting</span></div>
+    <div class="live-pill"><div class="pulse"></div>LIVE</div>
+    <button class="scan-btn" id="scan-btn" onclick="doScan()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Scan Now
+    </button>
+  </div>
+  <div class="loading-bar" id="load-bar"></div>
+
+  <div class="content">
+
+    <!-- PICKS -->
+    <div id="v-picks">
+      <div class="page-hdr">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+          <div style="font-size:26px;font-weight:800;letter-spacing:-.6px">Algobets <span style="color:var(--cyan)">AI</span></div>
+          <div style="font-size:11px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);border-radius:4px;padding:2px 7px;font-family:var(--mono)">BETA</div>
+        </div>
+        <div class="page-sub">Self-sharpening model · Pinnacle CLV benchmarked · Updated every 8 minutes</div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat s-green"><div class="stat-val" id="s-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
+        <div class="stat s-cyan"><div class="stat-val" id="s-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
+        <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">64.2%</div><div class="stat-label">30-day win rate</div></div>
+      </div>
+      <div class="error-banner" id="err-banner"></div>
+      <div class="mode-row">
+        <div class="mode-group">
+          <button class="mode-btn active" id="m-simple" onclick="setMode('simple')">Simple</button>
+          <button class="mode-btn" id="m-expert" onclick="setMode('expert')">Expert</button>
+        </div>
+        <span class="mode-hint" id="mode-hint">Plain English</span>
+      </div>
+      <div class="filters">
+        <div class="filter active" onclick="setFilter(this,'all')">All Sports</div>
+        <div class="filter" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
+        <div class="filter" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
+        <div class="filter" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
+        <div class="filter" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
+        <div class="filter" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
+        <div class="filter" onclick="setFilter(this,'a')">A-Grade Only</div>
+      </div>
+      <div class="sec-hdr">
+        <span class="sec-title" id="picks-count">Loading...</span>
+        <span class="sec-meta" id="picks-refreshed">—</span>
+      </div>
+      <div class="picks-list" id="picklist">
+        <!-- skeleton -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+          <div class="skeleton" style="height:12px;width:40%;"></div>
+          <div class="skeleton" style="height:18px;width:65%;"></div>
+          <div class="skeleton" style="height:10px;width:30%;"></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+          <div class="skeleton" style="height:12px;width:35%;"></div>
+          <div class="skeleton" style="height:18px;width:55%;"></div>
+          <div class="skeleton" style="height:10px;width:28%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EV -->
+    <div id="v-ev" style="display:none">
+      <div class="page-hdr"><div class="page-title">+EV <span>Finder</span></div><div class="page-sub">Bets priced better than fair value — powered by live Odds API data</div></div>
+      <div class="error-banner" id="ev-err-banner"></div>
+      <div class="sec-hdr"><span class="sec-title" id="ev-count">Loading...</span><span class="sec-meta">Pinnacle devig method</span></div>
+      <div class="ev-table">
+        <div class="ev-hdr"><div>Bet</div><div>EV %</div><div>Best book</div><div>Odds</div></div>
+        <div id="evlist"></div>
+      </div>
+    </div>
+
+    <!-- ARB -->
+    <div id="v-arb" style="display:none">
+      <div class="page-hdr"><div class="page-title">Arbitrage</div><div class="page-sub">Guaranteed profit no matter the outcome</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="arb-count">Loading...</span><span class="sec-meta">100% guaranteed edge only</span></div>
+      <div class="picks-list" id="arblist"></div>
+    </div>
+
+    <!-- PARLAY -->
+    <div id="v-parlay" style="display:none">
+      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Add picks with the + button on any pick card</div></div>
+      <div class="parlay-section">
+        <div class="parlay-empty" id="parlay-empty">No picks yet — hit <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
+        <div id="parlay-legs"></div>
+        <div id="parlay-result" style="display:none" class="parlay-result">
+          <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
+          <div class="pl-row"><span>$100 wins</span><span class="pl-val" id="parlay-win"></span></div>
+          <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOST -->
+    <div id="v-boost" style="display:none">
+      <div class="page-hdr"><div class="page-title">Boost <span>Checker</span></div><div class="page-sub">Is that sportsbook promo actually worth taking?</div></div>
+      <div class="boost-card">
+        <div style="font-size:12px;color:var(--sub);line-height:1.6">Paste the normal and boosted odds — we'll tell you if it's +EV instantly.</div>
+        <div class="field-grid">
+          <div class="field"><div class="field-label">Normal odds</div><input class="field-input" id="bc-normal" placeholder="-110" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Boosted odds</div><input class="field-input" id="bc-boost" placeholder="+100" style="color:var(--violet)" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Your stake ($)</div><input class="field-input" id="bc-stake" type="number" placeholder="50" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Fair odds (optional)</div><input class="field-input" id="bc-fair" placeholder="-115" oninput="calcBoost()"/></div>
+        </div>
+        <div class="boost-result" id="bc-result">
+          <div class="boost-ev" id="bc-ev">+0.0%</div>
+          <div style="font-size:12px;font-weight:700;margin-top:3px" id="bc-verdict"></div>
+          <div class="boost-grid">
+            <div><div class="bst-val" id="bc-win" style="color:var(--green)">$0</div><div class="bst-lbl">If it wins</div></div>
+            <div><div class="bst-val" id="bc-lose" style="color:var(--red)">-$0</div><div class="bst-lbl">If it loses</div></div>
+            <div><div class="bst-val" id="bc-edge" style="color:var(--amber)">+$0</div><div class="bst-lbl">Edge vs normal</div></div>
+          </div>
+        </div>
+        <div class="examples-list" id="boost-examples">
+          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Try an example</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERF -->
+    <div id="v-perf" style="display:none">
+      <div class="page-hdr"><div class="page-title">Track <span>Record</span></div><div class="page-sub">CLV-verified results — measured against Pinnacle's closing line</div></div>
+      <div class="perf-grid">
+        <div class="stat s-green"><div class="stat-val" style="color:var(--green)">64.2%</div><div class="stat-label">All-time win rate · 143W 80L</div></div>
+        <div class="stat s-cyan"><div class="stat-val" style="color:var(--cyan)">+18.4u</div><div class="stat-label">Total units won</div></div>
+        <div class="stat s-violet"><div class="stat-val" style="color:var(--violet)">+4.2%</div><div class="stat-label">Avg CLV vs close</div></div>
+        <div class="stat s-green"><div class="stat-val" style="color:var(--amber)">67.1%</div><div class="stat-label">Last 30 days · 44W 22L</div></div>
+        <div class="stat s-cyan"><div class="stat-val" style="color:var(--green)">+8.2u</div><div class="stat-label">30-day units</div></div>
+        <div class="stat s-violet"><div class="stat-val" style="color:var(--cyan)">228</div><div class="stat-label">Picks tracked</div></div>
+      </div>
+      <div class="perf-chart">
+        <div style="font-size:13px;font-weight:700">Monthly P&L (Units)</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">Oct 2025 – Mar 2026</div>
+        <div class="bars" id="perf-bars"></div>
+        <div class="bar-labels"><span class="bar-lbl">Oct</span><span class="bar-lbl">Nov</span><span class="bar-lbl">Dec</span><span class="bar-lbl">Jan</span><span class="bar-lbl">Feb</span><span class="bar-lbl">Mar</span></div>
+      </div>
+      <div class="agent-tbl">
+        <div class="agent-row agent-hdr"><span>Signal</span><span>Win % fired</span><span>Weight</span></div>
+        <div class="agent-row"><span>CLV / Value</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">68.4%</span><span style="color:var(--cyan);font-family:var(--mono)">+3.5</span></div>
+        <div class="agent-row"><span>Sharp Money</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">65.1%</span><span style="color:var(--cyan);font-family:var(--mono)">+5.5</span></div>
+        <div class="agent-row"><span>Line Movement</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">62.8%</span><span style="color:var(--cyan);font-family:var(--mono)">+3.8</span></div>
+        <div class="agent-row"><span>Fade Public</span><span style="color:var(--amber);font-family:var(--mono);font-weight:700">59.3%</span><span style="color:var(--amber);font-family:var(--mono)">+10.0</span></div>
+        <div class="agent-row"><span>Elo Model</span><span style="color:var(--sub);font-family:var(--mono);font-weight:700">57.2%</span><span style="color:var(--sub);font-family:var(--mono)">+4.0</span></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /shell -->
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    Picks
+  </button>
+  <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    +EV
+  </button>
+  <button class="mnav-btn" id="mn-arb" onclick="go('arb')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    Arb
+  </button>
+  <button class="mnav-btn" id="mn-boost" onclick="go('boost')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Boost
+  </button>
+  <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    Record
+  </button>
+</nav>
+
+<!-- HOW-TO MODAL -->
+<div class="overlay" id="act-overlay" onclick="closeModal(event)">
+  <div class="modal" id="act-modal">
+    <div id="act-content"></div>
+    <button class="modal-close" onclick="document.getElementById('act-overlay').classList.remove('on');document.getElementById('act-modal').classList.remove('on')">Close</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const ODDS_KEY = '316ba9e3bd49f1c65f604a292e1962a8';
+const ODDS_BASE = 'https://api.the-odds-api.com/v4';
+const BACKEND_URL = 'https://algobetsai.onrender.com'; // your Render backend
+
+// Sports to scan — ordered by priority
+const SPORTS = [
+  {key:'basketball_nba',  label:'NBA 🏀', sk:'nba'},
+  {key:'basketball_ncaab', label:'NCAAB 🎓', sk:'basketball_ncaab'},
+  {key:'icehockey_nhl',   label:'NHL 🏒', sk:'nhl'},
+  {key:'baseball_mlb',    label:'MLB ⚾', sk:'mlb'},
+  {key:'soccer_epl',      label:'EPL ⚽', sk:'epl'},
+];
+
+// Book priority for best-odds
+const BOOKS = ['pinnacle','draftkings','fanduel','betmgm','caesars','pointsbet','bet365'];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let mode = 'simple';
+let filter = 'all';
+let legs = [];
+let PICKS = [];
+let EVDATA = [];
+let ARBDATA = [];
+let lastRefresh = null;
+let isScanning = false;
+let currentTab = 'picks';
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function americanToDecimal(odds) {
+  const o = parseInt(odds);
+  if (isNaN(o)) return 1;
+  return o > 0 ? (o / 100) + 1 : 1 + (100 / Math.abs(o));
+}
+
+function decimalToAmerican(d) {
+  if (d >= 2) return '+' + Math.round((d - 1) * 100);
+  return Math.round(-100 / (d - 1)).toString();
+}
+
+function impliedProb(odds) {
+  const o = parseInt(odds);
+  if (isNaN(o)) return 0.5;
+  return o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100);
+}
+
+function devig(prob1, prob2) {
+  // Multiplicative devig
+  const total = prob1 + prob2;
+  return prob1 / total;
+}
+
+function calcEV(odds, fairProb) {
+  const dec = americanToDecimal(odds);
+  return ((dec - 1) * fairProb - (1 - fairProb)) * 100;
+}
+
+function evColor(ev) {
+  return ev >= 6 ? 'var(--cyan)' : ev >= 3 ? 'var(--violet)' : 'var(--amber)';
+}
+
+function evRing(ev, sz = 52) {
+  const r = sz / 2 - 5, c = sz / 2;
+  function arc(a1, a2) {
+    const R = a => a * Math.PI / 180;
+    const x1 = c + r * Math.cos(R(a1)), y1 = c + r * Math.sin(R(a1));
+    const x2 = c + r * Math.cos(R(a2)), y2 = c + r * Math.sin(R(a2));
+    const lg = (a2 - a1) > 180 ? 1 : 0;
+    return `M${x1},${y1}A${r},${r},0,${lg},1,${x2},${y2}`;
+  }
+  const pct = Math.min(100, Math.max(0, ev * 8));
+  const end = -90 + pct * 3.6;
+  const col = evColor(ev);
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="flex-shrink:0">
+    <path d="${arc(-90, 270)}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4" stroke-linecap="round"/>
+    ${ev > 0 ? `<path d="${arc(-90, end)}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` : ''}
+    <text x="${c}" y="${c+1}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="JetBrains Mono,monospace">+${ev}%</text>
+    <text x="${c}" y="${c+10}" text-anchor="middle" dominant-baseline="middle" fill="#3d4554" font-size="7" font-family="Space Grotesk,sans-serif">EV</text>
+  </svg>`;
+}
+
+function timeAgo(date) {
+  if (!date) return '—';
+  const s = Math.round((Date.now() - date) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  return `${Math.round(s/3600)}h ago`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+function sportLabel(key) {
+  const s = SPORTS.find(x => x.key === key);
+  return s ? s.label : key.toUpperCase();
+}
+
+function bookLabel(bk) {
+  const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
+  return map[bk] || bk;
+}
+
+// ─── BACKEND API ─────────────────────────────────────────────────────────────
+const BACKEND = 'https://algobetsai.onrender.com';
+const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+
+async function backendGet(path) {
+  const res = await fetch(`${BACKEND}${path}`, {
+    headers: {
+      'x-api-key': BACKEND_KEY,
+      'x-user-id': 'grandrichlife727@gmail.com'
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function setApiStatus(state) {
+  const dot = document.getElementById('api-dot');
+  const lbl = document.getElementById('api-lbl');
+  dot.className = 'api-dot ' + state;
+  lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Error' : 'Loading';
+  lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
+}
+
+// Map backend pick format → frontend format
+function normalizePick(p, idx) {
+  const ev = parseFloat(p.edge || p.ev || 0);
+  const conf = parseFloat(p.confidence || 50);
+  const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
+
+  const chips = [];
+  if (p.edge_source === 'pinnacle_clv' || p.clv_edge) chips.push({t:'clv', l:`CLV +${ev}%`});
+  if (p.steam)    chips.push({t:'steam', l:'STEAM'});
+  if (p.rlm)      chips.push({t:'rlm',   l:'RLM'});
+  if (p.elo_edge) chips.push({t:'elo',   l:`ELO +${p.elo_edge}%`});
+  if (p.soft_book_lag) chips.push({t:'ev', l:`LAG +${p.lag_pct||0}%`});
+  if (!chips.length) chips.push({t:'ev',  l:`+EV ${ev}%`});
+
+  // Build human explanation from model_breakdown
+  const mb = p.model_breakdown || {};
+  const explain = mb.pinnacle_clv
+    ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
+    : buildExplain(p.bet||'', p.game||'', ev, grade, p.best_book||'', p.odds||'', p.fair_prob||0.5);
+
+  // Format time
+  let timeStr = p.game_time || '';
+  if (timeStr) {
+    try {
+      timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+    } catch(e) {}
+  }
+
+  return {
+    id:    idx + 1,
+    grade,
+    sport: `${p.emoji||''} ${p.sport||''}`.trim(),
+    sk:    p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
+    game:  p.game  || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
+    time:  timeStr,
+    bet:   p.bet   || '—',
+    odds:  p.odds  || '—',
+    ev,
+    conf:  Math.round(conf * 100),
+    book:  bookLabel(p.best_book || ''),
+    sh:    Math.round(p.sharpPct  || 0),
+    pu:    Math.round(p.publicPct || 0),
+    lm:    p.lineMove   || 0,
+    elo:   p.elo_edge   || 0,
+    sig:   chips.length,
+    chips,
+    explain,
+  };
+}
+
+function normalizeEV(e, idx) {
+  return {
+    bet:   e.bet  || '—',
+    game:  e.game || '—',
+    sport: e.sport || '',
+    ev:    parseFloat(e.ev || 0),
+    best:  e.bookOdds ? (e.books_compared ? `${e.books_compared} books` : '—') : '—',
+    bo:    e.bookOdds  || '—',
+    book:  '—', // best book not directly in ev response
+  };
+}
+
+function normalizeArb(a, idx) {
+  const sides = a.sides || [];
+  return {
+    sport: `${a.emoji||''} ${a.sport||''}`.trim(),
+    game:  a.game  || '—',
+    p:     parseFloat(a.profit_pct || 0),
+    lA: {
+      bk:    sides[0]?.book  || '—',
+      bt:    sides[0]?.bet   || '—',
+      od:    sides[0]?.odds  || '—',
+      stake: sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—',
+    },
+    lB: {
+      bk:    sides[1]?.book  || '—',
+      bt:    sides[1]?.bet   || '—',
+      od:    sides[1]?.odds  || '—',
+      stake: sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—',
+    },
+  };
+}
+
+// ─── MAIN SCAN ────────────────────────────────────────────────────────────────
+async function doScan(silent = false) {
+  if (isScanning) return;
+  isScanning = true;
+
+  const btn = document.getElementById('scan-btn');
+  const loadBar = document.getElementById('load-bar');
+  btn.classList.add('loading');
+  btn.textContent = 'Scanning…';
+  loadBar.classList.add('on');
+  setApiStatus('loading');
+
+  if (!silent) {
+    document.getElementById('picklist').innerHTML = `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+        <div class="skeleton" style="height:12px;width:40%"></div>
+        <div class="skeleton" style="height:18px;width:65%"></div>
+        <div class="skeleton" style="height:10px;width:30%"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+        <div class="skeleton" style="height:12px;width:35%"></div>
+        <div class="skeleton" style="height:18px;width:55%"></div>
+        <div class="skeleton" style="height:10px;width:28%"></div>
+      </div>`;
+  }
+
+  try {
+    // Hit all three backend endpoints in parallel
+    const [picksRes, evRes, arbRes] = await Promise.allSettled([
+      backendGet('/scan'),
+      backendGet('/api/ev-finder'),
+      backendGet('/api/arb-detect'),
+    ]);
+
+    // Process picks
+    if (picksRes.status === 'fulfilled') {
+      const raw = picksRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
+      PICKS = arr.map(normalizePick);
+      PICKS.sort((a, b) => b.ev - a.ev);
+    }
+
+    // Process EV
+    if (evRes.status === 'fulfilled') {
+      const raw = evRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
+      EVDATA = arr.map(normalizeEV).sort((a, b) => b.ev - a.ev);
+    }
+
+    // Process Arb
+    if (arbRes.status === 'fulfilled') {
+      const raw = arbRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.arbs || raw.data || []);
+      ARBDATA = arr.map(normalizeArb).sort((a, b) => b.p - a.p);
+    }
+
+    lastRefresh = Date.now();
+
+    // Update stats
+    if (PICKS.length) {
+      const avgEV = Math.round(PICKS.reduce((s, p) => s + p.ev, 0) / PICKS.length * 10) / 10;
+      document.getElementById('s-edge').textContent = '+' + avgEV + '%';
+      document.getElementById('s-count').textContent = PICKS.length;
+    } else {
+      document.getElementById('s-edge').textContent = '—';
+      document.getElementById('s-count').textContent = '0';
+    }
+    document.getElementById('nb-picks').textContent = PICKS.length;
+
+    const errBanner = document.getElementById('err-banner');
+    if (PICKS.length === 0 && EVDATA.length === 0) {
+      errBanner.textContent = '⚠ No picks found right now — the model may be warming up or no edges exist at this moment. Try again in a few minutes.';
+      errBanner.classList.add('on');
+      loadDemoFallback();
+    } else {
+      errBanner.classList.remove('on');
+    }
+
+    setApiStatus('ok');
+    if (!silent && PICKS.length > 0) showToast('✓ Found ' + PICKS.length + ' edges');
+
+  } catch(err) {
+    console.error('Scan error:', err);
+    setApiStatus('err');
+    const errBanner = document.getElementById('err-banner');
+    errBanner.textContent = '⚠ Could not reach backend. Check your connection or try again.';
+    errBanner.classList.add('on');
+    loadDemoFallback();
+  }
+
+  renderPicks();
+  renderEV();
+  renderArb();
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
+  loadBar.classList.remove('on');
+  isScanning = false;
+}
+
+// ─── RENDER PICKS ─────────────────────────────────────────────────────────────
+function renderPicks() {
+  const el = document.getElementById('picklist');
+  const pts = PICKS.filter(p => {
+    if (filter === 'all') return true;
+    if (filter === 'a') return p.grade === 'a';
+    return p.sk === filter;
+  });
+
+  document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
+  document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
+
+  if (!pts.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or scan again.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = pts.map((p, i) => {
+    const chips = p.chips.map(c => `<span class="chip ${c.t}">${c.l}</span>`).join('');
+    const bars = mode === 'expert' ? `<div class="sig-bars">
+      <div class="sig-row"><span class="sig-lbl">Sharp</span><div class="sig-track"><div class="sig-fill" style="width:${p.sh}%;background:${p.sh>=60?'var(--cyan)':'var(--muted)'}"></div></div><span class="sig-num" style="color:${p.sh>=60?'var(--cyan)':'var(--sub)'}">${p.sh}%</span></div>
+      <div class="sig-row"><span class="sig-lbl">Public</span><div class="sig-track"><div class="sig-fill" style="width:${p.pu}%;background:var(--muted)"></div></div><span class="sig-num">${p.pu}%</span></div>
+      <div class="sig-row"><span class="sig-lbl">Line mv</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,Math.abs(p.lm)*20)}%;background:${p.lm>0?'var(--green)':'var(--red)'}"></div></div><span class="sig-num" style="color:${p.lm>0?'var(--green)':'var(--red)'}">${p.lm>0?'+':''}${p.lm}</span></div>
+      <div class="sig-row"><span class="sig-lbl">Elo</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,p.elo*12)}%;background:var(--amber)"></div></div><span class="sig-num" style="color:var(--amber)">+${p.elo}%</span></div>
+    </div>` : '';
+
+    return `<div class="pick grade-${p.grade}" style="animation-delay:${i * .05}s">
+  <div class="pick-inner">
+    <div class="pick-left">
+      <div class="pick-sport-row">
+        <span class="sport-tag">${p.sport}</span>
+        <span class="game-label">${p.game}</span>
+        <span class="grade-tag ${p.grade}">${p.grade.toUpperCase()}</span>
+        <span class="game-time">${p.time}</span>
+      </div>
+      <div class="pick-bet">${p.bet}</div>
+      <div class="pick-odds-row">
+        <span class="pick-odds">${p.odds}</span>
+        ${bookLink(p.book)}
+      </div>
+      <div class="chips">${chips}</div>
+      ${bars}
+    </div>
+    <div class="pick-right">
+      ${evRing(p.ev)}
+    </div>
+  </div>
+  <div class="pick-explain${mode === 'simple' ? ' on' : ''}" id="exp-${p.id}">${p.explain}</div>
+  <div class="pick-actions">
+    <button class="btn-how" onclick="showAction(${p.id})">👉 How to bet this</button>
+    <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
+    <button class="explain-toggle" onclick="toggleExplain(${p.id})" id="etgl-${p.id}">${mode === 'simple' ? '▲ Less' : '▼ Why?'}</button>
+  </div>
+</div>`;
+  }).join('');
+}
+
+function toggleExplain(id) {
+  const el = document.getElementById(`exp-${id}`);
+  const btn = document.getElementById(`etgl-${id}`);
+  el.classList.toggle('on');
+  btn.textContent = el.classList.contains('on') ? '▲ Less' : '▼ Why?';
+}
+
+// ─── RENDER EV ────────────────────────────────────────────────────────────────
+function renderEV() {
+  const el = document.getElementById('evlist');
+  document.getElementById('ev-count').textContent = `${EVDATA.length} +EV bet${EVDATA.length !== 1 ? 's' : ''} found`;
+  if (!EVDATA.length) {
+    el.innerHTML = `<div class="empty" style="padding:32px"><div class="empty-icon">📊</div><div class="empty-title">No +EV bets right now</div><div class="empty-sub">Hit Scan to refresh.</div></div>`;
+    return;
+  }
+  el.innerHTML = EVDATA.slice(0, 20).map(e => `
+    <div class="ev-row">
+      <div><div class="ev-bet">${e.bet}</div><div class="ev-game">${e.game}</div></div>
+      <div class="ev-pct" style="color:${evColor(e.ev)}">+${e.ev}%</div>
+      <div class="ev-book" style="color:var(--text)">${bookLabel(e.best)}</div>
+      <div class="ev-odds" style="color:var(--cyan)">${e.bo}</div>
+    </div>`).join('');
+}
+
+// ─── RENDER ARB ───────────────────────────────────────────────────────────────
+function renderArb() {
+  const el = document.getElementById('arblist');
+  document.getElementById('arb-count').textContent = `${ARBDATA.length} arb${ARBDATA.length !== 1 ? 's' : ''} found`;
+  if (!ARBDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⚖️</div><div class="empty-title">No arbitrage right now</div><div class="empty-sub">Arbs are rare — check back after line moves.</div></div>`;
+    return;
+  }
+  el.innerHTML = ARBDATA.map((a, i) => `
+    <div class="arb-card" style="animation-delay:${i*.06}s">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:var(--sub);margin-bottom:3px">${a.sport} · ${a.game}</div>
+          <div class="arb-profit">+${a.p}% guaranteed profit</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:4px 10px;font-family:var(--mono)">LOCK</div>
+      </div>
+      <div class="arb-legs">
+        <div class="leg"><div class="leg-book">${a.lA.bk}</div><div class="leg-bet">${a.lA.bt}</div><div class="leg-odds">${a.lA.od}</div><div class="leg-stake">Stake: $${a.lA.stake}</div></div>
+        <div class="leg"><div class="leg-book">${a.lB.bk}</div><div class="leg-bet">${a.lB.bt}</div><div class="leg-odds">${a.lB.od}</div><div class="leg-stake">Stake: $${a.lB.stake}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── PERF CHART ───────────────────────────────────────────────────────────────
+function renderPerf() {
+  const data = [2.1, 3.8, 1.4, 4.2, 3.1, 2.8];
+  const max = Math.max(...data);
+  document.getElementById('perf-bars').innerHTML = data.map((v, i) => `<div class="bar" style="height:${(v/max)*100}%;background:${v > 3 ? 'var(--green)' : 'var(--cyan)'};opacity:${0.7 + i*0.05}" title="${v > 0 ? '+' : ''}${v}u"></div>`).join('');
+}
+
+// ─── PARLAY ───────────────────────────────────────────────────────────────────
+function addParlay(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
+  legs.push({id: p.id, bet: p.bet, odds: p.odds});
+  updateParlay();
+  showToast(`+ ${p.bet}`);
+}
+
+function clearParlay() {
+  legs = [];
+  updateParlay();
+}
+
+function updateParlay() {
+  const n = legs.length;
+  const nb = document.getElementById('nb-parlay');
+  nb.textContent = n;
+  nb.style.display = n > 0 ? '' : 'none';
+
+  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay()">×</button></div>`).join('');
+  const emptyEl = document.getElementById('parlay-empty');
+  const legsEl = document.getElementById('parlay-legs');
+  if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
+  if (legsEl) legsEl.innerHTML = html;
+
+  const resEl = document.getElementById('parlay-result');
+  if (n >= 2) {
+    let tot = 1;
+    legs.forEach(l => { const o = parseInt(l.odds.replace('+', '')); const d = o > 0 ? (o/100)+1 : 1-(100/Math.abs(o)); tot *= d; });
+    const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
+    const w = Math.round((tot - 1) * 100);
+    document.getElementById('parlay-odds').textContent = ao;
+    document.getElementById('parlay-win').textContent = `$${w}`;
+    if (resEl) resEl.style.display = '';
+  } else {
+    if (resEl) resEl.style.display = 'none';
+  }
+}
+
+// ─── BOOST CHECKER ───────────────────────────────────────────────────────────
+const BOOST_EXAMPLES = [
+  {nm:'DraftKings: Celtics ML Boost', normal:'-120', boost:'+100', stake:50},
+  {nm:'FanDuel: Chiefs -3 Boost', normal:'-110', boost:'-100', stake:50},
+  {nm:'BetMGM: Over 225.5 Boost', normal:'-115', boost:'+110', stake:50},
+];
+
+function loadBoostExamples() {
+  const el = document.getElementById('boost-examples');
+  el.innerHTML = `<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Try an example</div>` +
+    BOOST_EXAMPLES.map(e => `<button class="ex-btn" onclick="loadBoost('${e.normal}','${e.boost}','${e.stake}')">
+      <span style="font-size:12px;font-weight:600;color:var(--text)">${e.nm}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">${e.normal} → ${e.boost}</span>
+    </button>`).join('');
+}
+
+function loadBoost(n, b, s) {
+  document.getElementById('bc-normal').value = n;
+  document.getElementById('bc-boost').value = b;
+  document.getElementById('bc-stake').value = s;
+  calcBoost();
+}
+
+function calcBoost() {
+  const n = document.getElementById('bc-normal').value;
+  const b = document.getElementById('bc-boost').value;
+  const s = parseFloat(document.getElementById('bc-stake').value) || 100;
+  const f = document.getElementById('bc-fair').value;
+  if (!n || !b) return;
+
+  const pFair = f ? impliedProb(f) : impliedProb(n);
+  const ev = calcEV(b, pFair);
+  const dn = americanToDecimal(n), db = americanToDecimal(b);
+  const winN = (dn - 1) * s, winB = (db - 1) * s;
+  const edge = winB - winN;
+
+  const res = document.getElementById('bc-result');
+  document.getElementById('bc-ev').textContent = `${ev >= 0 ? '+' : ''}${Math.round(ev * 10) / 10}%`;
+  document.getElementById('bc-ev').style.color = ev >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('bc-verdict').textContent = ev >= 2 ? '✓ Take this boost — it\'s +EV' : ev >= 0 ? '⚠ Marginal — depends on your edge' : '✗ Skip this boost — it\'s -EV';
+  document.getElementById('bc-verdict').style.color = ev >= 2 ? 'var(--green)' : ev >= 0 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('bc-win').textContent = `$${Math.round(winB)}`;
+  document.getElementById('bc-lose').textContent = `-$${s}`;
+  document.getElementById('bc-edge').textContent = `${edge >= 0 ? '+' : ''}$${Math.round(edge)}`;
+  res.classList.add('on');
+}
+
+// ─── HOW-TO MODAL ─────────────────────────────────────────────────────────────
+const BOOK_URLS = {DraftKings:'https://sportsbook.draftkings.com',FanDuel:'https://sportsbook.fanduel.com',BetMGM:'https://sports.betmgm.com',Caesars:'https://sportsbook.caesars.com',PointsBet:'https://www.pointsbet.com',Pinnacle:'https://www.pinnacle.com',Bet365:'https://www.bet365.com'};
+
+function bookLink(name) {
+  const url = BOOK_URLS[name];
+  if (!url) return `<span class="pick-book">@ ${name}</span>`;
+  return `<a class="pick-book-link" href="${url}" target="_blank" rel="noopener">@ ${name} ↗</a>`;
+}
+
+function showAction(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  const size = p.grade === 'a' ? 'a full unit (1–2% of bankroll)' : p.grade === 'b' ? 'half a unit (~1%)' : 'a quarter unit (~0.5%)';
+  document.getElementById('act-content').innerHTML = `
+    <div class="modal-title">How to bet this</div>
+    <div class="modal-sub">${p.bet} · ${p.odds} · ${p.sport}</div>
+    <div class="act-step"><div class="act-num">1</div><div class="act-text">Open <strong>${p.book}</strong> — <a href="${BOOK_URLS[p.book]||'#'}" target="_blank">Go to ${p.book} ↗</a></div></div>
+    <div class="act-step"><div class="act-num">2</div><div class="act-text">Find <strong>${p.game}</strong> and place: <strong>${p.bet}</strong></div></div>
+    <div class="act-step"><div class="act-num">3</div><div class="act-text">Confirm odds show <strong>${p.odds}</strong> or better. If they've moved against you, the edge may be gone.</div></div>
+    <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
+    <div class="act-note">⏱ <strong>Game: ${p.time}</strong> — lines can move fast. Lock this in before the edge closes.</div>`;
+  const ov = document.getElementById('act-overlay');
+  const md = document.getElementById('act-modal');
+  ov.classList.add('on');
+  requestAnimationFrame(() => md.classList.add('on'));
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('act-overlay')) {
+    document.getElementById('act-overlay').classList.remove('on');
+    document.getElementById('act-modal').classList.remove('on');
+  }
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+const ALL_TABS = ['picks','ev','arb','parlay','boost','perf'];
+
+function go(name) {
+  currentTab = name;
+  ALL_TABS.forEach(t => {
+    const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
+    const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
+    const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
+  });
+  window.scrollTo({top: 0, behavior:'smooth'});
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('m-simple').classList.toggle('active', m === 'simple');
+  document.getElementById('m-expert').classList.toggle('active', m === 'expert');
+  document.getElementById('mode-hint').textContent = m === 'simple' ? 'Plain English' : 'Full signal data';
+  renderPicks();
+}
+
+function setFilter(el, k) {
+  document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  filter = k;
+  renderPicks();
+}
+
+// ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
+function startAutoRefresh() {
+  // Refresh every 8 minutes
+  setInterval(() => {
+    if (!isScanning) doScan(true);
+  }, 8 * 60 * 1000);
+
+  // Update time labels every 30s
+  setInterval(() => {
+    const el = document.getElementById('picks-refreshed');
+    if (el && lastRefresh) el.textContent = `Updated ${timeAgo(lastRefresh)}`;
+  }, 30000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+go('picks');
+renderPerf();
+loadBoostExamples();
+doScan();
+startAutoRefresh();
+</script>
+</body>
+</html>
