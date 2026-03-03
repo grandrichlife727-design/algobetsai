@@ -390,6 +390,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">64.2%</div><div class="stat-label">30-day win rate</div></div>
       </div>
       <div class="error-banner" id="err-banner"></div>
+      <div id="no-picks-msg" style="display:none;text-align:center;padding:40px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-top:20px">
+        <div style="font-size:40px;margin-bottom:15px">🔍</div>
+        <div style="font-size:18px;font-weight:700;color:var(--fg);margin-bottom:8px">No picks found right now</div>
+        <div style="font-size:14px;color:var(--sub);max-width:300px;margin:0 auto 20px">The model is scanning 6+ sports. If no high-value edges are found, this list stays empty to protect your bankroll.</div>
+        <button onclick="doScan()" style="background:var(--primary);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer">Scan Again</button>
+      </div>
       <div class="mode-row">
         <div class="mode-group">
           <button class="mode-btn active" id="m-simple" onclick="setMode('simple')">Simple</button>
@@ -414,8 +420,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <span class="sec-title" id="picks-count">Loading...</span>
         <span class="sec-meta" id="picks-refreshed">—</span>
       </div>
-      <!-- DEBUG PANEL: tap to expand, hidden in prod -->
-      <div id="debug-panel" style="display:none;background:rgba(0,0,0,.4);border:1px solid rgba(255,183,0,.2);border-radius:8px;padding:10px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--amber);line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-all"></div>
+      <!-- DEBUG PANEL: enabled for troubleshooting -->
+      <div id="debug-panel" style="display:block;background:rgba(0,0,0,.4);border:1px solid rgba(255,183,0,.2);border-radius:8px;padding:10px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--amber);line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-all"></div>
       <div class="picks-list" id="picklist">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
           <div class="skeleton" style="height:12px;width:40%"></div>
@@ -800,6 +806,7 @@ async function doScan(silent = false) {
       backendGet(`/api/ev-finder?_=${bust}`),
       backendGet(`/api/arb-detect?_=${bust}`),
     ]);
+    console.log('[Algobets] Scan complete. Picks found:', picksRes.status === 'fulfilled' ? (Array.isArray(picksRes.value) ? picksRes.value.length : (picksRes.value.consensus_picks ? picksRes.value.consensus_picks.length : 'unknown')) : 'failed');
 
     const now = Date.now();
 
@@ -811,7 +818,7 @@ async function doScan(silent = false) {
         .filter(p => {
           if (!p.gameTimeRaw) return true;
           const gt = new Date(p.gameTimeRaw).getTime();
-          return gt > now - 3 * 60 * 60 * 1000; // keep games started within last 3hrs (live) + all future
+          return gt > now - 12 * 60 * 60 * 1000; // keep games started within last 12hrs (live) + all future
         })
         .sort((a, b) => b.ev - a.ev);
     }
@@ -888,13 +895,18 @@ function renderPicks() {
   const todayStr = localDateStr(now);
   const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
   const tomorrowStr = localDateStr(tomorrow);
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+  const yesterdayStr = localDateStr(yesterday);
 
   const pts = PICKS.filter(p => {
     // Day filter — convert game time to local date for comparison
     if (p.gameTimeRaw) {
       const gameDate = localDateStr(new Date(p.gameTimeRaw));
       if (dayMode === 'tomorrow' && gameDate !== tomorrowStr) return false;
-      if (dayMode === 'today' && gameDate !== todayStr) return false;
+      if (dayMode === 'today') {
+        // Allow games from today, and also games from "yesterday" if they are still live (started within 3-4 hours)
+        if (gameDate !== todayStr && gameDate !== yesterdayStr) return false;
+      }
     }
     // Sport filter
     if (filter === 'all') return true;
@@ -906,12 +918,21 @@ function renderPicks() {
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
 
   if (!pts.length) {
-    const msg = dayMode === 'tomorrow'
-      ? `<div class="empty"><div class="empty-icon">🌙</div><div class="empty-title">No tomorrow picks yet</div><div class="empty-sub">Lines for tomorrow's games open later tonight. Check back after 8 PM or hit Scan Now.</div></div>`
-      : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
-    el.innerHTML = msg;
+    const noPicksMsg = document.getElementById('no-picks-msg');
+    if (dayMode === 'today' && filter === 'all' && PICKS.length === 0) {
+      if (noPicksMsg) noPicksMsg.style.display = 'block';
+      el.innerHTML = '';
+    } else {
+      if (noPicksMsg) noPicksMsg.style.display = 'none';
+      const msg = dayMode === 'tomorrow'
+        ? `<div class="empty"><div class="empty-icon">🌙</div><div class="empty-title">No tomorrow picks yet</div><div class="empty-sub">Lines for tomorrow's games open later tonight. Check back after 8 PM or hit Scan Now.</div></div>`
+        : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
+      el.innerHTML = msg;
+    }
     return;
   }
+  const noPicksMsg = document.getElementById('no-picks-msg');
+  if (noPicksMsg) noPicksMsg.style.display = 'none';
 
   el.innerHTML = pts.map((p, i) => {
     const chips = p.chips.map(c => `<span class="chip ${c.t}">${c.l}</span>`).join('');
@@ -1153,7 +1174,9 @@ function updateDebug() {
     ...PICKS.map((p, i) => {
       const gd = p.gameTimeRaw ? localDateStr(new Date(p.gameTimeRaw)) : 'no-date';
       const graw = p.gameTimeRaw || 'null';
-      return `[${i}] ${p.game} | raw=${graw} | local=${gd} | sport=${p.sk}`;
+      const gt = p.gameTimeRaw ? new Date(p.gameTimeRaw).getTime() : 0;
+      const age = gt ? Math.round((now.getTime() - gt) / 1000 / 60) : 'N/A';
+      return `[${i}] ${p.game} | raw=${graw} | local=${gd} | age=${age}m | sport=${p.sk} | ev=${p.ev}%`;
     })
   ];
   p.textContent = lines.join('\n');
