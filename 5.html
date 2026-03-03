@@ -433,20 +433,24 @@ function setFilter(f, el) {
 }
 
 // ── FETCH — direct first, proxy fallback ──────────────────────────────────────
-async function backendGet(path, timeout=30000) {
-  const url = BACKEND + path;
-  const hdrs = { 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID };
+async function backendGet(path, timeout=90000) {
+  // Embed auth in URL so proxy doesn't strip headers
+  const sep = path.includes('?') ? '&' : '?';
+  const authPath = path + sep + 'api_key=' + BACKEND_KEY + '&uid=' + encodeURIComponent(USER_ID);
+  const url     = BACKEND + path;
+  const urlAuth = BACKEND + authPath;
+  const hdrs    = { 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID };
 
-  // Try direct
+  // Try direct with headers
   try {
     dbg('→ GET ' + path);
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeout);
-    const res = await fetch(url, { headers: hdrs, signal: ctrl.signal });
+    const tid  = setTimeout(() => ctrl.abort(), timeout);
+    const res  = await fetch(url, { headers: hdrs, signal: ctrl.signal });
     clearTimeout(tid);
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
-      throw new Error('HTTP ' + res.status + ' ' + txt.slice(0,120));
+      throw new Error('HTTP ' + res.status + ' ' + txt.slice(0, 200));
     }
     const json = await res.json();
     dbg('✓ ' + path + ' (' + (Array.isArray(json) ? json.length : Object.keys(json).length) + ' keys)', 'ok');
@@ -455,19 +459,19 @@ async function backendGet(path, timeout=30000) {
     dbg('✗ direct: ' + e.message, 'err');
   }
 
-  // CORS proxy fallback
+  // Proxy fallback — auth baked into URL params
   try {
     dbg('→ proxy ' + path, 'warn');
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlAuth);
     const ctrl2 = new AbortController();
-    const tid2 = setTimeout(() => ctrl2.abort(), timeout);
-    const res2 = await fetch(proxyUrl, { signal: ctrl2.signal });
+    const tid2  = setTimeout(() => ctrl2.abort(), timeout);
+    const res2  = await fetch(proxyUrl, { signal: ctrl2.signal });
     clearTimeout(tid2);
     if (!res2.ok) throw new Error('proxy HTTP ' + res2.status);
     const w = await res2.json();
-    if (!w.contents) throw new Error('proxy empty');
+    if (!w.contents) throw new Error('proxy empty response');
     const json = JSON.parse(w.contents);
-    dbg('✓ proxy ' + path, 'ok');
+    dbg('✓ proxy ' + path + ' (' + (Array.isArray(json) ? json.length : Object.keys(json).length) + ' keys)', 'ok');
     return json;
   } catch(e2) {
     dbg('✗ proxy: ' + e2.message, 'err');
@@ -521,13 +525,24 @@ function normPick(p) {
 async function doScan(silent=false) {
   if (scanning) return; scanning = true;
   _uid = 0;
+
+  // Ping health endpoint first to wake Render from cold start
+  try {
+    await fetch(BACKEND + '/health', { signal: AbortSignal.timeout(8000) });
+    dbg('✓ backend awake', 'ok');
+    await new Promise(r => setTimeout(r, 800)); // brief pause after wake
+  } catch(e) {
+    dbg('⚠ backend waking up (~30s)…', 'warn');
+    await new Promise(r => setTimeout(r, 8000)); // wait for cold start
+  }
   const btn = document.getElementById('scan-btn');
   btn.classList.add('busy');
   btn.innerHTML = '<svg class="spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Scanning…';
   document.getElementById('prog').classList.add('on');
   document.getElementById('err-banner').classList.remove('on');
-  showErr('', '');
+  showErr('⏳ Waking up backend server… this takes ~30s on first load.', 'info');
 
+  showErr('', '');
   const bust = Date.now();
   dbg('=== SCAN START ===');
 
