@@ -187,7 +187,7 @@ CACHE_TTL_INJURIES = 900    # 15 min — injuries
 CACHE_TTL_PROPS    = 3600   # 1 hr   — player props
 CACHE_TTL_SPORTS   = 86400  # 24 hrs — active sports list
 
-ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
+ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,caesars,pointsbet")
 
 _quota_remaining: int = 500
 _quota_used_last: int = 0
