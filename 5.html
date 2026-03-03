@@ -432,18 +432,12 @@ function setFilter(f, el) {
   el.classList.add('active'); renderPicks();
 }
 
-// ── FETCH — direct first, proxy fallback ──────────────────────────────────────
-async function backendGet(path, timeout=90000) {
-  // Embed auth in URL so proxy doesn't strip headers
-  const sep = path.includes('?') ? '&' : '?';
-  const authPath = path + sep + 'api_key=' + BACKEND_KEY + '&uid=' + encodeURIComponent(USER_ID);
-  const url     = BACKEND + path;
-  const urlAuth = BACKEND + authPath;
-  const hdrs    = { 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID };
-
-  // Try direct with headers
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function backendGet(path, timeout=90000, attempt=1) {
+  const url  = BACKEND + path;
+  const hdrs = { 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID };
   try {
-    dbg('→ GET ' + path);
+    dbg((attempt > 1 ? '↺ retry ' : '→ GET ') + path);
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), timeout);
     const res  = await fetch(url, { headers: hdrs, signal: ctrl.signal });
@@ -456,26 +450,14 @@ async function backendGet(path, timeout=90000) {
     dbg('✓ ' + path + ' (' + (Array.isArray(json) ? json.length : Object.keys(json).length) + ' keys)', 'ok');
     return json;
   } catch(e) {
-    dbg('✗ direct: ' + e.message, 'err');
-  }
-
-  // Proxy fallback — auth baked into URL params
-  try {
-    dbg('→ proxy ' + path, 'warn');
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlAuth);
-    const ctrl2 = new AbortController();
-    const tid2  = setTimeout(() => ctrl2.abort(), timeout);
-    const res2  = await fetch(proxyUrl, { signal: ctrl2.signal });
-    clearTimeout(tid2);
-    if (!res2.ok) throw new Error('proxy HTTP ' + res2.status);
-    const w = await res2.json();
-    if (!w.contents) throw new Error('proxy empty response');
-    const json = JSON.parse(w.contents);
-    dbg('✓ proxy ' + path + ' (' + (Array.isArray(json) ? json.length : Object.keys(json).length) + ' keys)', 'ok');
-    return json;
-  } catch(e2) {
-    dbg('✗ proxy: ' + e2.message, 'err');
-    throw e2;
+    dbg('✗ attempt ' + attempt + ': ' + e.message, 'err');
+    if (attempt < 3) {
+      const wait = attempt * 5000;
+      dbg('⏳ retrying in ' + (wait/1000) + 's…', 'warn');
+      await new Promise(r => setTimeout(r, wait));
+      return backendGet(path, timeout, attempt + 1);
+    }
+    throw e;
   }
 }
 
@@ -557,6 +539,7 @@ async function doScan(silent=false) {
   // Process picks
   if (pR.status === 'fulfilled') {
     const raw = pR.value;
+    dbg('RAW SCAN RESPONSE: ' + JSON.stringify(raw).slice(0, 300), 'warn');
     const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
     dbg('Picks raw response keys: ' + Object.keys(pR.value).join(', '), 'warn');
     dbg('Picks raw count: ' + arr.length, arr.length ? 'ok' : 'warn');
