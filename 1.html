@@ -650,10 +650,17 @@ function bookLabel(bk) {
   return map[bk] || bk;
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-async function fetchOdds(sport) {
-  const url = `${ODDS_BASE}/sports/${sport}/odds/?apiKey=${ODDS_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=${BOOKS.join(',')}`;
-  const res = await fetch(url);
+// ─── BACKEND API ─────────────────────────────────────────────────────────────
+const BACKEND = 'https://algobetsai.onrender.com';
+const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+
+async function backendGet(path) {
+  const res = await fetch(`${BACKEND}${path}`, {
+    headers: {
+      'x-api-key': BACKEND_KEY,
+      'x-user-id': 'grandrichlife727@gmail.com'
+    }
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -666,166 +673,87 @@ function setApiStatus(state) {
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
 }
 
-// ─── PROCESS ODDS DATA ────────────────────────────────────────────────────────
-function processOddsData(allGames, sportKey) {
-  const picks = [];
-  const evData = [];
-  const arbData = [];
+// Map backend pick format → frontend format
+function normalizePick(p, idx) {
+  const ev = parseFloat(p.edge || p.ev || 0);
+  const conf = parseFloat(p.confidence || 50);
+  const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
 
-  for (const game of allGames) {
-    const home = game.home_team;
-    const away = game.away_team;
-    const gameTime = new Date(game.commence_time);
-    const timeStr = gameTime.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  const chips = [];
+  if (p.edge_source === 'pinnacle_clv' || p.clv_edge) chips.push({t:'clv', l:`CLV +${ev}%`});
+  if (p.steam)    chips.push({t:'steam', l:'STEAM'});
+  if (p.rlm)      chips.push({t:'rlm',   l:'RLM'});
+  if (p.elo_edge) chips.push({t:'elo',   l:`ELO +${p.elo_edge}%`});
+  if (p.soft_book_lag) chips.push({t:'ev', l:`LAG +${p.lag_pct||0}%`});
+  if (!chips.length) chips.push({t:'ev',  l:`+EV ${ev}%`});
 
-    // Collect all outcomes across bookmakers
-    const marketData = {}; // "market:outcome" -> [{book, odds}]
+  // Build human explanation from model_breakdown
+  const mb = p.model_breakdown || {};
+  const explain = mb.pinnacle_clv
+    ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
+    : buildExplain(p.bet||'', p.game||'', ev, grade, p.best_book||'', p.odds||'', p.fair_prob||0.5);
 
-    for (const bk of (game.bookmakers || [])) {
-      for (const mkt of (bk.markets || [])) {
-        for (const outcome of (mkt.outcomes || [])) {
-          const key = `${mkt.key}:${outcome.name}:${outcome.point || ''}`;
-          if (!marketData[key]) marketData[key] = {name:outcome.name, market:mkt.key, point:outcome.point, books:[]};
-          marketData[key].books.push({book:bk.key, odds:outcome.price});
-        }
-      }
-    }
-
-    // For each market, find best odds and check EV vs Pinnacle
-    for (const [mkey, mkt] of Object.entries(marketData)) {
-      if (mkt.books.length < 2) continue;
-
-      // Find Pinnacle odds as fair value reference
-      const pinnacleEntry = mkt.books.find(b => b.book === 'pinnacle');
-
-      // Find the opposite outcome for devigging
-      let oppKey = null;
-      if (mkt.market === 'h2h') {
-        const oppName = mkt.name === home ? away : home;
-        oppKey = `h2h:${oppName}:`;
-      } else if (mkt.market === 'spreads') {
-        oppKey = `spreads:${mkt.name === home ? away : home}:${mkt.point ? -mkt.point : ''}`;
-      } else if (mkt.market === 'totals') {
-        oppKey = `totals:${mkt.name === 'Over' ? 'Under' : 'Over'}:${mkt.point || ''}`;
-      }
-
-      const opp = oppKey ? marketData[Object.keys(marketData).find(k => k.startsWith(oppKey.split(':').slice(0,2).join(':')))] : null;
-
-      // Calculate fair probability
-      let fairProb = 0.5;
-      if (pinnacleEntry && opp) {
-        const pinnOpp = opp.books.find(b => b.book === 'pinnacle');
-        if (pinnOpp) {
-          const p1 = impliedProb(pinnacleEntry.odds);
-          const p2 = impliedProb(pinnOpp.odds);
-          fairProb = devig(p1, p2);
-        }
-      } else if (opp) {
-        // Use average of best odds from other books
-        const bestThis = Math.max(...mkt.books.map(b => americanToDecimal(b.odds)));
-        const bestOpp = opp ? Math.max(...opp.books.map(b => americanToDecimal(b.odds))) : 0;
-        if (bestOpp > 0) {
-          const p1 = 1 / bestThis;
-          const p2 = 1 / bestOpp;
-          fairProb = devig(p1, p2);
-        }
-      }
-
-      // Find best odds (exclude pinnacle for actual betting)
-      const bettingBooks = mkt.books.filter(b => b.book !== 'pinnacle');
-      if (!bettingBooks.length) continue;
-      const bestBook = bettingBooks.reduce((a, b) => b.odds > a.odds ? b : a);
-      const ev = calcEV(bestBook.odds, fairProb);
-
-      // Format bet name
-      let betName = mkt.name;
-      if (mkt.market === 'spreads') betName = `${mkt.name} ${mkt.point > 0 ? '+' : ''}${mkt.point}`;
-      else if (mkt.market === 'totals') betName = `${mkt.name} ${mkt.point}`;
-
-      const gameName = `${away} vs ${home}`;
-
-      // EV threshold for picks
-      if (ev >= 2.0) {
-        evData.push({
-          bet: betName,
-          game: gameName,
-          sport: sportKey,
-          ev: Math.round(ev * 10) / 10,
-          best: bestBook.book,
-          bo: bestBook.odds > 0 ? '+' + bestBook.odds : bestBook.odds.toString(),
-          fairProb: fairProb,
-          gameTime,
-          timeStr,
-        });
-
-        // Higher threshold for main picks
-        if (ev >= 3.5) {
-          const conf = Math.min(92, Math.round(50 + ev * 5 + (pinnacleEntry ? 8 : 0)));
-          const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
-          const chips = [];
-          if (pinnacleEntry) chips.push({t:'clv', l:`CLV +${Math.round(ev*10)/10}%`});
-          if (ev >= 6) chips.push({t:'ev', l:`+EV ${Math.round(ev*10)/10}%`});
-
-          picks.push({
-            id: picks.length + 1,
-            grade,
-            sport: sportLabel(sportKey),
-            sk: sportKey,
-            game: gameName,
-            time: timeStr,
-            bet: betName,
-            odds: bestBook.odds > 0 ? '+' + bestBook.odds : bestBook.odds.toString(),
-            ev: Math.round(ev * 10) / 10,
-            conf,
-            book: bookLabel(bestBook.book),
-            chips,
-            sh: Math.round(55 + Math.random() * 20),
-            pu: Math.round(25 + Math.random() * 30),
-            lm: Math.round((Math.random() * 4 - 1) * 10) / 10,
-            elo: Math.round(Math.random() * 5 * 10) / 10,
-            sig: chips.length + 1,
-            explain: buildExplain(betName, gameName, ev, grade, bookLabel(bestBook.book), bestBook.odds, fairProb),
-          });
-        }
-      }
-
-      // Check for arbitrage
-      if (opp) {
-        const oppBestBook = (opp.books || []).filter(b => b.book !== 'pinnacle');
-        if (oppBestBook.length) {
-          const oppBest = oppBestBook.reduce((a, b) => b.odds > a.odds ? b : a);
-          const d1 = americanToDecimal(bestBook.odds);
-          const d2 = americanToDecimal(oppBest.odds);
-          const arbPct = ((1/d1 + 1/d2) - 1) * -100;
-          if (arbPct > 0.5) {
-            const stake1 = 100;
-            const totalStake = stake1 / (1 - (1/d1 + 1/d2 - 1) / (1/d2));
-            const stake2 = totalStake - stake1;
-            arbData.push({
-              sport: sportLabel(sportKey),
-              game: gameName,
-              p: Math.round(arbPct * 100) / 100,
-              lA: {bk: bookLabel(bestBook.book), bt: betName, od: bestBook.odds > 0 ? '+'+bestBook.odds : bestBook.odds.toString(), stake: Math.round(stake1)},
-              lB: {bk: bookLabel(oppBest.book), bt: opp.name + (opp.market === 'spreads' ? ` ${opp.point > 0 ? '+' : ''}${opp.point}` : opp.market === 'totals' ? ` ${opp.point}` : ''), od: oppBest.odds > 0 ? '+'+oppBest.odds : oppBest.odds.toString(), stake: Math.round(stake2)},
-            });
-          }
-        }
-      }
-    }
+  // Format time
+  let timeStr = p.game_time || '';
+  if (timeStr) {
+    try {
+      timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+    } catch(e) {}
   }
 
-  return {picks, evData, arbData};
+  return {
+    id:    idx + 1,
+    grade,
+    sport: `${p.emoji||''} ${p.sport||''}`.trim(),
+    sk:    p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
+    game:  p.game  || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
+    time:  timeStr,
+    bet:   p.bet   || '—',
+    odds:  p.odds  || '—',
+    ev,
+    conf:  Math.round(conf * 100),
+    book:  bookLabel(p.best_book || ''),
+    sh:    Math.round(p.sharpPct  || 0),
+    pu:    Math.round(p.publicPct || 0),
+    lm:    p.lineMove   || 0,
+    elo:   p.elo_edge   || 0,
+    sig:   chips.length,
+    chips,
+    explain,
+  };
 }
 
-function buildExplain(bet, game, ev, grade, book, odds, fairProb) {
-  const fairOdds = decimalToAmerican(1 / fairProb);
-  const oddsStr = odds > 0 ? '+' + odds : odds.toString();
-  if (grade === 'a') {
-    return `<strong>Strong +EV bet.</strong> The market is pricing ${bet} at ${oddsStr}, but the true fair odds are around ${fairOdds}. That's a <strong>+${ev}% edge</strong> — exactly the kind of line that beats closing value. Bet at ${book}.`;
-  } else if (grade === 'b') {
-    return `<strong>Solid value.</strong> ${bet} in <strong>${game}</strong> is priced at ${oddsStr} vs a fair line of ~${fairOdds}. A <strong>+${ev}% edge</strong> after devigging. Half-unit bet at ${book}.`;
-  }
-  return `Thin but real edge on ${bet}. Fair odds ~${fairOdds}, getting ${oddsStr} at ${book}. <strong>C-grade — small stake or parlay leg only.</strong>`;
+function normalizeEV(e, idx) {
+  return {
+    bet:   e.bet  || '—',
+    game:  e.game || '—',
+    sport: e.sport || '',
+    ev:    parseFloat(e.ev || 0),
+    best:  e.bookOdds ? (e.books_compared ? `${e.books_compared} books` : '—') : '—',
+    bo:    e.bookOdds  || '—',
+    book:  '—', // best book not directly in ev response
+  };
+}
+
+function normalizeArb(a, idx) {
+  const sides = a.sides || [];
+  return {
+    sport: `${a.emoji||''} ${a.sport||''}`.trim(),
+    game:  a.game  || '—',
+    p:     parseFloat(a.profit_pct || 0),
+    lA: {
+      bk:    sides[0]?.book  || '—',
+      bt:    sides[0]?.bet   || '—',
+      od:    sides[0]?.odds  || '—',
+      stake: sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—',
+    },
+    lB: {
+      bk:    sides[1]?.book  || '—',
+      bt:    sides[1]?.bet   || '—',
+      od:    sides[1]?.odds  || '—',
+      stake: sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—',
+    },
+  };
 }
 
 // ─── MAIN SCAN ────────────────────────────────────────────────────────────────
@@ -854,100 +782,78 @@ async function doScan(silent = false) {
       </div>`;
   }
 
-  const allPicks = [];
-  const allEV = [];
-  const allArb = [];
-  let errors = 0;
+  try {
+    // Hit all three backend endpoints in parallel
+    const [picksRes, evRes, arbRes] = await Promise.allSettled([
+      backendGet('/scan'),
+      backendGet('/api/ev-finder'),
+      backendGet('/api/arb-detect'),
+    ]);
 
-  // Fetch sports sequentially with delay to avoid rate limiting
-  for (const sport of SPORTS) {
-    try {
-      const games = await fetchOdds(sport.key);
-      if (Array.isArray(games) && games.length > 0) {
-        const {picks, evData, arbData} = processOddsData(games, sport.key);
-        allPicks.push(...picks);
-        allEV.push(...evData);
-        allArb.push(...arbData);
-      }
-    } catch(e) {
-      console.warn(`[OddsAPI] Error ${sport.key}:`, e.message);
-      errors++;
+    // Process picks
+    if (picksRes.status === 'fulfilled') {
+      const raw = picksRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
+      PICKS = arr.map(normalizePick);
+      PICKS.sort((a, b) => b.ev - a.ev);
     }
-    // Small delay between requests to respect rate limits
-    await new Promise(r => setTimeout(r, 500));
-  }
 
-  // Sort by EV descending
-  allPicks.sort((a, b) => b.ev - a.ev);
-  allEV.sort((a, b) => b.ev - a.ev);
-  allArb.sort((a, b) => b.p - a.p);
+    // Process EV
+    if (evRes.status === 'fulfilled') {
+      const raw = evRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
+      EVDATA = arr.map(normalizeEV).sort((a, b) => b.ev - a.ev);
+    }
 
-  // Re-ID picks
-  allPicks.forEach((p, i) => p.id = i + 1);
+    // Process Arb
+    if (arbRes.status === 'fulfilled') {
+      const raw = arbRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.arbs || raw.data || []);
+      ARBDATA = arr.map(normalizeArb).sort((a, b) => b.p - a.p);
+    }
 
-  PICKS = allPicks;
-  EVDATA = allEV;
-  ARBDATA = allArb;
-  lastRefresh = Date.now();
+    lastRefresh = Date.now();
 
-  // Update stats
-  if (PICKS.length) {
-    const avgEV = Math.round(PICKS.reduce((s, p) => s + p.ev, 0) / PICKS.length * 10) / 10;
-    document.getElementById('s-edge').textContent = `+${avgEV}%`;
-    document.getElementById('s-count').textContent = PICKS.length;
-  } else {
-    document.getElementById('s-edge').textContent = '—';
-    document.getElementById('s-count').textContent = '0';
-  }
-  document.getElementById('nb-picks').textContent = PICKS.length;
+    // Update stats
+    if (PICKS.length) {
+      const avgEV = Math.round(PICKS.reduce((s, p) => s + p.ev, 0) / PICKS.length * 10) / 10;
+      document.getElementById('s-edge').textContent = '+' + avgEV + '%';
+      document.getElementById('s-count').textContent = PICKS.length;
+    } else {
+      document.getElementById('s-edge').textContent = '—';
+      document.getElementById('s-count').textContent = '0';
+    }
+    document.getElementById('nb-picks').textContent = PICKS.length;
 
-  // Handle errors
-  const errBanner = document.getElementById('err-banner');
-  if (errors > 0 && PICKS.length === 0) {
-    errBanner.textContent = `⚠ Could not load live odds. The Odds API may be rate-limited or key invalid. Showing cached picks if available.`;
-    errBanner.classList.add('on');
-    setApiStatus('err');
-    // Fall back to demo data
-    loadDemoFallback();
-  } else {
-    errBanner.classList.remove('on');
+    const errBanner = document.getElementById('err-banner');
+    if (PICKS.length === 0 && EVDATA.length === 0) {
+      errBanner.textContent = '⚠ No picks found right now — the model may be warming up or no edges exist at this moment. Try again in a few minutes.';
+      errBanner.classList.add('on');
+      loadDemoFallback();
+    } else {
+      errBanner.classList.remove('on');
+    }
+
     setApiStatus('ok');
+    if (!silent && PICKS.length > 0) showToast('✓ Found ' + PICKS.length + ' edges');
+
+  } catch(err) {
+    console.error('Scan error:', err);
+    setApiStatus('err');
+    const errBanner = document.getElementById('err-banner');
+    errBanner.textContent = '⚠ Could not reach backend. Check your connection or try again.';
+    errBanner.classList.add('on');
+    loadDemoFallback();
   }
 
-  // Render
   renderPicks();
   renderEV();
   renderArb();
 
   btn.classList.remove('loading');
-  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan`;
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
   loadBar.classList.remove('on');
   isScanning = false;
-
-  if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
-}
-
-// ─── DEMO FALLBACK ────────────────────────────────────────────────────────────
-function loadDemoFallback() {
-  PICKS = [
-    {id:1,grade:'a',sport:'NBA 🏀',game:'Celtics vs Knicks',time:'7:30 PM ET',bet:'Boston Celtics ML',odds:'-118',ev:7.4,conf:82,book:'DraftKings',sh:71,pu:33,lm:1.5,elo:4.2,ky:2.1,sig:3,sk:'basketball_nba',
-     chips:[{t:'clv',l:'CLV +7.4%'},{t:'steam',l:'STEAM'},{t:'elo',l:'ELO +4.2%'}],
-     explain:'<strong>Strong play.</strong> Boston is getting mispriced at -118. The true line should be around -108 based on Pinnacle\'s model. 71% of sharp money is on the Celtics, and the line has moved 1.5 points toward them. Bet at DraftKings.'},
-    {id:2,grade:'a',sport:'NCAAB 🎓',game:'Duke vs North Carolina',time:'9:00 PM ET',bet:'Duke Blue Devils -4.5',odds:'-108',ev:5.8,conf:78,book:'FanDuel',sh:68,pu:41,lm:2.0,elo:3.1,sig:3,sk:'basketball_ncaab',
-     chips:[{t:'clv',l:'CLV +5.8%'},{t:'rlm',l:'RLM'},{t:'elo',l:'ELO +3.1%'}],
-     explain:'<strong>Solid value.</strong> Duke -4.5 at -108 beats the fair line of -114. Sharp money is on the Blue Devils. Reverse line move detected — public is on UNC but the line keeps moving toward Duke.'},
-    {id:3,grade:'b',sport:'NHL 🏒',game:'Panthers vs Bruins',time:'7:00 PM ET',bet:'Florida Panthers ML',odds:'+102',ev:4.2,conf:67,book:'BetMGM',sh:60,pu:38,lm:0.5,elo:2.2,sig:2,sk:'icehockey_nhl',
-     chips:[{t:'clv',l:'CLV +4.2%'},{t:'rlm',l:'RLM'}],
-     explain:'Panthers at +102 have value — fair price is -103. Getting plus money on a slight favorite is the textbook definition of closing line value. Two signals confirm. Half-unit at BetMGM.'},
-  ];
-  EVDATA = [
-    {bet:'Celtics ML',game:'Celtics vs Knicks',sport:'basketball_nba',ev:7.4,best:'draftkings',bo:'-118',fo:'-108'},
-    {bet:'Chiefs -3.5',game:'Chiefs vs Eagles',sport:'americanfootball_nfl',ev:5.8,best:'fanduel',bo:'-108',fo:'-114'},
-    {bet:'Panthers ML',game:'Panthers vs Bruins',sport:'icehockey_nhl',ev:4.2,best:'betmgm',bo:'+102',fo:'-103'},
-  ];
-  document.getElementById('s-edge').textContent = '+5.8%';
-  document.getElementById('s-count').textContent = PICKS.length;
-  document.getElementById('nb-picks').textContent = PICKS.length;
 }
 
 // ─── RENDER PICKS ─────────────────────────────────────────────────────────────
