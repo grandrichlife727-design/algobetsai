@@ -581,6 +581,52 @@ async def get_quota():
     }
 
 
+@app.get("/api/games")
+async def get_all_games():
+    """Get all upcoming games for all sports - for planning ahead."""
+    all_games = []
+    
+    for sport in SPORTS:
+        games = await fetch_odds_api_games(sport)
+        meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
+        
+        for game in games:
+            # Calculate edge for each game
+            home_ml = game.get("home_ml")
+            away_ml = game.get("away_ml")
+            
+            edge_data = {}
+            if home_ml and away_ml:
+                edge_data = calculate_edge(home_ml, away_ml)
+            
+            all_games.append({
+                "sport": sport,
+                "emoji": meta.get("emoji", "🎯"),
+                "label": meta.get("label", sport),
+                "home_team": game.get("home_team"),
+                "away_team": game.get("away_team"),
+                "game": f"{game.get('away_team', 'TBD')} @ {game.get('home_team', 'TBD')}",
+                "game_time": game.get("commence_time"),
+                "home_ml": game.get("home_ml"),
+                "away_ml": game.get("away_ml"),
+                "home_spread": game.get("home_spread"),
+                "away_spread": game.get("away_spread"),
+                "total": game.get("total"),
+                "home_edge": edge_data.get("home_edge", 0),
+                "away_edge": edge_data.get("away_edge", 0),
+                "books": game.get("bookmakers", []),
+            })
+    
+    # Sort by game time
+    all_games.sort(key=lambda x: x.get("game_time", ""))
+    
+    return {
+        "games": all_games,
+        "total": len(all_games),
+        "sports_covered": SPORTS,
+    }
+
+
 @app.get("/api/odds/{sport}")
 async def get_sport_odds(sport: str):
     """Get raw odds for a specific sport."""
