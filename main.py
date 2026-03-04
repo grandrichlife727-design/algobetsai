@@ -543,7 +543,7 @@ async def health_check():
 
 @app.get("/scan")
 async def scan(request: Request):
-    """Main scan endpoint - generates picks for all sports."""
+    """Main scan endpoint - generates picks + shows all upcoming games."""
     # API key check disabled for now
     
     # Check quota
@@ -551,20 +551,44 @@ async def scan(request: Request):
         return {"error": "Low API quota", "quota": _quota_remaining}
     
     all_picks = []
+    all_games = []
     
     # Fetch games for each sport
     for sport in SPORTS:
         games = await fetch_odds_api_games(sport)
-        if games:
-            picks = await generate_picks_for_sport(sport, games)
+        meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
+        
+        for game in games:
+            # Add meta to each game
+            game["sport"] = sport
+            game["emoji"] = meta.get("emoji", "🎯")
+            game["label"] = meta.get("label", sport)
+            
+            # Calculate edge
+            home_ml = game.get("home_ml")
+            away_ml = game.get("away_ml")
+            if home_ml and away_ml:
+                edge_data = calculate_edge(home_ml, away_ml)
+                game["home_edge"] = edge_data.get("home_edge", 0)
+                game["away_edge"] = edge_data.get("away_edge", 0)
+            
+            all_games.append(game)
+            
+            # Also generate picks for positive edge games
+            picks = await generate_picks_for_sport(sport, [game])
             all_picks.extend(picks)
     
     # Sort by edge (highest first)
     all_picks.sort(key=lambda x: abs(x.get("edge", 0)), reverse=True)
     
+    # Sort games by time
+    all_games.sort(key=lambda x: x.get("commence_time", ""))
+    
     return {
         "picks": all_picks[:20],  # Top 20 picks
-        "total_found": len(all_picks),
+        "picks_total": len(all_picks),
+        "games": all_games,  # All upcoming games
+        "games_total": len(all_games),
         "quota_remaining": _quota_remaining,
         "sports_covered": SPORTS,
     }
