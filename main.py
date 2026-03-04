@@ -542,10 +542,9 @@ async def health_check():
 
 
 @app.get("/scan")
-@limiter.limit("10/minute")
 async def scan(request: Request):
     """Main scan endpoint - generates picks for all sports."""
-    await verify_api_key(request)
+    # API key check disabled for now
     
     # Check quota
     if _quota_remaining < 10 and ODDS_API_KEY:
