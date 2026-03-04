@@ -871,7 +871,7 @@ function renderPicks() {
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
 
   if (!pts.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Try a different sport or hit Scan Now.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div></div>`;
     return;
   }
 
