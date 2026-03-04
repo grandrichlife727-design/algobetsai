@@ -531,6 +531,16 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
 # API ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@app.get("/api/debug")
+async def debug():
+    """Debug endpoint to check configuration."""
+    return {
+        "odds_api_key_set": bool(ODDS_API_KEY),
+        "odds_api_key_prefix": ODDS_API_KEY[:10] + "..." if ODDS_API_KEY else "NOT SET",
+        "quota_remaining": _quota_remaining,
+    }
+
+
 @app.get("/health")
 async def health_check():
     return {
