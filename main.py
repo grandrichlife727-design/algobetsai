@@ -71,6 +71,8 @@ def _csv_env(name: str) -> list[str]:
 
 PREMIUM_PRICE_IDS = _csv_env("STRIPE_PREMIUM_PRICE_IDS") or _csv_env("STRIPE_PRO_PRICE_IDS")
 VIP_PRICE_IDS = _csv_env("STRIPE_VIP_PRICE_IDS") or _csv_env("STRIPE_SHARP_PRICE_IDS")
+PREMIUM_ANNUAL_PRICE_IDS = _csv_env("STRIPE_PREMIUM_ANNUAL_PRICE_IDS")
+VIP_ANNUAL_PRICE_IDS = _csv_env("STRIPE_VIP_ANNUAL_PRICE_IDS")
 
 
 def normalize_plan_name(plan: str) -> str:
@@ -332,7 +334,10 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     rec.setdefault("referral_code", _user_referral_code(user_id))
     rec.setdefault("redeemed_code", "")
     rec.setdefault("referrals", [])
+    rec.setdefault("referral_bonus_pairs_awarded", 0)
     rec.setdefault("trial_until", 0)
+    rec.setdefault("free_trial_claimed", False)
+    rec.setdefault("free_trial_claimed_at", 0)
     rec.setdefault("alerts", [])
     rec.setdefault("history", [])
     users[user_id] = rec
@@ -365,12 +370,17 @@ def _build_referral_status(user_id: str) -> dict[str, Any]:
     now = time.time()
     trial_until = float(rec.get("trial_until", 0) or 0)
     secs_left = max(0, int(trial_until - now))
+    referrals_count = len(rec.get("referrals", []))
+    bonus_pairs_awarded = int(rec.get("referral_bonus_pairs_awarded", 0) or 0)
+    next_bonus_at = (bonus_pairs_awarded + 1) * 2
     return {
         "referral_code": rec.get("referral_code"),
         "redeemed_code": rec.get("redeemed_code") or None,
-        "referrals_count": len(rec.get("referrals", [])),
+        "referrals_count": referrals_count,
+        "referrals_until_bonus": max(0, next_bonus_at - referrals_count),
         "trial_active_until": int(trial_until) if trial_until > now else None,
         "trial_seconds_left": secs_left,
+        "free_trial_claimed": bool(rec.get("free_trial_claimed")),
     }
 
 
@@ -968,13 +978,14 @@ TIER_CONFIG = {
         "scan_pick_limit": 50,
         "sports_allowed": SPORTS,
         "min_scan_interval_seconds": 60,
-        "features": ["50 picks per scan", "All sports", "+EV finder", "Arbitrage feed", "Refresh every minute"],
+        "features": ["50 picks per scan", "All sports", "+EV finder", "Steam feed", "Refresh every minute"],
     },
 }
 
 
 class CheckoutRequest(BaseModel):
     tier: str
+    billing_cycle: Optional[str] = "monthly"
     success_url: str
     cancel_url: str
     user_id: Optional[str] = None
@@ -1010,13 +1021,19 @@ def _request_user_id(request: Request) -> str:
     return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
 
 
-def _resolve_price_id_for_tier(tier: str) -> str:
+def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str] = "monthly") -> str:
     t = normalize_plan_name(tier)
+    cycle = str(billing_cycle or "monthly").strip().lower()
+    is_annual = cycle in ("annual", "yearly", "year")
     if t == PLAN_PREMIUM:
+        if is_annual and PREMIUM_ANNUAL_PRICE_IDS:
+            return PREMIUM_ANNUAL_PRICE_IDS[0]
         if not PREMIUM_PRICE_IDS:
             raise HTTPException(status_code=500, detail="Premium price is not configured.")
         return PREMIUM_PRICE_IDS[0]
     if t == PLAN_VIP:
+        if is_annual and VIP_ANNUAL_PRICE_IDS:
+            return VIP_ANNUAL_PRICE_IDS[0]
         if not VIP_PRICE_IDS:
             raise HTTPException(status_code=500, detail="VIP price is not configured.")
         return VIP_PRICE_IDS[0]
@@ -1067,9 +1084,26 @@ async def health_check():
 async def pricing():
     return {
         "tiers": {
-            PLAN_FREE: TIER_CONFIG[PLAN_FREE],
-            PLAN_PREMIUM: {**TIER_CONFIG[PLAN_PREMIUM], "price_ids_configured": len(PREMIUM_PRICE_IDS) > 0},
-            PLAN_VIP: {**TIER_CONFIG[PLAN_VIP], "price_ids_configured": len(VIP_PRICE_IDS) > 0},
+            PLAN_FREE: {
+                **TIER_CONFIG[PLAN_FREE],
+                "billing": {"monthly_configured": False, "annual_configured": False},
+            },
+            PLAN_PREMIUM: {
+                **TIER_CONFIG[PLAN_PREMIUM],
+                "price_ids_configured": len(PREMIUM_PRICE_IDS) > 0,
+                "billing": {
+                    "monthly_configured": len(PREMIUM_PRICE_IDS) > 0,
+                    "annual_configured": len(PREMIUM_ANNUAL_PRICE_IDS) > 0,
+                },
+            },
+            PLAN_VIP: {
+                **TIER_CONFIG[PLAN_VIP],
+                "price_ids_configured": len(VIP_PRICE_IDS) > 0,
+                "billing": {
+                    "monthly_configured": len(VIP_PRICE_IDS) > 0,
+                    "annual_configured": len(VIP_ANNUAL_PRICE_IDS) > 0,
+                },
+            },
         }
     }
 
@@ -1122,6 +1156,18 @@ async def referral_redeem(body: ReferralRedeemRequest, request: Request):
     owner_rec["trial_until"] = max(float(owner_rec.get("trial_until", 0) or 0), grant_until)
     owner_rec.setdefault("referrals", []).append({"user_id": user_id, "ts": int(now)})
 
+    # Milestone reward: every 2 successful invites grants referrer +7 days Premium.
+    referrals_count = len(owner_rec.get("referrals", []))
+    earned_pairs = referrals_count // 2
+    bonus_pairs_awarded = int(owner_rec.get("referral_bonus_pairs_awarded", 0) or 0)
+    if earned_pairs > bonus_pairs_awarded:
+        bonus_seconds = (earned_pairs - bonus_pairs_awarded) * (7 * 24 * 3600)
+        owner_rec["trial_until"] = max(
+            float(owner_rec.get("trial_until", 0) or 0),
+            now,
+        ) + bonus_seconds
+        owner_rec["referral_bonus_pairs_awarded"] = earned_pairs
+
     _save_growth_db()
     _invalidate_plan_cache(user_id)
     _invalidate_plan_cache(owner_user_id)
@@ -1131,6 +1177,53 @@ async def referral_redeem(body: ReferralRedeemRequest, request: Request):
         "trial_plan": PLAN_PREMIUM,
         "trial_until": int(user_rec["trial_until"]),
         "referral": _build_referral_status(user_id),
+    }
+
+
+@app.get("/api/trial/status")
+async def trial_status(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    now = time.time()
+    trial_until = float(rec.get("trial_until", 0) or 0)
+    return {
+        "eligible": not bool(rec.get("free_trial_claimed")),
+        "claimed": bool(rec.get("free_trial_claimed")),
+        "claimed_at": int(rec.get("free_trial_claimed_at", 0) or 0) or None,
+        "trial_active_until": int(trial_until) if trial_until > now else None,
+        "trial_seconds_left": max(0, int(trial_until - now)),
+    }
+
+
+@app.post("/api/trial/start")
+async def trial_start(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+
+    # Paid users do not need free trial grants.
+    stripe_plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
+    if plan_rank(stripe_plan) >= plan_rank(PLAN_PREMIUM):
+        raise HTTPException(status_code=400, detail="Paid plan already active.")
+
+    rec = _ensure_growth_user(user_id)
+    if rec.get("free_trial_claimed"):
+        raise HTTPException(status_code=400, detail="Free trial already claimed.")
+
+    now = time.time()
+    grant_seconds = 72 * 3600
+    rec["free_trial_claimed"] = True
+    rec["free_trial_claimed_at"] = int(now)
+    rec["trial_until"] = max(float(rec.get("trial_until", 0) or 0), now + grant_seconds)
+    _save_growth_db()
+    _invalidate_plan_cache(user_id)
+    return {
+        "ok": True,
+        "granted_hours": 72,
+        "trial_plan": PLAN_PREMIUM,
+        "trial_until": int(rec["trial_until"]),
     }
 
 
@@ -1268,7 +1361,8 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
         raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
 
     tier = normalize_plan_name(body.tier)
-    price_id = _resolve_price_id_for_tier(tier)
+    billing_cycle = str(body.billing_cycle or "monthly").strip().lower()
+    price_id = _resolve_price_id_for_tier_and_cycle(tier, billing_cycle)
     customer = await asyncio.to_thread(_find_or_create_customer, user_id)
 
     session = await asyncio.to_thread(
@@ -1280,7 +1374,7 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
         cancel_url=body.cancel_url,
         allow_promotion_codes=True,
         client_reference_id=user_id,
-        metadata={"userId": user_id, "tier": tier},
+        metadata={"userId": user_id, "tier": tier, "billing_cycle": billing_cycle},
     )
     return {"checkout_url": session.url, "session_id": session.id}
 
