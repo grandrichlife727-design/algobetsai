@@ -408,6 +408,7 @@ html, body {
 .c-mode{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--sub)}
 .c-mode.win{color:var(--green);border-color:rgba(0,229,160,.25)}
 .c-mode.pick{color:var(--cyan);border-color:rgba(34,211,238,.25)}
+.c-verified{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:999px;border:1px solid rgba(255,183,0,.25);color:var(--amber);background:rgba(255,183,0,.08)}
 .c-text{font-size:12px;color:var(--sub);margin-top:7px;line-height:1.45}
 .feature-lock{position:relative;overflow:hidden}
 .blur-wrap{filter:blur(4px);pointer-events:none;user-select:none;opacity:.7}
@@ -717,14 +718,9 @@ html, body {
       <div class="page-hdr"><div class="page-title">Community <span>Feed</span></div><div class="page-sub">Share your picks, post wins, and see what others are betting</div></div>
       <div class="community-wrap">
         <div class="community-composer">
-          <div class="community-title">Post to feed</div>
-          <div class="community-sub">Drop a quick pick or winning slip note.</div>
+          <div class="community-title">Verified feed only</div>
+          <div class="community-sub">To reduce spam, posts can only be created from live pick cards using the post buttons.</div>
           <div class="community-row">
-            <input class="auth-in" id="community-text" type="text" maxlength="240" placeholder="Example: Knicks ML +120 looked mispriced at open"/>
-          </div>
-          <div class="community-row">
-            <button class="btn-share" onclick="createCommunityPost('pick')">Post Pick</button>
-            <button class="btn-win" onclick="createCommunityPost('win')">Post Win</button>
             <button class="bill-link" onclick="loadCommunityFeed()">Refresh</button>
           </div>
         </div>
@@ -1352,7 +1348,10 @@ function renderCommunityFeed() {
     <div class="cpost">
       <div class="c-top">
         <div><div class="c-user">${esc(p.user || 'anon')}</div><div class="c-time">${fmtTs(p.ts)}</div></div>
-        <div class="c-mode ${p.mode === 'win' ? 'win' : 'pick'}">${p.mode === 'win' ? 'WIN' : 'PICK'}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${p.verified ? '<div class="c-verified">VERIFIED</div>' : ''}
+          <div class="c-mode ${p.mode === 'win' ? 'win' : 'pick'}">${p.mode === 'win' ? 'WIN' : 'PICK'}</div>
+        </div>
       </div>
       <div class="c-text">${esc(p.text || '')}</div>
       <div class="c-text"><strong style="color:var(--text)">${esc(p.bet || '—')}</strong> ${esc(p.odds || '')} · ${esc(p.game || '')}${p.ev !== null && p.ev !== undefined ? ` · +${esc(String(p.ev))}% EV` : ''}</div>
@@ -1369,25 +1368,6 @@ async function loadCommunityFeed() {
     COMMUNITYDATA = [];
   }
   renderCommunityFeed();
-}
-
-async function createCommunityPost(mode = 'pick') {
-  if (!ensureRegisteredUser()) return;
-  const inp = document.getElementById('community-text');
-  const text = String(inp?.value || '').trim();
-  if (!text) {
-    showToast('Write something first');
-    return;
-  }
-  try {
-    await backendPost('/api/community/posts', {mode, text});
-    if (inp) inp.value = '';
-    showToast(mode === 'win' ? 'Win post published' : 'Pick post published');
-    loadCommunityFeed();
-  } catch (err) {
-    console.error(err);
-    showToast('Could not publish post');
-  }
 }
 
 async function loadReferralStatus() {
