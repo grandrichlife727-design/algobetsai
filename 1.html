@@ -1398,8 +1398,22 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Affiliate Dashboard</div>
-          <div class="growth-sub">Track creator link clicks and conversions.</div>
+          <div class="growth-sub">Paste your affiliate URLs and track clicks by sportsbook.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-draftkings" type="text" placeholder="DraftKings affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-fanduel" type="text" placeholder="FanDuel affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-betmgm" type="text" placeholder="BetMGM affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-caesars" type="text" placeholder="Caesars affiliate URL"/>
+          </div>
+          <div class="rf-row"><button class="paywall-cta" onclick="saveAffiliateLinks()">Save Affiliate Links</button><button class="pf-btn" onclick="go('offers')">Open Offers</button></div>
           <div class="growth-note" id="af-note">Loading affiliate data...</div>
+          <div class="growth-note" id="af-note-detail">No click data yet.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">News Impact Engine</div>
@@ -1650,6 +1664,29 @@ const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
+const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
+const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
+const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
+const DEFAULT_AFFILIATE_LINKS = {
+  draftkings: 'https://sportsbook.draftkings.com',
+  fanduel: 'https://sportsbook.fanduel.com',
+  betmgm: 'https://sports.betmgm.com',
+  caesars: 'https://sportsbook.caesars.com',
+  betrivers: 'https://sportsbook.betrivers.com',
+  fanatics: 'https://sportsbook.fanatics.com',
+  espnbet: 'https://espnbet.com',
+  hardrock: 'https://hardrocksportsbook.com',
+};
+const AFFILIATE_EPC_EST = {
+  draftkings: 95,
+  fanduel: 90,
+  betmgm: 80,
+  caesars: 75,
+  betrivers: 60,
+  fanatics: 55,
+  espnbet: 50,
+  hardrock: 45,
+};
 
 function makeUserId() {
   return `usr_${Math.random().toString(36).slice(2, 14)}`;
@@ -1746,6 +1783,8 @@ let CLVDATA = null;
 let AGENTWEIGHTS = null;
 let ALERTPACKS = null;
 let AFFILIATE = null;
+let affiliateLinks = {...DEFAULT_AFFILIATE_LINKS};
+let affiliateStats = {total_clicks: 0, by_book: {}, last_click_ts: 0};
 let NEWSIMPACT = [];
 let HOME_SPORTS_NEWS = [];
 let HOME_SPORTS_NEWS_TS = 0;
@@ -2044,6 +2083,7 @@ function applyStateBookOrdering() {
     return pref.indexOf(ab) - pref.indexOf(bb);
   });
   links.forEach(l => root.appendChild(l));
+  applyAffiliateLinks();
 }
 
 async function loadProfileSettings() {
@@ -2365,16 +2405,150 @@ function applyDemoDataset() {
   ];
 }
 
-async function loadAffiliate() {
+function normalizeAffiliateLinks(raw) {
+  const next = {...DEFAULT_AFFILIATE_LINKS};
+  if (!raw || typeof raw !== 'object') return next;
+  AFFILIATE_BOOKS.forEach(book => {
+    const val = String(raw[book] || '').trim();
+    if (/^https?:\/\//i.test(val)) next[book] = val;
+  });
+  return next;
+}
+
+function loadAffiliateLocalState() {
+  try {
+    affiliateLinks = normalizeAffiliateLinks(JSON.parse(localStorage.getItem(AFFILIATE_LINKS_KEY) || '{}'));
+  } catch (_) {
+    affiliateLinks = {...DEFAULT_AFFILIATE_LINKS};
+  }
+  try {
+    const parsed = JSON.parse(localStorage.getItem(AFFILIATE_STATS_KEY) || '{}');
+    const byBook = parsed && typeof parsed.by_book === 'object' ? parsed.by_book : {};
+    affiliateStats = {
+      total_clicks: Number(parsed.total_clicks || 0),
+      by_book: Object.fromEntries(Object.entries(byBook).map(([k, v]) => [k, Number(v || 0)])),
+      last_click_ts: Number(parsed.last_click_ts || 0),
+    };
+  } catch (_) {
+    affiliateStats = {total_clicks: 0, by_book: {}, last_click_ts: 0};
+  }
+}
+
+function saveAffiliateLocalState() {
+  try { localStorage.setItem(AFFILIATE_LINKS_KEY, JSON.stringify(affiliateLinks)); } catch (_) {}
+  try { localStorage.setItem(AFFILIATE_STATS_KEY, JSON.stringify(affiliateStats)); } catch (_) {}
+}
+
+function hydrateAffiliateInputs() {
+  const ids = ['draftkings','fanduel','betmgm','caesars'];
+  ids.forEach(book => {
+    const input = document.getElementById(`af-link-${book}`);
+    if (input) input.value = String(affiliateLinks[book] || '');
+  });
+}
+
+function normalizeAffiliateSource(el) {
+  if (!el) return 'unknown';
+  if (el.classList.contains('book-link')) return 'sidebar';
+  if (el.closest('#v-offers')) return 'offers';
+  if (el.closest('#v-home')) return 'home';
+  return 'app';
+}
+
+function buildTrackedAffiliateUrl(book, source = 'app') {
+  const base = String(affiliateLinks[book] || DEFAULT_AFFILIATE_LINKS[book] || '').trim();
+  if (!base) return '#';
+  try {
+    const u = new URL(base, window.location.origin);
+    u.searchParams.set('utm_source', 'algobets_ai');
+    u.searchParams.set('utm_medium', 'affiliate');
+    u.searchParams.set('utm_campaign', `${book}_offer`);
+    u.searchParams.set('utm_content', source);
+    if (AFFILIATE?.code) u.searchParams.set('affiliate_code', String(AFFILIATE.code));
+    if (USER_ID) u.searchParams.set('alg_uid', USER_ID);
+    return u.toString();
+  } catch (_) {
+    return base;
+  }
+}
+
+function renderAffiliateDashboard() {
   const note = document.getElementById('af-note');
+  const detail = document.getElementById('af-note-detail');
+  const convPct = Math.max(0, Number(AFFILIATE?.estimated_conversion_pct || 2.5));
+  const convRate = convPct / 100;
+  const clickRows = Object.entries(affiliateStats.by_book || {}).filter(([, v]) => Number(v) > 0).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const estRevenue = clickRows.reduce((sum, [book, clicks]) => {
+    const epc = Number(AFFILIATE_EPC_EST[book] || 50);
+    return sum + (Number(clicks) * convRate * epc);
+  }, 0);
+  if (note) {
+    if (AFFILIATE?.code) {
+      note.textContent = `Code ${AFFILIATE.code} · Clicks 30d ${Number(AFFILIATE.clicks_30d || 0)} · Referrals ${Number(AFFILIATE.referrals_total || 0)} · Conv ${convPct.toFixed(1)}%`;
+    } else {
+      note.textContent = `Local clicks tracked: ${Number(affiliateStats.total_clicks || 0)} · Estimated conv: ${convPct.toFixed(1)}%`;
+    }
+  }
+  if (detail) {
+    const top = clickRows.slice(0, 4).map(([book, clicks]) => `${book.toUpperCase()}: ${clicks} clicks`).join(' · ');
+    const est = estRevenue > 0 ? `Estimated value: ~$${estRevenue.toFixed(0)} (model estimate).` : 'No click data yet.';
+    detail.textContent = top ? `${top} · ${est}` : est;
+  }
+}
+
+function applyAffiliateLinks() {
+  const links = Array.from(document.querySelectorAll('a[data-book]'));
+  links.forEach(link => {
+    const book = String(link.getAttribute('data-book') || '').toLowerCase();
+    if (!book) return;
+    const source = normalizeAffiliateSource(link);
+    link.href = buildTrackedAffiliateUrl(book, source);
+    link.setAttribute('rel', 'noopener sponsored');
+    if (link.dataset.afBound === '1') return;
+    link.dataset.afBound = '1';
+    link.addEventListener('click', () => {
+      const payload = {
+        book,
+        source,
+        tab: currentTab,
+        plan: normalizePlan(currentPlan),
+        state: String(profileSettings?.state || 'auto'),
+      };
+      affiliateStats.total_clicks = Number(affiliateStats.total_clicks || 0) + 1;
+      affiliateStats.by_book[book] = Number(affiliateStats.by_book[book] || 0) + 1;
+      affiliateStats.last_click_ts = Date.now();
+      saveAffiliateLocalState();
+      renderAffiliateDashboard();
+      trackEvent('affiliate_click', payload);
+      backendPost('/api/affiliate/click', payload).catch(() => {});
+    });
+  });
+}
+
+function saveAffiliateLinks() {
+  const books = ['draftkings','fanduel','betmgm','caesars'];
+  books.forEach(book => {
+    const input = document.getElementById(`af-link-${book}`);
+    const raw = String(input?.value || '').trim();
+    affiliateLinks[book] = /^https?:\/\//i.test(raw) ? raw : DEFAULT_AFFILIATE_LINKS[book];
+  });
+  saveAffiliateLocalState();
+  applyAffiliateLinks();
+  renderAffiliateDashboard();
+  trackEvent('affiliate_links_saved', {configured_books: books.filter(b => !!affiliateLinks[b]).length});
+  showToast('Affiliate links saved');
+}
+
+async function loadAffiliate() {
   try {
     const res = await backendGet('/api/affiliate/status');
     AFFILIATE = res.affiliate || null;
-    if (!AFFILIATE) return;
-    if (note) note.textContent = `Code ${AFFILIATE.code} · Clicks 30d ${AFFILIATE.clicks_30d} · Referrals ${AFFILIATE.referrals_total} · Conv ${AFFILIATE.estimated_conversion_pct}%`;
   } catch (err) {
-    if (note) note.textContent = 'Affiliate data unavailable.';
+    AFFILIATE = null;
   }
+  hydrateAffiliateInputs();
+  applyAffiliateLinks();
+  renderAffiliateDashboard();
 }
 
 async function loadPublicConfig() {
@@ -5372,6 +5546,10 @@ loadPremiumSettings();
 loadVipSettings();
 loadTrialUiState();
 loadProfile();
+loadAffiliateLocalState();
+hydrateAffiliateInputs();
+applyAffiliateLinks();
+renderAffiliateDashboard();
 bindUiAccessibility();
 updateDemoToggleUi();
 setupInstallPrompt();
