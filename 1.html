@@ -61,10 +61,8 @@ html, body {
 .sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
 @media(max-width:900px){.sidebar{display:none}}
 .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
-.logo-mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-mark svg{width:20px;height:20px;color:var(--cyan)}
-.logo-text{font-size:14px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--text)}
-.logo-text b{color:var(--cyan);font-weight:800}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;box-shadow:0 0 20px rgba(8,145,178,.35)}
+.logo-text{font-size:20px;font-weight:800;letter-spacing:.4px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
 .nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -86,9 +84,8 @@ html, body {
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;letter-spacing:.3px;white-space:nowrap;color:var(--text)}
-.topbar-mark{width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.03);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center}
-.topbar-mark svg{width:14px;height:14px;color:var(--cyan)}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;letter-spacing:.35px;white-space:nowrap;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 14px rgba(8,145,178,.3);-webkit-text-fill-color:initial;color:#fff}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -398,14 +395,8 @@ html, body {
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 4l7 16h-2.8l-1.4-3.2H9.2L7.8 20H5z"/>
-        <path d="M10.2 14.1h3.6"/>
-        <path d="M14.5 8.5l3-3"/>
-      </svg>
-    </div>
-    <div class="logo-text">Algo <b>Bets AI</b></div>
+    <div class="logo-mark">⚡</div>
+    <div class="logo-text">Algobets Ai</div>
   </div>
   <span class="nav-section">Picks</span>
   <button class="nav-item active" onclick="go('picks')">
@@ -470,14 +461,8 @@ html, body {
 <main class="main">
   <div class="topbar">
     <div class="topbar-logo">
-      <span class="topbar-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 4l7 16h-2.8l-1.4-3.2H9.2L7.8 20H5z"/>
-          <path d="M10.2 14.1h3.6"/>
-          <path d="M14.5 8.5l3-3"/>
-        </svg>
-      </span>
-      ALGOBETS AI
+      <span class="topbar-mark">⚡</span>
+      Algobets Ai
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -870,51 +855,6 @@ function showToast(msg) {
 function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
-
-function logoSvgFor(variant) {
-  if (variant === 'minimal') {
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 19h16"/>
-      <path d="M6 15l4-4 3 3 5-5"/>
-      <path d="M16 9h2v2"/>
-    </svg>`;
-  }
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 17l5-5 4 3 7-8"/>
-    <path d="M16 7h4v4"/>
-    <path d="M4 20h16"/>
-  </svg>`;
-}
-
-function applyLogoVariant(variant = LOGO_VARIANT) {
-  const v = normalizeLogoVariant(variant);
-  LOGO_VARIANT = v;
-  localStorage.setItem('algobets-logo-variant', v);
-  document.body.setAttribute('data-logo', v);
-
-  const sideMark = document.getElementById('logo-mark-side');
-  const topMark = document.getElementById('logo-mark-top');
-  if (sideMark) sideMark.innerHTML = logoSvgFor(v);
-  if (topMark) topMark.innerHTML = logoSvgFor(v);
-
-  const sideWord = document.getElementById('logo-word-side');
-  const a = document.getElementById('logo-word-a');
-  const b = document.getElementById('logo-word-b');
-  if (v === 'minimal') {
-    if (sideWord) sideWord.innerHTML = `Algo <b>Bets</b>`;
-    if (a) a.textContent = 'ALGO';
-    if (b) b.textContent = 'BETS';
-  } else {
-    if (sideWord) sideWord.innerHTML = `Algo <b>Bets AI</b>`;
-    if (a) a.textContent = 'ALGO';
-    if (b) b.textContent = 'BETS AI';
-  }
-}
-
-window.setLogoVariant = function(variant) {
-  applyLogoVariant(variant);
-  showToast(`Logo: ${normalizeLogoVariant(variant)}`);
-};
 
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
@@ -2040,7 +1980,6 @@ function applySavedSelections() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
 loadProfile();
-applyLogoVariant();
 bindUiAccessibility();
 applySavedSelections();
 updateScanCooldownUi();
