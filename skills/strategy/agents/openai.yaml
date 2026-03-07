@@ -1,0 +1,4 @@
+interface:
+  display_name: "Strategy"
+  short_description: "Define strategic direction and prioritization decisions"
+  default_prompt: "Use $strategy to define a clear strategic plan with tradeoffs."
