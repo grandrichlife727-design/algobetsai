@@ -86,6 +86,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .book-name{font-size:12px;font-weight:600;color:var(--text)}
 .book-promo{font-size:10px;color:var(--green);margin-top:1px}
 .book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
+.offer-link{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;text-decoration:none;background:rgba(255,255,255,.03);border:1px solid var(--border);transition:all .12s}
+.offer-link:hover{background:rgba(255,255,255,.06);border-color:var(--border2)}
+.offer-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0}
+.offer-info{min-width:0;flex:1}
+.offer-name{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
+.offer-promo{font-size:12px;color:var(--green);line-height:1.35;margin-top:3px}
+.offer-cta{font-size:11px;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:.7px}
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
@@ -111,22 +118,47 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:520px){.auth-actions .bill-link{display:inline-flex}}
 @media(max-width:900px){
   .topbar{padding:6px 10px;min-height:auto;flex-wrap:wrap;row-gap:6px}
-  .topbar-logo{font-size:21px;line-height:1}
-  .topbar-mark{width:22px;height:22px;font-size:13px}
+  .topbar-logo{font-size:24px;line-height:1}
+  .topbar-mark{width:26px;height:26px;font-size:15px}
   .topbar-right{width:100%;margin-left:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
   .topbar-right::-webkit-scrollbar{display:none}
   .topbar-right > *{flex-shrink:0}
-  .scan-btn{font-size:11px;padding:6px 10px}
+  .scan-btn{font-size:12px;padding:7px 11px}
   .bill-btn{padding:6px 9px}
+  .content{font-size:15px}
+  .page-title{font-size:24px}
+  .page-sub{font-size:15px}
+  .sec-title{font-size:12px}
+  .sec-meta{font-size:12px}
+  .stat-val{font-size:24px}
+  .stat-label{font-size:12px}
+  .mode-btn{font-size:12px;padding:7px 13px}
+  .mode-hint{font-size:12px}
+  .filter{font-size:14px;padding:7px 14px}
+  .pick-bet{font-size:17px}
+  .pick-odds{font-size:16px}
+  .pick-book,.pick-book-link,.pick-stake{font-size:12px}
+  .pick-explain{font-size:13px}
+  .btn-how,.btn-parlay,.btn-share,.btn-win{font-size:12px;padding:6px 11px}
+  .explain-toggle{font-size:12px}
+  .ev-bet{font-size:14px}
+  .ev-game{font-size:12px}
+  .odds-time{font-size:12px}
+  .odds-game{font-size:16px}
+  .growth-title{font-size:13px}
+  .growth-sub,.growth-note{font-size:12px}
+  .empty-title{font-size:16px}
+  .empty-sub{font-size:13px}
+  .paywall-cta,.pf-btn{font-size:13px;padding:8px 12px}
 }
 @media(max-width:560px){
-  .topbar-logo{font-size:19px}
+  .topbar-logo{font-size:22px}
   .plan-pill{display:none}
   .cooldown-pill{display:none !important}
 }
 @media(max-width:420px){
-  .topbar-logo{font-size:17px}
-  .topbar-mark{width:20px;height:20px;font-size:12px}
+  .topbar-logo{font-size:20px}
+  .topbar-mark{width:23px;height:23px;font-size:13px}
 }
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
@@ -359,14 +391,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+  padding:9px 8px calc(env(safe-area-inset-bottom,0px) + 10px);grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
-  color:var(--sub);font-size:9px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
+  color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
 .mnav-btn.active{color:var(--cyan)}
-.mnav-btn svg{width:20px;height:20px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
-.mnav-label{font-size:9px;font-weight:700;line-height:1;margin-top:1px}
-@media(max-width:380px){.mnav-btn svg{width:18px;height:18px}.mnav-label{font-size:8px}}
+.mnav-btn svg{width:23px;height:23px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
+.mnav-label{font-size:10px;font-weight:800;line-height:1;margin-top:1px}
+@media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
 .mnav-more-wrap{position:relative}
 .mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
 .mnav-more-panel.on{display:block}
@@ -551,6 +583,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     Picks <span class="nav-badge" id="nb-picks">0</span>
   </button>
+  <button class="nav-item" onclick="go('premium')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+    Premium
+  </button>
   <button class="nav-item" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Odds
@@ -629,7 +665,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Core Navigation</div>
           <div class="growth-sub">Use <strong>Picks</strong> for betting cards and <strong>Odds</strong> for line shopping.</div>
-          <div class="growth-sub">Use <strong>Offers</strong> for promo links and <strong>More</strong> for premium tools.</div>
+          <div class="growth-sub">Use <strong>Premium</strong> for Props, +EV, Steam, and Fades. Use <strong>Offers</strong> for promo links.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Premium Includes</div>
@@ -716,25 +752,45 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Sportsbook <span>Offers</span></div><div class="page-sub">Promo and affiliate links. We can add more books over time.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link" data-book="draftkings">
-            <div class="book-icon" style="background:#53D338;color:#000">DK</div>
-            <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
-            <span class="book-arrow">&rarr;</span>
+          <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" data-book="draftkings">
+            <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
+            <div class="offer-info"><div class="offer-name">DraftKings</div><div class="offer-promo">Bet $5, Get $150 in bonus bets</div></div>
+            <span class="offer-cta">Claim</span>
           </a>
-          <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link" data-book="fanduel">
-            <div class="book-icon" style="background:#1493FF;color:#fff">FD</div>
-            <div class="book-info"><div class="book-name">FanDuel</div><div class="book-promo">$1,000 No Sweat Bet</div></div>
-            <span class="book-arrow">&rarr;</span>
+          <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="offer-link" data-book="fanduel">
+            <div class="offer-icon" style="background:#1493FF;color:#fff">FD</div>
+            <div class="offer-info"><div class="offer-name">FanDuel</div><div class="offer-promo">$1,000 no sweat first bet</div></div>
+            <span class="offer-cta">Claim</span>
           </a>
-          <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link" data-book="betmgm">
-            <div class="book-icon" style="background:#C9A96E;color:#000">MGM</div>
-            <div class="book-info"><div class="book-name">BetMGM</div><div class="book-promo">First Bet up to $1,500</div></div>
-            <span class="book-arrow">&rarr;</span>
+          <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="offer-link" data-book="betmgm">
+            <div class="offer-icon" style="background:#C9A96E;color:#000">MGM</div>
+            <div class="offer-info"><div class="offer-name">BetMGM</div><div class="offer-promo">First bet offer up to $1,500</div></div>
+            <span class="offer-cta">Claim</span>
           </a>
-          <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link" data-book="caesars">
-            <div class="book-icon" style="background:#003087;color:#fff">CZ</div>
-            <div class="book-info"><div class="book-name">Caesars</div><div class="book-promo">Get up to $1,000 back</div></div>
-            <span class="book-arrow">&rarr;</span>
+          <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="offer-link" data-book="caesars">
+            <div class="offer-icon" style="background:#003087;color:#fff">CZ</div>
+            <div class="offer-info"><div class="offer-name">Caesars</div><div class="offer-promo">Get up to $1,000 back if your first bet loses</div></div>
+            <span class="offer-cta">Claim</span>
+          </a>
+          <a href="https://sportsbook.betrivers.com" target="_blank" rel="noopener" class="offer-link" data-book="betrivers">
+            <div class="offer-icon" style="background:#182334;color:#7dd3fc">BR</div>
+            <div class="offer-info"><div class="offer-name">BetRivers</div><div class="offer-promo">Second chance bonus bet promo</div></div>
+            <span class="offer-cta">Claim</span>
+          </a>
+          <a href="https://sportsbook.fanatics.com" target="_blank" rel="noopener" class="offer-link" data-book="fanatics">
+            <div class="offer-icon" style="background:#e11d48;color:#fff">FT</div>
+            <div class="offer-info"><div class="offer-name">Fanatics Sportsbook</div><div class="offer-promo">Sign-up bonus + FanCash rewards offers</div></div>
+            <span class="offer-cta">Claim</span>
+          </a>
+          <a href="https://espnbet.com" target="_blank" rel="noopener" class="offer-link" data-book="espnbet">
+            <div class="offer-icon" style="background:#cf0a2c;color:#fff">ES</div>
+            <div class="offer-info"><div class="offer-name">ESPN BET</div><div class="offer-promo">New user bonus bet package</div></div>
+            <span class="offer-cta">Claim</span>
+          </a>
+          <a href="https://hardrocksportsbook.com" target="_blank" rel="noopener" class="offer-link" data-book="hardrock">
+            <div class="offer-icon" style="background:#111827;color:#f59e0b">HR</div>
+            <div class="offer-info"><div class="offer-name">Hard Rock Bet</div><div class="offer-promo">First bet and odds boost promos</div></div>
+            <span class="offer-cta">Claim</span>
           </a>
         </div>
         <div class="growth-card">
@@ -745,14 +801,25 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
     </div>
 
-    <div id="v-more" style="display:none">
-      <div class="page-hdr"><div class="page-title">More <span>Features</span></div><div class="page-sub">Premium tools and all advanced sections.</div></div>
+    <div id="v-premium" style="display:none">
+      <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props, +EV, Steam, and Fades all in one place.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Premium Tools</div>
           <div class="rf-row"><button class="paywall-cta" onclick="go('props')">Props</button><button class="paywall-cta" onclick="go('ev')">+EV</button></div>
           <div class="rf-row"><button class="paywall-cta" onclick="go('steam')">Steam</button><button class="paywall-cta" onclick="go('fades')">Fades</button></div>
         </div>
+        <div class="growth-card">
+          <div class="growth-title">Plan Access</div>
+          <div class="growth-sub">Premium unlocks these four sections plus more picks volume.</div>
+          <div class="growth-note">If you are on Free, tap Upgrade to unlock everything here.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-more" style="display:none">
+      <div class="page-hdr"><div class="page-title">More <span>Features</span></div><div class="page-sub">Everything else: builders, tracking, account, and help.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Builder + Tracking</div>
           <div class="rf-row"><button class="pf-btn" onclick="go('parlay')">Parlay Builder</button><button class="pf-btn" onclick="go('boost')">Boost Checker</button></div>
@@ -1143,6 +1210,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="mnav-btn" id="mn-picks" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
+  </button>
+  <button class="mnav-btn" id="mn-premium" onclick="go('premium')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+    <span class="mnav-label">Premium</span>
   </button>
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -3931,8 +4002,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
