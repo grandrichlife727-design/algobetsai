@@ -1643,7 +1643,8 @@ let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
 let VIP_DISCORD_URL = '';
-let GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID_FALLBACK = '157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com';
+let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
@@ -2258,12 +2259,12 @@ async function loadPublicConfig() {
     const res = await backendGet('/api/config/public');
     const invite = String(res?.vip_discord_url || '').trim();
     VIP_DISCORD_URL = invite;
-    GOOGLE_CLIENT_ID = String(res?.google_client_id || '').trim();
+    GOOGLE_CLIENT_ID = String(res?.google_client_id || '').trim() || GOOGLE_CLIENT_ID_FALLBACK;
     const authModalOpen = document.getElementById('auth-ov')?.classList.contains('on');
     if (authModalOpen) renderGoogleAuthButton();
   } catch (_) {
     VIP_DISCORD_URL = '';
-    GOOGLE_CLIENT_ID = '';
+    GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
   }
 }
 
@@ -3700,6 +3701,7 @@ function dismissTrialCard() {
 }
 
 async function claimFreeTrial() {
+  if (!ensureRegisteredUser()) return;
   try {
     await backendPost('/api/trial/start', {});
     trialUiState.dismissed = true;
@@ -3742,18 +3744,20 @@ function updateTrialCard() {
     return;
   }
 
-  const showClaim = isFree && registered && eligible && !trialUiState.dismissed;
+  const showClaim = isFree && eligible;
   if (!showClaim) {
     card.classList.remove('on');
     return;
   }
-  copy.innerHTML = `<strong>Step 1:</strong> Create your free account. <strong>Step 2:</strong> Start your 3-day Premium trial to unlock +EV and faster refresh.`;
+  copy.innerHTML = registered
+    ? `<strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.`
+    : `<strong>Create your free account</strong>, then start your 3-day Premium trial to unlock +EV, Props, Steam, and faster refresh.`;
   if (claimBtn) {
     claimBtn.disabled = false;
-    claimBtn.textContent = 'Start Free Trial';
+    claimBtn.textContent = registered ? 'Start Free Trial' : 'Create Account';
     claimBtn.style.opacity = '1';
   }
-  if (dismissBtn) dismissBtn.style.display = '';
+  if (dismissBtn) dismissBtn.style.display = 'none';
   card.classList.add('on');
 }
 
