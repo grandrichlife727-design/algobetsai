@@ -422,9 +422,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .mnav-btn.vip-nav svg{opacity:.95;color:var(--amber)}
 .mnav-label{font-size:10px;font-weight:800;line-height:1;margin-top:1px}
 @media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
-.mnav-more-wrap{position:relative}
-.mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
-.mnav-more-panel.on{display:block}
+.mnav-vip-wrap,.mnav-more-wrap{position:relative}
+.mnav-vip-panel,.mnav-more-panel{position:absolute;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
+.mnav-vip-panel{left:50%;transform:translateX(-50%)}
+.mnav-vip-panel.on,.mnav-more-panel.on{display:block}
+.mnav-more-panel{right:4px}
 .mnav-more-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);padding:8px;border-radius:7px;cursor:pointer;text-align:left}
 .mnav-more-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
 .mnav-more-item svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
@@ -1494,10 +1496,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
     <span class="mnav-label">Premium</span>
   </button>
-  <button class="mnav-btn vip-nav" id="mn-vip" onclick="go('vip')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
-    <span class="mnav-label">VIP</span>
-  </button>
+  <div class="mnav-vip-wrap">
+    <button class="mnav-btn vip-nav" id="mn-vip" onclick="toggleMobileVip(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
+      <span class="mnav-label">VIP</span>
+    </button>
+    <div class="mnav-vip-panel" id="mnav-vip-panel">
+      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
+      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Picks</button>
+      <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
+      <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
+      <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
+      <button class="mnav-more-item" onclick="go('vip-discord')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>Discord</button>
+      <button class="mnav-more-item" onclick="go('vip-reports')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Reports</button>
+    </div>
+  </div>
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
@@ -1513,14 +1526,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </button>
     <div class="mnav-more-panel" id="mnav-more-panel">
       <button class="mnav-more-item" onclick="go('more')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='5' r='1.5'/><circle cx='12' cy='12' r='1.5'/><circle cx='12' cy='19' r='1.5'/></svg>More Hub</button>
-      <div class="mnav-more-sec">VIP</div>
-      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
-      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Picks</button>
-      <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
-      <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
-      <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
-      <button class="mnav-more-item" onclick="go('vip-discord')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>Discord</button>
-      <button class="mnav-more-item" onclick="go('vip-reports')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Reports</button>
       <div class="mnav-more-sec">Premium</div>
       <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props</button>
       <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
@@ -5178,9 +5183,23 @@ function closeMobileMore() {
   if (panel) panel.classList.remove('on');
 }
 
+function closeMobileVip() {
+  const panel = document.getElementById('mnav-vip-panel');
+  if (panel) panel.classList.remove('on');
+}
+
 function toggleMobileMore(e) {
   if (e) e.stopPropagation();
+  closeMobileVip();
   const panel = document.getElementById('mnav-more-panel');
+  if (!panel) return;
+  panel.classList.toggle('on');
+}
+
+function toggleMobileVip(e) {
+  if (e) e.stopPropagation();
+  closeMobileMore();
+  const panel = document.getElementById('mnav-vip-panel');
   if (!panel) return;
   panel.classList.toggle('on');
 }
@@ -5201,11 +5220,14 @@ function go(name) {
   }
   currentTab = name;
   closeMobileMore();
+  closeMobileVip();
   ALL_TABS.forEach(t => {
     const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
+  const vipBtn = document.getElementById('mn-vip');
+  if (vipBtn) vipBtn.classList.toggle('active', name === 'vip' || name.startsWith('vip-'));
   const moreBtn = document.getElementById('mn-more');
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
@@ -5293,11 +5315,14 @@ function bindUiAccessibility() {
       const nudge = document.getElementById('auth-nudge-ov');
       if (nudge && nudge.classList.contains('on')) nudge.classList.remove('on');
       closeMobileMore();
+      closeMobileVip();
     }
   });
   document.addEventListener('click', e => {
-    const wrap = document.querySelector('.mnav-more-wrap');
-    if (wrap && !wrap.contains(e.target)) closeMobileMore();
+    const moreWrap = document.querySelector('.mnav-more-wrap');
+    if (moreWrap && !moreWrap.contains(e.target)) closeMobileMore();
+    const vipWrap = document.querySelector('.mnav-vip-wrap');
+    if (vipWrap && !vipWrap.contains(e.target)) closeMobileVip();
   });
 }
 
