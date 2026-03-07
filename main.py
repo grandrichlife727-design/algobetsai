@@ -32,6 +32,7 @@ import asyncio
 import hashlib
 import stripe
 import numpy as np
+import statistics
 from datetime import datetime, timedelta
 from typing import Optional
 from contextlib import contextmanager
@@ -280,8 +281,11 @@ async def fetch_odds_api_games(sport_key: str) -> list:
             r = await client.get(url, params={
                 "apiKey": ODDS_API_KEY,
                 "sport": odds_sport,
-                "region": "us",
-                "mkt": "h2h",  # moneyline
+                "regions": "us",
+                "markets": "h2h,spreads,totals",
+                "oddsFormat": "american",
+                "dateFormat": "iso",
+                "bookmakers": ODDS_BOOKMAKERS,
             })
             
             if r.status_code == 403:
@@ -322,39 +326,69 @@ async def fetch_odds_api_games(sport_key: str) -> list:
             bookmakers = game.get("bookmakers", [])
             if not bookmakers:
                 continue
-                
-            # Get best odds across bookmakers
-            home_ml = None
-            away_ml = None
-            home_spread = None
-            away_spread = None
-            over_under = None
-            
+
+            # Keep per-book prices for a stronger consensus model.
+            moneyline_by_book = {}
+            spreads_by_book = {}
+            totals_by_book = {}
+
             for bm in bookmakers:
                 bm_name = bm.get("title", "")
                 if bm_name.lower() not in ODDS_BOOKMAKERS.lower():
                     continue
-                    
+
+                bm_home_ml = None
+                bm_away_ml = None
+                bm_home_spread = None
+                bm_away_spread = None
+                bm_total = None
+
                 for market in bm.get("markets", []):
                     outcomes = market.get("outcomes", [])
                     for outcome in outcomes:
                         name = outcome.get("name", "")
                         price = outcome.get("price")
-                        
+
                         if market.get("key") == "h2h":
                             if name == home_team:
-                                home_ml = price
+                                bm_home_ml = price
                             elif name == away_team:
-                                away_ml = price
+                                bm_away_ml = price
                         elif market.get("key") == "spreads":
                             if name == home_team:
-                                home_spread = outcome.get("point")
+                                bm_home_spread = outcome.get("point")
                             elif name == away_team:
-                                away_spread = outcome.get("point")
+                                bm_away_spread = outcome.get("point")
                         elif market.get("key") == "totals":
                             if outcome.get("name") == "Over":
-                                over_under = outcome.get("point")
-            
+                                bm_total = outcome.get("point")
+
+                if bm_home_ml is not None and bm_away_ml is not None:
+                    moneyline_by_book[bm_name] = {"home": bm_home_ml, "away": bm_away_ml}
+                if bm_home_spread is not None and bm_away_spread is not None:
+                    spreads_by_book[bm_name] = {"home": bm_home_spread, "away": bm_away_spread}
+                if bm_total is not None:
+                    totals_by_book[bm_name] = bm_total
+
+            # Default view fields used by existing consumers.
+            home_lines = [v["home"] for v in moneyline_by_book.values()]
+            away_lines = [v["away"] for v in moneyline_by_book.values()]
+            if not home_lines or not away_lines:
+                continue
+
+            # "Best" means best payout for the bettor.
+            best_home_book = max(moneyline_by_book.items(), key=lambda kv: american_to_decimal(kv[1]["home"]))
+            best_away_book = max(moneyline_by_book.items(), key=lambda kv: american_to_decimal(kv[1]["away"]))
+
+            home_ml = best_home_book[1]["home"]
+            away_ml = best_away_book[1]["away"]
+            home_spreads = [v["home"] for v in spreads_by_book.values()]
+            away_spreads = [v["away"] for v in spreads_by_book.values()]
+            totals = list(totals_by_book.values())
+            home_spread = round(statistics.median(home_spreads), 1) if home_spreads else None
+            away_spread = round(statistics.median(away_spreads), 1) if away_spreads else None
+            over_under = round(statistics.median(totals), 1) if totals else None
+
             game_data = {
                 "sport_key": sport_key,
                 "home_team": home_team,
@@ -365,7 +399,10 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                 "home_spread": home_spread,
                 "away_spread": away_spread,
                 "total": over_under,
-                "bookmakers": [bm.get("title") for bm in bookmakers[:3]],  # Top 3 books
+                "bookmakers": list(moneyline_by_book.keys()),
+                "moneyline_by_book": moneyline_by_book,
+                "best_home_book": best_home_book[0],
+                "best_away_book": best_away_book[0],
             }
             games.append(game_data)
             
@@ -439,6 +476,108 @@ def calculate_implied_probability(odds: int) -> float:
         return abs(odds) / (abs(odds) + 100)
 
 
+def american_to_decimal(odds: int) -> float:
+    """Convert American odds to decimal payout."""
+    if odds is None:
+        return 1.0
+    if odds > 0:
+        return (odds / 100.0) + 1.0
+    return 1.0 + (100.0 / abs(odds))
+
+
+def expected_value_pct(odds: int, fair_prob: float) -> float:
+    """Expected ROI percent for a 1-unit stake."""
+    dec = american_to_decimal(odds)
+    return (((dec - 1.0) * fair_prob) - (1.0 - fair_prob)) * 100.0
+
+
+def devig_two_way_probabilities(home_odds: int, away_odds: int) -> tuple[float, float]:
+    """Remove vig from a two-way market to get fair probabilities."""
+    p_home = calculate_implied_probability(home_odds)
+    p_away = calculate_implied_probability(away_odds)
+    denom = p_home + p_away
+    if denom <= 0:
+        return 0.5, 0.5
+    return p_home / denom, p_away / denom
+
+
+def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
+    """
+    Build fair probability from all available books using de-vigged two-way prices.
+    Returns (home_prob, away_prob, diagnostics).
+    """
+    by_book = game.get("moneyline_by_book") or {}
+    if not by_book:
+        # Fallback from best lines only.
+        return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
+
+    # Slightly favor sharper books when available.
+    sharp_weights = {
+        "pinnacle": 1.30,
+        "circa": 1.20,
+        "betfair": 1.15,
+        "draftkings": 1.00,
+        "fanduel": 1.00,
+        "betmgm": 1.00,
+        "caesars": 0.95,
+        "william hill": 0.95,
+        "bovada": 0.90,
+    }
+
+    weighted_home = []
+    weighted_away = []
+    for book, lines in by_book.items():
+        home_o = lines.get("home")
+        away_o = lines.get("away")
+        if home_o is None or away_o is None:
+            continue
+        h, a = devig_two_way_probabilities(home_o, away_o)
+        key = book.lower()
+        w = 1.0
+        for k, v in sharp_weights.items():
+            if k in key:
+                w = v
+                break
+        weighted_home.extend([h] * max(1, int(round(w * 10))))
+        weighted_away.extend([a] * max(1, int(round(w * 10))))
+
+    if not weighted_home:
+        return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
+
+    home_prob = statistics.median(weighted_home)
+    away_prob = 1.0 - home_prob
+    diagnostics = {
+        "books_count": len(by_book),
+        "home_prob_min": round(min(weighted_home), 4),
+        "home_prob_max": round(max(weighted_home), 4),
+        "home_prob_spread": round(max(weighted_home) - min(weighted_home), 4),
+    }
+    return home_prob, away_prob, diagnostics
+
+
+def best_two_way_lines(game: dict) -> dict:
+    """Find the best available home/away prices and source books."""
+    by_book = game.get("moneyline_by_book") or {}
+    if not by_book:
+        return {
+            "home_odds": game.get("home_ml"),
+            "away_odds": game.get("away_ml"),
+            "home_book": game.get("best_home_book") or "DraftKings",
+            "away_book": game.get("best_away_book") or "DraftKings",
+            "books_count": 1 if game.get("home_ml") is not None and game.get("away_ml") is not None else 0,
+        }
+
+    best_home_book, best_home_line = max(by_book.items(), key=lambda kv: american_to_decimal(kv[1]["home"]))
+    best_away_book, best_away_line = max(by_book.items(), key=lambda kv: american_to_decimal(kv[1]["away"]))
+    return {
+        "home_odds": best_home_line["home"],
+        "away_odds": best_away_line["away"],
+        "home_book": best_home_book,
+        "away_book": best_away_book,
+        "books_count": len(by_book),
+    }
+
+
 def calculate_edge(home_odds: int, away_odds: int) -> dict:
     """Calculate value edge between the two sides."""
     home_implied = calculate_implied_probability(home_odds)
@@ -465,7 +604,7 @@ def calculate_edge(home_odds: int, away_odds: int) -> dict:
 
 
 async def generate_picks_for_sport(sport_key: str, games: list) -> list:
-    """Generate picks for a sport based on odds analysis."""
+    """Generate picks using a consensus fair-probability and best-line EV model."""
     picks = []
     
     if not games:
@@ -479,52 +618,153 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         home_ml = game.get("home_ml")
         away_ml = game.get("away_ml")
         
-        if not home_ml or not away_ml:
+        if home_ml is None or away_ml is None:
             continue
-            
-        # Calculate edge
-        edge_data = calculate_edge(home_ml, away_ml)
-        
-        # Only generate pick if edge > 3%
-        if abs(edge_data["home_edge"]) > 3 or abs(edge_data["away_edge"]) > 3:
-            # Choose the side with positive edge
-            if edge_data["home_edge"] > edge_data["away_edge"]:
-                bet_side = home_team
-                bet_odds = home_ml
-                edge = edge_data["home_edge"]
-            else:
-                bet_side = away_team
-                bet_odds = away_ml
-                edge = edge_data["away_edge"]
-            
-            # Confidence based on edge size
-            confidence = min(95, 50 + abs(edge) * 2)
-            
-            game_time = game.get("commence_time", "")
-            
-            pick = {
-                "id": f"{sport_key}_{home_team}_{away_team}_{int(time.time())}",
-                "sport": sport_key,
-                "emoji": meta.get("emoji", "🎯"),
-                "label": meta.get("label", sport_key),
-                "home_team": home_team,
-                "away_team": away_team,
-                "game": f"{away_team} @ {home_team}",
-                "game_time": game_time,
-                "bet": bet_side,
-                "bet_type": "moneyline",
-                "odds": bet_odds,
-                "edge": round(edge, 1),
-                "confidence": int(confidence),
-                "fair_prob": edge_data.get("home_fair_prob" if bet_side == home_team else "away_fair_prob", 50),
-                "implied_prob": round(calculate_implied_probability(bet_odds) * 100, 1),
-                "best_book": game.get("bookmakers", ["draftkings"])[0] if game.get("bookmakers") else "draftkings",
-                "agents_fired": ["value", "odds_analysis"],
-                "data_source": "odds_api",
-            }
-            picks.append(pick)
+
+        consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+        home_ev = expected_value_pct(home_ml, consensus_home)
+        away_ev = expected_value_pct(away_ml, consensus_away)
+
+        # Keep threshold modest; user can filter by grade in UI.
+        min_ev_threshold = 1.0
+        if max(home_ev, away_ev) < min_ev_threshold:
+            continue
+
+        if home_ev >= away_ev:
+            bet_side = home_team
+            bet_odds = home_ml
+            edge = home_ev
+            fair_prob = consensus_home
+            best_book = game.get("best_home_book")
+        else:
+            bet_side = away_team
+            bet_odds = away_ml
+            edge = away_ev
+            fair_prob = consensus_away
+            best_book = game.get("best_away_book")
+
+        disagreement = diag.get("home_prob_spread", 0.0)
+        # Confidence = function(edge, #books, consensus tightness)
+        books_boost = min(12.0, (diag.get("books_count", 1) - 1) * 2.0)
+        uncertainty_penalty = min(18.0, disagreement * 100.0 * 0.8)
+        confidence = max(50.0, min(95.0, 56.0 + (edge * 3.8) + books_boost - uncertainty_penalty))
+
+        game_time = game.get("commence_time", "")
+        fair_pct = fair_prob * 100.0
+        implied_pct = calculate_implied_probability(bet_odds) * 100.0
+
+        pick = {
+            "id": f"{sport_key}_{home_team}_{away_team}_{int(time.time())}",
+            "sport": sport_key,
+            "emoji": meta.get("emoji", "🎯"),
+            "label": meta.get("label", sport_key),
+            "home_team": home_team,
+            "away_team": away_team,
+            "game": f"{away_team} @ {home_team}",
+            "game_time": game_time,
+            "bet": f"{bet_side} ML",
+            "bet_type": "moneyline",
+            "odds": bet_odds,
+            "edge": round(edge, 2),
+            "ev": round(edge, 2),
+            "confidence": int(confidence),
+            "fair_prob": round(fair_pct, 1),
+            "implied_prob": round(implied_pct, 1),
+            "best_book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
+            "books_compared": diag.get("books_count", 1),
+            "market_disagreement": round(disagreement * 100.0, 2),
+            "model_breakdown": {
+                "pinnacle_clv": f"Consensus fair {fair_pct:.1f}% vs implied {implied_pct:.1f}% ({edge:+.2f}% EV).",
+                "sharp_money": f"Compared across {diag.get('books_count', 1)} books; disagreement {disagreement*100.0:.2f} pts.",
+                "confirms": "Best-line EV, de-vig consensus, book quality weighting",
+            },
+            "agents_fired": ["best_line_ev", "market_consensus", "devig"],
+            "data_source": "odds_api",
+        }
+        picks.append(pick)
     
     return picks
+
+
+def build_ev_rows_for_game(game: dict) -> list:
+    """Build +EV opportunities per side using best-line prices."""
+    lines = best_two_way_lines(game)
+    home_odds = lines.get("home_odds")
+    away_odds = lines.get("away_odds")
+    if home_odds is None or away_odds is None:
+        return []
+
+    home_team = game.get("home_team", "")
+    away_team = game.get("away_team", "")
+    consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+
+    rows = []
+    home_ev = expected_value_pct(home_odds, consensus_home)
+    away_ev = expected_value_pct(away_odds, consensus_away)
+
+    if home_ev >= 0.5:
+        rows.append({
+            "bet": f"{home_team} ML",
+            "game": f"{away_team} @ {home_team}",
+            "ev": round(home_ev, 2),
+            "bookOdds": home_odds,
+            "book": lines.get("home_book"),
+            "books_compared": diag.get("books_count", lines.get("books_count", 1)),
+        })
+    if away_ev >= 0.5:
+        rows.append({
+            "bet": f"{away_team} ML",
+            "game": f"{away_team} @ {home_team}",
+            "ev": round(away_ev, 2),
+            "bookOdds": away_odds,
+            "book": lines.get("away_book"),
+            "books_compared": diag.get("books_count", lines.get("books_count", 1)),
+        })
+    return rows
+
+
+def build_arb_for_game(game: dict) -> Optional[dict]:
+    """Detect simple 2-way arbitrage between books for a game."""
+    lines = best_two_way_lines(game)
+    home_odds = lines.get("home_odds")
+    away_odds = lines.get("away_odds")
+    if home_odds is None or away_odds is None:
+        return None
+
+    home_dec = american_to_decimal(home_odds)
+    away_dec = american_to_decimal(away_odds)
+    inv_sum = (1.0 / home_dec) + (1.0 / away_dec)
+    if inv_sum >= 1.0:
+        return None
+
+    profit_pct = ((1.0 / inv_sum) - 1.0) * 100.0
+    if profit_pct < 0.25:
+        return None
+
+    # Stake allocation as % of bankroll to lock profit.
+    home_stake_pct = ((1.0 / home_dec) / inv_sum) * 100.0
+    away_stake_pct = ((1.0 / away_dec) / inv_sum) * 100.0
+
+    return {
+        "sport": SPORT_META.get(game.get("sport_key"), {}).get("label", game.get("sport_key", "")),
+        "emoji": SPORT_META.get(game.get("sport_key"), {}).get("emoji", "🎯"),
+        "game": f"{game.get('away_team', '')} @ {game.get('home_team', '')}",
+        "profit_pct": round(profit_pct, 3),
+        "sides": [
+            {
+                "book": lines.get("home_book"),
+                "bet": f"{game.get('home_team', '')} ML",
+                "odds": home_odds,
+                "stake_pct": round(home_stake_pct, 2),
+            },
+            {
+                "book": lines.get("away_book"),
+                "bet": f"{game.get('away_team', '')} ML",
+                "odds": away_odds,
+                "stake_pct": round(away_stake_pct, 2),
+            },
+        ],
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -548,6 +788,41 @@ async def health_check():
         "version": "5.0.0",
         "data_source": "odds_api" if ODDS_API_KEY else "none",
         "quota_remaining": _quota_remaining,
+    }
+
+
+@app.get("/api/ev-finder")
+async def ev_finder():
+    """Return current +EV opportunities derived from consensus-vs-best-line model."""
+    rows = []
+    for sport in SPORTS:
+        games = await fetch_odds_api_games(sport)
+        for game in games:
+            rows.extend(build_ev_rows_for_game(game))
+
+    rows.sort(key=lambda x: x.get("ev", 0), reverse=True)
+    return {
+        "results": rows[:100],
+        "count": len(rows),
+        "model": "consensus_devig_best_line_ev",
+    }
+
+
+@app.get("/api/arb-detect")
+async def arb_detect():
+    """Return simple two-way arbitrage opportunities across available books."""
+    arbs = []
+    for sport in SPORTS:
+        games = await fetch_odds_api_games(sport)
+        for game in games:
+            arb = build_arb_for_game(game)
+            if arb:
+                arbs.append(arb)
+
+    arbs.sort(key=lambda x: x.get("profit_pct", 0), reverse=True)
+    return {
+        "results": arbs[:100],
+        "count": len(arbs),
     }
 
 
@@ -589,7 +864,7 @@ async def scan(request: Request):
             all_picks.extend(picks)
     
     # Sort by edge (highest first)
-    all_picks.sort(key=lambda x: abs(x.get("edge", 0)), reverse=True)
+    all_picks.sort(key=lambda x: x.get("edge", 0), reverse=True)
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
