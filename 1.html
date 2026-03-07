@@ -93,14 +93,18 @@ html, body {
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
 .scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
+.scan-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
 .plan-pill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid var(--border2);font-size:10px;font-family:var(--mono);font-weight:700;color:var(--sub);text-transform:uppercase}
 .plan-pill.free{color:var(--amber);border-color:rgba(255,183,0,.28);background:rgba(255,183,0,.08)}
 .plan-pill.premium{color:var(--cyan);border-color:rgba(0,212,255,.25);background:rgba(0,212,255,.08)}
 .plan-pill.vip{color:var(--green);border-color:rgba(0,229,160,.25);background:rgba(0,229,160,.08)}
+.cooldown-pill{display:none;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,183,0,.3);background:rgba(255,183,0,.09);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700;white-space:nowrap}
+.cooldown-pill.on{display:inline-flex}
 .bill-btn{background:rgba(0,229,160,.9);color:#00160f;padding:6px 10px;font-size:11px}
 .bill-link{background:none;border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
+.auth-btn{display:inline-flex}
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
 @keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
@@ -315,6 +319,45 @@ html, body {
 .paywall-copy{font-size:12px;color:var(--sub);line-height:1.45}
 .paywall-copy strong{color:var(--text)}
 .paywall-cta{background:var(--cyan);border:none;border-radius:6px;padding:6px 10px;color:#001722;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.tier-compare{display:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:0 0 14px}
+.tier-compare.on{display:block}
+.tier-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px}
+.tier-row{display:grid;grid-template-columns:1.2fr .9fr .9fr .9fr;gap:6px;font-size:11px;color:var(--sub)}
+.tier-row strong{color:var(--text)}
+.tier-row + .tier-row{margin-top:4px}
+.up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
+.up-ov.on{display:flex}
+.up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.up-title{font-size:16px;font-weight:800;margin-bottom:8px}
+.up-sub{font-size:12px;color:var(--sub);margin-bottom:12px}
+.up-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.up-btn{width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--text);font-family:var(--sans)}
+.up-btn:hover{border-color:var(--border2)}
+.up-btn b{display:block;font-size:12px}
+.up-btn span{font-size:11px;color:var(--sub)}
+.up-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.pf-row:last-child{border-bottom:none}
+.pf-k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.pf-v{font-size:13px;color:var(--text);font-weight:600;text-align:right;word-break:break-word}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pf-btn{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:12px;font-weight:700;padding:7px 10px;cursor:pointer;font-family:var(--sans)}
+.pf-btn:hover{color:var(--text);border-color:var(--border2)}
+.pf-btn.primary{background:var(--cyan);border-color:rgba(0,212,255,.4);color:#001722}
+.auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
+.auth-ov.on{display:flex}
+.auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.auth-title{font-size:16px;font-weight:800}
+.auth-sub{font-size:12px;color:var(--sub);margin:5px 0 10px}
+.auth-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.auth-m{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;font-family:var(--sans);text-align:left}
+.auth-m.on{border-color:rgba(0,212,255,.35);color:var(--cyan)}
+.auth-field{margin-top:10px}
+.auth-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px}
+.auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
+.auth-in:focus{outline:none;border-color:rgba(0,212,255,.35)}
+.auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -365,6 +408,10 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
     Track Record
   </button>
+  <button class="nav-item" onclick="go('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
+    Profile
+  </button>
   <div class="sidebar-bot">
     <span class="nav-section" style="padding-top:4px">Open an Account</span>
     <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link">
@@ -400,8 +447,10 @@ html, body {
         <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
       </div>
+      <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
-      <button class="scan-btn bill-btn" id="upgrade-btn" onclick="startCheckout()">Upgrade</button>
+      <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
+      <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         Scan Now
@@ -431,7 +480,16 @@ html, body {
       </div>
       <div class="paywall-card" id="paywall-card">
         <div class="paywall-copy" id="paywall-copy"></div>
-        <button class="paywall-cta" id="paywall-cta" onclick="startCheckout()">Upgrade</button>
+        <button class="paywall-cta" id="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
+      </div>
+      <div class="tier-compare" id="tier-compare">
+        <div class="tier-title">Free vs Premium vs VIP</div>
+        <div class="tier-row"><span>Feature</span><strong>Free</strong><strong>Premium</strong><strong>VIP</strong></div>
+        <div class="tier-row"><span>Scan picks</span><span>2</span><span>15</span><span>50</span></div>
+        <div class="tier-row"><span>Sports covered</span><span>NBA + NHL</span><span>All</span><span>All</span></div>
+        <div class="tier-row"><span>Scan refresh</span><span>20 min</span><span>5 min</span><span>1 min</span></div>
+        <div class="tier-row"><span>+EV Finder</span><span>—</span><span>Included</span><span>Included</span></div>
+        <div class="tier-row"><span>Arbitrage feed</span><span>—</span><span>—</span><span>Included</span></div>
       </div>
       <div class="filters">
         <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
@@ -538,6 +596,22 @@ html, body {
       </div>
     </div>
 
+    <div id="v-profile" style="display:none">
+      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage sign-in identity and billing access</div></div>
+      <div class="profile-card">
+        <div class="pf-row"><div class="pf-k">Account</div><div class="pf-v" id="pf-account">Guest</div></div>
+        <div class="pf-row"><div class="pf-k">Method</div><div class="pf-v" id="pf-method">Guest</div></div>
+        <div class="pf-row"><div class="pf-k">Plan</div><div class="pf-v" id="pf-plan">Free</div></div>
+        <div class="pf-row"><div class="pf-k">Pick Limit</div><div class="pf-v" id="pf-limit">2</div></div>
+        <div class="pf-actions">
+          <button class="pf-btn primary" onclick="openAuthModal()">Register / Sign In</button>
+          <button class="pf-btn" onclick="openUpgradePicker()">Upgrade</button>
+          <button class="pf-btn" onclick="openBillingPortal()">Manage Billing</button>
+          <button class="pf-btn" onclick="signOutProfile()">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
   </div></main>
 </div><nav class="mobile-nav">
   <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
@@ -560,12 +634,46 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
     <span class="mnav-label">Record</span>
   </button>
+  <button class="mnav-btn" id="mn-profile" onclick="go('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
+    <span class="mnav-label">Profile</span>
+  </button>
 </nav>
 
 <div class="overlay" id="act-overlay" onclick="closeModal(event)">
   <div class="modal" id="act-modal">
     <div id="act-content"></div>
     <button class="modal-close" onclick="document.getElementById('act-overlay').classList.remove('on');document.getElementById('act-modal').classList.remove('on')">Close</button>
+  </div>
+</div>
+
+<div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
+  <div class="up-modal">
+    <div class="up-title">Choose your plan</div>
+    <div class="up-sub" id="up-sub">Pick Premium or VIP before checkout.</div>
+    <div class="up-grid" id="up-grid"></div>
+    <div class="up-actions"><button class="bill-link" onclick="closeUpgradePicker()">Cancel</button></div>
+  </div>
+</div>
+
+<div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
+  <div class="auth-modal">
+    <div class="auth-title">Register / Sign In</div>
+    <div class="auth-sub">Choose a method: Gmail, Email, Phone, or Facebook.</div>
+    <div class="auth-methods">
+      <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
+      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
+      <button class="auth-m" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
+      <button class="auth-m" id="am-facebook" onclick="selectAuthMethod('facebook')">Facebook</button>
+    </div>
+    <div class="auth-field">
+      <div class="auth-lbl" id="auth-lbl">Gmail Address</div>
+      <input class="auth-in" id="auth-input" type="text" placeholder="you@gmail.com"/>
+    </div>
+    <div class="auth-actions">
+      <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
+      <button class="paywall-cta" onclick="submitAuthProfile()">Continue</button>
+    </div>
   </div>
 </div>
 
@@ -578,11 +686,18 @@ const _backendFromQp = (_qp.get('backend') || '').trim();
 if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
 const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
 const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+const PROFILE_KEY = 'algobets-profile-v1';
+const STATE_KEY = 'algobets-ui-state-v1';
+
+function makeGuestId() {
+  return `guest_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const _uidFromQp = (_qp.get('uid') || '').trim();
 if (_uidFromQp) localStorage.setItem('algobets-user-id', _uidFromQp);
 let USER_ID = (localStorage.getItem('algobets-user-id') || '').trim();
 if (!USER_ID) {
-  USER_ID = `guest_${Math.random().toString(36).slice(2, 10)}`;
+  USER_ID = makeGuestId();
   localStorage.setItem('algobets-user-id', USER_ID);
 }
 window.setAlgobetsUserId = function(uid) {
@@ -598,7 +713,6 @@ const SPORTS = [
   {key:'baseball_mlb',     label:'MLB ⚾'},
   {key:'soccer_epl',       label:'EPL ⚽'},
 ];
-const STATE_KEY = 'algobets-ui-state-v1';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
@@ -613,6 +727,9 @@ let currentTab = 'picks';
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
+let userProfile = {method: 'guest', identifier: '', name: ''};
+let scanCooldownRemaining = 0;
+let scanCooldownTicker = null;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -706,6 +823,196 @@ function saveState() {
   }
 }
 
+function normalizeAuthMethod(method) {
+  const m = String(method || '').toLowerCase();
+  if (m === 'gmail' || m === 'email' || m === 'phone' || m === 'facebook') return m;
+  return 'guest';
+}
+
+function authMethodLabel(method) {
+  const m = normalizeAuthMethod(method);
+  if (m === 'gmail') return 'Gmail';
+  if (m === 'email') return 'Email';
+  if (m === 'phone') return 'Phone';
+  if (m === 'facebook') return 'Facebook';
+  return 'Guest';
+}
+
+function maskIdentifier(method, identifier) {
+  const raw = String(identifier || '').trim();
+  if (!raw) return 'Guest';
+  const m = normalizeAuthMethod(method);
+  if (m === 'phone') {
+    const d = raw.replace(/\D/g, '');
+    if (d.length < 4) return raw;
+    return `***-***-${d.slice(-4)}`;
+  }
+  if (raw.includes('@')) {
+    const [name, domain] = raw.split('@');
+    if (!domain) return raw;
+    const pre = name.length > 2 ? `${name[0]}***${name[name.length - 1]}` : `${name[0] || '*'}*`;
+    return `${pre}@${domain}`;
+  }
+  return raw.length > 3 ? `${raw.slice(0, 2)}***` : raw;
+}
+
+function profilePickLimit() {
+  const p = normalizePlan(currentPlan);
+  const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
+  if (fromTier > 0) return fromTier;
+  if (p === 'vip') return 50;
+  if (p === 'premium') return 15;
+  return 2;
+}
+
+function updateAuthUi() {
+  const btn = document.getElementById('auth-btn');
+  if (!btn) return;
+  const loggedIn = normalizeAuthMethod(userProfile.method) !== 'guest' && !!String(userProfile.identifier || '').trim();
+  btn.textContent = loggedIn ? 'Account' : 'Sign In';
+}
+
+function renderProfile() {
+  const account = document.getElementById('pf-account');
+  const method = document.getElementById('pf-method');
+  const plan = document.getElementById('pf-plan');
+  const limit = document.getElementById('pf-limit');
+  if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
+  if (method) method.textContent = authMethodLabel(userProfile.method);
+  if (plan) plan.textContent = planLabel(currentPlan);
+  if (limit) limit.textContent = String(profilePickLimit());
+  updateAuthUi();
+}
+
+function saveProfile() {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
+  } catch (err) {
+    console.warn('[Algobets] Could not save profile:', err);
+  }
+}
+
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) {
+      if (USER_ID.includes('@')) {
+        userProfile = {method: USER_ID.endsWith('@gmail.com') ? 'gmail' : 'email', identifier: USER_ID, name: ''};
+      }
+      renderProfile();
+      return;
+    }
+    const p = JSON.parse(raw);
+    userProfile = {
+      method: normalizeAuthMethod(p.method),
+      identifier: String(p.identifier || '').trim(),
+      name: String(p.name || '').trim(),
+    };
+    if (userProfile.identifier && USER_ID.startsWith('guest_')) {
+      window.setAlgobetsUserId(authIdentityForBilling(userProfile.method, userProfile.identifier));
+    }
+  } catch (err) {
+    console.warn('[Algobets] Could not load profile:', err);
+  }
+  renderProfile();
+}
+
+function selectAuthMethod(method) {
+  const m = normalizeAuthMethod(method);
+  document.querySelectorAll('.auth-m').forEach(el => el.classList.remove('on'));
+  const active = document.getElementById(`am-${m}`);
+  if (active) active.classList.add('on');
+
+  const lbl = document.getElementById('auth-lbl');
+  const input = document.getElementById('auth-input');
+  if (!lbl || !input) return;
+
+  if (m === 'gmail') {
+    lbl.textContent = 'Gmail Address';
+    input.placeholder = 'you@gmail.com';
+    input.type = 'email';
+  } else if (m === 'email') {
+    lbl.textContent = 'Email Address';
+    input.placeholder = 'you@example.com';
+    input.type = 'email';
+  } else if (m === 'phone') {
+    lbl.textContent = 'Phone Number';
+    input.placeholder = '+1 (555) 123-4567';
+    input.type = 'tel';
+  } else {
+    lbl.textContent = 'Facebook Email or Username';
+    input.placeholder = 'yourprofile or you@facebookmail.com';
+    input.type = 'text';
+  }
+}
+
+function openAuthModal() {
+  const ov = document.getElementById('auth-ov');
+  const input = document.getElementById('auth-input');
+  if (!ov || !input) return;
+  const m = normalizeAuthMethod(userProfile.method === 'guest' ? 'gmail' : userProfile.method);
+  selectAuthMethod(m);
+  input.value = userProfile.identifier || '';
+  ov.classList.add('on');
+  requestAnimationFrame(() => input.focus());
+}
+
+function closeAuthModal(e) {
+  const ov = document.getElementById('auth-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function authIdentityForBilling(method, rawValue) {
+  const v = String(rawValue || '').trim();
+  const m = normalizeAuthMethod(method);
+  if (m === 'phone') return `phone:${v.replace(/\D/g, '')}`;
+  return v.toLowerCase();
+}
+
+async function submitAuthProfile() {
+  const active = document.querySelector('.auth-m.on');
+  const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'gmail');
+  const input = document.getElementById('auth-input');
+  if (!input) return;
+  const value = String(input.value || '').trim();
+  if (!value) {
+    showToast('Enter your account details');
+    return;
+  }
+  if ((method === 'gmail' || method === 'email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    showToast('Enter a valid email');
+    return;
+  }
+  if (method === 'gmail' && !/@gmail\.com$/i.test(value)) {
+    showToast('Use a Gmail address');
+    return;
+  }
+  if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
+    showToast('Enter a valid phone number');
+    return;
+  }
+
+  userProfile = {method, identifier: value, name: ''};
+  saveProfile();
+  window.setAlgobetsUserId(authIdentityForBilling(method, value));
+  closeAuthModal();
+  renderProfile();
+  showToast(`Signed in with ${authMethodLabel(method)}`);
+  await fetchPlan();
+  doScan(true);
+}
+
+function signOutProfile() {
+  userProfile = {method: 'guest', identifier: '', name: ''};
+  saveProfile();
+  window.setAlgobetsUserId(makeGuestId());
+  renderProfile();
+  showToast('Signed out');
+  fetchPlan();
+  doScan(true);
+}
+
 // ─── BACKEND ─────────────────────────────────────────────────────────────────
 // Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
 async function backendGet(path, timeout = 60000) {
@@ -788,9 +1095,10 @@ function updatePlanUi() {
   if (up) {
     const nxt = nextTier(p);
     up.style.display = nxt ? '' : 'none';
-    up.textContent = nxt ? (nxt === 'vip' ? 'Go VIP' : 'Upgrade') : 'Upgraded';
+    up.textContent = nxt ? 'Upgrade' : 'Upgraded';
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
+  renderProfile();
 }
 
 function updatePaywallUi() {
@@ -804,11 +1112,15 @@ function updatePaywallUi() {
   const total = Number(paywallMeta?.total_picks || PICKS.length || 0);
   if (!nxt || total <= visible) {
     card.classList.remove('on');
+    const cmp = document.getElementById('tier-compare');
+    if (cmp) cmp.classList.toggle('on', p !== 'vip');
     return;
   }
   copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
   cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
   card.classList.add('on');
+  const cmp = document.getElementById('tier-compare');
+  if (cmp) cmp.classList.toggle('on', p !== 'vip');
 }
 
 function ensureBillingUser() {
@@ -821,6 +1133,9 @@ function ensureBillingUser() {
     return false;
   }
   window.setAlgobetsUserId(email);
+  userProfile = {method: 'email', identifier: email, name: ''};
+  saveProfile();
+  renderProfile();
   showToast('Email saved');
   return true;
 }
@@ -853,6 +1168,34 @@ async function startCheckout(tier) {
     console.error(err);
     showToast('Checkout unavailable');
   }
+}
+
+function closeUpgradePicker(e) {
+  const ov = document.getElementById('up-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function openUpgradePicker() {
+  const p = normalizePlan(currentPlan);
+  const grid = document.getElementById('up-grid');
+  const sub = document.getElementById('up-sub');
+  if (!grid) return;
+  const opts = p === 'free'
+    ? [
+        {tier: 'premium', title: 'Premium', desc: 'Up to 15 picks/scan + full +EV Finder'},
+        {tier: 'vip', title: 'VIP', desc: 'Up to 50 picks/scan + Arbitrage feed'},
+      ]
+    : p === 'premium'
+      ? [{tier: 'vip', title: 'VIP', desc: 'Jump from 15 to 50 picks + unlock arbitrage'}]
+      : [];
+  if (!opts.length) {
+    showToast('You already have highest tier');
+    return;
+  }
+  sub.textContent = p === 'free' ? 'Pick Premium or VIP before checkout.' : 'Move to VIP for full access.';
+  grid.innerHTML = opts.map(o => `<button class="up-btn" onclick="startCheckout('${o.tier}');closeUpgradePicker()"><b>${o.title}</b><span>${o.desc}</span></button>`).join('');
+  document.getElementById('up-ov').classList.add('on');
 }
 
 async function openBillingPortal() {
@@ -1300,7 +1643,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','ev','arb','parlay','boost','perf'];
+const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -1358,6 +1701,10 @@ function bindUiAccessibility() {
         ov.classList.remove('on');
         document.getElementById('act-modal').classList.remove('on');
       }
+      const up = document.getElementById('up-ov');
+      if (up && up.classList.contains('on')) up.classList.remove('on');
+      const auth = document.getElementById('auth-ov');
+      if (auth && auth.classList.contains('on')) auth.classList.remove('on');
     }
   });
 }
@@ -1374,6 +1721,7 @@ function applySavedSelections() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+loadProfile();
 bindUiAccessibility();
 applySavedSelections();
 fetchPlan();
