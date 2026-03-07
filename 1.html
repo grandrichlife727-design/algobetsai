@@ -408,14 +408,14 @@ body[data-logo="sportsbook"] .topbar-logo .word-b{color:#9bf98a}
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-mark">
+    <div class="logo-mark" id="logo-mark-side">
       <svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 17l5-5 4 3 7-8"/>
         <path d="M16 7h4v4"/>
         <path d="M4 20h16"/>
       </svg>
     </div>
-    <div class="logo-text">Algo <b>Bets AI</b></div>
+    <div class="logo-text" id="logo-word-side">Algo <b>Bets AI</b></div>
   </div>
   <span class="nav-section">Picks</span>
   <button class="nav-item active" onclick="go('picks')">
@@ -480,14 +480,14 @@ body[data-logo="sportsbook"] .topbar-logo .word-b{color:#9bf98a}
 <main class="main">
   <div class="topbar">
     <div class="topbar-logo">
-      <span class="topbar-mark">
+      <span class="topbar-mark" id="logo-mark-top">
         <svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 17l5-5 4 3 7-8"/>
           <path d="M16 7h4v4"/>
           <path d="M4 20h16"/>
         </svg>
       </span>
-      <span class="word-a">ALGO</span><span class="word-b">BETS AI</span>
+      <span class="word-a" id="logo-word-a">ALGO</span><span class="word-b" id="logo-word-b">BETS AI</span>
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -770,6 +770,8 @@ body[data-logo="sportsbook"] .topbar-logo .word-b{color:#9bf98a}
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const _qp = new URLSearchParams(window.location.search);
+const _logoFromQp = (_qp.get('logo') || '').trim().toLowerCase();
+if (_logoFromQp) localStorage.setItem('algobets-logo-variant', _logoFromQp);
 const _backendFromQp = (_qp.get('backend') || '').trim();
 if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
 const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
@@ -780,6 +782,14 @@ const STATE_KEY = 'algobets-ui-state-v1';
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
 }
+
+function normalizeLogoVariant(v) {
+  const s = String(v || '').toLowerCase();
+  if (s === 'minimal') return 'minimal';
+  return 'sportsbook';
+}
+
+let LOGO_VARIANT = normalizeLogoVariant(_logoFromQp || localStorage.getItem('algobets-logo-variant') || 'sportsbook');
 
 const _uidFromQp = (_qp.get('uid') || '').trim();
 if (_uidFromQp) localStorage.setItem('algobets-user-id', _uidFromQp);
@@ -880,6 +890,51 @@ function showToast(msg) {
 function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+
+function logoSvgFor(variant) {
+  if (variant === 'minimal') {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19h16"/>
+      <path d="M6 15l4-4 3 3 5-5"/>
+      <path d="M16 9h2v2"/>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 17l5-5 4 3 7-8"/>
+    <path d="M16 7h4v4"/>
+    <path d="M4 20h16"/>
+  </svg>`;
+}
+
+function applyLogoVariant(variant = LOGO_VARIANT) {
+  const v = normalizeLogoVariant(variant);
+  LOGO_VARIANT = v;
+  localStorage.setItem('algobets-logo-variant', v);
+  document.body.setAttribute('data-logo', v);
+
+  const sideMark = document.getElementById('logo-mark-side');
+  const topMark = document.getElementById('logo-mark-top');
+  if (sideMark) sideMark.innerHTML = logoSvgFor(v);
+  if (topMark) topMark.innerHTML = logoSvgFor(v);
+
+  const sideWord = document.getElementById('logo-word-side');
+  const a = document.getElementById('logo-word-a');
+  const b = document.getElementById('logo-word-b');
+  if (v === 'minimal') {
+    if (sideWord) sideWord.innerHTML = `Algo <b>Bets</b>`;
+    if (a) a.textContent = 'ALGO';
+    if (b) b.textContent = 'BETS';
+  } else {
+    if (sideWord) sideWord.innerHTML = `Algo <b>Bets AI</b>`;
+    if (a) a.textContent = 'ALGO';
+    if (b) b.textContent = 'BETS AI';
+  }
+}
+
+window.setLogoVariant = function(variant) {
+  applyLogoVariant(variant);
+  showToast(`Logo: ${normalizeLogoVariant(variant)}`);
+};
 
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
@@ -2005,6 +2060,7 @@ function applySavedSelections() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
 loadProfile();
+applyLogoVariant();
 bindUiAccessibility();
 applySavedSelections();
 updateScanCooldownUi();
