@@ -116,6 +116,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
 @media(max-width:520px){.auth-actions .bill-link{display:inline-flex}}
+@media(max-width:520px){#demo-btn{display:inline-flex}}
 @media(max-width:900px){
   .topbar{padding:6px 10px;min-height:auto;flex-wrap:wrap;row-gap:6px}
   .topbar-logo{font-size:24px;line-height:1}
@@ -639,6 +640,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
+      <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
@@ -1386,6 +1388,7 @@ const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
 const PREF_KEY = 'algobets-pref-v1';
 const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
+const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -1441,6 +1444,13 @@ window.setAlgobetsUserId = function(uid) {
 const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
 const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
+const DEMO_QP_SET = _qp.has('demo');
+if (DEMO_QP_SET) {
+  localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
+}
+if (!DEMO_QP_SET && localStorage.getItem(DEMO_MODE_KEY) == null) {
+  localStorage.setItem(DEMO_MODE_KEY, '1');
+}
 if (_checkoutStatus === 'success') {
   setTimeout(() => showToast('Checkout successful. Syncing plan...'), 80);
   setTimeout(() => trackEvent('checkout_success', {uid: USER_ID}), 120);
@@ -1498,7 +1508,7 @@ let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let quotaExhausted = false;
-let demoMode = FORCE_DEMO_MODE;
+let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
 let CLVDATA = null;
@@ -2789,6 +2799,37 @@ function updatePlanUi() {
   updateTrialCard();
 }
 
+function updateDemoToggleUi() {
+  const btn = document.getElementById('demo-btn');
+  if (!btn) return;
+  btn.textContent = `Demo: ${demoMode ? 'On' : 'Off'}`;
+  btn.style.borderColor = demoMode ? 'rgba(0,229,160,.3)' : '';
+  btn.style.color = demoMode ? 'var(--green)' : '';
+}
+
+function toggleDemoMode() {
+  demoMode = !demoMode;
+  localStorage.setItem(DEMO_MODE_KEY, demoMode ? '1' : '0');
+  updateDemoToggleUi();
+  if (demoMode) {
+    applyDemoDataset();
+    lastRefresh = Date.now();
+    setApiStatus('ok');
+    renderPicks();
+    renderOdds();
+    renderLive();
+    renderProps();
+    renderEV();
+    renderSteam();
+    renderFades();
+    renderHomeModules();
+    showToast('Demo mode enabled');
+    return;
+  }
+  showToast('Demo mode disabled');
+  doScan(true);
+}
+
 function updateHomeSummary() {
   const edge = document.getElementById('s-edge')?.textContent || '—';
   const count = document.getElementById('s-count')?.textContent || String(PICKS.length || 0);
@@ -3521,6 +3562,25 @@ function setPropsSport(sport) {
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
 async function doScan(silent = false) {
   if (isScanning) return;
+  if (demoMode) {
+    applyDemoDataset();
+    lastRefresh = Date.now();
+    setApiStatus('ok');
+    document.getElementById('s-edge').textContent = '+5.7%';
+    document.getElementById('s-count').textContent = String(PICKS.length);
+    document.getElementById('nb-picks').textContent = String(PICKS.length);
+    renderPicks();
+    renderOdds();
+    renderLive();
+    renderProps();
+    renderEV();
+    renderSteam();
+    renderFades();
+    renderHomeModules();
+    updatePlanUi();
+    if (!silent) showToast('Demo mode active');
+    return;
+  }
   if (scanCooldownRemaining > 0) {
     if (!silent) showToast(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`);
     updateScanCooldownUi();
@@ -4300,6 +4360,8 @@ loadProfileSettings();
 loadQuotaDashboard();
 loadTomorrowGames();
 bindUiAccessibility();
+updateDemoToggleUi();
+if (demoMode) applyDemoDataset();
 applySavedSelections();
 updateScanCooldownUi();
 fetchPlan();
