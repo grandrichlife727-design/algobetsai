@@ -2882,10 +2882,32 @@ function renderHomeModules() {
 
   if (premiumEl) {
     const on = canUsePremium();
-    const badge = on ? 'UNLOCKED' : 'LOCKED';
-    const tone = on ? 'var(--green)' : 'var(--amber)';
-    premiumEl.innerHTML = `<div style="color:${tone};font-weight:800;font-size:11px;margin-bottom:4px">${badge}</div>
-      Props · +EV · Steam · Fades`;
+    const propsCt = Array.isArray(PROPSDATA) ? PROPSDATA.length : 0;
+    const evCt = Array.isArray(EVDATA) ? EVDATA.length : 0;
+    const steamCt = Array.isArray(STEAMDATA) ? STEAMDATA.length : 0;
+    const fadeCt = Array.isArray(FADESDATA) ? FADESDATA.length : 0;
+    const snapshot = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="tier-tag premium">Props <strong>${propsCt}</strong></div>
+        <div class="tier-tag premium">+EV <strong>${evCt}</strong></div>
+        <div class="tier-tag premium">Steam <strong>${steamCt}</strong></div>
+        <div class="tier-tag premium">Fades <strong>${fadeCt}</strong></div>
+      </div>`;
+    if (on) {
+      premiumEl.innerHTML = `<div style="color:var(--green);font-weight:800;font-size:11px;margin-bottom:6px">UNLOCKED</div>${snapshot}`;
+    } else {
+      premiumEl.innerHTML = `
+        <div style="position:relative">
+          <div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${snapshot}</div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+            <div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center">
+              <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">PREMIUM TEASE</div>
+              <div style="font-size:12px;color:var(--sub)">Unlock Props, +EV, Steam, and Fades</div>
+              <button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock Premium</button>
+            </div>
+          </div>
+        </div>`;
+    }
   }
 
   if (glanceEl) {
