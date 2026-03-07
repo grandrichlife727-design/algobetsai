@@ -353,6 +353,24 @@ html, body {
 .pf-btn{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:12px;font-weight:700;padding:7px 10px;cursor:pointer;font-family:var(--sans)}
 .pf-btn:hover{color:var(--text);border-color:var(--border2)}
 .pf-btn.primary{background:var(--cyan);border-color:rgba(0,212,255,.4);color:#001722}
+.growth-grid{display:grid;grid-template-columns:1fr;gap:10px;max-width:700px;margin-top:10px}
+@media(min-width:980px){.growth-grid{grid-template-columns:1fr 1fr}}
+.growth-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.growth-title{font-size:12px;font-weight:800;color:var(--text)}
+.growth-sub{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.45}
+.rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
+.rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
+.growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.h-time{font-size:11px;color:var(--muted)}
+.h-pill{font-size:10px;font-family:var(--mono);padding:3px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--sub)}
+.h-pill.free{color:var(--amber);border-color:rgba(255,183,0,.24)}
+.h-pill.premium{color:var(--cyan);border-color:rgba(0,212,255,.24)}
+.h-pill.vip{color:var(--green);border-color:rgba(0,229,160,.24)}
+.h-meta{font-size:11px;color:var(--sub);margin-top:6px}
+.h-list{margin-top:7px;display:flex;flex-direction:column;gap:5px}
+.h-item{font-size:11px;color:var(--sub)}
 .auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
 .auth-ov.on{display:flex}
 .auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -415,6 +433,10 @@ html, body {
   <button class="nav-item" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
     Track Record
+  </button>
+  <button class="nav-item" onclick="go('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    History
   </button>
   <button class="nav-item" onclick="go('profile')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -612,6 +634,12 @@ html, body {
       </div>
     </div>
 
+    <div id="v-history" style="display:none">
+      <div class="page-hdr"><div class="page-title">Pick <span>History</span></div><div class="page-sub">Recent scans and top edges captured for your account</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="history-count">Loading...</span><span class="sec-meta">Retention + trust proof</span></div>
+      <div class="picks-list" id="history-list"></div>
+    </div>
+
     <div id="v-profile" style="display:none">
       <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage sign-in identity and billing access</div></div>
       <div class="profile-card">
@@ -624,6 +652,37 @@ html, body {
           <button class="pf-btn" onclick="openUpgradePicker()">Upgrade</button>
           <button class="pf-btn" onclick="openBillingPortal()">Manage Billing</button>
           <button class="pf-btn" onclick="signOutProfile()">Sign Out</button>
+        </div>
+      </div>
+      <div class="growth-grid">
+        <div class="growth-card">
+          <div class="growth-title">Referral Unlock</div>
+          <div class="growth-sub">Share your code. Both users get 72h Premium trial when redeemed.</div>
+          <div class="rf-row">
+            <div class="rf-code" id="ref-code">ALGO--------</div>
+            <button class="pf-btn" onclick="copyReferralCode()">Copy</button>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="ref-input" type="text" placeholder="Enter referral code"/>
+            <button class="paywall-cta" onclick="redeemReferral()">Redeem</button>
+          </div>
+          <div class="growth-note" id="ref-note">Loading referral status...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Alert Capture</div>
+          <div class="growth-sub">Save alerts to email or SMS for +EV thresholds.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="al-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="al-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="al-min-ev" type="number" min="0.5" max="25" step="0.5" value="2"/>
+            <button class="paywall-cta" onclick="saveAlertSubscription()">Save Alert</button>
+          </div>
+          <div class="growth-note" id="al-note">No subscriptions yet.</div>
         </div>
       </div>
     </div>
@@ -649,6 +708,10 @@ html, body {
   <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
     <span class="mnav-label">Record</span>
+  </button>
+  <button class="mnav-btn" id="mn-history" onclick="go('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    <span class="mnav-label">History</span>
   </button>
   <button class="mnav-btn" id="mn-profile" onclick="go('profile')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -746,6 +809,7 @@ let paywallMeta = null;
 let userProfile = {method: 'guest', identifier: '', name: ''};
 let scanCooldownRemaining = 0;
 let scanCooldownTicker = null;
+let HISTORYDATA = [];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -1027,6 +1091,146 @@ function signOutProfile() {
   showToast('Signed out');
   fetchPlan();
   doScan(true);
+}
+
+function ensureRegisteredUser(redirectToProfile = true) {
+  if (!USER_ID || USER_ID.startsWith('guest_')) {
+    showToast('Sign in first to use this feature');
+    if (redirectToProfile && currentTab !== 'profile') go('profile');
+    return false;
+  }
+  return true;
+}
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  try {
+    return new Date(Number(ts) * 1000).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  } catch (e) {
+    return '—';
+  }
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  const ct = document.getElementById('history-count');
+  if (!el || !ct) return;
+  ct.textContent = `${HISTORYDATA.length} recent scan${HISTORYDATA.length !== 1 ? 's' : ''}`;
+  if (!HISTORYDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div></div>`;
+    return;
+  }
+  el.innerHTML = HISTORYDATA.map(h => {
+    const top = (h.top_picks || []).map(p => `<div class="h-item">${esc(p.sport || '')}: <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} <span style="color:var(--cyan)">(+${esc(String(p.ev || 0))}%)</span></div>`).join('');
+    const plan = normalizePlan(h.plan || 'free');
+    return `<div class="h-card">
+      <div class="h-top"><span class="h-time">${fmtTs(h.ts)}</span><span class="h-pill ${plan}">${planLabel(plan)}</span></div>
+      <div class="h-meta">${h.picks_visible || 0} shown of ${h.picks_total || 0} picks · ${(h.sports_covered || []).length} sports</div>
+      <div class="h-list">${top || '<div class="h-item">No picks captured in this scan.</div>'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadHistory() {
+  if (!ensureRegisteredUser()) return;
+  try {
+    const res = await backendGet('/api/history?limit=30');
+    HISTORYDATA = Array.isArray(res.history) ? res.history : [];
+  } catch (err) {
+    console.error(err);
+    HISTORYDATA = [];
+  }
+  renderHistory();
+}
+
+async function loadReferralStatus() {
+  const codeEl = document.getElementById('ref-code');
+  const noteEl = document.getElementById('ref-note');
+  if (!codeEl || !noteEl) return;
+  if (!ensureRegisteredUser(false)) {
+    codeEl.textContent = 'ALGO--------';
+    noteEl.textContent = 'Sign in to get your referral code.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/referral/status');
+    codeEl.textContent = res.referral_code || 'ALGO--------';
+    if (res.trial_seconds_left > 0) {
+      noteEl.textContent = `Premium trial active for ${fmtCountdown(res.trial_seconds_left)}. Referrals: ${res.referrals_count || 0}.`;
+    } else {
+      noteEl.textContent = `Referrals: ${res.referrals_count || 0}. Redeem one code to unlock 72h Premium trial.`;
+    }
+  } catch (err) {
+    console.error(err);
+    noteEl.textContent = 'Could not load referral status.';
+  }
+}
+
+function copyReferralCode() {
+  const code = (document.getElementById('ref-code')?.textContent || '').trim();
+  if (!code || code === 'ALGO--------') return;
+  navigator.clipboard?.writeText(code).then(() => showToast('Referral code copied')).catch(() => showToast(code));
+}
+
+async function redeemReferral() {
+  if (!ensureRegisteredUser()) return;
+  const input = document.getElementById('ref-input');
+  const code = String(input?.value || '').trim().toUpperCase();
+  if (!code) {
+    showToast('Enter a referral code');
+    return;
+  }
+  try {
+    await backendPost('/api/referral/redeem', {code});
+    showToast('Referral redeemed: 72h Premium unlocked');
+    if (input) input.value = '';
+    await fetchPlan();
+    await loadReferralStatus();
+    doScan(true);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not redeem code');
+  }
+}
+
+async function loadAlertSubscriptions() {
+  const noteEl = document.getElementById('al-note');
+  if (!noteEl) return;
+  if (!ensureRegisteredUser(false)) {
+    noteEl.textContent = 'Sign in to save alert destinations.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/alerts/subscriptions');
+    const subs = Array.isArray(res.subscriptions) ? res.subscriptions : [];
+    if (!subs.length) {
+      noteEl.textContent = 'No subscriptions yet.';
+      return;
+    }
+    noteEl.textContent = subs.slice(-2).map(s => `${s.channel.toUpperCase()}: ${s.target} (EV ≥ ${s.min_ev}%)`).join(' · ');
+  } catch (err) {
+    console.error(err);
+    noteEl.textContent = 'Could not load subscriptions.';
+  }
+}
+
+async function saveAlertSubscription() {
+  if (!ensureRegisteredUser()) return;
+  const channel = document.getElementById('al-channel')?.value || 'email';
+  const target = String(document.getElementById('al-target')?.value || '').trim();
+  const minEv = Number(document.getElementById('al-min-ev')?.value || 2);
+  if (!target) {
+    showToast('Enter email or phone destination');
+    return;
+  }
+  try {
+    await backendPost('/api/alerts/subscribe', {channel, target, min_ev: minEv});
+    showToast('Alert subscription saved');
+    loadAlertSubscriptions();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save alert');
+  }
 }
 
 // ─── BACKEND ─────────────────────────────────────────────────────────────────
@@ -1470,6 +1674,7 @@ async function doScan(silent = false) {
   renderPicks();
   renderEV();
   renderArb();
+  if (currentTab === 'history') loadHistory();
 
   btn.classList.remove('loading');
   btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
@@ -1707,7 +1912,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','profile'];
+const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','history','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -1718,6 +1923,11 @@ function go(name) {
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
   window.scrollTo({top:0,behavior:'smooth'});
+  if (name === 'history') loadHistory();
+  if (name === 'profile') {
+    loadReferralStatus();
+    loadAlertSubscriptions();
+  }
   saveState();
 }
 
