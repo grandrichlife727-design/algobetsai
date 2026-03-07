@@ -47,6 +47,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from pydantic import BaseModel
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIG
@@ -63,6 +65,7 @@ JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "").strip()
 ADMIN_API_TOKEN = os.getenv("ADMIN_API_TOKEN", "").strip()
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/New_York").strip() or "America/New_York"
 VIP_DISCORD_URL = os.getenv("VIP_DISCORD_URL", "").strip()
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -1964,6 +1967,10 @@ class AuthSessionRequest(BaseModel):
     identifier: Optional[str] = ""
 
 
+class AuthGoogleRequest(BaseModel):
+    id_token: str
+
+
 class ReferralRedeemRequest(BaseModel):
     code: str
 
@@ -2161,6 +2168,7 @@ async def health_check():
 async def public_config():
     return {
         "vip_discord_url": VIP_DISCORD_URL,
+        "google_client_id": GOOGLE_CLIENT_ID,
         "billing_enabled": BILLING_ENABLED,
         "auth_required": REQUIRE_AUTH_TOKEN,
     }
@@ -2180,6 +2188,45 @@ async def auth_session(body: AuthSessionRequest, request: Request):
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
     return {"token": token, "user_id": user_id, "expires_in": AUTH_TOKEN_TTL_SECONDS}
+
+
+@app.post("/api/auth/google")
+@limiter.limit("90/hour")
+async def auth_google(body: AuthGoogleRequest, request: Request):
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="Google auth is not configured.")
+    raw_token = str(body.id_token or "").strip()
+    if not raw_token:
+        raise HTTPException(status_code=400, detail="id_token is required.")
+    try:
+        claims = google_id_token.verify_oauth2_token(raw_token, google_requests.Request(), GOOGLE_CLIENT_ID)
+    except Exception as e:
+        _audit_security_event(request, "auth.google_invalid_token", str(e))
+        raise HTTPException(status_code=401, detail="Invalid Google token.")
+
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    email_verified = bool(claims.get("email_verified"))
+    if not sub:
+        raise HTTPException(status_code=401, detail="Invalid Google identity.")
+    if not email or not email_verified:
+        raise HTTPException(status_code=401, detail="Google account email must be verified.")
+
+    user_id = _normalize_user_id(f"g_{sub}")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid Google identity.")
+
+    rec = _ensure_growth_user(user_id)
+    profile = rec.setdefault("profile_identity", {})
+    profile.update({"method": "google", "identifier": email, "updated_at": int(time.time())})
+    _save_growth_db()
+    token = _issue_hs256_jwt(user_id)
+    return {
+        "token": token,
+        "user_id": user_id,
+        "expires_in": AUTH_TOKEN_TTL_SECONDS,
+        "profile": {"method": "google", "identifier": email},
+    }
 
 
 @app.get("/api/legal/terms")

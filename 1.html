@@ -556,6 +556,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
 .auth-in:focus{outline:none;border-color:rgba(0,212,255,.35)}
 .auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.google-auth-wrap{margin-top:10px;display:none}
+.google-auth-wrap.on{display:block}
+.google-auth-note{font-size:10px;color:var(--muted);margin-top:6px}
 .auth-nudge-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:730;padding:16px}
 .auth-nudge-ov.on{display:flex}
 .auth-nudge{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -1474,6 +1477,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="auth-lbl" id="auth-lbl">Email Address</div>
       <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
     </div>
+    <div class="google-auth-wrap" id="google-auth-wrap">
+      <div id="google-signin-btn"></div>
+      <div class="google-auth-note">Google sign-in uses secure OAuth and verified email identity.</div>
+    </div>
     <div class="auth-actions">
       <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
       <button class="paywall-cta" onclick="submitAuthProfile()">Continue</button>
@@ -1636,6 +1643,9 @@ let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
 let VIP_DISCORD_URL = '';
+let GOOGLE_CLIENT_ID = '';
+let googleAuthLoaded = false;
+let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -1822,13 +1832,14 @@ function saveTrialUiState() {
 
 function normalizeAuthMethod(method) {
   const m = String(method || '').toLowerCase();
-  if (m === 'gmail' || m === 'facebook') return 'email';
+  if (m === 'google' || m === 'gmail' || m === 'facebook') return 'google';
   if (m === 'email' || m === 'phone') return m;
   return 'guest';
 }
 
 function authMethodLabel(method) {
   const m = normalizeAuthMethod(method);
+  if (m === 'google') return 'Google';
   if (m === 'email') return 'Email';
   if (m === 'phone') return 'Phone';
   return 'Guest';
@@ -2247,8 +2258,12 @@ async function loadPublicConfig() {
     const res = await backendGet('/api/config/public');
     const invite = String(res?.vip_discord_url || '').trim();
     VIP_DISCORD_URL = invite;
+    GOOGLE_CLIENT_ID = String(res?.google_client_id || '').trim();
+    const authModalOpen = document.getElementById('auth-ov')?.classList.contains('on');
+    if (authModalOpen) renderGoogleAuthButton();
   } catch (_) {
     VIP_DISCORD_URL = '';
+    GOOGLE_CLIENT_ID = '';
   }
 }
 
@@ -2685,6 +2700,99 @@ function loadProfile() {
   renderProfile();
 }
 
+function ensureGoogleIdentityScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (googleScriptPromise) return googleScriptPromise;
+  googleScriptPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Google script failed'));
+    document.head.appendChild(s);
+  });
+  return googleScriptPromise;
+}
+
+async function renderGoogleAuthButton() {
+  const wrap = document.getElementById('google-auth-wrap');
+  const btn = document.getElementById('google-signin-btn');
+  if (!wrap || !btn) return;
+  if (!GOOGLE_CLIENT_ID) {
+    wrap.classList.remove('on');
+    return;
+  }
+  wrap.classList.add('on');
+  try {
+    await ensureGoogleIdentityScript();
+    if (!window.google?.accounts?.id) return;
+    if (!googleAuthLoaded) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+      });
+      googleAuthLoaded = true;
+    }
+    btn.innerHTML = '';
+    window.google.accounts.id.renderButton(btn, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'pill',
+      text: 'continue_with',
+      width: 320,
+    });
+  } catch (err) {
+    console.warn('[Algobets] google button render failed:', err?.message || err);
+  }
+}
+
+async function handleGoogleCredential(response) {
+  const credential = String(response?.credential || '').trim();
+  if (!credential) {
+    showToast('Google sign-in failed');
+    return;
+  }
+  try {
+    const res = await fetch(`${BACKEND}/api/auth/google`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify({id_token: credential}),
+    });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const payload = await res.json();
+        if (payload?.detail) msg = String(payload.detail);
+      } catch (_) {}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    AUTH_TOKEN = String(data.token || '').trim();
+    if (AUTH_TOKEN) localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
+    const uid = String(data.user_id || '').trim().toLowerCase();
+    if (uid) window.setAlgobetsUserId(uid);
+    const identifier = String(data?.profile?.identifier || '').trim();
+    userProfile = {method: 'google', identifier, name: ''};
+    saveProfile();
+    authNudgeState.completed = true;
+    saveAuthNudgeState();
+    trackEvent('auth_completed', {method: 'google'});
+    closeAuthModal();
+    renderProfile();
+    showToast('Signed in with Google');
+    await fetchPlan();
+    await loadTrialStatus();
+    loadDigestSubscription();
+    loadStreakStatus();
+    doScan(true);
+  } catch (err) {
+    console.error(err);
+    showToast('Google sign-in failed');
+  }
+}
+
 function selectAuthMethod(method) {
   const m = normalizeAuthMethod(method);
   document.querySelectorAll('.auth-m').forEach(el => el.classList.remove('on'));
@@ -2724,6 +2832,7 @@ function openAuthModal(preferredMethod = null) {
   }
   ov.classList.add('on');
   requestAnimationFrame(() => input.focus());
+  renderGoogleAuthButton();
 }
 
 function closeAuthModal(e) {
