@@ -37,6 +37,7 @@ import numpy as np
 import statistics
 from datetime import datetime, timedelta
 from typing import Optional, Any
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,6 +60,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
 JWT_ISSUER = os.getenv("JWT_ISSUER", "").strip()
 JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "").strip()
 ADMIN_API_TOKEN = os.getenv("ADMIN_API_TOKEN", "").strip()
+APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/New_York").strip() or "America/New_York"
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -1380,6 +1382,81 @@ def _build_betslip_url(book: str, game: str, bet: str, odds: Any) -> str:
         return ""
     q = urllib.parse.quote_plus(f"{game} {bet} {odds}")
     return f"{base}?q={q}"
+
+
+def _fallback_picks_from_games(games: list[dict[str, Any]], max_count: int = 12) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for g in games:
+        home_odds = g.get("home_ml")
+        away_odds = g.get("away_ml")
+        if home_odds is None or away_odds is None:
+            continue
+        try:
+            consensus_home, consensus_away, diag = market_consensus_fair_prob(g)
+            home_ev = expected_value_pct(int(home_odds), float(consensus_home))
+            away_ev = expected_value_pct(int(away_odds), float(consensus_away))
+            if home_ev >= away_ev:
+                side = g.get("home_team", "")
+                odds = home_odds
+                ev = float(home_ev)
+                fair_prob = float(consensus_home)
+                best_book = g.get("best_home_book")
+            else:
+                side = g.get("away_team", "")
+                odds = away_odds
+                ev = float(away_ev)
+                fair_prob = float(consensus_away)
+                best_book = g.get("best_away_book")
+            # Keep near-fair fallback so UI still has useful picks when strict gates yield none.
+            if ev < -0.5:
+                continue
+            implied_prob = calculate_implied_probability(int(odds)) * 100.0
+            fair_pct = fair_prob * 100.0
+            line_gap_pct = max(0.0, fair_pct - implied_prob)
+            conf = _calibrated_confidence_pct(
+                edge_ev=ev,
+                books_count=int(diag.get("books_count", 1) or 1),
+                disagreement_pct=float(diag.get("home_prob_spread", 0.0) or 0.0) * 100.0,
+                line_gap_pct=line_gap_pct,
+            )
+            sport_key = str(g.get("sport") or g.get("sport_key") or "")
+            meta = SPORT_META.get(sport_key, {"label": sport_key or "Game", "emoji": "🎯"})
+            out.append(
+                {
+                    "id": f"fallback_{sport_key}_{g.get('home_team')}_{g.get('away_team')}_{time.time_ns()}",
+                    "sport": sport_key,
+                    "emoji": meta.get("emoji", "🎯"),
+                    "label": meta.get("label", sport_key),
+                    "home_team": g.get("home_team"),
+                    "away_team": g.get("away_team"),
+                    "game": f"{g.get('away_team','')} @ {g.get('home_team','')}",
+                    "game_time": g.get("commence_time"),
+                    "bet": f"{side} ML",
+                    "bet_type": "moneyline",
+                    "odds": odds,
+                    "edge": round(ev, 2),
+                    "ev": round(ev, 2),
+                    "confidence": int(round(conf)),
+                    "confidence_calibrated": round(conf, 1),
+                    "fair_prob": round(fair_pct, 1),
+                    "implied_prob": round(implied_prob, 1),
+                    "best_book": best_book or "DraftKings",
+                    "books_compared": int(diag.get("books_count", 1) or 1),
+                    "market_disagreement": round(float(diag.get("home_prob_spread", 0.0) or 0.0) * 100.0, 2),
+                    "clv_expectation": round(line_gap_pct, 2),
+                    "model_breakdown": {
+                        "pinnacle_clv": f"Fallback mode: showing best available edges while strict filters are quiet.",
+                        "sharp_money": f"{int(diag.get('books_count', 1) or 1)} books compared.",
+                        "confirms": "Fallback ranking by EV + calibrated confidence",
+                    },
+                    "agents_fired": ["fallback_ranker"],
+                    "data_source": "odds_api",
+                }
+            )
+        except Exception:
+            continue
+    out.sort(key=lambda x: (float(x.get("edge", 0.0)), float(x.get("confidence", 0.0))), reverse=True)
+    return out[: max(1, int(max_count or 12))]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3152,6 +3229,10 @@ async def scan(request: Request):
         p["agent_score"] = round(_agent_weighted_pick_score(p, agent_weights), 3)
         p["betslip_url"] = _build_betslip_url(p.get("book"), p.get("game"), p.get("bet"), p.get("odds"))
     all_picks.sort(key=lambda x: x.get("agent_score", x.get("edge", 0)), reverse=True)
+    fallback_mode = False
+    if not all_picks and all_games:
+        fallback_mode = True
+        all_picks = _fallback_picks_from_games(all_games, max_count=max(8, int(tier.get("scan_pick_limit", 3) or 3)))
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
@@ -3164,6 +3245,7 @@ async def scan(request: Request):
         "plan": user_plan,
         "picks": visible_picks,
         "picks_total": len(all_picks),
+        "fallback_mode": fallback_mode,
         "games": all_games,  # All upcoming games
         "games_total": len(all_games),
         "paywall": {
@@ -3302,7 +3384,7 @@ async def debug_ingestion():
 
 
 @app.get("/api/games")
-async def get_all_games():
+async def get_all_games(day_offset: int = 0, limit: int = 400):
     """Get all upcoming games for all sports - for planning ahead."""
     all_games = []
     
@@ -3339,11 +3421,32 @@ async def get_all_games():
     
     # Sort by game time
     all_games.sort(key=lambda x: x.get("game_time", ""))
+    safe_limit = max(1, min(int(limit or 400), 1000))
+
+    if int(day_offset or 0) != 0:
+      try:
+          tz = ZoneInfo(APP_TIMEZONE)
+      except Exception:
+          tz = ZoneInfo("America/New_York")
+      target_day = (datetime.now(tz) + timedelta(days=int(day_offset))).date()
+      filtered = []
+      for g in all_games:
+          gt = str(g.get("game_time") or "")
+          if not gt:
+              continue
+          try:
+              dt = datetime.fromisoformat(gt.replace("Z", "+00:00")).astimezone(tz)
+          except Exception:
+              continue
+          if dt.date() == target_day:
+              filtered.append(g)
+      all_games = filtered
     
     return {
-        "games": all_games,
+        "games": all_games[:safe_limit],
         "total": len(all_games),
         "sports_covered": SPORTS,
+        "day_offset": int(day_offset or 0),
     }
 
 
