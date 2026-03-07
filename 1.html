@@ -108,6 +108,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
+@media(max-width:520px){.auth-actions .bill-link{display:inline-flex}}
 @media(max-width:900px){
   .topbar{padding:6px 10px;min-height:auto;flex-wrap:wrap;row-gap:6px}
   .topbar-logo{font-size:21px;line-height:1}
@@ -358,7 +359,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(8,minmax(0,1fr));gap:3px}
+  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
   color:var(--sub);font-size:9px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
@@ -541,63 +542,26 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="logo-mark">⚡</div>
     <div class="logo-text">Algobets Ai</div>
   </div>
-  <span class="nav-section">Picks</span>
-  <button class="nav-item active" onclick="go('picks')">
+  <span class="nav-section">Navigation</span>
+  <button class="nav-item active" onclick="go('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    Home
+  </button>
+  <button class="nav-item" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-    Today's Edges <span class="nav-badge" id="nb-picks">0</span>
+    Picks <span class="nav-badge" id="nb-picks">0</span>
   </button>
   <button class="nav-item" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Odds
   </button>
-  <button class="nav-item" onclick="go('live')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/></svg>
-    Live
+  <button class="nav-item" onclick="go('offers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7c0-2-1-4-3-4S6 5 8 7"/><path d="M12 7c0-2 1-4 3-4s3 2 1 4"/></svg>
+    Offers
   </button>
-  <button class="nav-item" onclick="go('props')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-    Props
-  </button>
-  <button class="nav-item" onclick="go('ev')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    +EV Finder
-  </button>
-  <button class="nav-item" onclick="go('steam')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-    Steam
-  </button>
-  <button class="nav-item" onclick="go('fades')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-    Public Fades
-  </button>
-  <button class="nav-item" onclick="go('parlay')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-    Parlay Builder <span class="nav-badge" style="display:none" id="nb-parlay">0</span>
-  </button>
-  <span class="nav-section">More</span>
-  <button class="nav-item" onclick="go('boost')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    Boost Checker
-  </button>
-  <button class="nav-item" onclick="go('perf')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-    Track Record
-  </button>
-  <button class="nav-item" onclick="go('history')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
-    History
-  </button>
-  <button class="nav-item" onclick="go('community')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-    Community
-  </button>
-  <button class="nav-item" onclick="go('profile')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
-    Profile
-  </button>
-  <button class="nav-item" onclick="go('guide')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v4h4"/><path d="M8 12h8M8 16h6"/></svg>
-    Guide
+  <button class="nav-item" onclick="go('more')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+    More
   </button>
   <div class="sidebar-bot">
     <span class="nav-section" style="padding-top:4px">Open an Account</span>
@@ -651,7 +615,31 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
   <div class="content">
 
-    <div id="v-picks">
+    <div id="v-home">
+      <div class="page-hdr">
+        <div class="page-title">Home <span>Dashboard</span></div>
+        <div class="page-sub">Quick access to picks, odds, premium features, and sportsbook offers.</div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat s-green"><div class="stat-val" id="home-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
+        <div class="stat s-cyan"><div class="stat-val" id="home-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
+        <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
+      </div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title">Core Navigation</div>
+          <div class="growth-sub">Use <strong>Picks</strong> for betting cards and <strong>Odds</strong> for line shopping.</div>
+          <div class="growth-sub">Use <strong>Offers</strong> for promo links and <strong>More</strong> for premium tools.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Premium Includes</div>
+          <div class="growth-sub">More picks plus full access to Props, +EV, Steam, and Fade signals.</div>
+          <div class="growth-sub">Upgrade once to unlock every premium market view.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-picks" style="display:none">
       <div class="page-hdr">
         <div class="page-sub">5-agent AI consensus · Live multi-book odds · Real-time edge detection</div>
       </div>
@@ -683,8 +671,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-title">How Plans Work</div>
         <div class="tier-strip">
           <div class="tier-tag"><strong>1) Free</strong>: 2 picks/scan</div>
-          <div class="tier-tag premium"><strong>2) Premium</strong>: 15 picks + full +EV + props</div>
-          <div class="tier-tag vip"><strong>3) VIP</strong>: 50 picks + steam + fastest refresh</div>
+          <div class="tier-tag premium"><strong>2) Premium</strong>: more picks + props + +EV + steam + fades</div>
         </div>
       </div>
       <div class="filters">
@@ -723,6 +710,60 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="odds-sports" id="odds-sports"></div>
       <div class="picks-list" id="odds-list"></div>
+    </div>
+
+    <div id="v-offers" style="display:none">
+      <div class="page-hdr"><div class="page-title">Sportsbook <span>Offers</span></div><div class="page-sub">Promo and affiliate links. We can add more books over time.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link" data-book="draftkings">
+            <div class="book-icon" style="background:#53D338;color:#000">DK</div>
+            <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
+            <span class="book-arrow">&rarr;</span>
+          </a>
+          <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link" data-book="fanduel">
+            <div class="book-icon" style="background:#1493FF;color:#fff">FD</div>
+            <div class="book-info"><div class="book-name">FanDuel</div><div class="book-promo">$1,000 No Sweat Bet</div></div>
+            <span class="book-arrow">&rarr;</span>
+          </a>
+          <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link" data-book="betmgm">
+            <div class="book-icon" style="background:#C9A96E;color:#000">MGM</div>
+            <div class="book-info"><div class="book-name">BetMGM</div><div class="book-promo">First Bet up to $1,500</div></div>
+            <span class="book-arrow">&rarr;</span>
+          </a>
+          <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link" data-book="caesars">
+            <div class="book-icon" style="background:#003087;color:#fff">CZ</div>
+            <div class="book-info"><div class="book-name">Caesars</div><div class="book-promo">Get up to $1,000 back</div></div>
+            <span class="book-arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Affiliate Strategy</div>
+          <div class="growth-sub">Track clicks from this page and rotate top converting offers by state.</div>
+          <div class="growth-note">21+ only. Gamble responsibly · 1-800-522-4700</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-more" style="display:none">
+      <div class="page-hdr"><div class="page-title">More <span>Features</span></div><div class="page-sub">Premium tools and all advanced sections.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title">Premium Tools</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="go('props')">Props</button><button class="paywall-cta" onclick="go('ev')">+EV</button></div>
+          <div class="rf-row"><button class="paywall-cta" onclick="go('steam')">Steam</button><button class="paywall-cta" onclick="go('fades')">Fades</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Builder + Tracking</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('parlay')">Parlay Builder</button><button class="pf-btn" onclick="go('boost')">Boost Checker</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('perf')">Track Record</button><button class="pf-btn" onclick="go('history')">History</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Account + Help</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('profile')">Profile</button><button class="pf-btn" onclick="go('guide')">Guide</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('community')">Community</button></div>
+        </div>
+      </div>
     </div>
 
     <div id="v-live" style="display:none">
@@ -1050,7 +1091,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">How Steam Works</div>
           <div class="growth-sub">Steam flags fast market movement and book divergence that can indicate sharp pressure.</div>
           <div class="growth-sub">Best use: identify where price is likely to keep moving, then act before it closes.</div>
-          <div class="growth-note">VIP users get deeper steam access and faster refresh windows.</div>
+          <div class="growth-note">Premium users get full steam access and faster refresh windows.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">How Fades Work</div>
@@ -1073,10 +1114,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub">Public Fades: highlights one-sided public ticket pressure.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Free vs Premium vs VIP</div>
+          <div class="growth-title">Free vs Premium</div>
           <div class="growth-sub">Free: lighter access and limited pick volume.</div>
-          <div class="growth-sub">Premium: higher pick limits, full +EV tools, props access.</div>
-          <div class="growth-sub">VIP: highest volume, faster signal access, deep market views.</div>
+          <div class="growth-sub">Premium: higher pick limits, full +EV, props, steam, and fades.</div>
           <div class="growth-note">Use monthly for flexibility; annual for lower effective monthly cost.</div>
         </div>
         <div class="growth-card">
@@ -1096,7 +1136,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 </div></main>
 </div><nav class="mobile-nav" id="mobile-nav">
-  <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
+  <button class="mnav-btn active" id="mn-home" onclick="go('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span class="mnav-label">Home</span>
+  </button>
+  <button class="mnav-btn" id="mn-picks" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
   </button>
@@ -1104,25 +1148,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
   </button>
-  <button class="mnav-btn" id="mn-live" onclick="go('live')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
-    <span class="mnav-label">Live</span>
-  </button>
-  <button class="mnav-btn" id="mn-props" onclick="go('props')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-    <span class="mnav-label">Props</span>
-  </button>
-  <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    <span class="mnav-label">+EV</span>
-  </button>
-  <button class="mnav-btn" id="mn-steam" onclick="go('steam')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-    <span class="mnav-label">Steam</span>
-  </button>
-  <button class="mnav-btn" id="mn-fades" onclick="go('fades')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-    <span class="mnav-label">Fades</span>
+  <button class="mnav-btn" id="mn-offers" onclick="go('offers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
+    <span class="mnav-label">Offers</span>
   </button>
   <div class="mnav-more-wrap">
     <button class="mnav-btn" id="mn-more" onclick="toggleMobileMore(event)">
@@ -1130,6 +1158,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <span class="mnav-label">More</span>
     </button>
     <div class="mnav-more-panel" id="mnav-more-panel">
+      <button class="mnav-more-item" onclick="go('more')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='5' r='1.5'/><circle cx='12' cy='12' r='1.5'/><circle cx='12' cy='19' r='1.5'/></svg>More Hub</button>
+      <div class="mnav-more-sec">Premium</div>
+      <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props</button>
+      <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
+      <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
+      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M7 12h10M10 17h4'/></svg>Fades</button>
+      <div class="mnav-more-sec">Advanced</div>
       <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
       <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
       <button class="mnav-more-item" onclick="go('perf')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Record</button>
@@ -1137,23 +1172,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
       <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
-      <div class="mnav-more-sec">Promo Links</div>
-      <a class="mnav-aff-link" href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
-        <div class="mnav-aff-icon" style="background:#53D338;color:#000">DK</div>
-        <div class="mnav-aff-info"><div class="mnav-aff-name">DraftKings</div><div class="mnav-aff-promo">Bet $5, Get $150</div></div>
-      </a>
-      <a class="mnav-aff-link" href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
-        <div class="mnav-aff-icon" style="background:#1493FF;color:#fff">FD</div>
-        <div class="mnav-aff-info"><div class="mnav-aff-name">FanDuel</div><div class="mnav-aff-promo">$1,000 No Sweat Bet</div></div>
-      </a>
-      <a class="mnav-aff-link" href="https://sports.betmgm.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
-        <div class="mnav-aff-icon" style="background:#C9A96E;color:#000">MGM</div>
-        <div class="mnav-aff-info"><div class="mnav-aff-name">BetMGM</div><div class="mnav-aff-promo">First Bet up to $1,500</div></div>
-      </a>
-      <a class="mnav-aff-link" href="https://sportsbook.caesars.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
-        <div class="mnav-aff-icon" style="background:#003087;color:#fff">CZ</div>
-        <div class="mnav-aff-info"><div class="mnav-aff-name">Caesars</div><div class="mnav-aff-promo">Get up to $1,000 back</div></div>
-      </a>
+      <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
     </div>
   </div>
 </nav>
@@ -1168,8 +1187,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
   <div class="up-modal">
     <div class="up-title">Choose your plan</div>
-    <div class="up-sub" id="up-sub">Simple flow: create account, pick tier, then checkout.</div>
-    <div class="up-flow">Free Preview -> Premium -> VIP</div>
+    <div class="up-sub" id="up-sub">Pick a tier and continue to secure checkout.</div>
+    <div class="up-flow">Free Preview -> Premium</div>
     <div class="cycle-toggle">
       <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
       <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
@@ -1182,8 +1201,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
-    <div class="auth-title">Create Your Free Account</div>
-    <div class="auth-sub">Use Gmail, Email, Phone, or Facebook to save picks and unlock upgrades.</div>
+    <div class="auth-title">Create Free Account</div>
+    <div class="auth-sub">Optional for browsing. Needed for saved history, alerts, and synced profile.</div>
     <div class="auth-methods">
       <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
       <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
@@ -1341,7 +1360,7 @@ let propsLoading = false;
 let propsFetchedAt = 0;
 let lastRefresh = null;
 let isScanning = false;
-let currentTab = 'picks';
+let currentTab = 'home';
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
@@ -1352,8 +1371,6 @@ let HISTORYDATA = [];
 let COMMUNITYDATA = [];
 let PRICING = {};
 let billingCycle = 'monthly';
-let pendingCheckoutTier = null;
-let pendingCheckoutCycle = 'monthly';
 let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
 let trialUiState = {dismissed: false};
 let hasScannedAtLeastOnce = false;
@@ -1382,7 +1399,6 @@ const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.r
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 const TIER_PRICE_DISPLAY = {
   premium: {monthly: '$19.99/mo', annual: '$199.99/yr'},
-  vip: {monthly: '$39.99/mo', annual: '$399.99/yr'},
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1594,8 +1610,7 @@ function profilePickLimit() {
   const p = normalizePlan(currentPlan);
   const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
   if (fromTier > 0) return fromTier;
-  if (p === 'vip') return 50;
-  if (p === 'premium') return 15;
+  if (p === 'premium') return 50;
   return 2;
 }
 
@@ -1999,7 +2014,7 @@ async function joinVipWaitlistPrompt(source = 'props_cap') {
     email = String(userProfile.identifier || '').trim().toLowerCase();
   }
   if (!email) {
-    const entered = prompt('Enter email for VIP props waitlist:');
+    const entered = prompt('Enter email for expanded props waitlist:');
     if (!entered) return;
     email = String(entered).trim().toLowerCase();
   }
@@ -2009,7 +2024,7 @@ async function joinVipWaitlistPrompt(source = 'props_cap') {
   }
   try {
     await backendPost('/api/waitlist/join', {email, source});
-    showToast('Added to VIP props waitlist');
+    showToast('Added to props waitlist');
   } catch (err) {
     showToast('Could not join waitlist');
   }
@@ -2093,16 +2108,10 @@ function openAuthModal(preferredMethod = null) {
   requestAnimationFrame(() => input.focus());
 }
 
-function closeAuthModal(e, keepPending = false) {
+function closeAuthModal(e) {
   const ov = document.getElementById('auth-ov');
   if (!ov) return;
-  if (!e || e.target === ov) {
-    ov.classList.remove('on');
-    if (!keepPending) {
-      pendingCheckoutTier = null;
-      pendingCheckoutCycle = 'monthly';
-    }
-  }
+  if (!e || e.target === ov) ov.classList.remove('on');
 }
 
 function openAuthNudge() {
@@ -2133,15 +2142,7 @@ function skipAuthNudge() {
 }
 
 function maybePromptAuthNudge() {
-  const isGuest = !USER_ID || USER_ID.startsWith('guest_');
-  if (!isGuest) return;
-  if (!hasScannedAtLeastOnce) return;
-  if (scanCount < 2) return;
-  if (!PICKS.length) return;
-  if (authNudgeState.completed || authNudgeState.skipped || authNudgeState.shown) return;
-  authNudgeState.shown = true;
-  saveAuthNudgeState();
-  setTimeout(() => openAuthNudge(), 260);
+  return;
 }
 
 function authIdentityForBilling(method, rawValue) {
@@ -2180,21 +2181,13 @@ async function submitAuthProfile() {
   authNudgeState.completed = true;
   saveAuthNudgeState();
   trackEvent('auth_completed', {method});
-  closeAuthModal(null, true);
+  closeAuthModal();
   renderProfile();
   showToast(`Signed in with ${authMethodLabel(method)}`);
   await fetchPlan();
   await loadTrialStatus();
   loadDigestSubscription();
   loadStreakStatus();
-  if (pendingCheckoutTier) {
-    const tierToCheckout = pendingCheckoutTier;
-    const cycleToCheckout = pendingCheckoutCycle;
-    pendingCheckoutTier = null;
-    pendingCheckoutCycle = 'monthly';
-    setTimeout(() => startCheckout(tierToCheckout, cycleToCheckout), 120);
-    return;
-  }
   doScan(true);
 }
 
@@ -2213,9 +2206,11 @@ function signOutProfile() {
 
 function ensureRegisteredUser(redirectToProfile = true) {
   if (!USER_ID || USER_ID.startsWith('guest_')) {
-    showToast('Create your free account to continue');
-    openAuthModal('gmail');
-    if (redirectToProfile && currentTab !== 'profile') trackEvent('signup_prompted', {from_tab: currentTab});
+    if (redirectToProfile) {
+      showToast('Create your free account to continue');
+      openAuthModal('gmail');
+      if (currentTab !== 'profile') trackEvent('signup_prompted', {from_tab: currentTab});
+    }
     return false;
   }
   return true;
@@ -2614,26 +2609,23 @@ const Api = {get: backendGet, post: backendPost, track: trackEvent};
 
 function normalizePlan(p) {
   const plan = String(p || '').toLowerCase();
-  if (plan === 'vip' || plan === 'sharp') return 'vip';
-  if (plan === 'premium' || plan === 'pro') return 'premium';
+  if (plan === 'vip' || plan === 'sharp' || plan === 'premium' || plan === 'pro') return 'premium';
   return 'free';
 }
 
 function planLabel(plan) {
   const p = normalizePlan(plan);
-  return p === 'vip' ? 'VIP' : p === 'premium' ? 'PREMIUM' : 'FREE';
+  return p === 'premium' ? 'PREMIUM' : 'FREE';
 }
 
 function nextTier(plan) {
   const p = normalizePlan(plan);
   if (p === 'free') return 'premium';
-  if (p === 'premium') return 'vip';
   return null;
 }
 
 function planRank(plan) {
   const p = normalizePlan(plan);
-  if (p === 'vip') return 2;
   if (p === 'premium') return 1;
   return 0;
 }
@@ -2643,7 +2635,7 @@ function canUsePremium() {
 }
 
 function canUseVip() {
-  return planRank(currentPlan) >= 2;
+  return planRank(currentPlan) >= 1;
 }
 
 function annualConfiguredForTier(tier) {
@@ -2676,8 +2668,21 @@ function updatePlanUi() {
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
   renderProfile();
+  updateHomeSummary();
   updateScanCooldownUi();
   updateTrialCard();
+}
+
+function updateHomeSummary() {
+  const edge = document.getElementById('s-edge')?.textContent || '—';
+  const count = document.getElementById('s-count')?.textContent || String(PICKS.length || 0);
+  const plan = planLabel(currentPlan);
+  const he = document.getElementById('home-edge');
+  const hc = document.getElementById('home-count');
+  const hp = document.getElementById('home-plan');
+  if (he) he.textContent = edge;
+  if (hc) hc.textContent = count;
+  if (hp) hp.textContent = plan;
 }
 
 function updatePaywallUi() {
@@ -2692,23 +2697,23 @@ function updatePaywallUi() {
   if (!nxt || total <= visible) {
     card.classList.remove('on');
     const cmp = document.getElementById('tier-compare');
-    if (cmp) cmp.classList.toggle('on', p !== 'vip');
+    if (cmp) cmp.classList.toggle('on', p !== 'premium');
     return;
   }
   if (PAYWALL_VARIANT === 'B') {
     copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Next step is <strong>${planLabel(nxt)}</strong> for more picks and deeper markets.`;
-    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
+    cta.textContent = 'Go Premium';
   } else {
     copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Upgrade to <strong>${planLabel(nxt)}</strong> to unlock more.`;
-    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
+    cta.textContent = 'Go Premium';
   }
   card.classList.add('on');
   const cmp = document.getElementById('tier-compare');
-  if (cmp) cmp.classList.toggle('on', p !== 'vip');
+  if (cmp) cmp.classList.toggle('on', p !== 'premium');
 }
 
 function ensureBillingUser() {
-  return ensureRegisteredUser(false);
+  return true;
 }
 
 async function fetchPlan() {
@@ -2753,7 +2758,6 @@ function dismissTrialCard() {
 }
 
 async function claimFreeTrial() {
-  if (!ensureRegisteredUser()) return;
   try {
     await backendPost('/api/trial/start', {});
     trialUiState.dismissed = true;
@@ -2793,11 +2797,7 @@ function setBillingCycle(cycle) {
 async function startCheckout(tier, cycle = billingCycle) {
   const desired = normalizePlan(tier || nextTier(currentPlan));
   if (!desired) return;
-  if (!ensureBillingUser()) {
-    pendingCheckoutTier = desired;
-    pendingCheckoutCycle = cycle === 'annual' ? 'annual' : 'monthly';
-    return;
-  }
+  if (!ensureBillingUser()) return;
   let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
   if (finalCycle === 'annual' && !annualConfiguredForTier(desired)) {
     finalCycle = 'monthly';
@@ -2836,23 +2836,18 @@ function openUpgradePicker() {
   const note = document.getElementById('cycle-note');
   if (!grid) return;
   setBillingCycle(billingCycle);
-  if (p === 'vip') {
-    showToast('You already have highest tier');
+  if (p === 'premium') {
+    showToast('You already have Premium');
     return;
   }
   const opts = [
-    {tier: 'premium', title: 'Premium', desc: '15 picks/scan + full +EV + props'},
-    {tier: 'vip', title: 'VIP', desc: '50 picks/scan + steam + fastest refresh'},
+    {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
   ];
-  sub.textContent = p === 'free'
-    ? 'Start with Premium or go straight to VIP.'
-    : 'You are on Premium. Upgrade to VIP when ready.';
+  sub.textContent = 'One paid plan. Everything premium is included.';
   if (note) note.textContent = billingCycle === 'annual'
     ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
     : 'Monthly selected. Switch to annual for lower effective monthly cost.';
   grid.innerHTML = opts.map(o => {
-    const isCurrent = o.tier === p;
-    const currentBadge = isCurrent ? '<span class="up-badge current">CURRENT</span>' : '';
     const annualOn = annualConfiguredForTier(o.tier);
     const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
     const monthlyLabel = tierPriceLabel(o.tier, 'monthly');
@@ -2863,9 +2858,6 @@ function openUpgradePicker() {
     const cycleHint = billingCycle === 'annual'
       ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
       : 'Monthly billing at checkout';
-    if (isCurrent) {
-      return `<button class="up-btn current" type="button"><b>${o.title}${currentBadge}</b><span>${priceLine}</span><span>${o.desc}</span></button>`;
-    }
     return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');
   document.getElementById('up-ov').classList.add('on');
@@ -2873,10 +2865,10 @@ function openUpgradePicker() {
 
 function maybeOpenUpgradeFromQuery() {
   if (!['premium', 'vip', 'pro', 'sharp'].includes(_upgradeFromQp)) return;
-  const normalized = _upgradeFromQp === 'pro' ? 'premium' : (_upgradeFromQp === 'sharp' ? 'vip' : _upgradeFromQp);
+  const normalized = 'premium';
   setTimeout(() => {
     openUpgradePicker();
-    const hint = normalized === 'vip' ? 'VIP option is ready in checkout.' : 'Premium option is ready in checkout.';
+    const hint = normalized === 'premium' ? 'Premium option is ready in checkout.' : 'Upgrade option is ready in checkout.';
     showToast(hint);
     if (history.replaceState) {
       const cleaned = new URL(window.location.href);
@@ -3230,8 +3222,8 @@ function renderProps() {
       listEl.innerHTML = `<div class="empty">
         <div class="empty-icon">📈</div>
         <div class="empty-title">Monthly props cap reached</div>
-        <div class="empty-sub">Lite props is capped to protect budget. Join waitlist for VIP props expansion.</div>
-        <div style="margin-top:10px"><button class="paywall-cta" onclick="joinVipWaitlistPrompt('props_cap')">Join VIP Waitlist</button></div>
+        <div class="empty-sub">Lite props is capped to protect budget. Join waitlist for broader props expansion.</div>
+        <div style="margin-top:10px"><button class="paywall-cta" onclick="joinVipWaitlistPrompt('props_cap')">Join Waitlist</button></div>
       </div>`;
     } else if (propsError.type === 'plan') {
       listEl.innerHTML = `<div class="empty">
@@ -3575,7 +3567,7 @@ function renderLockedFeature(el, title, subtitle, requiredTier) {
         <div class="lock-card">
           <div class="lock-title">${esc(title)}</div>
           <div class="lock-sub">${esc(subtitle)}</div>
-          <button class="paywall-cta" onclick="openUpgradePicker()">${requiredTier === 'vip' ? 'Go VIP' : 'Go Premium'}</button>
+          <button class="paywall-cta" onclick="openUpgradePicker()">Go Premium</button>
         </div>
       </div>
     </div>
@@ -3586,9 +3578,9 @@ function renderSteam() {
   const el = document.getElementById('steamlist');
   const countEl = document.getElementById('steam-count');
   if (!el || !countEl) return;
-  if (!canUseVip()) {
-    countEl.textContent = `VIP feature`;
-    renderLockedFeature(el, 'Steam Moves are VIP only', 'Preview is blurred. Upgrade to VIP for the full live feed.', 'vip');
+  if (!canUsePremium()) {
+    countEl.textContent = `Premium feature`;
+    renderLockedFeature(el, 'Steam Moves are Premium', 'Preview is blurred. Upgrade to Premium for the full live feed.', 'premium');
     return;
   }
   countEl.textContent = `${STEAMDATA.length} steam move${STEAMDATA.length !== 1 ? 's' : ''} found`;
@@ -3939,8 +3931,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
@@ -3956,7 +3948,7 @@ function toggleMobileMore(e) {
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
-  if (name === 'steam' && !canUseVip()) {
+  if (name === 'steam' && !canUsePremium()) {
     growthNudges.steamLocks += 1;
     if (growthNudges.steamLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
   }
@@ -3989,6 +3981,7 @@ function go(name) {
   if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
+  if (name === 'home') updateHomeSummary();
   if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
