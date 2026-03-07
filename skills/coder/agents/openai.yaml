@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coder"
+  short_description: "Implement, debug, and ship reliable code changes"
+  default_prompt: "Use $coder to implement this coding task with tests and clear verification."
