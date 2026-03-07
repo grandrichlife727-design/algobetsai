@@ -20,7 +20,7 @@
     "name": "Algobets Ai",
     "short_name": "Algobets",
     "description": "5-Agent AI Sports Betting Edge Finder",
-    "start_url": "/algobets.html",
+    "start_url": "/1.html",
     "display": "standalone",
     "background_color": "#06060a",
     "theme_color": "#06060a",
@@ -1694,11 +1694,19 @@
     }
     function submitEmailGate(e) {
       e.preventDefault();
-      const email = document.getElementById('gate-email').value;
+      const email = String(document.getElementById('gate-email').value || '').trim().toLowerCase();
       if (!email) return;
-      // Store email and redirect to app
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      // Store email and redirect to app with signup handoff.
       try { localStorage.setItem('algobets_email', email); } catch(err) {}
-      window.location.href = 'algobets.html';
+      const method = /@gmail\.com$/i.test(email) ? 'gmail' : 'email';
+      const next = new URL('1.html', window.location.href);
+      next.searchParams.set('signup', '1');
+      next.searchParams.set('method', method);
+      next.searchParams.set('id', email);
+      const ref = new URLSearchParams(window.location.search).get('ref');
+      if (ref) next.searchParams.set('ref', ref);
+      window.location.href = next.toString();
     }
     // Close on overlay click
     document.getElementById('email-gate-overlay').addEventListener('click', function(e) {
