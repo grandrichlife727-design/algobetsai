@@ -3448,7 +3448,7 @@ function updatePlanUi() {
     up.textContent = nxt ? 'Upgrade' : 'Upgraded';
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
-  if (trialBtn) trialBtn.style.display = p === 'free' ? '' : 'none';
+  if (trialBtn) trialBtn.style.display = p === 'free' ? 'inline-flex' : 'none';
   renderProfile();
   updateHomeSummary();
   updateScanCooldownUi();
@@ -3763,19 +3763,24 @@ function updateTrialCard() {
       return;
     }
 
-    const showClaim = isFree && eligible;
+    const showClaim = isFree;
     if (!showClaim) {
       card.classList.remove('on');
       return;
     }
 
-    copy.innerHTML = registered
-      ? `<strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.`
-      : `<strong>Create your free account</strong>, then start your 3-day Premium trial to unlock +EV, Props, Steam, and faster refresh.`;
+    if (!eligible) {
+      copy.innerHTML = `<strong>3-day trial already used</strong> on this account. Upgrade to Premium to unlock +EV, Props, Steam, and faster refresh.`;
+    } else {
+      copy.innerHTML = registered
+        ? `<strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.`
+        : `<strong>Create your free account</strong>, then start your 3-day Premium trial to unlock +EV, Props, Steam, and faster refresh.`;
+    }
     if (claimBtn) {
       claimBtn.disabled = false;
-      claimBtn.textContent = registered ? 'Start Free Trial' : 'Create Account';
+      claimBtn.textContent = !eligible ? 'Upgrade Premium' : (registered ? 'Start Free Trial' : 'Create Account');
       claimBtn.style.opacity = '1';
+      claimBtn.onclick = !eligible ? () => openUpgradePicker() : () => claimFreeTrial();
     }
     if (dismissBtn) dismissBtn.style.display = 'none';
     card.classList.add('on');
