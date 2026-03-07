@@ -399,7 +399,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:9px 8px calc(env(safe-area-inset-bottom,0px) + 10px);grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+  padding:9px 8px calc(env(safe-area-inset-bottom,0px) + 10px);grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
   color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
@@ -594,6 +594,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="nav-item" onclick="go('premium')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
     Premium
+  </button>
+  <button class="nav-item" onclick="go('vip')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l4 8h10l4-8"/><path d="M7 15l1.5 5h7L17 15"/><path d="M9 7l3 4 3-4"/><circle cx="4" cy="5" r="1"/><circle cx="20" cy="5" r="1"/><circle cx="12" cy="4" r="1"/></svg>
+    VIP
   </button>
   <button class="nav-item" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -1332,6 +1336,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
     <span class="mnav-label">Premium</span>
   </button>
+  <button class="mnav-btn" id="mn-vip" onclick="go('vip')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l4 8h10l4-8"/><path d="M7 15l1.5 5h7L17 15"/><path d="M9 7l3 4 3-4"/></svg>
+    <span class="mnav-label">VIP</span>
+  </button>
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
@@ -1359,7 +1367,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
-      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Tools</button>
       <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
       <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
     </div>
