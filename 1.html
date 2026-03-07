@@ -878,13 +878,53 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub"><strong>Advanced alerts:</strong> steam/line-jump notifications with faster delivery.</div>
           <div class="growth-sub"><strong>CLV dashboard:</strong> track close-line performance and timing quality.</div>
           <div class="growth-sub"><strong>Portfolio tools:</strong> correlation-aware sizing and exposure controls.</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button></div>
+          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><button class="pf-btn" onclick="go('vip')">Open VIP Tools</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
           <div class="growth-sub">Free: 2 picks preview.</div>
           <div class="growth-sub">Premium: Props, +EV, Steam, Fades, and higher pick volume.</div>
           <div class="growth-sub">VIP: Premium + early access + advanced alerts + CLV/portfolio layer.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-vip" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Tools</span></div><div class="page-sub">Execution, timing, portfolio, and alert controls.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title">CLV Dashboard</div>
+          <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
+          <div class="growth-note">Tracks close-line quality and long-term execution edge.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Bet Timing Engine</div>
+          <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Portfolio Builder</div>
+          <div class="rf-row">
+            <input class="auth-in" id="vip-bankroll" type="number" min="100" step="50" placeholder="Bankroll (e.g. 1000)"/>
+            <select class="auth-in" id="vip-risk" style="font-family:var(--sans)">
+              <option value="conservative">Conservative</option>
+              <option value="standard" selected>Standard</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </div>
+          <div class="rf-row"><button class="paywall-cta" onclick="runVipPortfolio()">Build Portfolio</button></div>
+          <div class="growth-note" id="vip-portfolio">No portfolio generated yet.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">VIP Alerts</div>
+          <div class="rf-row">
+            <input class="auth-in" id="vip-webhook" type="text" placeholder="Webhook URL (Discord/Slack)"/>
+          </div>
+          <div class="rf-row">
+            <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-steam"/> Steam jumps</label>
+            <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-clv"/> CLV shifts</label>
+          </div>
+          <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button></div>
+          <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
         </div>
       </div>
     </div>
@@ -900,6 +940,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Account + Help</div>
           <div class="rf-row"><button class="pf-btn" onclick="go('profile')">Profile</button><button class="pf-btn" onclick="go('guide')">Guide</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip')">VIP Tools</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('community')">Community</button></div>
         </div>
       </div>
@@ -1314,6 +1355,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
+      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Tools</button>
       <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
       <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
     </div>
@@ -1414,6 +1456,7 @@ const PREF_KEY = 'algobets-pref-v1';
 const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
+const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -1544,6 +1587,7 @@ let NEWSIMPACT = [];
 let HOME_SPORTS_NEWS = [];
 let HOME_SPORTS_NEWS_TS = 0;
 let HOME_SPORTS_NEWS_LOADING = false;
+let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -2206,6 +2250,114 @@ async function loadHomeSportsNews(force = false) {
     HOME_SPORTS_NEWS_LOADING = false;
     if (currentTab === 'home') renderHomeModules();
   }
+}
+
+function loadVipSettings() {
+  try {
+    const raw = localStorage.getItem(VIP_SETTINGS_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    VIP_SETTINGS = {
+      webhook: String(st.webhook || ''),
+      steam: st.steam !== false,
+      clv: st.clv !== false,
+    };
+  } catch (_) {}
+}
+
+function saveVipAlerts() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  VIP_SETTINGS.webhook = String(document.getElementById('vip-webhook')?.value || '').trim();
+  VIP_SETTINGS.steam = !!document.getElementById('vip-alert-steam')?.checked;
+  VIP_SETTINGS.clv = !!document.getElementById('vip-alert-clv')?.checked;
+  try {
+    localStorage.setItem(VIP_SETTINGS_KEY, JSON.stringify(VIP_SETTINGS));
+  } catch (_) {}
+  const note = document.getElementById('vip-alert-note');
+  if (note) note.textContent = `Saved: ${VIP_SETTINGS.steam ? 'Steam ' : ''}${VIP_SETTINGS.clv ? 'CLV ' : ''}${VIP_SETTINGS.webhook ? '· Webhook set' : '· No webhook'}`;
+  showToast('VIP alerts saved');
+}
+
+function runVipPortfolio() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  const note = document.getElementById('vip-portfolio');
+  const bank = Number(document.getElementById('vip-bankroll')?.value || 0);
+  const risk = String(document.getElementById('vip-risk')?.value || 'standard');
+  if (!bank || bank < 100) {
+    if (note) note.textContent = 'Enter bankroll of at least $100.';
+    return;
+  }
+  const picks = PICKS.slice(0, 5);
+  if (!picks.length) {
+    if (note) note.textContent = 'No picks available to allocate.';
+    return;
+  }
+  const basePct = risk === 'conservative' ? 0.005 : risk === 'aggressive' ? 0.018 : 0.01;
+  const weights = picks.map(p => Math.max(0.5, Number(p.ev || 0) / 5));
+  const wsum = weights.reduce((a, b) => a + b, 0) || 1;
+  const rows = picks.map((p, i) => {
+    const pct = Math.min(0.03, basePct * (weights[i] / (wsum / picks.length)));
+    const stake = Math.round(bank * pct);
+    return `${p.bet} ${p.odds}: $${stake} (${(pct * 100).toFixed(2)}%)`;
+  });
+  if (note) note.innerHTML = rows.join('<br/>');
+}
+
+function renderVipTools() {
+  const vipOn = canUseVip();
+  const clvEl = document.getElementById('vip-clv');
+  const timingEl = document.getElementById('vip-timing');
+  const webhookEl = document.getElementById('vip-webhook');
+  const steamEl = document.getElementById('vip-alert-steam');
+  const clvAlertEl = document.getElementById('vip-alert-clv');
+  const note = document.getElementById('vip-alert-note');
+  const portEl = document.getElementById('vip-portfolio');
+
+  if (!vipOn) {
+    if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
+    if (timingEl) timingEl.innerHTML = `<div style="color:var(--muted)">Timing engine is locked for VIP.</div>`;
+    if (portEl) portEl.textContent = 'Portfolio builder is locked for VIP.';
+    if (webhookEl) webhookEl.value = '';
+    if (steamEl) steamEl.checked = false;
+    if (clvAlertEl) clvAlertEl.checked = false;
+    if (note) note.textContent = 'VIP alerts are locked until upgrade.';
+    return;
+  }
+
+  const beatClose = Number(CLVDATA?.beat_closing_pct || 0);
+  const avgClv = Number(CLVDATA?.avg_clv_pct || 0);
+  const roi = Number(PERFDATA?.overall?.roi_pct || 0);
+  if (clvEl) clvEl.innerHTML = `Beat close: <strong>${beatClose.toFixed(1)}%</strong> · Avg CLV: <strong>${avgClv.toFixed(2)}%</strong> · ROI: <strong>${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</strong>`;
+
+  if (timingEl) {
+    if (!PICKS.length) {
+      timingEl.textContent = 'Run scan to generate timing recommendations.';
+    } else {
+      timingEl.innerHTML = PICKS.slice(0, 4).map(p => {
+        const ev = Number(p.ev || 0);
+        const conf = Number(p.conf || 50);
+        const rec = ev >= 6.5 || conf >= 68 ? 'Bet Now' : ev >= 4 ? 'Watch Line' : 'Wait';
+        const col = rec === 'Bet Now' ? 'var(--green)' : rec === 'Watch Line' ? 'var(--amber)' : 'var(--muted)';
+        return `<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span>${esc(p.bet)} ${esc(p.odds)}</span>
+          <strong style="color:${col}">${rec}</strong>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  if (webhookEl) webhookEl.value = VIP_SETTINGS.webhook || '';
+  if (steamEl) steamEl.checked = VIP_SETTINGS.steam;
+  if (clvAlertEl) clvAlertEl.checked = VIP_SETTINGS.clv;
+  if (note) note.textContent = VIP_SETTINGS.webhook ? 'Webhook connected.' : 'No alert settings saved.';
 }
 
 async function joinVipWaitlistPrompt(source = 'props_cap') {
@@ -3861,6 +4013,7 @@ async function doScan(silent = false) {
   renderSteam();
   renderFades();
   renderHomeModules();
+  renderVipTools();
   if (currentTab === 'perf') renderPerf();
   if (currentTab === 'history') loadHistory();
 
@@ -4333,8 +4486,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','vip','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','vip','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
@@ -4387,6 +4540,7 @@ function go(name) {
   if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
+  if (name === 'vip') renderVipTools();
   if (name === 'profile') {
     loadReferralStatus();
     loadAlertSubscriptions();
@@ -4476,6 +4630,7 @@ function applySavedSelections() {
 loadState();
 loadAuthNudgeState();
 loadPickPrefs();
+loadVipSettings();
 loadTrialUiState();
 loadProfile();
 try {
