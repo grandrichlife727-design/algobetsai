@@ -86,7 +86,7 @@ html, body {
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.topbar-logo{font-size:20px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
 .topbar-logo span{color:var(--cyan)}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}.live-pill{display:none}}
@@ -273,11 +273,11 @@ html, body {
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
   padding:8px 0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
 @media(max-width:900px){.mobile-nav{display:flex}}
-.mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;
-  color:var(--sub);font-size:9px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
+.mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
+  color:var(--sub);font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
 .mnav-btn.active{color:var(--cyan)}
-.mnav-btn svg{width:20px;height:20px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
-.mnav-label{font-size:9px;line-height:1;margin-top:1px}
+.mnav-btn svg{width:24px;height:24px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
+.mnav-label{font-size:10px;font-weight:700;line-height:1;margin-top:1px}
 
 /* LOADING SKELETON */
 .skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
@@ -401,10 +401,6 @@ html, body {
 
     <div id="v-picks">
       <div class="page-hdr">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap">
-          <div style="font-size:24px;font-weight:800;letter-spacing:-.6px">Algobets <span style="color:var(--cyan)">AI</span></div>
-          <div style="font-size:11px;font-weight:700;color:var(--cyan);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);border-radius:4px;padding:2px 7px;font-family:var(--mono)">BETA</div>
-        </div>
         <div class="page-sub">Self-sharpening model · Pinnacle CLV benchmarked · Updated every 8 minutes</div>
       </div>
       <div class="hero-stats">
@@ -560,8 +556,23 @@ html, body {
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const BACKEND = 'https://algobetsai.onrender.com';
+const _qp = new URLSearchParams(window.location.search);
+const _backendFromQp = (_qp.get('backend') || '').trim();
+if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
+const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
 const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+const _uidFromQp = (_qp.get('uid') || '').trim();
+if (_uidFromQp) localStorage.setItem('algobets-user-id', _uidFromQp);
+let USER_ID = (localStorage.getItem('algobets-user-id') || '').trim();
+if (!USER_ID) {
+  USER_ID = `guest_${Math.random().toString(36).slice(2, 10)}`;
+  localStorage.setItem('algobets-user-id', USER_ID);
+}
+window.setAlgobetsUserId = function(uid) {
+  if (!uid) return;
+  USER_ID = String(uid).trim();
+  localStorage.setItem('algobets-user-id', USER_ID);
+};
 
 const SPORTS = [
   {key:'basketball_nba',   label:'NBA 🏀'},
@@ -679,7 +690,7 @@ function saveState() {
 // Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
 async function backendGet(path, timeout = 60000) {
   const url = `${BACKEND}${path}`;
-  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': 'grandrichlife727@gmail.com'};
+  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID};
 
   // 1. Direct fetch
   try {
