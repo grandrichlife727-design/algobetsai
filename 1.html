@@ -93,6 +93,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .offer-name{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
 .offer-promo{font-size:12px;color:var(--green);line-height:1.35;margin-top:3px}
 .offer-cta{font-size:11px;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:.7px}
+.news-feed{display:flex;flex-direction:column;gap:8px}
+.news-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px}
+.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.news-tag{font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.7px}
+.news-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.news-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-top:4px}
+.news-sub{font-size:12px;color:var(--sub);line-height:1.45;margin-top:5px}
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
@@ -718,6 +725,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Tomorrow's Slate</div>
           <div id="home-tomorrow" class="growth-sub">Next games will show here when available.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Home News</div>
+          <div id="home-news" class="news-feed"></div>
         </div>
       </div>
     </div>
@@ -2850,6 +2861,7 @@ function renderHomeModules() {
   const trendEl = document.getElementById('home-trending');
   const resultEl = document.getElementById('home-results');
   const tomorrowEl = document.getElementById('home-tomorrow');
+  const newsEl = document.getElementById('home-news');
 
   if (topEl) {
     if (!PICKS.length) {
@@ -2958,6 +2970,52 @@ function renderHomeModules() {
         </div>`
       ).join('');
     }
+  }
+
+  if (newsEl) {
+    const items = [];
+    const now = Date.now();
+    if (PICKS.length) {
+      const p = PICKS[0];
+      items.push({
+        tag: 'Model Update',
+        ts: now - 5 * 60 * 1000,
+        title: `${p.bet} is leading today’s board`,
+        sub: `Top edge currently at +${Number(p.ev || 0).toFixed(1)}% EV. Price discipline still matters before placement.`,
+      });
+    }
+    if (STEAMDATA.length) {
+      const s = STEAMDATA[0];
+      items.push({
+        tag: 'Steam Alert',
+        ts: now - 12 * 60 * 1000,
+        title: `${s.side || 'Market side'} showing pressure`,
+        sub: `${s.game || 'Featured game'} · ${s.note || 'Best-book movement outpacing market median.'}`,
+      });
+    }
+    if (TOMORROW_GAMES.length) {
+      const g = TOMORROW_GAMES[0];
+      items.push({
+        tag: 'Tomorrow',
+        ts: now - 22 * 60 * 1000,
+        title: `Next slate: ${g.game || 'Upcoming games'}`,
+        sub: `Use this window to pre-plan entries and avoid forcing low-quality spots.`,
+      });
+    }
+    if (!items.length) {
+      items.push(
+        {tag: 'Market Note', ts: now - 9 * 60 * 1000, title: 'Injury/rotation updates can swing prices quickly', sub: 'Track late lineup changes before locking bets.'},
+        {tag: 'Line Movement', ts: now - 19 * 60 * 1000, title: 'Watch for soft-book lag around game windows', sub: 'Fast repricing gaps can create short-lived +EV opportunities.'},
+        {tag: 'Bankroll', ts: now - 34 * 60 * 1000, title: 'Unit sizing beats forcing action', sub: 'Consistent stake sizing helps preserve edge over volume.'},
+      );
+    }
+    newsEl.innerHTML = items.slice(0, 3).map(n => `
+      <div class="news-item">
+        <div class="news-top"><div class="news-tag">${esc(n.tag)}</div><div class="news-time">${timeAgo(n.ts)}</div></div>
+        <div class="news-title">${esc(n.title)}</div>
+        <div class="news-sub">${esc(n.sub)}</div>
+      </div>
+    `).join('');
   }
 }
 
