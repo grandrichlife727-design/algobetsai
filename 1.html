@@ -93,6 +93,14 @@ html, body {
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
 .scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
+.plan-pill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid var(--border2);font-size:10px;font-family:var(--mono);font-weight:700;color:var(--sub);text-transform:uppercase}
+.plan-pill.free{color:var(--amber);border-color:rgba(255,183,0,.28);background:rgba(255,183,0,.08)}
+.plan-pill.premium{color:var(--cyan);border-color:rgba(0,212,255,.25);background:rgba(0,212,255,.08)}
+.plan-pill.vip{color:var(--green);border-color:rgba(0,229,160,.25);background:rgba(0,229,160,.08)}
+.bill-btn{background:rgba(0,229,160,.9);color:#00160f;padding:6px 10px;font-size:11px}
+.bill-link{background:none;border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.bill-link:hover{border-color:var(--border2);color:var(--text)}
+@media(max-width:520px){.bill-link{display:none}}
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
 @keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
@@ -302,6 +310,11 @@ html, body {
 .mode-btn{padding:5px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
 .mode-btn.active{background:var(--card);color:var(--text)}
 .mode-hint{font-size:11px;color:var(--muted)}
+.paywall-card{display:none;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:9px;padding:10px 12px;margin:-6px 0 14px}
+.paywall-card.on{display:flex}
+.paywall-copy{font-size:12px;color:var(--sub);line-height:1.45}
+.paywall-copy strong{color:var(--text)}
+.paywall-cta{background:var(--cyan);border:none;border-radius:6px;padding:6px 10px;color:#001722;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -382,10 +395,13 @@ html, body {
   <div class="topbar">
     <div class="topbar-logo">Algo<span>bets AI</span></div>
     <div class="topbar-right">
+      <div class="plan-pill free" id="plan-pill">FREE</div>
       <div class="api-status">
         <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
       </div>
+      <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
+      <button class="scan-btn bill-btn" id="upgrade-btn" onclick="startCheckout()">Upgrade</button>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         Scan Now
@@ -412,6 +428,10 @@ html, body {
           <button class="mode-btn" id="m-expert" onclick="setMode('expert')">Expert</button>
         </div>
         <span class="mode-hint" id="mode-hint">Plain English</span>
+      </div>
+      <div class="paywall-card" id="paywall-card">
+        <div class="paywall-copy" id="paywall-copy"></div>
+        <button class="paywall-cta" id="paywall-cta" onclick="startCheckout()">Upgrade</button>
       </div>
       <div class="filters">
         <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
@@ -590,6 +610,9 @@ let ARBDATA = [];
 let lastRefresh = null;
 let isScanning = false;
 let currentTab = 'picks';
+let currentPlan = 'free';
+let planConfig = {};
+let paywallMeta = null;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -713,6 +736,137 @@ async function backendGet(path, timeout = 60000) {
   return JSON.parse(wrapped.contents);
 }
 
+async function backendPost(path, body, timeout = 60000) {
+  const url = `${BACKEND}${path}`;
+  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID, 'content-type': 'application/json'};
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, {method: 'POST', headers: hdrs, body: JSON.stringify(body || {}), signal: ctrl.signal});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function normalizePlan(p) {
+  const plan = String(p || '').toLowerCase();
+  if (plan === 'vip' || plan === 'sharp') return 'vip';
+  if (plan === 'premium' || plan === 'pro') return 'premium';
+  return 'free';
+}
+
+function planLabel(plan) {
+  const p = normalizePlan(plan);
+  return p === 'vip' ? 'VIP' : p === 'premium' ? 'PREMIUM' : 'FREE';
+}
+
+function nextTier(plan) {
+  const p = normalizePlan(plan);
+  if (p === 'free') return 'premium';
+  if (p === 'premium') return 'vip';
+  return null;
+}
+
+function planRank(plan) {
+  const p = normalizePlan(plan);
+  if (p === 'vip') return 2;
+  if (p === 'premium') return 1;
+  return 0;
+}
+
+function updatePlanUi() {
+  const p = normalizePlan(currentPlan);
+  const pill = document.getElementById('plan-pill');
+  if (pill) {
+    pill.className = `plan-pill ${p}`;
+    pill.textContent = planLabel(p);
+  }
+  const up = document.getElementById('upgrade-btn');
+  const manage = document.getElementById('manage-btn');
+  if (up) {
+    const nxt = nextTier(p);
+    up.style.display = nxt ? '' : 'none';
+    up.textContent = nxt ? (nxt === 'vip' ? 'Go VIP' : 'Upgrade') : 'Upgraded';
+  }
+  if (manage) manage.style.display = p === 'free' ? 'none' : '';
+}
+
+function updatePaywallUi() {
+  const card = document.getElementById('paywall-card');
+  const copy = document.getElementById('paywall-copy');
+  const cta = document.getElementById('paywall-cta');
+  if (!card || !copy || !cta) return;
+  const p = normalizePlan(currentPlan);
+  const nxt = (paywallMeta && paywallMeta.next_tier) ? normalizePlan(paywallMeta.next_tier) : nextTier(p);
+  const visible = Number(paywallMeta?.visible_pick_limit || PICKS.length || 0);
+  const total = Number(paywallMeta?.total_picks || PICKS.length || 0);
+  if (!nxt || total <= visible) {
+    card.classList.remove('on');
+    return;
+  }
+  copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
+  cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
+  card.classList.add('on');
+}
+
+function ensureBillingUser() {
+  if (USER_ID && USER_ID.includes('@')) return true;
+  const entered = prompt('Enter your email for billing and plan sync:');
+  if (!entered) return false;
+  const email = String(entered).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Enter a valid email');
+    return false;
+  }
+  window.setAlgobetsUserId(email);
+  showToast('Email saved');
+  return true;
+}
+
+async function fetchPlan() {
+  try {
+    const res = await backendGet('/api/plan');
+    currentPlan = normalizePlan(res.plan);
+    planConfig = res.tier || {};
+    updatePlanUi();
+  } catch (err) {
+    currentPlan = 'free';
+    updatePlanUi();
+  }
+}
+
+async function startCheckout(tier) {
+  const desired = normalizePlan(tier || nextTier(currentPlan));
+  if (!desired) return;
+  if (!ensureBillingUser()) return;
+  try {
+    const origin = window.location.origin + window.location.pathname;
+    const res = await backendPost('/api/billing/checkout', {
+      tier: desired,
+      success_url: `${origin}?checkout=success&uid=${encodeURIComponent(USER_ID)}`,
+      cancel_url: `${origin}?checkout=cancel&uid=${encodeURIComponent(USER_ID)}`
+    });
+    if (res.checkout_url) window.location.href = res.checkout_url;
+  } catch (err) {
+    console.error(err);
+    showToast('Checkout unavailable');
+  }
+}
+
+async function openBillingPortal() {
+  if (!ensureBillingUser()) return;
+  try {
+    const origin = window.location.origin + window.location.pathname;
+    const res = await backendPost('/api/billing/portal', {return_url: `${origin}?uid=${encodeURIComponent(USER_ID)}`});
+    if (res.portal_url) window.open(res.portal_url, '_blank', 'noopener');
+  } catch (err) {
+    console.error(err);
+    showToast('Billing portal unavailable');
+  }
+}
+
 function setApiStatus(state) {
   const dot = document.getElementById('api-dot');
   const lbl = document.getElementById('api-lbl');
@@ -830,19 +984,29 @@ async function doScan(silent = false) {
   try {
     // Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
     const bust = Date.now();
+    const canSeeEV = planRank(currentPlan) >= 1;
+    const canSeeArb = planRank(currentPlan) >= 2;
     const [picksRes, evRes, arbRes] = await Promise.allSettled([
       backendGet(`/scan?refresh=true&_=${bust}`),
-      backendGet(`/api/ev-finder?_=${bust}`),
-      backendGet(`/api/arb-detect?_=${bust}`),
+      canSeeEV ? backendGet(`/api/ev-finder?_=${bust}`) : Promise.resolve({results: []}),
+      canSeeArb ? backendGet(`/api/arb-detect?_=${bust}`) : Promise.resolve({results: []}),
     ]);
 
     if (picksRes.status === 'fulfilled') {
       const raw = picksRes.value;
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
+      if (!Array.isArray(raw)) {
+        currentPlan = normalizePlan(raw.plan || currentPlan);
+        paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
+      } else {
+        paywallMeta = null;
+      }
       PICKS = arr
         .map((p, i) => normalizePick(p, i))
         // REMOVED gameTimeRaw filter to ensure API picks are always shown
         .sort((a, b) => b.ev - a.ev);
+      updatePlanUi();
+      updatePaywallUi();
     } else {
         console.error("Picks request failed:", picksRes.reason);
     }
@@ -919,6 +1083,7 @@ function renderPicks() {
 
   document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
+  updatePaywallUi();
 
   if (!pts.length) {
     el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div></div>`;
@@ -1211,6 +1376,7 @@ function applySavedSelections() {
 loadState();
 bindUiAccessibility();
 applySavedSelections();
+fetchPlan();
 renderPerf();
 loadBoostExamples();
 doScan();
