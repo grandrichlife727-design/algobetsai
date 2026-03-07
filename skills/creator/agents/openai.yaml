@@ -1,0 +1,4 @@
+interface:
+  display_name: "Creator"
+  short_description: "Create platform-native content with clear hooks"
+  default_prompt: "Use $creator to create production-ready content for this audience and platform."
