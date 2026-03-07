@@ -720,7 +720,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
       <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
-      <button class="bill-link" id="install-btn" onclick="installApp()">Add to Home Screen</button>
+      <button class="bill-link" id="install-btn" style="display:none" onclick="installApp()">Add to Home Screen</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="handleAuthButton()">Sign In</button>
@@ -1829,6 +1829,7 @@ let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let deferredInstallPrompt = null;
+const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
@@ -3892,24 +3893,45 @@ function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+function hideInstallButton(persist = false) {
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+  if (persist) {
+    try { localStorage.setItem(INSTALL_CTA_HIDE_KEY, '1'); } catch (_) {}
+  }
+}
+
+function showInstallButton() {
+  if (isInStandaloneMode()) return;
+  try {
+    if (localStorage.getItem(INSTALL_CTA_HIDE_KEY) === '1') return;
+  } catch (_) {}
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'inline-flex';
+}
+
 function setupInstallPrompt() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
     const btn = document.getElementById('install-btn');
     if (btn) btn.textContent = 'Add to Home Screen';
+    showInstallButton();
   });
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'none';
+    hideInstallButton(true);
     showToast('Added to Home Screen');
   });
 
   if (isInStandaloneMode()) {
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'none';
+    hideInstallButton(true);
+    return;
+  }
+
+  if (isIosDevice()) {
+    showInstallButton();
   }
 }
 
@@ -3921,13 +3943,15 @@ async function installApp() {
   if (deferredInstallPrompt) {
     deferredInstallPrompt.prompt();
     try {
-      await deferredInstallPrompt.userChoice;
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') hideInstallButton(true);
     } catch (_) {}
     deferredInstallPrompt = null;
     return;
   }
   if (isIosDevice()) {
     showToast('On iPhone: Share -> Add to Home Screen');
+    hideInstallButton(true);
     return;
   }
   showToast('Use browser menu -> Add to Home Screen');
