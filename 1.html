@@ -182,6 +182,8 @@ html, body {
 .pick-actions{display:flex;gap:5px;align-items:center;padding:8px 12px 10px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.08);flex-wrap:wrap}
 .btn-how{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-how:hover{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.3)}
+.btn-betslip{background:linear-gradient(135deg,var(--cyan2),var(--violet));border:1px solid rgba(34,211,238,.25);border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-betslip:hover{opacity:.92;transform:translateY(-1px)}
 .btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-parlay:hover{background:rgba(255,255,255,.08);color:var(--text)}
 .btn-share{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:6px;color:#c6b0ff;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
@@ -192,6 +194,10 @@ html, body {
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
 .explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
 .explain-toggle:hover{color:var(--sub)}
+@media(max-width:520px){
+  .pick-actions{gap:6px}
+  .btn-share,.btn-win{font-size:10px;padding:4px 8px}
+}
 
 /* SIGNAL BARS (expert mode) */
 .sig-bars{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
@@ -454,6 +460,13 @@ html, body {
 .auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
 .auth-in:focus{outline:none;border-color:rgba(0,212,255,.35)}
 .auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.auth-nudge-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:730;padding:16px}
+.auth-nudge-ov.on{display:flex}
+.auth-nudge{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.nudge-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.nudge-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:left}
+.nudge-btn:hover{border-color:rgba(0,212,255,.3)}
+.nudge-btn.primary{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.25);color:var(--cyan)}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -1015,6 +1028,20 @@ html, body {
   </div>
 </div>
 
+<div class="auth-nudge-ov" id="auth-nudge-ov" onclick="closeAuthNudge(event)">
+  <div class="auth-nudge">
+    <div class="auth-title">Save Your Free Picks</div>
+    <div class="auth-sub">Keep alerts, history, and plan upgrades synced across devices.</div>
+    <div class="nudge-actions">
+      <button class="nudge-btn primary" onclick="startNudgeAuth('gmail')">Continue with Google (Recommended)</button>
+      <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
+      <button class="nudge-btn" onclick="startNudgeAuth('phone')">Continue with Phone</button>
+      <button class="nudge-btn" onclick="startNudgeAuth('facebook')">Continue with Facebook</button>
+      <button class="bill-link" style="justify-self:end" onclick="skipAuthNudge()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1028,6 +1055,8 @@ const PROFILE_KEY = 'algobets-profile-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
 const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
 const PREF_KEY = 'algobets-pref-v1';
+const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
+const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -1079,6 +1108,15 @@ window.setAlgobetsUserId = function(uid) {
   USER_ID = String(uid).trim();
   localStorage.setItem('algobets-user-id', USER_ID);
 };
+
+const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
+if (_checkoutStatus === 'success') {
+  setTimeout(() => showToast('Checkout successful. Syncing plan...'), 80);
+  setTimeout(() => trackEvent('checkout_success', {uid: USER_ID}), 120);
+} else if (_checkoutStatus === 'cancel') {
+  setTimeout(() => showToast('Checkout canceled'), 80);
+  setTimeout(() => trackEvent('checkout_canceled', {uid: USER_ID}), 120);
+}
 
 const SPORTS = [
   {key:'basketball_nba',   label:'NBA 🏀'},
@@ -1133,6 +1171,8 @@ let AGENTWEIGHTS = null;
 let ALERTPACKS = null;
 let AFFILIATE = null;
 let NEWSIMPACT = [];
+let authNudgeState = {shown: false, skipped: false, completed: false};
+let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 
@@ -1226,6 +1266,25 @@ function saveState() {
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
   }
+}
+
+function loadAuthNudgeState() {
+  try {
+    const raw = localStorage.getItem(AUTH_NUDGE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    authNudgeState = {
+      shown: !!s.shown,
+      skipped: !!s.skipped,
+      completed: !!s.completed,
+    };
+  } catch (_) {}
+}
+
+function saveAuthNudgeState() {
+  try {
+    localStorage.setItem(AUTH_NUDGE_KEY, JSON.stringify(authNudgeState));
+  } catch (_) {}
 }
 
 function loadPickPrefs() {
@@ -1695,13 +1754,18 @@ function selectAuthMethod(method) {
   }
 }
 
-function openAuthModal() {
+function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  const m = normalizeAuthMethod(userProfile.method === 'guest' ? 'gmail' : userProfile.method);
+  const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'gmail' : userProfile.method));
   selectAuthMethod(m);
-  input.value = userProfile.identifier || '';
+  const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
+  if (m === 'gmail' || m === 'email') {
+    input.value = userProfile.identifier || landingEmail || '';
+  } else {
+    input.value = userProfile.identifier || '';
+  }
   ov.classList.add('on');
   requestAnimationFrame(() => input.focus());
 }
@@ -1710,6 +1774,45 @@ function closeAuthModal(e) {
   const ov = document.getElementById('auth-ov');
   if (!ov) return;
   if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function openAuthNudge() {
+  const ov = document.getElementById('auth-nudge-ov');
+  if (!ov) return;
+  ov.classList.add('on');
+  trackEvent('auth_nudge_shown', {tab: currentTab, scan_count: scanCount});
+}
+
+function closeAuthNudge(e) {
+  const ov = document.getElementById('auth-nudge-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function startNudgeAuth(method) {
+  closeAuthNudge();
+  openAuthModal(method);
+}
+
+function skipAuthNudge() {
+  authNudgeState.skipped = true;
+  authNudgeState.shown = true;
+  saveAuthNudgeState();
+  closeAuthNudge();
+  trackEvent('auth_nudge_skipped', {scan_count: scanCount});
+  showToast('You can sign in anytime from Profile');
+}
+
+function maybePromptAuthNudge() {
+  const isGuest = !USER_ID || USER_ID.startsWith('guest_');
+  if (!isGuest) return;
+  if (!hasScannedAtLeastOnce) return;
+  if (scanCount < 2) return;
+  if (!PICKS.length) return;
+  if (authNudgeState.completed || authNudgeState.skipped || authNudgeState.shown) return;
+  authNudgeState.shown = true;
+  saveAuthNudgeState();
+  setTimeout(() => openAuthNudge(), 260);
 }
 
 function authIdentityForBilling(method, rawValue) {
@@ -1745,6 +1848,9 @@ async function submitAuthProfile() {
   userProfile = {method, identifier: value, name: ''};
   saveProfile();
   window.setAlgobetsUserId(authIdentityForBilling(method, value));
+  authNudgeState.completed = true;
+  saveAuthNudgeState();
+  trackEvent('auth_completed', {method});
   closeAuthModal();
   renderProfile();
   showToast(`Signed in with ${authMethodLabel(method)}`);
@@ -2160,6 +2266,22 @@ async function backendPost(path, body, timeout = 60000) {
   }
 }
 
+function trackEvent(name, props = {}) {
+  try {
+    const payload = {name, props: props || {}};
+    const url = `${BACKEND}/api/telemetry/event`;
+    const body = JSON.stringify(payload);
+    fetch(url, {
+      method: 'POST',
+      headers: {'content-type': 'application/json', 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID},
+      body,
+      keepalive: true
+    }).catch(() => {});
+  } catch (_) {}
+}
+
+const Api = {get: backendGet, post: backendPost, track: trackEvent};
+
 function normalizePlan(p) {
   const plan = String(p || '').toLowerCase();
   if (plan === 'vip' || plan === 'sharp') return 'vip';
@@ -2312,6 +2434,7 @@ async function claimFreeTrial() {
     saveTrialUiState();
     await fetchPlan();
     await loadTrialStatus();
+    trackEvent('trial_started', {plan_before: 'free'});
     showToast('Premium trial started: 72 hours');
     doScan(true);
   } catch (err) {
@@ -2351,6 +2474,7 @@ async function startCheckout(tier, cycle = billingCycle) {
     showToast('Annual price not configured yet. Using monthly checkout.');
   }
   try {
+    trackEvent('checkout_started', {tier: desired, billing_cycle: finalCycle});
     const origin = window.location.origin + window.location.pathname;
     const res = await backendPost('/api/billing/checkout', {
       tier: desired,
@@ -2358,7 +2482,10 @@ async function startCheckout(tier, cycle = billingCycle) {
       success_url: `${origin}?checkout=success&uid=${encodeURIComponent(USER_ID)}`,
       cancel_url: `${origin}?checkout=cancel&uid=${encodeURIComponent(USER_ID)}`
     });
-    if (res.checkout_url) window.location.href = res.checkout_url;
+    if (res.checkout_url) {
+      trackEvent('checkout_redirected', {tier: desired, billing_cycle: finalCycle});
+      window.location.href = res.checkout_url;
+    }
   } catch (err) {
     console.error(err);
     showToast('Checkout unavailable');
@@ -2372,6 +2499,7 @@ function closeUpgradePicker(e) {
 }
 
 function openUpgradePicker() {
+  trackEvent('upgrade_picker_opened', {plan: currentPlan, tab: currentTab});
   const p = normalizePlan(currentPlan);
   const grid = document.getElementById('up-grid');
   const sub = document.getElementById('up-sub');
@@ -2830,7 +2958,13 @@ async function doScan(silent = false) {
       updatePlanUi();
       updatePaywallUi();
       hasScannedAtLeastOnce = true;
+      if (!silent) {
+        scanCount += 1;
+        localStorage.setItem(SCAN_COUNT_KEY, String(scanCount));
+        trackEvent('scan_manual', {scan_count: scanCount, picks: arr.length});
+      }
       updateTrialCard();
+      maybePromptAuthNudge();
     } else {
         console.error("Picks request failed:", picksRes.reason);
     }
@@ -2947,7 +3081,7 @@ function renderPicks() {
   <div class="pick-explain${mode === 'simple' ? ' on' : ''}" id="exp-${p.id}">${p.explain}</div>
   <div class="pick-actions">
     <button class="btn-how" onclick="showAction(${p.id})">👉 How to bet this</button>
-    <button class="btn-how" onclick="openBetSlip(${p.id})">Bet Slip</button>
+    <button class="btn-betslip" onclick="openBetSlip(${p.id})">Bet Slip</button>
     <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
     <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
     <button class="btn-win" onclick="postPickToCommunity(${p.id},'win')">Post Win</button>
@@ -3385,6 +3519,8 @@ function bindUiAccessibility() {
       if (up && up.classList.contains('on')) up.classList.remove('on');
       const auth = document.getElementById('auth-ov');
       if (auth && auth.classList.contains('on')) auth.classList.remove('on');
+      const nudge = document.getElementById('auth-nudge-ov');
+      if (nudge && nudge.classList.contains('on')) nudge.classList.remove('on');
       closeMobileMore();
     }
   });
@@ -3406,9 +3542,16 @@ function applySavedSelections() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+loadAuthNudgeState();
 loadPickPrefs();
 loadTrialUiState();
 loadProfile();
+try {
+  if (!sessionStorage.getItem('algobets-app-open-tracked')) {
+    trackEvent('app_open', {tab: currentTab});
+    sessionStorage.setItem('algobets-app-open-tracked', '1');
+  }
+} catch (_) {}
 loadProfileSettings();
 loadQuotaDashboard();
 bindUiAccessibility();
