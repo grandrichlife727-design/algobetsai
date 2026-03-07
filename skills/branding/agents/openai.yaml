@@ -1,0 +1,4 @@
+interface:
+  display_name: "Branding"
+  short_description: "Build coherent brand positioning and identity systems"
+  default_prompt: "Use $branding to craft a cohesive brand strategy and identity direction."
