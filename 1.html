@@ -557,6 +557,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .auth-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .auth-m{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;font-family:var(--sans);text-align:left}
 .auth-m.on{border-color:rgba(0,212,255,.35);color:var(--cyan)}
+.auth-m.secondary{display:none}
+.auth-m.secondary.on{display:block}
+.auth-more-link{margin-top:8px;background:none;border:none;color:var(--cyan);font-size:11px;font-weight:700;cursor:pointer;padding:0}
 .auth-field{margin-top:10px}
 .auth-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px}
 .auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
@@ -1485,9 +1488,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="auth-title">Create Free Account</div>
     <div class="auth-sub">Optional for browsing. Needed for saved history, alerts, billing, and synced profile.</div>
     <div class="auth-methods">
-      <button class="auth-m on" id="am-email" onclick="selectAuthMethod('email')">Email</button>
-      <button class="auth-m" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
+      <button class="auth-m on" id="am-google" onclick="selectAuthMethod('google')">Google</button>
+      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
+      <button class="auth-m secondary" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
     </div>
+    <button class="auth-more-link" id="auth-more-link" onclick="toggleAuthMore()">More options</button>
     <div class="auth-field">
       <div class="auth-lbl" id="auth-lbl">Email Address</div>
       <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
@@ -1498,7 +1503,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
     <div class="auth-actions">
       <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
-      <button class="paywall-cta" onclick="submitAuthProfile()">Continue</button>
+      <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Continue</button>
     </div>
   </div>
 </div>
@@ -1508,7 +1513,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="auth-title">Create Account in 10 Seconds</div>
     <div class="auth-sub">Save picks, alerts, and billing under one profile.</div>
     <div class="nudge-actions">
-      <button class="nudge-btn primary" onclick="startNudgeAuth('email')">Continue with Email (Recommended)</button>
+      <button class="nudge-btn primary" onclick="startNudgeAuth('google')">Continue with Google (Recommended)</button>
+      <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
       <button class="nudge-btn" onclick="startNudgeAuth('phone')">Continue with Phone</button>
       <button class="bill-link" style="justify-self:end" onclick="skipAuthNudge()">Skip for now</button>
     </div>
@@ -2748,6 +2754,12 @@ async function renderGoogleAuthButton() {
   const wrap = document.getElementById('google-auth-wrap');
   const btn = document.getElementById('google-signin-btn');
   if (!wrap || !btn) return;
+  const active = document.querySelector('.auth-m.on');
+  const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'guest');
+  if (method !== 'google') {
+    wrap.classList.remove('on');
+    return;
+  }
   if (!GOOGLE_CLIENT_ID) {
     wrap.classList.remove('on');
     return;
@@ -2830,20 +2842,37 @@ function selectAuthMethod(method) {
 
   const lbl = document.getElementById('auth-lbl');
   const input = document.getElementById('auth-input');
+  const fieldWrap = input ? input.closest('.auth-field') : null;
+  const googleWrap = document.getElementById('google-auth-wrap');
+  const continueBtn = document.getElementById('auth-continue');
   if (!lbl || !input) return;
 
   if (m === 'email') {
     lbl.textContent = 'Email Address';
     input.placeholder = 'you@example.com';
     input.type = 'email';
+    if (fieldWrap) fieldWrap.style.display = '';
+    if (googleWrap) googleWrap.classList.remove('on');
+    if (continueBtn) continueBtn.style.display = '';
   } else if (m === 'phone') {
     lbl.textContent = 'Phone Number';
     input.placeholder = '+1 (555) 123-4567';
     input.type = 'tel';
+    if (fieldWrap) fieldWrap.style.display = '';
+    if (googleWrap) googleWrap.classList.remove('on');
+    if (continueBtn) continueBtn.style.display = '';
+  } else if (m === 'google') {
+    if (fieldWrap) fieldWrap.style.display = 'none';
+    if (googleWrap) googleWrap.classList.add('on');
+    if (continueBtn) continueBtn.style.display = 'none';
+    renderGoogleAuthButton();
   } else {
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
     input.type = 'text';
+    if (fieldWrap) fieldWrap.style.display = '';
+    if (googleWrap) googleWrap.classList.remove('on');
+    if (continueBtn) continueBtn.style.display = '';
   }
 }
 
@@ -2851,17 +2880,36 @@ function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'email' : userProfile.method));
+  const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   selectAuthMethod(m);
   const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
   if (m === 'email') {
     input.value = userProfile.identifier || landingEmail || '';
-  } else {
+  } else if (m === 'phone') {
     input.value = userProfile.identifier || '';
+  } else {
+    input.value = '';
   }
   ov.classList.add('on');
-  requestAnimationFrame(() => input.focus());
+  requestAnimationFrame(() => {
+    if (m !== 'google') input.focus();
+  });
+  const phoneBtn = document.getElementById('am-phone');
+  const moreBtn = document.getElementById('auth-more-link');
+  if (phoneBtn) {
+    if (m === 'phone') phoneBtn.classList.remove('secondary');
+    else phoneBtn.classList.add('secondary');
+  }
+  if (moreBtn) moreBtn.style.display = (m === 'phone') ? 'none' : 'block';
   renderGoogleAuthButton();
+}
+
+function toggleAuthMore() {
+  const phoneBtn = document.getElementById('am-phone');
+  const moreBtn = document.getElementById('auth-more-link');
+  if (!phoneBtn) return;
+  phoneBtn.classList.remove('secondary');
+  if (moreBtn) moreBtn.style.display = 'none';
 }
 
 function closeAuthModal(e) {
@@ -2904,6 +2952,10 @@ function maybePromptAuthNudge() {
 async function submitAuthProfile() {
   const active = document.querySelector('.auth-m.on');
   const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'email');
+  if (method === 'google') {
+    showToast('Use the Google button to continue');
+    return;
+  }
   const input = document.getElementById('auth-input');
   if (!input) return;
   const value = String(input.value || '').trim();
