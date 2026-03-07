@@ -430,6 +430,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
 .up-title{font-size:16px;font-weight:800;margin-bottom:8px}
 .up-sub{font-size:12px;color:var(--sub);margin-bottom:12px}
+.up-flow{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:-2px 0 10px}
 .cycle-toggle{display:flex;gap:6px;margin-bottom:10px}
 .cycle-btn{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--sub);font-size:11px;font-weight:700;font-family:var(--sans)}
 .cycle-btn.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.08);color:var(--cyan)}
@@ -437,9 +438,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .up-grid{display:grid;grid-template-columns:1fr;gap:8px}
 .up-btn{width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--text);font-family:var(--sans)}
 .up-btn:hover{border-color:var(--border2)}
+.up-btn.current{cursor:default;opacity:.78}
+.up-btn.current:hover{border-color:var(--border)}
 .up-btn b{display:block;font-size:12px}
 .up-btn span{font-size:11px;color:var(--sub)}
 .up-badge{display:inline-flex;align-items:center;border:1px solid rgba(0,229,160,.3);background:rgba(0,229,160,.1);border-radius:999px;padding:2px 7px;font-size:9px;font-family:var(--mono);color:var(--green);margin-left:6px}
+.up-badge.current{border-color:rgba(255,183,0,.28);background:rgba(255,183,0,.1);color:var(--amber)}
 .up-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
 .pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
@@ -665,7 +669,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <span class="mode-hint" id="mode-hint">Plain English</span>
       </div>
       <div class="trial-card" id="trial-card">
-        <div class="trial-copy" id="trial-copy"><strong>3-day Premium trial</strong> unlocked after your first scan.</div>
+        <div class="trial-copy" id="trial-copy"><strong>Step 1:</strong> Create your free account. <strong>Step 2:</strong> Start your 3-day Premium trial.</div>
         <div class="trial-actions">
           <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
           <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
@@ -676,11 +680,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <button class="paywall-cta" id="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
       </div>
       <div class="tier-compare" id="tier-compare">
-        <div class="tier-title">Upgrade Highlights</div>
+        <div class="tier-title">How Plans Work</div>
         <div class="tier-strip">
-          <div class="tier-tag">Free: <strong>2 picks</strong> · NBA/NHL · 20m refresh</div>
-          <div class="tier-tag premium">Premium: <strong>15 picks</strong> + full +EV</div>
-          <div class="tier-tag vip">VIP: <strong>50 picks</strong> + Steam feed + 1m refresh</div>
+          <div class="tier-tag"><strong>1) Free</strong>: 2 picks/scan</div>
+          <div class="tier-tag premium"><strong>2) Premium</strong>: 15 picks + full +EV + props</div>
+          <div class="tier-tag vip"><strong>3) VIP</strong>: 50 picks + steam + fastest refresh</div>
         </div>
       </div>
       <div class="filters">
@@ -1164,7 +1168,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
   <div class="up-modal">
     <div class="up-title">Choose your plan</div>
-    <div class="up-sub" id="up-sub">Pick Premium or VIP before checkout.</div>
+    <div class="up-sub" id="up-sub">Simple flow: create account, pick tier, then checkout.</div>
+    <div class="up-flow">Free Preview -> Premium -> VIP</div>
     <div class="cycle-toggle">
       <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
       <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
@@ -1177,8 +1182,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
-    <div class="auth-title">Register / Sign In</div>
-    <div class="auth-sub">Choose a method: Gmail, Email, Phone, or Facebook. Profile linking only (OAuth can be added next).</div>
+    <div class="auth-title">Create Your Free Account</div>
+    <div class="auth-sub">Use Gmail, Email, Phone, or Facebook to save picks and unlock upgrades.</div>
     <div class="auth-methods">
       <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
       <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
@@ -1198,8 +1203,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="auth-nudge-ov" id="auth-nudge-ov" onclick="closeAuthNudge(event)">
   <div class="auth-nudge">
-    <div class="auth-title">Save Your Free Picks</div>
-    <div class="auth-sub">Keep alerts, history, and plan upgrades synced across devices.</div>
+    <div class="auth-title">Create Account in 10 Seconds</div>
+    <div class="auth-sub">Save picks, alerts, and billing under one profile.</div>
     <div class="nudge-actions">
       <button class="nudge-btn primary" onclick="startNudgeAuth('gmail')">Continue with Google (Recommended)</button>
       <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
@@ -1347,6 +1352,8 @@ let HISTORYDATA = [];
 let COMMUNITYDATA = [];
 let PRICING = {};
 let billingCycle = 'monthly';
+let pendingCheckoutTier = null;
+let pendingCheckoutCycle = 'monthly';
 let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
 let trialUiState = {dismissed: false};
 let hasScannedAtLeastOnce = false;
@@ -2086,10 +2093,16 @@ function openAuthModal(preferredMethod = null) {
   requestAnimationFrame(() => input.focus());
 }
 
-function closeAuthModal(e) {
+function closeAuthModal(e, keepPending = false) {
   const ov = document.getElementById('auth-ov');
   if (!ov) return;
-  if (!e || e.target === ov) ov.classList.remove('on');
+  if (!e || e.target === ov) {
+    ov.classList.remove('on');
+    if (!keepPending) {
+      pendingCheckoutTier = null;
+      pendingCheckoutCycle = 'monthly';
+    }
+  }
 }
 
 function openAuthNudge() {
@@ -2167,13 +2180,21 @@ async function submitAuthProfile() {
   authNudgeState.completed = true;
   saveAuthNudgeState();
   trackEvent('auth_completed', {method});
-  closeAuthModal();
+  closeAuthModal(null, true);
   renderProfile();
   showToast(`Signed in with ${authMethodLabel(method)}`);
   await fetchPlan();
   await loadTrialStatus();
   loadDigestSubscription();
   loadStreakStatus();
+  if (pendingCheckoutTier) {
+    const tierToCheckout = pendingCheckoutTier;
+    const cycleToCheckout = pendingCheckoutCycle;
+    pendingCheckoutTier = null;
+    pendingCheckoutCycle = 'monthly';
+    setTimeout(() => startCheckout(tierToCheckout, cycleToCheckout), 120);
+    return;
+  }
   doScan(true);
 }
 
@@ -2192,8 +2213,9 @@ function signOutProfile() {
 
 function ensureRegisteredUser(redirectToProfile = true) {
   if (!USER_ID || USER_ID.startsWith('guest_')) {
-    showToast('Sign in first to use this feature');
-    if (redirectToProfile && currentTab !== 'profile') go('profile');
+    showToast('Create your free account to continue');
+    openAuthModal('gmail');
+    if (redirectToProfile && currentTab !== 'profile') trackEvent('signup_prompted', {from_tab: currentTab});
     return false;
   }
   return true;
@@ -2674,11 +2696,11 @@ function updatePaywallUi() {
     return;
   }
   if (PAYWALL_VARIANT === 'B') {
-    copy.innerHTML = `<strong>${planLabel(p)}</strong> gives ${visible}/${total} picks. <strong>${planLabel(nxt)}</strong> unlocks full card access, props, and faster refresh windows.`;
-    cta.textContent = nxt === 'vip' ? 'Unlock VIP' : 'Unlock Premium';
+    copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Next step is <strong>${planLabel(nxt)}</strong> for more picks and deeper markets.`;
+    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
   } else {
-    copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
-    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
+    copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Upgrade to <strong>${planLabel(nxt)}</strong> to unlock more.`;
+    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
   }
   card.classList.add('on');
   const cmp = document.getElementById('tier-compare');
@@ -2686,20 +2708,7 @@ function updatePaywallUi() {
 }
 
 function ensureBillingUser() {
-  if (USER_ID && USER_ID.includes('@')) return true;
-  const entered = prompt('Enter your email for billing and plan sync:');
-  if (!entered) return false;
-  const email = String(entered).trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showToast('Enter a valid email');
-    return false;
-  }
-  window.setAlgobetsUserId(email);
-  userProfile = {method: 'email', identifier: email, name: ''};
-  saveProfile();
-  renderProfile();
-  showToast('Email saved');
-  return true;
+  return ensureRegisteredUser(false);
 }
 
 async function fetchPlan() {
@@ -2769,7 +2778,7 @@ function updateTrialCard() {
     card.classList.remove('on');
     return;
   }
-  copy.innerHTML = `<strong>3-day Premium trial</strong> is ready. Start now to unlock +EV Finder and faster scans.`;
+  copy.innerHTML = `<strong>Step 1:</strong> Create your free account. <strong>Step 2:</strong> Start your 3-day Premium trial to unlock +EV and faster refresh.`;
   card.classList.add('on');
 }
 
@@ -2784,7 +2793,11 @@ function setBillingCycle(cycle) {
 async function startCheckout(tier, cycle = billingCycle) {
   const desired = normalizePlan(tier || nextTier(currentPlan));
   if (!desired) return;
-  if (!ensureBillingUser()) return;
+  if (!ensureBillingUser()) {
+    pendingCheckoutTier = desired;
+    pendingCheckoutCycle = cycle === 'annual' ? 'annual' : 'monthly';
+    return;
+  }
   let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
   if (finalCycle === 'annual' && !annualConfiguredForTier(desired)) {
     finalCycle = 'monthly';
@@ -2823,23 +2836,23 @@ function openUpgradePicker() {
   const note = document.getElementById('cycle-note');
   if (!grid) return;
   setBillingCycle(billingCycle);
-  const opts = p === 'free'
-    ? [
-        {tier: 'premium', title: 'Premium', desc: 'Up to 15 picks/scan + full +EV Finder'},
-        {tier: 'vip', title: 'VIP', desc: 'Up to 50 picks/scan + Steam feed'},
-      ]
-    : p === 'premium'
-      ? [{tier: 'vip', title: 'VIP', desc: 'Jump from 15 to 50 picks + unlock steam feed'}]
-      : [];
-  if (!opts.length) {
+  if (p === 'vip') {
     showToast('You already have highest tier');
     return;
   }
-  sub.textContent = p === 'free' ? 'Pick Premium or VIP before checkout.' : 'Move to VIP for full access.';
+  const opts = [
+    {tier: 'premium', title: 'Premium', desc: '15 picks/scan + full +EV + props'},
+    {tier: 'vip', title: 'VIP', desc: '50 picks/scan + steam + fastest refresh'},
+  ];
+  sub.textContent = p === 'free'
+    ? 'Start with Premium or go straight to VIP.'
+    : 'You are on Premium. Upgrade to VIP when ready.';
   if (note) note.textContent = billingCycle === 'annual'
     ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
     : 'Monthly selected. Switch to annual for lower effective monthly cost.';
   grid.innerHTML = opts.map(o => {
+    const isCurrent = o.tier === p;
+    const currentBadge = isCurrent ? '<span class="up-badge current">CURRENT</span>' : '';
     const annualOn = annualConfiguredForTier(o.tier);
     const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
     const monthlyLabel = tierPriceLabel(o.tier, 'monthly');
@@ -2850,6 +2863,9 @@ function openUpgradePicker() {
     const cycleHint = billingCycle === 'annual'
       ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
       : 'Monthly billing at checkout';
+    if (isCurrent) {
+      return `<button class="up-btn current" type="button"><b>${o.title}${currentBadge}</b><span>${priceLine}</span><span>${o.desc}</span></button>`;
+    }
     return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');
   document.getElementById('up-ov').classList.add('on');
