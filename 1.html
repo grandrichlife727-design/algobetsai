@@ -1718,6 +1718,75 @@ function normalizeArb(a) {
   };
 }
 
+function formatOddsTime(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('en-US', {weekday:'short', hour:'numeric', minute:'2-digit', hour12:true});
+  } catch (e) {
+    return '—';
+  }
+}
+
+function normalizeOddsGames(games) {
+  return (Array.isArray(games) ? games : []).map(g => {
+    const sport = g.sport || g.sport_key || '';
+    const byBook = g.moneyline_by_book || {};
+    const books = Object.keys(byBook).map(book => {
+      const row = byBook[book] || {};
+      return {book, away: row.away, home: row.home};
+    });
+    return {
+      id: g.id || `${sport}_${g.away_team || ''}_${g.home_team || ''}_${g.commence_time || ''}`,
+      sport,
+      sportLabel: g.label || SPORTS.find(s => s.key === sport)?.label || sport,
+      awayTeam: g.away_team || 'Away',
+      homeTeam: g.home_team || 'Home',
+      commence: g.commence_time || '',
+      books,
+    };
+  });
+}
+
+function renderOdds() {
+  const sportsEl = document.getElementById('odds-sports');
+  const listEl = document.getElementById('odds-list');
+  if (!sportsEl || !listEl) return;
+
+  if (!ODDSGAMES.length) {
+    sportsEl.innerHTML = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">No odds loaded yet</div><div class="empty-sub">Run Scan Now to load live odds.</div></div>`;
+    return;
+  }
+
+  const sports = [...new Set(ODDSGAMES.map(g => g.sport).filter(Boolean))];
+  if (!activeOddsSport || !sports.includes(activeOddsSport)) activeOddsSport = sports[0] || '';
+  sportsEl.innerHTML = sports.map(s => {
+    const label = SPORTS.find(x => x.key === s)?.label || ODDSGAMES.find(g => g.sport === s)?.sportLabel || s;
+    return `<button class="odds-sport ${s === activeOddsSport ? 'active' : ''}" onclick="setOddsSport('${s}')">${esc(label)}</button>`;
+  }).join('');
+
+  const rows = ODDSGAMES.filter(g => g.sport === activeOddsSport);
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No games for this sport</div><div class="empty-sub">Try another sport tab.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(g => `
+    <div class="odds-card">
+      <div class="odds-time">${formatOddsTime(g.commence)}</div>
+      <div class="odds-game">${esc(g.awayTeam)} @ ${esc(g.homeTeam)}</div>
+      <div class="odds-grid">
+        <div class="odds-head">Book</div><div class="odds-head">${esc(g.awayTeam.split(' ').pop() || 'Away')}</div><div class="odds-head">${esc(g.homeTeam.split(' ').pop() || 'Home')}</div>
+        ${g.books.map(b => `<div class="odds-book">${esc(bookLabel(b.book))}</div><div class="odds-line">${b.away ? esc(String(b.away)) : '—'}</div><div class="odds-line">${b.home ? esc(String(b.home)) : '—'}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function setOddsSport(sport) {
+  activeOddsSport = sport;
+  renderOdds();
+}
+
 
 
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
@@ -1774,12 +1843,15 @@ async function doScan(silent = false) {
       if (!Array.isArray(raw)) {
         currentPlan = normalizePlan(raw.plan || currentPlan);
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
+        ODDSGAMES = normalizeOddsGames(raw.games || []);
+        if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
         setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
         if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
           showToast(`Using cached scan. Fresh data in ${fmtCountdown(scanCooldownRemaining)}`);
         }
       } else {
         paywallMeta = null;
+        ODDSGAMES = [];
         setScanCooldown(0);
       }
       PICKS = arr
@@ -1843,6 +1915,7 @@ async function doScan(silent = false) {
   }
 
   renderPicks();
+  renderOdds();
   renderEV();
   renderArb();
   if (currentTab === 'history') loadHistory();
@@ -2085,7 +2158,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','ev','arb','parlay','boost','perf','history','community','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -2096,6 +2169,7 @@ function go(name) {
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
   window.scrollTo({top:0,behavior:'smooth'});
+  if (name === 'odds') renderOdds();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'profile') {
