@@ -1022,8 +1022,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-vip-core" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Core Edge</span></div><div class="page-sub">Early-release cards and high-conviction VIP edge plays.</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Core Edge</span></div><div class="page-sub">Early-release cards plus a single VIP Pick of the Day (our top-rated play).</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title vip-title"><span class="vip-ico">🏆</span>VIP Pick of the Day</div>
+          <div class="growth-sub" id="vip-pod-best">Loading top-rated play...</div>
+          <div class="growth-note">One highest-conviction system play for today.</div>
+        </div>
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
@@ -2687,6 +2692,10 @@ function getVipPodPicks() {
   return rankPicksForVip().slice(0, 3);
 }
 
+function getVipPickOfDay() {
+  return rankPicksForVip()[0] || null;
+}
+
 function getPremiumBestBetCards() {
   const vipCore = getVipPodPicks().slice(0, 2);
   const vipIds = new Set(vipCore.map(p => p.id));
@@ -2862,6 +2871,7 @@ function renderVipTools() {
   const earlyEl = document.getElementById('vip-early');
   const timingEl = document.getElementById('vip-timing');
   const podEl = document.getElementById('vip-pod');
+  const podBestEl = document.getElementById('vip-pod-best');
   const discordEl = document.getElementById('vip-discord-status');
   const clvLabEl = document.getElementById('vip-clv-lab');
   const depthEl = document.getElementById('vip-depth');
@@ -2880,6 +2890,9 @@ function renderVipTools() {
       const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
       podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No plays yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock Core Edge</button></div></div>`;
+    }
+    if (podBestEl) {
+      podBestEl.innerHTML = `Top-rated play is locked for VIP. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Unlock VIP</button>`;
     }
     if (discordEl) discordEl.textContent = 'VIP Discord is locked for VIP members.';
     if (clvLabEl) clvLabEl.textContent = 'CLV Lab is locked for VIP.';
@@ -2911,6 +2924,14 @@ function renderVipTools() {
           <span style="font-family:var(--mono);color:var(--green)">+${Number(p.ev || 0).toFixed(1)}%</span>
         </div>`).join('')
       : 'Run scan to load Core Edge plays.';
+  }
+  if (podBestEl) {
+    const pod = getVipPickOfDay();
+    if (!pod) {
+      podBestEl.textContent = "Run scan to generate today's top-rated play.";
+    } else {
+      podBestEl.innerHTML = `<strong>${esc(pod.bet)}</strong> ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% EV · ${Number(pod.conf || 0).toFixed(0)}% conf`;
+    }
   }
   if (discordEl) discordEl.textContent = 'Private VIP Discord is active. Tap "Join Discord" to open invite.';
 
