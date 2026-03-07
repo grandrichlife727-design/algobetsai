@@ -322,17 +322,11 @@ html, body {
 .tier-compare{display:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:0 0 14px}
 .tier-compare.on{display:block}
 .tier-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px}
-.tier-grid{display:grid;grid-template-columns:1fr;gap:8px}
-.tier-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:9px 10px}
-.tier-card.premium{border-color:rgba(0,212,255,.22)}
-.tier-card.vip{border-color:rgba(0,229,160,.22)}
-.tier-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
-.tier-name{font-size:11px;font-weight:800;color:var(--text)}
-.tier-picks{font-size:10px;font-family:var(--mono);color:var(--cyan)}
-.tier-picks.vip{color:var(--green)}
-.tier-line{font-size:11px;color:var(--sub);line-height:1.45}
-.tier-line + .tier-line{margin-top:3px}
-.tier-line strong{color:var(--text)}
+.tier-strip{display:flex;flex-wrap:wrap;gap:6px}
+.tier-tag{font-size:11px;color:var(--sub);padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02)}
+.tier-tag strong{color:var(--text)}
+.tier-tag.premium{border-color:rgba(0,212,255,.28)}
+.tier-tag.vip{border-color:rgba(0,229,160,.28)}
 .up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
 .up-ov.on{display:flex}
 .up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -513,20 +507,11 @@ html, body {
         <button class="paywall-cta" id="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
       </div>
       <div class="tier-compare" id="tier-compare">
-        <div class="tier-title">Upgrade Path</div>
-        <div class="tier-grid">
-          <div class="tier-card premium">
-            <div class="tier-head"><span class="tier-name">Premium</span><span class="tier-picks">15 picks / scan</span></div>
-            <div class="tier-line"><strong>Sports:</strong> all major leagues</div>
-            <div class="tier-line"><strong>Refresh:</strong> every 5 minutes</div>
-            <div class="tier-line"><strong>Includes:</strong> full +EV Finder</div>
-          </div>
-          <div class="tier-card vip">
-            <div class="tier-head"><span class="tier-name">VIP</span><span class="tier-picks vip">50 picks / scan</span></div>
-            <div class="tier-line"><strong>Sports:</strong> all major leagues</div>
-            <div class="tier-line"><strong>Refresh:</strong> every 1 minute</div>
-            <div class="tier-line"><strong>Includes:</strong> +EV Finder + Arbitrage feed</div>
-          </div>
+        <div class="tier-title">Upgrade Highlights</div>
+        <div class="tier-strip">
+          <div class="tier-tag">Free: <strong>2 picks</strong> · NBA/NHL · 20m refresh</div>
+          <div class="tier-tag premium">Premium: <strong>15 picks</strong> + full +EV</div>
+          <div class="tier-tag vip">VIP: <strong>50 picks</strong> + Arbitrage + 1m refresh</div>
         </div>
       </div>
       <div class="filters">
