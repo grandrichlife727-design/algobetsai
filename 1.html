@@ -846,7 +846,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="tier-compare" id="tier-compare">
         <div class="tier-title">How Plans Work</div>
         <div class="tier-strip">
-          <div class="tier-tag"><strong>1) Free</strong>: 2 picks/scan</div>
+          <div class="tier-tag"><strong>1) Free</strong>: teaser preview only</div>
           <div class="tier-tag premium"><strong>2) Premium</strong>: more picks + props + +EV + steam + fades</div>
           <div class="tier-tag vip"><strong>3) VIP</strong>: Core Edge timing, execution layer, and automation tools</div>
         </div>
@@ -5075,7 +5075,7 @@ function renderPicks() {
     return;
   }
   const isFreePlan = normalizePlan(currentPlan) === 'free';
-  const freeVisibleLimit = 1;
+  const freeVisibleLimit = 0;
   const teaserLimit = 3;
   const useFreeTease = isFreePlan && pts.length > freeVisibleLimit;
   const hiddenCount = useFreeTease ? Math.max(0, pts.length - freeVisibleLimit) : 0;
@@ -5127,7 +5127,7 @@ function renderPicks() {
       <div class="lock-overlay">
         <div class="lock-card">
           <div class="lock-title">${isPrimaryLock ? 'Premium Unlock' : 'Locked Pick'}</div>
-          <div class="lock-sub">${isPrimaryLock ? `Free includes 1 full pick. Unlock ${hiddenCount} more picks plus Props, +EV, Steam, and Fades.` : 'Upgrade to reveal this full pick.'}</div>
+          <div class="lock-sub">${isPrimaryLock ? `Free is teaser-only. Unlock ${hiddenCount} live picks plus Props, +EV, Steam, and Fades.` : 'Upgrade to reveal this full pick.'}</div>
           <button class="paywall-cta" onclick="openUpgradePicker()">${isPrimaryLock ? 'Unlock More Picks' : 'Go Premium'}</button>
         </div>
       </div>
