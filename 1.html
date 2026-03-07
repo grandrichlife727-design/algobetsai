@@ -69,7 +69,7 @@ html, body {
 .logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
-.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
@@ -182,6 +182,10 @@ html, body {
 .btn-how:hover{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.3)}
 .btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-parlay:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-share{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:6px;color:#c6b0ff;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-share:hover{background:rgba(124,58,237,.16);border-color:rgba(124,58,237,.35);color:#e0d6ff}
+.btn-win{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.2);border-radius:6px;color:var(--green);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-win:hover{background:rgba(0,229,160,.15);border-color:rgba(0,229,160,.35)}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
 .explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
@@ -206,6 +210,16 @@ html, body {
 .ev-pct{font-family:var(--mono);font-weight:700;font-size:14px}
 .ev-book{font-size:11px;font-weight:600}
 .ev-odds{font-family:var(--mono);font-size:13px;font-weight:600}
+.odds-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.odds-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.odds-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
+.odds-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.odds-time{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:6px}
+.odds-game{font-size:14px;font-weight:700;margin-bottom:9px}
+.odds-grid{display:grid;grid-template-columns:88px 1fr 1fr;gap:4px;font-family:var(--mono);font-size:11px}
+.odds-head{color:var(--muted)}
+.odds-book{color:var(--sub);font-size:10px}
+.odds-line{color:var(--green)}
 
 /* ARB */
 .arb-card{background:var(--card);border:1px solid rgba(0,229,160,.1);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:fadein .3s ease both}
@@ -367,6 +381,20 @@ html, body {
 .h-meta{font-size:11px;color:var(--sub);margin-top:6px}
 .h-list{margin-top:7px;display:flex;flex-direction:column;gap:5px}
 .h-item{font-size:11px;color:var(--sub)}
+.community-wrap{display:grid;grid-template-columns:1fr;gap:10px}
+.community-composer{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.community-title{font-size:12px;font-weight:800;color:var(--text)}
+.community-sub{font-size:11px;color:var(--sub);margin-top:3px}
+.community-row{display:flex;gap:8px;margin-top:9px}
+.community-feed{display:flex;flex-direction:column;gap:8px}
+.cpost{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.c-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.c-user{font-size:11px;color:var(--text);font-weight:700}
+.c-time{font-size:10px;color:var(--muted)}
+.c-mode{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--sub)}
+.c-mode.win{color:var(--green);border-color:rgba(0,229,160,.25)}
+.c-mode.pick{color:var(--cyan);border-color:rgba(34,211,238,.25)}
+.c-text{font-size:12px;color:var(--sub);margin-top:7px;line-height:1.45}
 .auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
 .auth-ov.on{display:flex}
 .auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -407,6 +435,10 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     Today's Edges <span class="nav-badge" id="nb-picks">0</span>
   </button>
+  <button class="nav-item" onclick="go('odds')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Odds
+  </button>
   <button class="nav-item" onclick="go('ev')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     +EV Finder
@@ -431,6 +463,10 @@ html, body {
   <button class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
     History
+  </button>
+  <button class="nav-item" onclick="go('community')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Community
   </button>
   <button class="nav-item" onclick="go('profile')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -544,6 +580,12 @@ html, body {
       </div>
     </div>
 
+    <div id="v-odds" style="display:none">
+      <div class="page-hdr"><div class="page-title">Live <span>Odds</span></div><div class="page-sub">Book-by-book moneylines from latest scan</div></div>
+      <div class="odds-sports" id="odds-sports"></div>
+      <div class="picks-list" id="odds-list"></div>
+    </div>
+
     <div id="v-ev" style="display:none">
       <div class="page-hdr"><div class="page-title">+EV <span>Finder</span></div><div class="page-sub">Bets priced better than fair value — powered by live Odds API data</div></div>
       <div class="error-banner" id="ev-err-banner" role="status" aria-live="polite"></div>
@@ -628,6 +670,25 @@ html, body {
       <div class="picks-list" id="history-list"></div>
     </div>
 
+    <div id="v-community" style="display:none">
+      <div class="page-hdr"><div class="page-title">Community <span>Feed</span></div><div class="page-sub">Share your picks, post wins, and see what others are betting</div></div>
+      <div class="community-wrap">
+        <div class="community-composer">
+          <div class="community-title">Post to feed</div>
+          <div class="community-sub">Drop a quick pick or winning slip note.</div>
+          <div class="community-row">
+            <input class="auth-in" id="community-text" type="text" maxlength="240" placeholder="Example: Knicks ML +120 looked mispriced at open"/>
+          </div>
+          <div class="community-row">
+            <button class="btn-share" onclick="createCommunityPost('pick')">Post Pick</button>
+            <button class="btn-win" onclick="createCommunityPost('win')">Post Win</button>
+            <button class="bill-link" onclick="loadCommunityFeed()">Refresh</button>
+          </div>
+        </div>
+        <div class="community-feed" id="community-feed"></div>
+      </div>
+    </div>
+
     <div id="v-profile" style="display:none">
       <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage sign-in identity and billing access</div></div>
       <div class="profile-card">
@@ -681,6 +742,10 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
   </button>
+  <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span class="mnav-label">Odds</span>
+  </button>
   <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     <span class="mnav-label">+EV</span>
@@ -700,6 +765,10 @@ html, body {
   <button class="mnav-btn" id="mn-history" onclick="go('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
     <span class="mnav-label">History</span>
+  </button>
+  <button class="mnav-btn" id="mn-community" onclick="go('community')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span class="mnav-label">Social</span>
   </button>
   <button class="mnav-btn" id="mn-profile" onclick="go('profile')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -788,6 +857,8 @@ let legs = [];
 let PICKS = [];
 let EVDATA = [];
 let ARBDATA = [];
+let ODDSGAMES = [];
+let activeOddsSport = '';
 let lastRefresh = null;
 let isScanning = false;
 let currentTab = 'picks';
@@ -798,6 +869,7 @@ let userProfile = {method: 'guest', identifier: '', name: ''};
 let scanCooldownRemaining = 0;
 let scanCooldownTicker = null;
 let HISTORYDATA = [];
+let COMMUNITYDATA = [];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -1109,7 +1181,7 @@ function renderHistory() {
     return;
   }
   el.innerHTML = HISTORYDATA.map(h => {
-    const top = (h.top_picks || []).map(p => `<div class="h-item">${esc(p.sport || '')}: <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} <span style="color:var(--cyan)">(+${esc(String(p.ev || 0))}%)</span></div>`).join('');
+    const top = (h.top_picks || []).map((p, idx) => `<div class="h-item">${esc(p.sport || '')}: <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} <span style="color:var(--cyan)">(+${esc(String(p.ev || 0))}%)</span> <button class="btn-share" style="padding:2px 6px;margin-left:6px" onclick="shareHistoryPick(${JSON.stringify(h.ts)},${idx})">Share</button></div>`).join('');
     const plan = normalizePlan(h.plan || 'free');
     return `<div class="h-card">
       <div class="h-top"><span class="h-time">${fmtTs(h.ts)}</span><span class="h-pill ${plan}">${planLabel(plan)}</span></div>
@@ -1117,6 +1189,24 @@ function renderHistory() {
       <div class="h-list">${top || '<div class="h-item">No picks captured in this scan.</div>'}</div>
     </div>`;
   }).join('');
+}
+
+async function shareHistoryPick(ts, idx) {
+  const row = HISTORYDATA.find(h => Number(h.ts) === Number(ts));
+  const p = row?.top_picks?.[Number(idx)];
+  if (!p) return;
+  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets Ai`;
+  const url = window.location.href.split('?')[0];
+  try {
+    if (navigator.share) {
+      await navigator.share({title: 'Algobets Ai Pick', text, url});
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      showToast('Pick copied to clipboard');
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 async function loadHistory() {
@@ -1129,6 +1219,99 @@ async function loadHistory() {
     HISTORYDATA = [];
   }
   renderHistory();
+}
+
+function buildShareTextFromPick(p, mode = 'pick') {
+  const tag = mode === 'win' ? 'WIN ✅' : 'Pick 🎯';
+  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets Ai`;
+}
+
+async function sharePick(id, mode = 'pick') {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  const text = buildShareTextFromPick(p, mode);
+  const url = window.location.href.split('?')[0];
+  try {
+    if (navigator.share) {
+      await navigator.share({title: 'Algobets Ai Pick', text, url});
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      showToast('Pick copied to clipboard');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function postPickToCommunity(id, mode = 'pick') {
+  if (!ensureRegisteredUser()) return;
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  try {
+    await backendPost('/api/community/posts', {
+      mode,
+      text: mode === 'win' ? `Cashed this edge.` : `Sharing this edge.`,
+      bet: p.bet,
+      game: p.game,
+      odds: p.odds,
+      ev: p.ev,
+      sport: p.sport,
+    });
+    showToast(mode === 'win' ? 'Posted winning pick' : 'Posted to community');
+    if (currentTab === 'community') loadCommunityFeed();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not post right now');
+  }
+}
+
+function renderCommunityFeed() {
+  const el = document.getElementById('community-feed');
+  if (!el) return;
+  if (!COMMUNITYDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">No posts yet</div><div class="empty-sub">Be the first to share a pick.</div></div>`;
+    return;
+  }
+  el.innerHTML = COMMUNITYDATA.map(p => `
+    <div class="cpost">
+      <div class="c-top">
+        <div><div class="c-user">${esc(p.user || 'anon')}</div><div class="c-time">${fmtTs(p.ts)}</div></div>
+        <div class="c-mode ${p.mode === 'win' ? 'win' : 'pick'}">${p.mode === 'win' ? 'WIN' : 'PICK'}</div>
+      </div>
+      <div class="c-text">${esc(p.text || '')}</div>
+      <div class="c-text"><strong style="color:var(--text)">${esc(p.bet || '—')}</strong> ${esc(p.odds || '')} · ${esc(p.game || '')}${p.ev !== null && p.ev !== undefined ? ` · +${esc(String(p.ev))}% EV` : ''}</div>
+    </div>
+  `).join('');
+}
+
+async function loadCommunityFeed() {
+  try {
+    const res = await backendGet('/api/community/posts?limit=50');
+    COMMUNITYDATA = Array.isArray(res.posts) ? res.posts : [];
+  } catch (err) {
+    console.error(err);
+    COMMUNITYDATA = [];
+  }
+  renderCommunityFeed();
+}
+
+async function createCommunityPost(mode = 'pick') {
+  if (!ensureRegisteredUser()) return;
+  const inp = document.getElementById('community-text');
+  const text = String(inp?.value || '').trim();
+  if (!text) {
+    showToast('Write something first');
+    return;
+  }
+  try {
+    await backendPost('/api/community/posts', {mode, text});
+    if (inp) inp.value = '';
+    showToast(mode === 'win' ? 'Win post published' : 'Pick post published');
+    loadCommunityFeed();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not publish post');
+  }
 }
 
 async function loadReferralStatus() {
@@ -1722,6 +1905,8 @@ function renderPicks() {
   <div class="pick-actions">
     <button class="btn-how" onclick="showAction(${p.id})">👉 How to bet this</button>
     <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
+    <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
+    <button class="btn-win" onclick="postPickToCommunity(${p.id},'win')">Post Win</button>
     <button class="explain-toggle" onclick="toggleExplain(${p.id})" id="etgl-${p.id}">${mode === 'simple' ? '▲ Less' : '▼ Why?'}</button>
   </div>
 </div>`;
@@ -1900,7 +2085,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','history','profile'];
+const ALL_TABS = ['picks','ev','arb','parlay','boost','perf','history','community','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -1912,6 +2097,7 @@ function go(name) {
   });
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'history') loadHistory();
+  if (name === 'community') loadCommunityFeed();
   if (name === 'profile') {
     loadReferralStatus();
     loadAlertSubscriptions();
