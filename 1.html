@@ -422,10 +422,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .mnav-btn.vip-nav svg{opacity:.95;color:var(--amber)}
 .mnav-label{font-size:10px;font-weight:800;line-height:1;margin-top:1px}
 @media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
-.mnav-vip-wrap,.mnav-more-wrap{position:relative}
-.mnav-vip-panel,.mnav-more-panel{position:absolute;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
+.mnav-premium-wrap,.mnav-vip-wrap,.mnav-more-wrap{position:relative;min-width:0;display:flex}
+.mnav-premium-wrap>.mnav-btn,.mnav-vip-wrap>.mnav-btn,.mnav-more-wrap>.mnav-btn{width:100%}
+.mnav-premium-panel,.mnav-vip-panel,.mnav-more-panel{position:absolute;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
+.mnav-premium-panel{left:50%;transform:translateX(-50%)}
 .mnav-vip-panel{left:50%;transform:translateX(-50%)}
-.mnav-vip-panel.on,.mnav-more-panel.on{display:block}
+.mnav-premium-panel.on,.mnav-vip-panel.on,.mnav-more-panel.on{display:block}
 .mnav-more-panel{right:4px}
 .mnav-more-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);padding:8px;border-radius:7px;cursor:pointer;text-align:left}
 .mnav-more-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
@@ -1492,10 +1494,19 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
   </button>
-  <button class="mnav-btn" id="mn-premium" onclick="go('premium')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
-    <span class="mnav-label">Premium</span>
-  </button>
+  <div class="mnav-premium-wrap">
+    <button class="mnav-btn" id="mn-premium" onclick="toggleMobilePremium(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+      <span class="mnav-label">Premium</span>
+    </button>
+    <div class="mnav-premium-panel" id="mnav-premium-panel">
+      <button class="mnav-more-item" onclick="go('premium')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Premium Home</button>
+      <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props</button>
+      <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
+      <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
+      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M7 12h10M10 17h4'/></svg>Fades</button>
+    </div>
+  </div>
   <div class="mnav-vip-wrap">
     <button class="mnav-btn vip-nav" id="mn-vip" onclick="toggleMobileVip(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
@@ -1526,11 +1537,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </button>
     <div class="mnav-more-panel" id="mnav-more-panel">
       <button class="mnav-more-item" onclick="go('more')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='5' r='1.5'/><circle cx='12' cy='12' r='1.5'/><circle cx='12' cy='19' r='1.5'/></svg>More Hub</button>
-      <div class="mnav-more-sec">Premium</div>
-      <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props</button>
-      <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
-      <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
-      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M7 12h10M10 17h4'/></svg>Fades</button>
       <div class="mnav-more-sec">Advanced</div>
       <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
       <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
@@ -5176,10 +5182,15 @@ function closeModal(e) {
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
+  if (panel) panel.classList.remove('on');
+}
+
+function closeMobilePremium() {
+  const panel = document.getElementById('mnav-premium-panel');
   if (panel) panel.classList.remove('on');
 }
 
@@ -5190,14 +5201,25 @@ function closeMobileVip() {
 
 function toggleMobileMore(e) {
   if (e) e.stopPropagation();
+  closeMobilePremium();
   closeMobileVip();
   const panel = document.getElementById('mnav-more-panel');
   if (!panel) return;
   panel.classList.toggle('on');
 }
 
+function toggleMobilePremium(e) {
+  if (e) e.stopPropagation();
+  closeMobileMore();
+  closeMobileVip();
+  const panel = document.getElementById('mnav-premium-panel');
+  if (!panel) return;
+  panel.classList.toggle('on');
+}
+
 function toggleMobileVip(e) {
   if (e) e.stopPropagation();
+  closeMobilePremium();
   closeMobileMore();
   const panel = document.getElementById('mnav-vip-panel');
   if (!panel) return;
@@ -5219,6 +5241,7 @@ function go(name) {
     if (growthNudges.fadeLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
   }
   currentTab = name;
+  closeMobilePremium();
   closeMobileMore();
   closeMobileVip();
   ALL_TABS.forEach(t => {
@@ -5228,6 +5251,8 @@ function go(name) {
   });
   const vipBtn = document.getElementById('mn-vip');
   if (vipBtn) vipBtn.classList.toggle('active', name === 'vip' || name.startsWith('vip-'));
+  const premiumBtn = document.getElementById('mn-premium');
+  if (premiumBtn) premiumBtn.classList.toggle('active', name === 'premium' || ['props','ev','steam','fades'].includes(name));
   const moreBtn = document.getElementById('mn-more');
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
@@ -5314,11 +5339,14 @@ function bindUiAccessibility() {
       if (auth && auth.classList.contains('on')) auth.classList.remove('on');
       const nudge = document.getElementById('auth-nudge-ov');
       if (nudge && nudge.classList.contains('on')) nudge.classList.remove('on');
+      closeMobilePremium();
       closeMobileMore();
       closeMobileVip();
     }
   });
   document.addEventListener('click', e => {
+    const premiumWrap = document.querySelector('.mnav-premium-wrap');
+    if (premiumWrap && !premiumWrap.contains(e.target)) closeMobilePremium();
     const moreWrap = document.querySelector('.mnav-more-wrap');
     if (moreWrap && !moreWrap.contains(e.target)) closeMobileMore();
     const vipWrap = document.querySelector('.mnav-vip-wrap');
