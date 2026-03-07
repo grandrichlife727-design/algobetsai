@@ -298,6 +298,23 @@ html, body {
 .agent-tbl{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .agent-row{display:grid;grid-template-columns:1fr 100px 60px;gap:0;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center;min-width:300px;}
 .agent-row:last-child{border-bottom:none}
+.wf-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media(min-width:980px){.wf-grid{grid-template-columns:1fr 1fr}}
+.wf-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.wf-title{font-size:12px;font-weight:800;margin-bottom:8px}
+.wf-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.wf-controls{display:flex;gap:6px}
+.wf-chip{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:999px;padding:4px 9px;font-size:10px;color:var(--sub);cursor:pointer;font-family:var(--mono)}
+.wf-chip.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
+.wf-table{display:grid;grid-template-columns:1fr 58px 58px 58px;gap:0;font-size:11px}
+.wf-head{color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-size:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.wf-cell{padding:7px 0;border-bottom:1px solid var(--border)}
+.wf-cell:last-child,.wf-cell.end{border-bottom:none}
+.wf-name{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wf-spark{width:52px;height:14px;opacity:.9;flex-shrink:0}
+.trend-up{color:var(--green)}
+.trend-dn{color:var(--red)}
+.trend-fl{color:var(--muted)}
 .agent-hdr{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:7px 14px}
 
 /* HOW-TO MODAL */
@@ -757,6 +774,27 @@ html, body {
         <div class="agent-row"><span>Steam Moves</span><span style="color:var(--amber);font-family:var(--mono);font-weight:700">59.3%</span><span style="color:var(--amber);font-family:var(--mono)">+8.0</span></div>
         <div class="agent-row"><span>Public Fades</span><span style="color:var(--sub);font-family:var(--mono);font-weight:700">57.2%</span><span style="color:var(--sub);font-family:var(--mono)">+5.0</span></div>
       </div>
+      <div class="wf-grid">
+        <div class="wf-card">
+          <div class="wf-top">
+            <div class="wf-title" style="margin-bottom:0">Walk-Forward (Weekly)</div>
+            <div class="wf-controls">
+              <button class="wf-chip" id="wf-4" onclick="setWalkWeeks(4)">4w</button>
+              <button class="wf-chip active" id="wf-12" onclick="setWalkWeeks(12)">12w</button>
+              <button class="wf-chip" id="wf-26" onclick="setWalkWeeks(26)">26w</button>
+            </div>
+          </div>
+          <div id="wf-weekly"></div>
+        </div>
+        <div class="wf-card">
+          <div class="wf-title">By Sport</div>
+          <div id="wf-sport"></div>
+        </div>
+      </div>
+      <div class="wf-card" style="margin-top:10px">
+        <div class="wf-title">By Market</div>
+        <div id="wf-market"></div>
+      </div>
     </div>
 
     <div id="v-history" style="display:none">
@@ -1173,6 +1211,8 @@ let AFFILIATE = null;
 let NEWSIMPACT = [];
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
+let WALKDATA = null;
+let WALK_WEEKS = 12;
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 
@@ -2592,7 +2632,7 @@ function setScanCooldown(seconds) {
 // ─── NORMALIZERS ──────────────────────────────────────────────────────────────
 function normalizePick(p, idx) {
   const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
-  const conf = parseFloat(p.confidence || 50);
+  const conf = parseFloat(p.confidence_calibrated || p.confidence || 50);
   const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
   const betText = esc(p.bet || '—');
   const gameText = esc(p.game || `${p.awayTeam || ''} vs ${p.homeTeam || ''}`);
@@ -2605,6 +2645,7 @@ function normalizePick(p, idx) {
   if (p.rlm)      chips.push({t:'rlm',   l:'RLM'});
   if (p.elo_edge) chips.push({t:'elo',   l:`ELO +${p.elo_edge}%`});
   if (p.soft_book_lag) chips.push({t:'ev', l:`LAG`});
+  if (p.clv_expectation) chips.push({t:'clv', l:`CLV Exp +${Number(p.clv_expectation).toFixed(1)}%`});
   if (!chips.length)   chips.push({t:'ev', l:`+EV ${ev}%`});
 
   const mb = p.model_breakdown || {};
@@ -2628,7 +2669,9 @@ function normalizePick(p, idx) {
     bet:  betText,
     odds: oddsText,
     ev,
-    conf: Math.round(conf * 100),
+    conf: Math.round(conf),
+    clvExp: Number(p.clv_expectation || 0),
+    mScore: Number(p.model_v2?.ensemble_score || p.agent_score || 0),
     book: bookText,
     bookRaw: bookLabel(p.best_book || ''),
     sh:   Math.round(p.sharpPct  || 0),
@@ -3072,7 +3115,7 @@ function renderPicks() {
         <span class="pick-odds">${p.odds}</span>
         ${bookLink(p.bookRaw)}
       </div>
-      <div class="pick-stake">Suggested stake: <strong>${suggestedStakeText(Number(p.ev || 0))}</strong></div>
+      <div class="pick-stake">Suggested stake: <strong>${suggestedStakeText(Number(p.ev || 0))}</strong> · Conf: <strong>${Math.max(50, Math.min(95, Number(p.conf || 50)))}%</strong> · CLV Exp: <strong>${Number(p.clvExp || 0).toFixed(1)}%</strong></div>
       <div class="chips">${chips}</div>
       ${bars}
     </div>
@@ -3260,6 +3303,10 @@ function renderPerf() {
   if (rangeEl && rows.length > 1) {
     rangeEl.textContent = `${rows[0].month} – ${rows[rows.length - 1].month}`;
   }
+  if (rangeEl && WALKDATA?.metrics?.weeks?.length) {
+    const wk = WALKDATA.metrics.weeks[WALKDATA.metrics.weeks.length - 1];
+    if (wk) rangeEl.textContent = `${rangeEl.textContent} · Last week: ${Number(wk.win_pct || 0).toFixed(1)}% WR / ${Number(wk.roi_pct || 0).toFixed(1)}% ROI`;
+  }
   if (barsEl) {
     barsEl.innerHTML = rows.map((r, i) => {
       const v = Number(r.units || 0);
@@ -3271,6 +3318,85 @@ function renderPerf() {
   if (labelsEl) {
     labelsEl.innerHTML = rows.map(r => `<span class="bar-lbl">${esc(String(r.month || '-').slice(5))}</span>`).join('');
   }
+
+  const wfWeekly = document.getElementById('wf-weekly');
+  const wfSport = document.getElementById('wf-sport');
+  const wfMarket = document.getElementById('wf-market');
+  const wf4 = document.getElementById('wf-4');
+  const wf12 = document.getElementById('wf-12');
+  const wf26 = document.getElementById('wf-26');
+  if (wf4) wf4.classList.toggle('active', WALK_WEEKS === 4);
+  if (wf12) wf12.classList.toggle('active', WALK_WEEKS === 12);
+  if (wf26) wf26.classList.toggle('active', WALK_WEEKS === 26);
+  const wkRows = WALKDATA?.metrics?.weeks || [];
+  const bySport = WALKDATA?.metrics?.by_sport || {};
+  const byMarket = WALKDATA?.metrics?.by_market || {};
+  const trendGlyph = t => t > 0 ? `<span class="trend-up">↑</span>` : t < 0 ? `<span class="trend-dn">↓</span>` : `<span class="trend-fl">→</span>`;
+  const sparkline = (vals = [], color = 'var(--cyan)') => {
+    const arr = (Array.isArray(vals) ? vals : []).map(v => Number(v || 0));
+    if (!arr.length) return '';
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
+    const span = Math.max(1e-6, max - min);
+    const W = 52, H = 14, pad = 1;
+    const pts = arr.map((v, i) => {
+      const x = pad + (i * (W - pad * 2)) / Math.max(1, arr.length - 1);
+      const y = H - pad - ((v - min) / span) * (H - pad * 2);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+    const tip = arr.map(v => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`).join(' → ');
+    return `<svg class="wf-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" title="ROI trend: ${esc(tip)}"><polyline fill="none" stroke="${color}" stroke-width="1.8" points="${pts}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  const tableWrap = (rows, nameFn) => {
+    if (!rows.length) return `<div class="empty"><div class="empty-sub">No walk-forward data yet.</div></div>`;
+    return `<div class="wf-table">
+      <div class="wf-head">Group</div><div class="wf-head">Win%</div><div class="wf-head">ROI%</div><div class="wf-head">Units</div>
+      ${rows.map((r, i) => `
+        <div class="wf-cell ${i===rows.length-1?'end':''}"><div class="wf-name"><span>${esc(nameFn(r))}</span>${sparkline(r.spark || [Number(r.roi_pct || 0)], Number(r.roi_pct || 0) >= 0 ? 'var(--cyan)' : 'var(--red)')}</div></div>
+        <div class="wf-cell ${i===rows.length-1?'end':''}" style="color:var(--green)">${Number(r.win_pct||0).toFixed(1)} ${trendGlyph(Number(r.trend_win||0))}</div>
+        <div class="wf-cell ${i===rows.length-1?'end':''}" style="color:${Number(r.roi_pct||0)>=0?'var(--cyan)':'var(--red)'}">${Number(r.roi_pct||0).toFixed(1)} ${trendGlyph(Number(r.trend_roi||0))}</div>
+        <div class="wf-cell ${i===rows.length-1?'end':''}" style="font-family:var(--mono)">${Number(r.units||0).toFixed(1)}u</div>
+      `).join('')}
+    </div>`;
+  };
+  if (wfWeekly) {
+    const recent = wkRows.slice(-8).map((w, i, arr) => {
+      const prev = i > 0 ? arr[i - 1] : null;
+      return {
+        ...w,
+        group: `${String(w.week_start||'').slice(5)}→${String(w.week_end||'').slice(5)}`,
+        trend_win: prev ? Number(w.win_pct || 0) - Number(prev.win_pct || 0) : 0,
+        trend_roi: prev ? Number(w.roi_pct || 0) - Number(prev.roi_pct || 0) : 0,
+        spark: arr.slice(Math.max(0, i - 3), i + 1).map(x => Number(x.roi_pct || 0)),
+      };
+    });
+    wfWeekly.innerHTML = tableWrap(recent, r => r.group || 'week');
+  }
+  if (wfSport) {
+    const rows = Object.keys(bySport).map(k => ({group: k, ...bySport[k], trend_win: Number(bySport[k]?.win_pct || 0) - 50, trend_roi: Number(bySport[k]?.roi_pct || 0), spark: [0, Number(bySport[k]?.roi_pct || 0)]}))
+      .sort((a,b) => Number(b.roi_pct||0)-Number(a.roi_pct||0))
+      .slice(0,8);
+    wfSport.innerHTML = tableWrap(rows, r => r.group || 'sport');
+  }
+  if (wfMarket) {
+    const rows = Object.keys(byMarket).map(k => ({group: k, ...byMarket[k], trend_win: Number(byMarket[k]?.win_pct || 0) - 50, trend_roi: Number(byMarket[k]?.roi_pct || 0), spark: [0, Number(byMarket[k]?.roi_pct || 0)]}))
+      .sort((a,b) => Number(b.roi_pct||0)-Number(a.roi_pct||0));
+    wfMarket.innerHTML = tableWrap(rows, r => r.group || 'market');
+  }
+}
+
+async function setWalkWeeks(weeks) {
+  WALK_WEEKS = [4, 12, 26].includes(Number(weeks)) ? Number(weeks) : 12;
+  await loadWalkforward();
+  renderPerf();
+}
+
+async function loadWalkforward() {
+  try {
+    WALKDATA = await backendGet(`/api/model/walkforward?weeks=${WALK_WEEKS}`);
+  } catch (err) {
+    WALKDATA = null;
+  }
 }
 
 async function loadPerformance() {
@@ -3281,6 +3407,7 @@ async function loadPerformance() {
   }
   try {
     PERFDATA = await backendGet('/api/performance');
+    await loadWalkforward();
     loadCLV();
   } catch (err) {
     PERFDATA = {overall: {monthly_units: []}, streak: {current_days: 0}};
