@@ -1105,6 +1105,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">💬</span>VIP Discord</div>
           <div class="growth-sub" id="vip-discord-status">Checking access...</div>
+          <div class="rf-row">
+            <input class="auth-in" id="vip-discord-id" type="text" inputmode="numeric" placeholder="Discord User ID (Developer Mode copy)">
+          </div>
+          <div class="rf-row">
+            <button class="pf-btn" onclick="linkDiscordAccount()">Link Discord</button>
+            <button class="pf-btn" onclick="loadDiscordLink(true)">Refresh Link</button>
+          </div>
+          <div class="growth-note" id="vip-discord-link-note">Link your Discord ID once. Roles sync automatically from Stripe plan changes.</div>
           <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
           <div class="growth-note">Private VIP channel for alert drops, card recaps, and live discussion.</div>
         </div>
@@ -1823,6 +1831,8 @@ let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
 let VIP_DISCORD_URL = '';
+let DISCORD_LINK = {discord_user_id: ''};
+let DISCORD_ROLE_SYNC_ENABLED = false;
 const GOOGLE_CLIENT_ID_FALLBACK = '157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com';
 let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
@@ -2704,11 +2714,57 @@ async function loadPublicConfig() {
     const invite = String(res?.vip_discord_url || '').trim();
     VIP_DISCORD_URL = invite;
     GOOGLE_CLIENT_ID = String(res?.google_client_id || '').trim() || GOOGLE_CLIENT_ID_FALLBACK;
+    DISCORD_ROLE_SYNC_ENABLED = !!res?.discord_role_sync_enabled;
     const authModalOpen = document.getElementById('auth-ov')?.classList.contains('on');
     if (authModalOpen) renderGoogleAuthButton();
   } catch (_) {
     VIP_DISCORD_URL = '';
     GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
+    DISCORD_ROLE_SYNC_ENABLED = false;
+  }
+}
+
+async function loadDiscordLink(force = false) {
+  if (!force && DISCORD_LINK?.discord_user_id) return;
+  if (!AUTH_TOKEN) {
+    try { await ensureAuthSession(); } catch (_) {}
+  }
+  const input = document.getElementById('vip-discord-id');
+  const note = document.getElementById('vip-discord-link-note');
+  try {
+    const res = await backendGet('/api/discord/link');
+    DISCORD_LINK = {discord_user_id: String(res?.discord_user_id || '').trim()};
+    if (input) input.value = DISCORD_LINK.discord_user_id || '';
+    if (note) {
+      note.textContent = DISCORD_LINK.discord_user_id
+        ? `Linked Discord ID: ${DISCORD_LINK.discord_user_id}`
+        : 'Link your Discord ID once. Roles sync automatically from Stripe plan changes.';
+    }
+  } catch (_) {
+    if (note) note.textContent = 'Could not load Discord link.';
+  }
+}
+
+async function linkDiscordAccount() {
+  const input = document.getElementById('vip-discord-id');
+  const note = document.getElementById('vip-discord-link-note');
+  const raw = String(input?.value || '').trim();
+  if (!/^\d{15,22}$/.test(raw)) {
+    showToast('Enter a valid Discord User ID');
+    return;
+  }
+  try {
+    const res = await backendPost('/api/discord/link', {discord_user_id: raw});
+    DISCORD_LINK = {discord_user_id: String(res?.discord_user_id || raw).trim()};
+    if (input) input.value = DISCORD_LINK.discord_user_id;
+    const syncOk = !!res?.role_sync?.ok;
+    if (note) note.textContent = syncOk
+      ? `Linked and synced for ${planLabel(res?.plan || currentPlan)}.`
+      : `Linked. ${DISCORD_ROLE_SYNC_ENABLED ? 'Role sync pending.' : 'Role sync not configured in backend env yet.'}`;
+    showToast(syncOk ? 'Discord linked and synced' : 'Discord linked');
+  } catch (err) {
+    if (note) note.textContent = 'Could not link Discord ID.';
+    showToast('Could not link Discord');
   }
 }
 
@@ -3004,6 +3060,8 @@ function renderVipTools() {
   const podEl = document.getElementById('vip-pod');
   const podBestEl = document.getElementById('vip-pod-best');
   const discordEl = document.getElementById('vip-discord-status');
+  const discordInputEl = document.getElementById('vip-discord-id');
+  const discordNoteEl = document.getElementById('vip-discord-link-note');
   const clvLabEl = document.getElementById('vip-clv-lab');
   const depthEl = document.getElementById('vip-depth');
   const watchEl = document.getElementById('vip-watchlist');
@@ -3026,6 +3084,8 @@ function renderVipTools() {
       podBestEl.innerHTML = `Top-rated play is locked for VIP. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Unlock VIP</button>`;
     }
     if (discordEl) discordEl.textContent = 'VIP Discord is locked for VIP members.';
+    if (discordInputEl) discordInputEl.value = '';
+    if (discordNoteEl) discordNoteEl.textContent = 'Upgrade to VIP to unlock Discord role access.';
     if (clvLabEl) clvLabEl.textContent = 'CLV Lab is locked for VIP.';
     if (depthEl) depthEl.textContent = 'Market depth is locked for VIP.';
     if (watchEl) watchEl.value = '';
@@ -3065,7 +3125,22 @@ function renderVipTools() {
       podBestEl.innerHTML = `<strong>${esc(pod.bet)}</strong> ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% EV · ${Number(pod.conf || 0).toFixed(0)}% conf`;
     }
   }
-  if (discordEl) discordEl.textContent = 'Private VIP Discord is active. Tap "Join Discord" to open invite.';
+  if (discordEl) {
+    if (!DISCORD_ROLE_SYNC_ENABLED) {
+      discordEl.textContent = 'Private VIP Discord is active. Role sync is not enabled in backend yet.';
+    } else if (DISCORD_LINK?.discord_user_id) {
+      discordEl.textContent = `Private VIP Discord is active. Linked ID: ${DISCORD_LINK.discord_user_id}.`;
+    } else {
+      discordEl.textContent = 'Private VIP Discord is active. Link your Discord ID for automatic VIP role access.';
+    }
+  }
+  if (discordInputEl) discordInputEl.value = String(DISCORD_LINK?.discord_user_id || '');
+  if (discordNoteEl && !DISCORD_LINK?.discord_user_id && DISCORD_ROLE_SYNC_ENABLED) {
+    discordNoteEl.textContent = 'Link your Discord ID once. Roles sync automatically from Stripe plan changes.';
+  }
+  if (DISCORD_ROLE_SYNC_ENABLED && !DISCORD_LINK?.discord_user_id) {
+    loadDiscordLink();
+  }
 
   if (timingEl) {
     if (!PICKS.length) {
@@ -5772,6 +5847,7 @@ function go(name) {
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
+  if (name === 'vip-discord') loadDiscordLink(true);
   if (name === 'vip-execution') refreshVipLivePlays(true);
   if (name === 'profile') {
     loadReferralStatus();

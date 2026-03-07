@@ -66,6 +66,10 @@ ADMIN_API_TOKEN = os.getenv("ADMIN_API_TOKEN", "").strip()
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/New_York").strip() or "America/New_York"
 VIP_DISCORD_URL = os.getenv("VIP_DISCORD_URL", "").strip()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "").strip()
+DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID", "").strip()
+DISCORD_PREMIUM_ROLE_ID = os.getenv("DISCORD_PREMIUM_ROLE_ID", "").strip()
+DISCORD_VIP_ROLE_ID = os.getenv("DISCORD_VIP_ROLE_ID", "").strip()
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -2054,6 +2058,10 @@ class ProfileSettingsRequest(BaseModel):
     bankroll_mode: Optional[str] = "standard"
 
 
+class DiscordLinkRequest(BaseModel):
+    discord_user_id: str
+
+
 class BankrollPlanRequest(BaseModel):
     bankroll: float
     risk_mode: Optional[str] = "standard"
@@ -2202,6 +2210,66 @@ def _invalidate_plan_cache(user_id: str):
     _plan_cache.pop(user_id, None)
 
 
+def _normalize_discord_user_id(value: str) -> str:
+    uid = str(value or "").strip()
+    return uid if re.match(r"^\d{15,22}$", uid) else ""
+
+
+def _discord_config_ready() -> bool:
+    return bool(DISCORD_BOT_TOKEN and DISCORD_GUILD_ID and (DISCORD_PREMIUM_ROLE_ID or DISCORD_VIP_ROLE_ID))
+
+
+def _role_set_for_plan(plan: str) -> set[str]:
+    p = normalize_plan_name(plan)
+    premium = _normalize_discord_user_id(DISCORD_PREMIUM_ROLE_ID)
+    vip = _normalize_discord_user_id(DISCORD_VIP_ROLE_ID)
+    if p == PLAN_VIP:
+        return {r for r in (premium, vip) if r}
+    if p == PLAN_PREMIUM:
+        return {premium} if premium else set()
+    return set()
+
+
+async def _discord_member_role_apply(discord_user_id: str, role_id: str, should_have: bool):
+    method = "PUT" if should_have else "DELETE"
+    endpoint = f"https://discord.com/api/v10/guilds/{DISCORD_GUILD_ID}/members/{discord_user_id}/roles/{role_id}"
+    headers = {
+        "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    async with httpx.AsyncClient(timeout=12.0) as client:
+        res = await client.request(method, endpoint, headers=headers)
+    if res.status_code in {200, 201, 204}:
+        return {"ok": True}
+    return {"ok": False, "status_code": res.status_code, "body": (res.text or "")[:300]}
+
+
+async def _sync_discord_roles_for_user(user_id: str, plan: str):
+    uid = _normalize_user_id(user_id)
+    if not uid:
+        return {"ok": False, "reason": "missing_user"}
+    rec = _ensure_growth_user(uid)
+    identity = rec.get("profile_identity", {}) if isinstance(rec, dict) else {}
+    discord_user_id = _normalize_discord_user_id((identity or {}).get("discord_user_id", ""))
+    if not discord_user_id:
+        return {"ok": False, "reason": "discord_not_linked"}
+    if not _discord_config_ready():
+        return {"ok": False, "reason": "discord_not_configured"}
+
+    managed_roles = {r for r in (_normalize_discord_user_id(DISCORD_PREMIUM_ROLE_ID), _normalize_discord_user_id(DISCORD_VIP_ROLE_ID)) if r}
+    target_roles = _role_set_for_plan(plan)
+    applied: list[dict[str, Any]] = []
+    for role_id in managed_roles:
+        should_have = role_id in target_roles
+        out = await _discord_member_role_apply(discord_user_id, role_id, should_have)
+        applied.append({"role_id": role_id, "should_have": should_have, **out})
+    return {
+        "ok": all(bool(x.get("ok")) for x in applied),
+        "discord_user_id": discord_user_id,
+        "applied": applied,
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2234,6 +2302,7 @@ async def public_config():
         "google_client_id": GOOGLE_CLIENT_ID,
         "billing_enabled": BILLING_ENABLED,
         "auth_required": REQUIRE_AUTH_TOKEN,
+        "discord_role_sync_enabled": _discord_config_ready(),
     }
 
 
@@ -3041,6 +3110,7 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
             invoice_status = str(latest_invoice.get("status") or "").strip().lower()
         _set_billing_entitlement(user_id, tier, source="subscription_upgrade")
         _invalidate_plan_cache(user_id)
+        await _sync_discord_roles_for_user(user_id, tier)
         if invoice_url and invoice_status in {"open", "draft", "uncollectible"}:
             return {
                 "checkout_url": invoice_url,
@@ -3158,10 +3228,56 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
     if user_id:
         _set_billing_entitlement(user_id, resolved_plan, source=event_type)
         _invalidate_plan_cache(user_id)
+        discord_sync = await _sync_discord_roles_for_user(user_id, resolved_plan)
+        if not discord_sync.get("ok"):
+            _audit_security_event(
+                request,
+                "discord.role_sync_nonblocking",
+                str(discord_sync.get("reason") or "partial_failure"),
+                user_id=user_id,
+            )
     _audit_security_event(request, "billing.webhook_processed", event_type, user_id=user_id)
     _save_growth_db()
 
     return {"received": True, "event_type": event_type}
+
+
+@app.get("/api/discord/link")
+async def discord_link_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    identity = rec.get("profile_identity", {}) if isinstance(rec, dict) else {}
+    discord_user_id = _normalize_discord_user_id((identity or {}).get("discord_user_id", ""))
+    return {
+        "discord_user_id": discord_user_id or None,
+        "discord_role_sync_enabled": _discord_config_ready(),
+    }
+
+
+@app.post("/api/discord/link")
+@limiter.limit("40/hour")
+async def discord_link_set(body: DiscordLinkRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    discord_user_id = _normalize_discord_user_id(body.discord_user_id)
+    if not discord_user_id:
+        raise HTTPException(status_code=400, detail="Valid Discord user id is required.")
+    rec = _ensure_growth_user(user_id)
+    identity = rec.setdefault("profile_identity", {})
+    identity["discord_user_id"] = discord_user_id
+    identity["updated_at"] = int(time.time())
+    _save_growth_db()
+    plan = await _get_verified_plan(request)
+    sync = await _sync_discord_roles_for_user(user_id, plan)
+    return {
+        "ok": True,
+        "discord_user_id": discord_user_id,
+        "plan": normalize_plan_name(plan),
+        "role_sync": sync,
+    }
 
 
 @app.get("/api/ev-finder")
