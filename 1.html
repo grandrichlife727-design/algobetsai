@@ -1049,6 +1049,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
           <div class="growth-note">Use this block to decide bet now, wait, or pass.</div>
         </div>
+        <div class="growth-card">
+          <div class="growth-title vip-title"><span class="vip-ico">📡</span>VIP Live Plays</div>
+          <div class="growth-sub" id="vip-live-note">Loading live algorithm...</div>
+          <div class="picks-list" id="vip-live-list"></div>
+          <div class="rf-row"><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
+          <div class="growth-note">Budget guard: capped games + throttled refresh + cache fallback.</div>
+        </div>
       </div>
     </div>
 
@@ -1680,6 +1687,7 @@ const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
+const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
@@ -1703,6 +1711,10 @@ const AFFILIATE_EPC_EST = {
   espnbet: 50,
   hardrock: 45,
 };
+const VIP_LIVE_POLL_MS = 90000;
+const VIP_LIVE_CACHE_MS = 90000;
+const VIP_LIVE_MAX_GAMES = 8;
+const VIP_LIVE_DAILY_CALL_CAP = 180;
 
 function makeUserId() {
   return `usr_${Math.random().toString(36).slice(2, 14)}`;
@@ -1795,6 +1807,8 @@ let quotaExhausted = false;
 let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
+let VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
+let vipLiveTicker = null;
 let CLVDATA = null;
 let AGENTWEIGHTS = null;
 let ALERTPACKS = null;
@@ -2201,6 +2215,109 @@ async function loadLive() {
     if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Live mode unavailable</div></div>`;
   }
   renderLive();
+}
+
+function loadVipLiveState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(VIP_LIVE_STATE_KEY) || '{}');
+    VIP_LIVE_STATE = {
+      day: String(raw.day || ''),
+      calls: Number(raw.calls || 0),
+      last_fetch_ts: Number(raw.last_fetch_ts || 0),
+      cached: Array.isArray(raw.cached) ? raw.cached : [],
+    };
+  } catch (_) {
+    VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
+  }
+}
+
+function saveVipLiveState() {
+  try { localStorage.setItem(VIP_LIVE_STATE_KEY, JSON.stringify(VIP_LIVE_STATE)); } catch (_) {}
+}
+
+function currentUtcDay() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeVipLiveRows(rows) {
+  return (Array.isArray(rows) ? rows : []).slice(0, VIP_LIVE_MAX_GAMES).map(r => {
+    const home = Number(r.home_ml || 0);
+    const away = Number(r.away_ml || 0);
+    const spread = Math.abs(home - away);
+    const mins = Number(r.minutes_since_start || 0);
+    const liveWindowScore = mins >= -15 && mins <= 35 ? 18 : mins > 35 ? 10 : 6;
+    const priceScore = Math.max(4, 22 - Math.min(18, spread / 10));
+    const momentum = mins >= 0 ? 12 : 7;
+    const score = Math.max(40, Math.min(95, Math.round(52 + liveWindowScore + priceScore + momentum)));
+    const timing = mins >= 0 ? (mins <= 10 ? 'Now' : mins <= 35 ? 'Monitor' : 'Late window') : (Math.abs(mins) <= 10 ? 'Pre-start' : 'Watch');
+    return {...r, vip_score: score, vip_timing: timing};
+  }).sort((a, b) => Number(b.vip_score || 0) - Number(a.vip_score || 0));
+}
+
+function renderVipLivePlays() {
+  const listEl = document.getElementById('vip-live-list');
+  const noteEl = document.getElementById('vip-live-note');
+  if (!listEl || !noteEl) return;
+  if (!canUseVip()) {
+    noteEl.innerHTML = `VIP-only live algorithm. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
+    listEl.innerHTML = '';
+    return;
+  }
+  const rows = normalizeVipLiveRows(VIP_LIVE_STATE.cached);
+  const day = currentUtcDay();
+  if (VIP_LIVE_STATE.day !== day) {
+    VIP_LIVE_STATE.day = day;
+    VIP_LIVE_STATE.calls = 0;
+    saveVipLiveState();
+  }
+  const callsLeft = Math.max(0, VIP_LIVE_DAILY_CALL_CAP - Number(VIP_LIVE_STATE.calls || 0));
+  noteEl.textContent = rows.length
+    ? `Live algorithm active · ${rows.length} games · ${callsLeft} calls left today`
+    : `No live windows yet · ${callsLeft} calls left today`;
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><div class="empty-title">No live plays right now</div><div class="empty-sub">Live plays appear near start and during active windows.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(r => `
+    <div class="live-card">
+      <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
+      <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
+      <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+    </div>
+  `).join('');
+}
+
+async function refreshVipLivePlays(force = false) {
+  if (!canUseVip()) return renderVipLivePlays();
+  const day = currentUtcDay();
+  if (VIP_LIVE_STATE.day !== day) {
+    VIP_LIVE_STATE.day = day;
+    VIP_LIVE_STATE.calls = 0;
+  }
+  const now = Date.now();
+  const fresh = (now - Number(VIP_LIVE_STATE.last_fetch_ts || 0)) < VIP_LIVE_CACHE_MS;
+  if (!force && fresh && Array.isArray(VIP_LIVE_STATE.cached) && VIP_LIVE_STATE.cached.length) {
+    return renderVipLivePlays();
+  }
+  if (Number(VIP_LIVE_STATE.calls || 0) >= VIP_LIVE_DAILY_CALL_CAP) {
+    return renderVipLivePlays();
+  }
+  try {
+    const res = await backendGet('/api/live');
+    const live = Array.isArray(res.live) ? res.live.slice(0, VIP_LIVE_MAX_GAMES) : [];
+    VIP_LIVE_STATE.cached = live;
+    VIP_LIVE_STATE.last_fetch_ts = now;
+    VIP_LIVE_STATE.calls = Number(VIP_LIVE_STATE.calls || 0) + 1;
+    saveVipLiveState();
+  } catch (_) {}
+  renderVipLivePlays();
+}
+
+function startVipLiveTicker() {
+  if (vipLiveTicker) return;
+  vipLiveTicker = setInterval(() => {
+    if (currentTab === 'vip-execution') refreshVipLivePlays(false);
+  }, VIP_LIVE_POLL_MS);
 }
 
 async function loadTomorrowGames() {
@@ -2905,6 +3022,7 @@ function renderVipTools() {
     if (steamEl) steamEl.checked = false;
     if (clvAlertEl) clvAlertEl.checked = false;
     if (note) note.textContent = 'VIP alerts are locked until upgrade.';
+    renderVipLivePlays();
     return;
   }
 
@@ -2978,6 +3096,7 @@ function renderVipTools() {
   if (watchEl) watchEl.value = String(VIP_SETTINGS.watchlist || '');
   if (watchNoteEl) watchNoteEl.textContent = VIP_SETTINGS.watchlist ? `Watching: ${VIP_SETTINGS.watchlist}` : 'No watchlist configured.';
   if (note) note.textContent = VIP_SETTINGS.webhook ? 'Webhook connected.' : 'No alert settings saved.';
+  renderVipLivePlays();
 }
 
 async function joinVipWaitlistPrompt(source = 'props_cap') {
@@ -5479,6 +5598,7 @@ function go(name) {
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
+  if (name === 'vip-execution') refreshVipLivePlays(true);
   if (name === 'profile') {
     loadReferralStatus();
     loadAlertSubscriptions();
@@ -5576,6 +5696,7 @@ loadAuthNudgeState();
 loadPickPrefs();
 loadPremiumSettings();
 loadVipSettings();
+loadVipLiveState();
 loadTrialUiState();
 loadProfile();
 loadAffiliateLocalState();
@@ -5611,6 +5732,7 @@ fetchPricing();
 loadTrialStatus();
 doScan();
 startAutoRefresh();
+startVipLiveTicker();
 </script>
 </body>
 </html>
