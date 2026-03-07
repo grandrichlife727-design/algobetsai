@@ -783,8 +783,7 @@ html, body {
     </div>
 
 </div></main>
-</div><nav class="mobile-nav">
-  <div class="mnav-section">Picks</div>
+</div><nav class="mobile-nav" id="mobile-nav">
   <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
@@ -805,31 +804,20 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
     <span class="mnav-label">Fades</span>
   </button>
-  <button class="mnav-btn" id="mn-parlay" onclick="go('parlay')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-    <span class="mnav-label">Parlay</span>
-  </button>
-  <div class="mnav-section">Tools</div>
-  <button class="mnav-btn" id="mn-boost" onclick="go('boost')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    <span class="mnav-label">Boost</span>
-  </button>
-  <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-    <span class="mnav-label">Record</span>
-  </button>
-  <button class="mnav-btn" id="mn-history" onclick="go('history')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
-    <span class="mnav-label">History</span>
-  </button>
-  <button class="mnav-btn" id="mn-community" onclick="go('community')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-    <span class="mnav-label">Social</span>
-  </button>
-  <button class="mnav-btn" id="mn-profile" onclick="go('profile')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
-    <span class="mnav-label">Profile</span>
-  </button>
+  <div class="mnav-more-wrap">
+    <button class="mnav-btn" id="mn-more" onclick="toggleMobileMore(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+      <span class="mnav-label">More</span>
+    </button>
+    <div class="mnav-more-panel" id="mnav-more-panel">
+      <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
+      <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
+      <button class="mnav-more-item" onclick="go('perf')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Record</button>
+      <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
+      <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
+      <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
+    </div>
+  </div>
 </nav>
 
 <div class="overlay" id="act-overlay" onclick="closeModal(event)">
@@ -2453,15 +2441,31 @@ function closeModal(e) {
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['picks','odds','ev','steam','fades','parlay','boost','perf','history','community','profile'];
+const MOBILE_MORE_TABS = ['parlay','boost','perf','history','community','profile'];
+
+function closeMobileMore() {
+  const panel = document.getElementById('mnav-more-panel');
+  if (panel) panel.classList.remove('on');
+}
+
+function toggleMobileMore(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('mnav-more-panel');
+  if (!panel) return;
+  panel.classList.toggle('on');
+}
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
   currentTab = name;
+  closeMobileMore();
   ALL_TABS.forEach(t => {
     const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
+  const moreBtn = document.getElementById('mn-more');
+  if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') renderOdds();
   if (name === 'steam') renderSteam();
