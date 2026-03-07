@@ -115,6 +115,7 @@ html, body {
 .main{display:flex;flex-direction:column;min-height:100vh;min-width:0;width:100%;}
 .content{padding:14px;flex:1;padding-bottom:90px;min-width:0;}
 @media(min-width:901px){.content{padding:20px;padding-bottom:20px}}
+@media(max-width:900px){.content{padding-bottom:240px}}
 
 /* HERO STATS */
 .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
@@ -299,8 +300,9 @@ html, body {
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:8px 0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
-@media(max-width:900px){.mobile-nav{display:flex}}
+  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-height:48vh;overflow-y:auto}
+@media(max-width:900px){.mobile-nav{display:grid}}
+.mnav-section{grid-column:1/-1;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:3px 4px 1px}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
   color:var(--sub);font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
 .mnav-btn.active{color:var(--cyan)}
@@ -775,8 +777,9 @@ html, body {
       </div>
     </div>
 
-  </div></main>
+</div></main>
 </div><nav class="mobile-nav">
+  <div class="mnav-section">Picks</div>
   <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
     <span class="mnav-label">Picks</span>
@@ -796,6 +799,15 @@ html, body {
   <button class="mnav-btn" id="mn-fades" onclick="go('fades')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
     <span class="mnav-label">Fades</span>
+  </button>
+  <button class="mnav-btn" id="mn-parlay" onclick="go('parlay')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+    <span class="mnav-label">Parlay</span>
+  </button>
+  <div class="mnav-section">Tools</div>
+  <button class="mnav-btn" id="mn-boost" onclick="go('boost')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    <span class="mnav-label">Boost</span>
   </button>
   <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
