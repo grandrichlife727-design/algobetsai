@@ -3602,20 +3602,49 @@ async function claimFreeTrial() {
     doScan(true);
   } catch (err) {
     console.error(err);
-    showToast('Trial unavailable');
+    const msg = String(err?.detail || err?.message || '');
+    if (/already claimed/i.test(msg)) showToast('Trial already used on this account');
+    else if (/paid plan already active/i.test(msg)) showToast('Premium already active');
+    else if (/retry in/i.test(msg)) showToast(msg);
+    else showToast('Trial unavailable');
   }
 }
 
 function updateTrialCard() {
   const card = document.getElementById('trial-card');
   const copy = document.getElementById('trial-copy');
+  const claimBtn = card ? card.querySelector('.trial-claim') : null;
+  const dismissBtn = card ? card.querySelector('.trial-dismiss') : null;
   if (!card || !copy) return;
-  const show = hasScannedAtLeastOnce && normalizePlan(currentPlan) === 'free' && !!trialStatusState.eligible && !trialUiState.dismissed;
-  if (!show) {
+  const isFree = normalizePlan(currentPlan) === 'free';
+  const registered = ensureRegisteredUser(false);
+  const secs = Number(trialStatusState.trial_seconds_left || 0);
+  const eligible = !!trialStatusState.eligible;
+
+  if (isFree && secs > 0) {
+    copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. You have Premium access right now.`;
+    if (claimBtn) {
+      claimBtn.disabled = true;
+      claimBtn.textContent = 'Trial Active';
+      claimBtn.style.opacity = '.7';
+    }
+    if (dismissBtn) dismissBtn.style.display = 'none';
+    card.classList.add('on');
+    return;
+  }
+
+  const showClaim = isFree && registered && eligible && !trialUiState.dismissed;
+  if (!showClaim) {
     card.classList.remove('on');
     return;
   }
   copy.innerHTML = `<strong>Step 1:</strong> Create your free account. <strong>Step 2:</strong> Start your 3-day Premium trial to unlock +EV and faster refresh.`;
+  if (claimBtn) {
+    claimBtn.disabled = false;
+    claimBtn.textContent = 'Start Free Trial';
+    claimBtn.style.opacity = '1';
+  }
+  if (dismissBtn) dismissBtn.style.display = '';
   card.classList.add('on');
 }
 
