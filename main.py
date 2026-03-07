@@ -37,6 +37,7 @@ from typing import Optional, Any
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -69,10 +70,19 @@ def _csv_env(name: str) -> list[str]:
     return [x.strip() for x in os.getenv(name, "").split(",") if x.strip()]
 
 
+def _bool_env(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
 PREMIUM_PRICE_IDS = _csv_env("STRIPE_PREMIUM_PRICE_IDS") or _csv_env("STRIPE_PRO_PRICE_IDS")
 VIP_PRICE_IDS = _csv_env("STRIPE_VIP_PRICE_IDS") or _csv_env("STRIPE_SHARP_PRICE_IDS")
 PREMIUM_ANNUAL_PRICE_IDS = _csv_env("STRIPE_PREMIUM_ANNUAL_PRICE_IDS")
 VIP_ANNUAL_PRICE_IDS = _csv_env("STRIPE_VIP_ANNUAL_PRICE_IDS")
+ALLOWED_ORIGINS = [o for o in (_csv_env("ALLOWED_ORIGINS") or [FRONTEND_URL]) if o]
+ENFORCE_ORIGIN_CHECKS = _bool_env("ENFORCE_ORIGIN_CHECKS", "true")
+REQUIRE_BACKEND_API_KEY = _bool_env("REQUIRE_BACKEND_API_KEY", "false")
+SECURITY_HEADERS_ENABLED = _bool_env("SECURITY_HEADERS_ENABLED", "true")
+WEBHOOK_EVENT_TTL_SECONDS = int(os.getenv("WEBHOOK_EVENT_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 
 
 def normalize_plan_name(plan: str) -> str:
@@ -93,9 +103,10 @@ def plan_rank(plan: str) -> int:
     return 0
 
 def verify_api_key(request: Request, x_api_key: str = Header(default="")):
-    # For now, accept any key or no key - simplify for deployment
-    # TODO: Re-enable strict checking after testing
-    pass  # Skip API key check for now
+    if not REQUIRE_BACKEND_API_KEY:
+        return
+    if not BACKEND_API_KEY or x_api_key != BACKEND_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -254,11 +265,67 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_allowed_origin_set = {o.rstrip("/").lower() for o in ALLOWED_ORIGINS if o}
+
+
+def _origin_allowed(origin: str) -> bool:
+    if not origin:
+        return True
+    if "*" in _allowed_origin_set:
+        return True
+    return origin.rstrip("/").lower() in _allowed_origin_set
+
+
+def _is_sensitive_path(path: str) -> bool:
+    if path.startswith("/api/billing/"):
+        return True
+    if path in {
+        "/api/community/posts",
+        "/api/alerts/subscribe",
+        "/api/waitlist/join",
+        "/api/referral/redeem",
+        "/api/trial/start",
+        "/api/profile/settings",
+        "/api/digest/subscription",
+        "/api/streak/claim",
+        "/scan",
+    }:
+        return True
+    return False
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    path = request.url.path
+    method = request.method.upper()
+    is_write = method in {"POST", "PUT", "PATCH", "DELETE"}
+    origin = request.headers.get("origin", "")
+
+    if ENFORCE_ORIGIN_CHECKS and _is_sensitive_path(path) and is_write and origin and not _origin_allowed(origin):
+        return JSONResponse(status_code=403, content={"detail": "Origin not allowed."})
+
+    if REQUIRE_BACKEND_API_KEY and _is_sensitive_path(path) and path != "/api/billing/webhook":
+        provided = request.headers.get("x-api-key", "")
+        if not BACKEND_API_KEY or provided != BACKEND_API_KEY:
+            return JSONResponse(status_code=401, content={"detail": "Invalid API key."})
+
+    response = await call_next(request)
+
+    if SECURITY_HEADERS_ENABLED:
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+
+    return response
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1525,6 +1592,7 @@ async def referral_status(request: Request):
 
 
 @app.post("/api/referral/redeem")
+@limiter.limit("20/day")
 async def referral_redeem(body: ReferralRedeemRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1610,6 +1678,7 @@ async def profile_settings_get(request: Request):
 
 
 @app.post("/api/profile/settings")
+@limiter.limit("60/hour")
 async def profile_settings_set(body: ProfileSettingsRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1629,6 +1698,7 @@ async def profile_settings_set(body: ProfileSettingsRequest, request: Request):
 
 
 @app.post("/api/trial/start")
+@limiter.limit("5/day")
 async def trial_start(request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1680,6 +1750,7 @@ async def alerts_subscriptions(request: Request):
 
 
 @app.post("/api/alerts/subscribe")
+@limiter.limit("30/hour")
 async def alerts_subscribe(body: AlertSubscribeRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1733,6 +1804,7 @@ async def community_posts(limit: int = 40):
 
 
 @app.post("/api/community/posts")
+@limiter.limit("40/hour")
 async def community_create_post(body: CommunityPostRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1868,6 +1940,7 @@ async def digest_subscription_get(request: Request):
 
 
 @app.post("/api/digest/subscription")
+@limiter.limit("30/hour")
 async def digest_subscription_set(body: DigestSubscribeRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1933,6 +2006,7 @@ async def streak_status(request: Request):
 
 
 @app.post("/api/streak/claim")
+@limiter.limit("15/day")
 async def streak_claim(request: Request):
     user_id = _request_user_id(request)
     if not user_id:
@@ -1951,6 +2025,7 @@ async def streak_claim(request: Request):
 
 
 @app.post("/api/waitlist/join")
+@limiter.limit("20/hour")
 async def waitlist_join(body: WaitlistJoinRequest, request: Request):
     email = (body.email or "").strip().lower()
     if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
@@ -1971,6 +2046,7 @@ async def waitlist_join(body: WaitlistJoinRequest, request: Request):
 
 
 @app.post("/api/billing/checkout")
+@limiter.limit("20/hour")
 async def billing_checkout(body: CheckoutRequest, request: Request):
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
@@ -1998,6 +2074,7 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
 
 
 @app.post("/api/billing/portal")
+@limiter.limit("20/hour")
 async def billing_portal(body: PortalRequest, request: Request):
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
@@ -2015,6 +2092,7 @@ async def billing_portal(body: PortalRequest, request: Request):
 
 
 @app.post("/api/billing/webhook")
+@limiter.limit("120/minute")
 async def billing_webhook(request: Request, stripe_signature: str = Header(default="", alias="Stripe-Signature")):
     payload = await request.body()
     if not STRIPE_WEBHOOK:
@@ -2024,6 +2102,22 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
         event = stripe.Webhook.construct_event(payload=payload, sig_header=stripe_signature, secret=STRIPE_WEBHOOK)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid webhook payload: {e}")
+
+    event_id = str(event.get("id") or "").strip()
+    now_ts = int(time.time())
+    processed = _growth_db.setdefault("stripe_webhook_events", {})
+    if not isinstance(processed, dict):
+        processed = {}
+    # Prune stale event IDs to keep storage bounded.
+    cutoff = now_ts - max(300, WEBHOOK_EVENT_TTL_SECONDS)
+    processed = {k: int(v) for k, v in processed.items() if str(k) and int(v) >= cutoff}
+    if event_id:
+        if event_id in processed:
+            _growth_db["stripe_webhook_events"] = processed
+            _save_growth_db()
+            return {"received": True, "duplicate": True}
+        processed[event_id] = now_ts
+    _growth_db["stripe_webhook_events"] = processed
 
     event_type = event.get("type", "")
     obj = event.get("data", {}).get("object", {})
@@ -2042,6 +2136,7 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
 
     if user_id:
         _invalidate_plan_cache(user_id)
+    _save_growth_db()
 
     return {"received": True, "event_type": event_type}
 
@@ -2086,6 +2181,7 @@ async def arb_detect(plan: str = Depends(get_user_plan)):
 
 
 @app.get("/scan")
+@limiter.limit("90/hour")
 async def scan(request: Request):
     """Main scan endpoint - generates picks + shows all upcoming games."""
     user_plan = await _get_verified_plan(request)
