@@ -219,6 +219,9 @@ html, body {
 .ev-book{font-size:11px;font-weight:600}
 .ev-odds{font-family:var(--mono);font-size:13px;font-weight:600}
 .odds-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.odds-range{display:flex;gap:6px;margin:0 0 10px}
+.odds-range-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:11px;color:var(--sub);cursor:pointer;font-family:var(--mono)}
+.odds-range-btn.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
 .odds-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
 .odds-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
 .odds-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
@@ -677,6 +680,11 @@ html, body {
 
     <div id="v-odds" style="display:none">
       <div class="page-hdr"><div class="page-title">Live <span>Odds</span></div><div class="page-sub">Book-by-book moneylines from latest scan</div></div>
+      <div class="odds-range" id="odds-range">
+        <button class="odds-range-btn active" id="or-today" onclick="setOddsRange('today')">Today</button>
+        <button class="odds-range-btn" id="or-tomorrow" onclick="setOddsRange('tomorrow')">Tomorrow</button>
+        <button class="odds-range-btn" id="or-week" onclick="setOddsRange('week')">This Week</button>
+      </div>
       <div class="odds-sports" id="odds-sports"></div>
       <div class="picks-list" id="odds-list"></div>
     </div>
@@ -1148,6 +1156,7 @@ window.setAlgobetsUserId = function(uid) {
 };
 
 const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
+const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
 if (_checkoutStatus === 'success') {
   setTimeout(() => showToast('Checkout successful. Syncing plan...'), 80);
   setTimeout(() => trackEvent('checkout_success', {uid: USER_ID}), 120);
@@ -1176,6 +1185,8 @@ let ODDSGAMES = [];
 let PROPSDATA = [];
 let propsError = null;
 let activeOddsSport = '';
+let oddsRange = 'today';
+let SCHEDULE_GAMES = [];
 let activePropsSport = 'basketball_nba';
 let propsLoading = false;
 let propsFetchedAt = 0;
@@ -1213,6 +1224,7 @@ let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
+let TOMORROW_GAMES = [];
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 
@@ -1290,6 +1302,7 @@ function loadState() {
     if (st.mode === 'simple' || st.mode === 'expert') mode = st.mode;
     if (typeof st.filter === 'string') filter = st.filter;
     if (typeof st.currentTab === 'string') currentTab = st.currentTab;
+    if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
     if (Array.isArray(st.legs)) {
       legs = st.legs
         .map(l => ({id: Number(l.id), bet: String(l.bet || ''), odds: String(l.odds || '')}))
@@ -1302,7 +1315,7 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab}));
+    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab, oddsRange}));
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
   }
@@ -1574,6 +1587,31 @@ async function loadLive() {
     if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Live mode unavailable</div></div>`;
   }
   renderLive();
+}
+
+async function loadTomorrowGames() {
+  try {
+    const res = await backendGet('/api/games?day_offset=1&limit=14');
+    TOMORROW_GAMES = Array.isArray(res.games) ? res.games : [];
+  } catch (err) {
+    TOMORROW_GAMES = [];
+  }
+}
+
+function renderTomorrowGamesBlock() {
+  if (!TOMORROW_GAMES.length) return '';
+  const rows = TOMORROW_GAMES.slice(0, 8).map(g => {
+    const t = formatOddsTime(g.game_time);
+    return `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text)">${esc(g.emoji || '🎯')} ${esc(g.game || '')}</div>
+      <div style="font-size:11px;color:var(--muted);white-space:nowrap">${esc(t)}</div>
+    </div>`;
+  }).join('');
+  return `<div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+    <div style="font-size:12px;font-weight:800;margin-bottom:4px">Tomorrow's Games</div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:4px">No strong edges now. Here’s the next slate:</div>
+    ${rows}
+  </div>`;
 }
 
 async function loadCLV() {
@@ -2267,19 +2305,9 @@ async function backendGet(path, timeout = 60000) {
     }
     return await res.json();
   } catch(directErr) {
-    console.warn('[Algobets] Direct fetch failed, trying proxy:', directErr.message);
+    console.warn('[Algobets] Direct backend request failed:', directErr.message);
+    throw directErr;
   }
-
-  // 2. CORS proxy fallback
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  const ctrl2 = new AbortController();
-  const t2 = setTimeout(() => ctrl2.abort(), timeout);
-  const res2 = await fetch(proxyUrl, {signal: ctrl2.signal});
-  clearTimeout(t2);
-  if (!res2.ok) throw new Error(`Proxy HTTP ${res2.status}`);
-  const wrapped = await res2.json();
-  if (!wrapped.contents) throw new Error('Empty proxy response');
-  return JSON.parse(wrapped.contents);
 }
 
 async function backendPost(path, body, timeout = 60000) {
@@ -2573,6 +2601,22 @@ function openUpgradePicker() {
   document.getElementById('up-ov').classList.add('on');
 }
 
+function maybeOpenUpgradeFromQuery() {
+  if (!['premium', 'vip', 'pro', 'sharp'].includes(_upgradeFromQp)) return;
+  const normalized = _upgradeFromQp === 'pro' ? 'premium' : (_upgradeFromQp === 'sharp' ? 'vip' : _upgradeFromQp);
+  setTimeout(() => {
+    openUpgradePicker();
+    const hint = normalized === 'vip' ? 'VIP option is ready in checkout.' : 'Premium option is ready in checkout.';
+    showToast(hint);
+    if (history.replaceState) {
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete('upgrade');
+      cleaned.searchParams.delete('src');
+      history.replaceState({}, document.title, cleaned.toString());
+    }
+  }, 320);
+}
+
 async function openBillingPortal() {
   if (!ensureBillingUser()) return;
   try {
@@ -2722,6 +2766,73 @@ function normalizeOddsGames(games) {
   });
 }
 
+function normalizeScheduleGames(games) {
+  return (Array.isArray(games) ? games : []).map(g => {
+    const sport = g.sport || '';
+    const books = [{book: 'Best', away: g.away_ml, home: g.home_ml}];
+    return {
+      id: `${sport}_${g.away_team || ''}_${g.home_team || ''}_${g.game_time || ''}`,
+      sport,
+      sportLabel: g.label || SPORTS.find(s => s.key === sport)?.label || sport,
+      awayTeam: g.away_team || 'Away',
+      homeTeam: g.home_team || 'Home',
+      commence: g.game_time || '',
+      books,
+    };
+  });
+}
+
+async function loadScheduleGames(range = oddsRange) {
+  try {
+    if (range === 'tomorrow') {
+      const res = await backendGet('/api/games?day_offset=1&limit=300');
+      SCHEDULE_GAMES = normalizeScheduleGames(res.games || []);
+      return;
+    }
+    if (range === 'week') {
+      const res = await backendGet('/api/games?day_offset=0&limit=600');
+      const now = Date.now();
+      const weekMs = 7 * 24 * 60 * 60 * 1000;
+      const raw = normalizeScheduleGames(res.games || []);
+      SCHEDULE_GAMES = raw.filter(g => {
+        const t = new Date(g.commence).getTime();
+        return Number.isFinite(t) && t >= now && t <= (now + weekMs);
+      });
+      return;
+    }
+    SCHEDULE_GAMES = [];
+  } catch (err) {
+    SCHEDULE_GAMES = [];
+  }
+}
+
+function syncOddsRangeUi() {
+  ['today', 'tomorrow', 'week'].forEach(k => {
+    const btn = document.getElementById(`or-${k}`);
+    if (btn) btn.classList.toggle('active', oddsRange === k);
+  });
+}
+
+async function setOddsRange(range) {
+  if (!['today', 'tomorrow', 'week'].includes(range)) return;
+  oddsRange = range;
+  syncOddsRangeUi();
+  activeOddsSport = '';
+  const listEl = document.getElementById('odds-list');
+  if (range === 'today') {
+    SCHEDULE_GAMES = [];
+    renderOdds();
+    saveState();
+    return;
+  }
+  if (listEl) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading ${range === 'tomorrow' ? "tomorrow's" : 'weekly'} games...</div></div>`;
+  }
+  await loadScheduleGames(range);
+  renderOdds();
+  saveState();
+}
+
 function americanFromDecimal(dec) {
   const d = Number(dec);
   if (!Number.isFinite(d) || d <= 1) return '—';
@@ -2773,21 +2884,27 @@ function renderOdds() {
   const sportsEl = document.getElementById('odds-sports');
   const listEl = document.getElementById('odds-list');
   if (!sportsEl || !listEl) return;
+  syncOddsRangeUi();
+  const sourceGames = oddsRange === 'today' ? ODDSGAMES : SCHEDULE_GAMES;
 
-  if (!ODDSGAMES.length) {
+  if (!sourceGames.length) {
     sportsEl.innerHTML = '';
-    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">No odds loaded yet</div><div class="empty-sub">Run Scan Now to load live odds.</div></div>`;
+    if (oddsRange === 'today') {
+      listEl.innerHTML = `<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">No odds loaded yet</div><div class="empty-sub">Run Scan Now to load live odds.</div></div>`;
+    } else {
+      listEl.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No games found</div><div class="empty-sub">Try a different range or check back soon.</div></div>`;
+    }
     return;
   }
 
-  const sports = [...new Set(ODDSGAMES.map(g => g.sport).filter(Boolean))];
+  const sports = [...new Set(sourceGames.map(g => g.sport).filter(Boolean))];
   if (!activeOddsSport || !sports.includes(activeOddsSport)) activeOddsSport = sports[0] || '';
   sportsEl.innerHTML = sports.map(s => {
-    const label = SPORTS.find(x => x.key === s)?.label || ODDSGAMES.find(g => g.sport === s)?.sportLabel || s;
+    const label = SPORTS.find(x => x.key === s)?.label || sourceGames.find(g => g.sport === s)?.sportLabel || s;
     return `<button class="odds-sport ${s === activeOddsSport ? 'active' : ''}" onclick="setOddsSport('${s}')">${esc(label)}</button>`;
   }).join('');
 
-  const rows = ODDSGAMES.filter(g => g.sport === activeOddsSport);
+  const rows = sourceGames.filter(g => g.sport === activeOddsSport);
   if (!rows.length) {
     listEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No games for this sport</div><div class="empty-sub">Try another sport tab.</div></div>`;
     return;
@@ -2973,6 +3090,7 @@ async function doScan(silent = false) {
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
       if (!Array.isArray(raw)) {
         currentPlan = normalizePlan(raw.plan || currentPlan);
+        if (raw.fallback_mode) showToast('Showing best available picks while market edges are thin');
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
         ODDSGAMES = normalizeOddsGames(raw.games || []);
         STEAMDATA = computeSteamSignals(raw.games || []);
@@ -3032,6 +3150,7 @@ async function doScan(silent = false) {
     }
 
     if (PICKS.length === 0 && EVDATA.length === 0) {
+      await loadTomorrowGames();
       const errBanner = document.getElementById('err-banner');
       if (errBanner) {
         const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
@@ -3088,7 +3207,7 @@ function renderPicks() {
   updatePaywallUi();
 
   if (!pts.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div>${renderTomorrowGamesBlock()}</div>`;
     return;
   }
 
@@ -3574,7 +3693,13 @@ function go(name) {
   const moreBtn = document.getElementById('mn-more');
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
-  if (name === 'odds') renderOdds();
+  if (name === 'odds') {
+    if (oddsRange === 'today' || SCHEDULE_GAMES.length) {
+      renderOdds();
+    } else {
+      setOddsRange(oddsRange);
+    }
+  }
   if (name === 'live') loadLive();
   if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
@@ -3681,6 +3806,7 @@ try {
 } catch (_) {}
 loadProfileSettings();
 loadQuotaDashboard();
+loadTomorrowGames();
 bindUiAccessibility();
 applySavedSelections();
 updateScanCooldownUi();
@@ -3690,6 +3816,7 @@ loadTrialStatus();
 renderPerf();
 loadBoostExamples();
 renderFades();
+maybeOpenUpgradeFromQuery();
 doScan();
 startAutoRefresh();
 </script>
