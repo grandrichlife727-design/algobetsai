@@ -657,6 +657,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
+      <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
@@ -679,6 +680,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-green"><div class="stat-val" id="home-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
         <div class="stat s-cyan"><div class="stat-val" id="home-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
         <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
+      </div>
+      <div class="trial-card" id="trial-card-home">
+        <div class="trial-copy" id="trial-copy-home"><strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.</div>
+        <div class="trial-actions">
+          <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
+          <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
+        </div>
       </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
@@ -3433,16 +3441,23 @@ function updatePlanUi() {
   }
   const up = document.getElementById('upgrade-btn');
   const manage = document.getElementById('manage-btn');
+  const trialBtn = document.getElementById('trial-btn');
   if (up) {
     const nxt = nextTier(p);
     up.style.display = nxt ? '' : 'none';
     up.textContent = nxt ? 'Upgrade' : 'Upgraded';
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
+  if (trialBtn) trialBtn.style.display = p === 'free' ? '' : 'none';
   renderProfile();
   updateHomeSummary();
   updateScanCooldownUi();
   updateTrialCard();
+}
+
+function quickTrialAction() {
+  if (!ensureRegisteredUser()) return;
+  claimFreeTrial();
 }
 
 function updateDemoToggleUi() {
@@ -3722,43 +3737,49 @@ async function claimFreeTrial() {
 }
 
 function updateTrialCard() {
-  const card = document.getElementById('trial-card');
-  const copy = document.getElementById('trial-copy');
-  const claimBtn = card ? card.querySelector('.trial-claim') : null;
-  const dismissBtn = card ? card.querySelector('.trial-dismiss') : null;
-  if (!card || !copy) return;
+  const cardSet = [
+    {card: document.getElementById('trial-card'), copy: document.getElementById('trial-copy')},
+    {card: document.getElementById('trial-card-home'), copy: document.getElementById('trial-copy-home')},
+  ];
   const isFree = normalizePlan(currentPlan) === 'free';
   const registered = ensureRegisteredUser(false);
   const secs = Number(trialStatusState.trial_seconds_left || 0);
   const eligible = !!trialStatusState.eligible;
 
-  if (isFree && secs > 0) {
-    copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. You have Premium access right now.`;
+  cardSet.forEach(({card, copy}) => {
+    if (!card || !copy) return;
+    const claimBtn = card.querySelector('.trial-claim');
+    const dismissBtn = card.querySelector('.trial-dismiss');
+
+    if (isFree && secs > 0) {
+      copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. You have Premium access right now.`;
+      if (claimBtn) {
+        claimBtn.disabled = true;
+        claimBtn.textContent = 'Trial Active';
+        claimBtn.style.opacity = '.7';
+      }
+      if (dismissBtn) dismissBtn.style.display = 'none';
+      card.classList.add('on');
+      return;
+    }
+
+    const showClaim = isFree && eligible;
+    if (!showClaim) {
+      card.classList.remove('on');
+      return;
+    }
+
+    copy.innerHTML = registered
+      ? `<strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.`
+      : `<strong>Create your free account</strong>, then start your 3-day Premium trial to unlock +EV, Props, Steam, and faster refresh.`;
     if (claimBtn) {
-      claimBtn.disabled = true;
-      claimBtn.textContent = 'Trial Active';
-      claimBtn.style.opacity = '.7';
+      claimBtn.disabled = false;
+      claimBtn.textContent = registered ? 'Start Free Trial' : 'Create Account';
+      claimBtn.style.opacity = '1';
     }
     if (dismissBtn) dismissBtn.style.display = 'none';
     card.classList.add('on');
-    return;
-  }
-
-  const showClaim = isFree && eligible;
-  if (!showClaim) {
-    card.classList.remove('on');
-    return;
-  }
-  copy.innerHTML = registered
-    ? `<strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.`
-    : `<strong>Create your free account</strong>, then start your 3-day Premium trial to unlock +EV, Props, Steam, and faster refresh.`;
-  if (claimBtn) {
-    claimBtn.disabled = false;
-    claimBtn.textContent = registered ? 'Start Free Trial' : 'Create Account';
-    claimBtn.style.opacity = '1';
-  }
-  if (dismissBtn) dismissBtn.style.display = 'none';
-  card.classList.add('on');
+  });
 }
 
 function setBillingCycle(cycle) {
