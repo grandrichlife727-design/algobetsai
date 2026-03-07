@@ -996,6 +996,16 @@ class AlertSubscribeRequest(BaseModel):
     sports: Optional[list[str]] = None
 
 
+class CommunityPostRequest(BaseModel):
+    mode: Optional[str] = "pick"
+    text: Optional[str] = ""
+    bet: Optional[str] = ""
+    game: Optional[str] = ""
+    odds: Optional[str] = ""
+    ev: Optional[float] = None
+    sport: Optional[str] = ""
+
+
 def _request_user_id(request: Request) -> str:
     return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
 
@@ -1188,6 +1198,65 @@ async def alerts_subscribe(body: AlertSubscribeRequest, request: Request):
     rec["alerts"] = alerts[-25:]
     _save_growth_db()
     return {"ok": True, "subscription": updated, "count": len(rec["alerts"])}
+
+
+@app.get("/api/community/posts")
+async def community_posts(limit: int = 40):
+    posts = list(_growth_db.get("community_posts", []))
+    posts.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    safe_limit = max(1, min(int(limit or 40), 100))
+    return {"posts": posts[:safe_limit], "count": len(posts)}
+
+
+@app.post("/api/community/posts")
+async def community_create_post(body: CommunityPostRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+
+    mode = (body.mode or "pick").strip().lower()
+    if mode not in {"pick", "win"}:
+        mode = "pick"
+
+    text = (body.text or "").strip()[:240]
+    bet = (body.bet or "").strip()[:120]
+    game = (body.game or "").strip()[:120]
+    odds = (body.odds or "").strip()[:24]
+    sport = (body.sport or "").strip()[:48]
+    ev = None
+    if body.ev is not None:
+        try:
+            ev = round(float(body.ev), 2)
+        except Exception:
+            ev = None
+
+    if not any([text, bet, game]):
+        raise HTTPException(status_code=400, detail="Post content is empty.")
+
+    masked_user = user_id
+    if "@" in user_id:
+        name, domain = user_id.split("@", 1)
+        masked_user = f"{(name[:2] if len(name) > 2 else name)}***@{domain}"
+    elif len(user_id) > 8:
+        masked_user = f"{user_id[:4]}***"
+
+    post = {
+        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8")).hexdigest()[:12],
+        "ts": int(time.time()),
+        "user": masked_user,
+        "mode": mode,
+        "text": text,
+        "bet": bet,
+        "game": game,
+        "odds": odds,
+        "ev": ev,
+        "sport": sport,
+    }
+    feed = _growth_db.setdefault("community_posts", [])
+    feed.append(post)
+    _growth_db["community_posts"] = feed[-500:]
+    _save_growth_db()
+    return {"ok": True, "post": post}
 
 
 @app.post("/api/billing/checkout")
