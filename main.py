@@ -420,24 +420,29 @@ async def fetch_odds_api_games(sport_key: str) -> list:
 
     cache_key = f"odds_{sport_key}"
     cached = cache_get(cache_key, ttl=CACHE_TTL)
-    if cached is not None:
+    # Don't trust empty cache payloads; they can come from transient API failures.
+    if cached is not None and len(cached) > 0:
         return cached
 
     odds_sport = ODDS_API_SPORT_MAP.get(sport_key, sport_key)
-    url = f"{ODDS_BASE}/odds/"
+    # Canonical Odds API endpoint: /sports/{sport}/odds
+    url = f"{ODDS_BASE}/sports/{odds_sport}/odds"
     
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            # Fetch h2h (moneyline) odds
-            r = await client.get(url, params={
+            params = {
                 "apiKey": ODDS_API_KEY,
-                "sport": odds_sport,
                 "regions": "us",
                 "markets": "h2h,spreads,totals",
                 "oddsFormat": "american",
                 "dateFormat": "iso",
                 "bookmakers": ODDS_BOOKMAKERS,
-            })
+            }
+            r = await client.get(url, params=params)
+            # Fallback for older endpoint shapes if provider changes.
+            if r.status_code == 404:
+                legacy_url = f"{ODDS_BASE}/odds/"
+                r = await client.get(legacy_url, params={**params, "sport": odds_sport})
             
             if r.status_code == 403:
                 print(f"[OddsAPI] API key invalid or quota exceeded")
@@ -448,6 +453,9 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                 
             r.raise_for_status()
             data = r.json()
+            if not isinstance(data, list):
+                print(f"[OddsAPI] Unexpected payload for {sport_key}: {type(data).__name__}")
+                return []
             
             # Update quota tracking
             if hasattr(r, 'headers'):
@@ -485,8 +493,6 @@ async def fetch_odds_api_games(sport_key: str) -> list:
 
             for bm in bookmakers:
                 bm_name = bm.get("title", "")
-                if bm_name.lower() not in ODDS_BOOKMAKERS.lower():
-                    continue
 
                 bm_home_ml = None
                 bm_away_ml = None
@@ -930,7 +936,7 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         away_ev = expected_value_pct(away_ml, consensus_away)
 
         # Keep threshold modest; user can filter by grade in UI.
-        min_ev_threshold = 1.0
+        min_ev_threshold = 0.25
         if max(home_ev, away_ev) < min_ev_threshold:
             continue
 
