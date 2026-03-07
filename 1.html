@@ -1527,6 +1527,9 @@ let AGENTWEIGHTS = null;
 let ALERTPACKS = null;
 let AFFILIATE = null;
 let NEWSIMPACT = [];
+let HOME_SPORTS_NEWS = [];
+let HOME_SPORTS_NEWS_TS = 0;
+let HOME_SPORTS_NEWS_LOADING = false;
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -2141,6 +2144,51 @@ async function loadNewsImpact() {
     if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
   } catch (err) {
     if (note) note.textContent = 'Impact feed unavailable.';
+  }
+}
+
+async function loadHomeSportsNews(force = false) {
+  const ttlMs = 15 * 60 * 1000;
+  if (!force && HOME_SPORTS_NEWS.length && (Date.now() - HOME_SPORTS_NEWS_TS) < ttlMs) return;
+  if (HOME_SPORTS_NEWS_LOADING) return;
+  HOME_SPORTS_NEWS_LOADING = true;
+  try {
+    const feeds = [
+      {league: 'NBA', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news'},
+      {league: 'NFL', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news'},
+      {league: 'MLB', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news'},
+      {league: 'NHL', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/news'},
+    ];
+    const results = await Promise.allSettled(
+      feeds.map(async f => {
+        const r = await fetch(f.url, {method: 'GET', headers: {'accept': 'application/json'}});
+        if (!r.ok) throw new Error(`news_${f.league}_${r.status}`);
+        const j = await r.json();
+        const arts = Array.isArray(j?.articles) ? j.articles : [];
+        return arts.slice(0, 6).map(a => ({
+          league: f.league,
+          title: String(a?.headline || '').trim(),
+          sub: String(a?.description || '').trim(),
+          ts: a?.published || a?.lastModified || null,
+          link: a?.links?.web?.href || '',
+        })).filter(x => x.title);
+      })
+    );
+    HOME_SPORTS_NEWS = results
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value)
+      .sort((a, b) => {
+        const ta = a.ts ? new Date(a.ts).getTime() : 0;
+        const tb = b.ts ? new Date(b.ts).getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 8);
+    HOME_SPORTS_NEWS_TS = Date.now();
+  } catch (err) {
+    // Keep any existing cached news; renderer handles fallback when empty.
+  } finally {
+    HOME_SPORTS_NEWS_LOADING = false;
+    if (currentTab === 'home') renderHomeModules();
   }
 }
 
@@ -2973,46 +3021,20 @@ function renderHomeModules() {
   }
 
   if (newsEl) {
-    const items = [];
-    const now = Date.now();
-    if (PICKS.length) {
-      const p = PICKS[0];
-      items.push({
-        tag: 'Model Update',
-        ts: now - 5 * 60 * 1000,
-        title: `${p.bet} is leading today’s board`,
-        sub: `Top edge currently at +${Number(p.ev || 0).toFixed(1)}% EV. Price discipline still matters before placement.`,
-      });
+    if (!HOME_SPORTS_NEWS.length && !HOME_SPORTS_NEWS_LOADING) {
+      loadHomeSportsNews(false);
     }
-    if (STEAMDATA.length) {
-      const s = STEAMDATA[0];
-      items.push({
-        tag: 'Steam Alert',
-        ts: now - 12 * 60 * 1000,
-        title: `${s.side || 'Market side'} showing pressure`,
-        sub: `${s.game || 'Featured game'} · ${s.note || 'Best-book movement outpacing market median.'}`,
-      });
+    if (HOME_SPORTS_NEWS_LOADING && !HOME_SPORTS_NEWS.length) {
+      newsEl.innerHTML = `<div class="news-item"><div class="news-title">Loading sports headlines...</div><div class="news-sub">Fetching latest NBA, NFL, MLB, and NHL stories.</div></div>`;
+      return;
     }
-    if (TOMORROW_GAMES.length) {
-      const g = TOMORROW_GAMES[0];
-      items.push({
-        tag: 'Tomorrow',
-        ts: now - 22 * 60 * 1000,
-        title: `Next slate: ${g.game || 'Upcoming games'}`,
-        sub: `Use this window to pre-plan entries and avoid forcing low-quality spots.`,
-      });
-    }
-    if (!items.length) {
-      items.push(
-        {tag: 'Market Note', ts: now - 9 * 60 * 1000, title: 'Injury/rotation updates can swing prices quickly', sub: 'Track late lineup changes before locking bets.'},
-        {tag: 'Line Movement', ts: now - 19 * 60 * 1000, title: 'Watch for soft-book lag around game windows', sub: 'Fast repricing gaps can create short-lived +EV opportunities.'},
-        {tag: 'Bankroll', ts: now - 34 * 60 * 1000, title: 'Unit sizing beats forcing action', sub: 'Consistent stake sizing helps preserve edge over volume.'},
-      );
-    }
-    newsEl.innerHTML = items.slice(0, 3).map(n => `
+    const items = HOME_SPORTS_NEWS.length ? HOME_SPORTS_NEWS.slice(0, 4) : [
+      {league: 'Sports', ts: Date.now(), title: 'Live sports news is temporarily unavailable', sub: 'News feed will auto-refresh. You can still use picks and odds in the meantime.', link: ''},
+    ];
+    newsEl.innerHTML = items.map(n => `
       <div class="news-item">
-        <div class="news-top"><div class="news-tag">${esc(n.tag)}</div><div class="news-time">${timeAgo(n.ts)}</div></div>
-        <div class="news-title">${esc(n.title)}</div>
+        <div class="news-top"><div class="news-tag">${esc(n.league || 'Sports')}</div><div class="news-time">${n.ts ? timeAgo(new Date(n.ts).getTime()) : 'now'}</div></div>
+        <div class="news-title">${n.link ? `<a href="${esc(n.link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${esc(n.title)}</a>` : esc(n.title)}</div>
         <div class="news-sub">${esc(n.sub)}</div>
       </div>
     `).join('');
@@ -4439,6 +4461,7 @@ try {
 loadProfileSettings();
 loadQuotaDashboard();
 loadTomorrowGames();
+loadHomeSportsNews();
 bindUiAccessibility();
 updateDemoToggleUi();
 if (demoMode) applyDemoDataset();
