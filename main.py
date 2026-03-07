@@ -26,6 +26,8 @@ import re
 import json
 import math
 import time
+import base64
+import hmac
 import httpx
 import asyncio
 import hashlib
@@ -52,6 +54,10 @@ STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
 BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
+JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
+JWT_ISSUER = os.getenv("JWT_ISSUER", "").strip()
+JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "").strip()
+ADMIN_API_TOKEN = os.getenv("ADMIN_API_TOKEN", "").strip()
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -83,6 +89,14 @@ ENFORCE_ORIGIN_CHECKS = _bool_env("ENFORCE_ORIGIN_CHECKS", "true")
 REQUIRE_BACKEND_API_KEY = _bool_env("REQUIRE_BACKEND_API_KEY", "false")
 SECURITY_HEADERS_ENABLED = _bool_env("SECURITY_HEADERS_ENABLED", "true")
 WEBHOOK_EVENT_TTL_SECONDS = int(os.getenv("WEBHOOK_EVENT_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
+REQUIRE_AUTH_TOKEN = _bool_env("REQUIRE_AUTH_TOKEN", "false")
+COMMUNITY_ENABLED = _bool_env("COMMUNITY_ENABLED", "true")
+BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
+SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
+CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
+TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
+WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
+SECURITY_EVENT_CAP = int(os.getenv("SECURITY_EVENT_CAP", "5000") or 5000)
 
 
 def normalize_plan_name(plan: str) -> str:
@@ -107,6 +121,54 @@ def verify_api_key(request: Request, x_api_key: str = Header(default="")):
         return
     if not BACKEND_API_KEY or x_api_key != BACKEND_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key.")
+
+
+def _b64url_decode(segment: str) -> bytes:
+    s = segment + "=" * ((4 - len(segment) % 4) % 4)
+    return base64.urlsafe_b64decode(s.encode("utf-8"))
+
+
+def _json_b64url_decode(segment: str) -> dict[str, Any]:
+    raw = _b64url_decode(segment)
+    data = json.loads(raw.decode("utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("JWT payload must be an object.")
+    return data
+
+
+def _verify_hs256_jwt(token: str) -> dict[str, Any]:
+    if not JWT_SECRET:
+        raise ValueError("JWT secret is not configured.")
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise ValueError("Malformed JWT.")
+    h, p, s = parts
+    header = _json_b64url_decode(h)
+    payload = _json_b64url_decode(p)
+    if str(header.get("alg", "")).upper() != "HS256":
+        raise ValueError("Unsupported JWT algorithm.")
+    signing_input = f"{h}.{p}".encode("utf-8")
+    expected_sig = hmac.new(JWT_SECRET.encode("utf-8"), signing_input, hashlib.sha256).digest()
+    provided_sig = _b64url_decode(s)
+    if not hmac.compare_digest(expected_sig, provided_sig):
+        raise ValueError("Invalid JWT signature.")
+    now = int(time.time())
+    exp = payload.get("exp")
+    nbf = payload.get("nbf")
+    if exp is not None and int(exp) < now:
+        raise ValueError("JWT expired.")
+    if nbf is not None and int(nbf) > now:
+        raise ValueError("JWT not active yet.")
+    if JWT_ISSUER and str(payload.get("iss", "")).strip() != JWT_ISSUER:
+        raise ValueError("JWT issuer mismatch.")
+    if JWT_AUDIENCE:
+        aud = payload.get("aud")
+        if isinstance(aud, list):
+            if JWT_AUDIENCE not in [str(x) for x in aud]:
+                raise ValueError("JWT audience mismatch.")
+        elif str(aud) != JWT_AUDIENCE:
+            raise ValueError("JWT audience mismatch.")
+    return payload
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -156,7 +218,7 @@ def _verify_plan_stripe_sync(user_id: str) -> str:
 OWNER_EMAILS = {"grandrichlife727@gmail.com"}
 
 async def _get_verified_plan(request: Request) -> str:
-    user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
+    user_id = _request_user_id(request)
     if not user_id:
         return PLAN_FREE
 
@@ -294,6 +356,10 @@ def _is_sensitive_path(path: str) -> bool:
         "/api/profile/settings",
         "/api/digest/subscription",
         "/api/streak/claim",
+        "/api/ev-finder",
+        "/api/arb-detect",
+        "/api/props",
+        "/api/plan",
         "/scan",
     }:
         return True
@@ -306,13 +372,34 @@ async def security_middleware(request: Request, call_next):
     method = request.method.upper()
     is_write = method in {"POST", "PUT", "PATCH", "DELETE"}
     origin = request.headers.get("origin", "")
+    auth_user_id = ""
+    auth_ok = False
+
+    auth_header = str(request.headers.get("authorization", "")).strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        try:
+            claims = _verify_hs256_jwt(token)
+            auth_user_id = str(claims.get("sub") or claims.get("email") or claims.get("user_id") or "").strip().lower()
+            auth_ok = bool(auth_user_id)
+        except Exception as e:
+            _audit_security_event(request, "auth.jwt_invalid", str(e))
+    request.state.user_id = auth_user_id
+    request.state.auth_verified = auth_ok
 
     if ENFORCE_ORIGIN_CHECKS and _is_sensitive_path(path) and is_write and origin and not _origin_allowed(origin):
+        _audit_security_event(request, "security.origin_blocked", f"origin={origin}")
         return JSONResponse(status_code=403, content={"detail": "Origin not allowed."})
+
+    if REQUIRE_AUTH_TOKEN and _is_sensitive_path(path):
+        if not auth_ok:
+            _audit_security_event(request, "security.auth_required", "Missing or invalid bearer token.")
+            return JSONResponse(status_code=401, content={"detail": "Authentication required."})
 
     if REQUIRE_BACKEND_API_KEY and _is_sensitive_path(path) and path != "/api/billing/webhook":
         provided = request.headers.get("x-api-key", "")
         if not BACKEND_API_KEY or provided != BACKEND_API_KEY:
+            _audit_security_event(request, "security.api_key_invalid", "Invalid x-api-key.")
             return JSONResponse(status_code=401, content={"detail": "Invalid API key."})
 
     response = await call_next(request)
@@ -397,6 +484,59 @@ def _save_growth_db():
             json.dump(_growth_db, f)
     except Exception as e:
         print(f"[GrowthDB] Save failed: {e}")
+
+
+def _client_ip(request: Request) -> str:
+    xff = str(request.headers.get("x-forwarded-for", "")).strip()
+    if xff:
+        return xff.split(",")[0].strip()
+    xrip = str(request.headers.get("x-real-ip", "")).strip()
+    if xrip:
+        return xrip
+    if request.client and request.client.host:
+        return str(request.client.host)
+    return "unknown"
+
+
+def _audit_security_event(request: Request, event: str, detail: Optional[str] = None, user_id: Optional[str] = None):
+    logs = _growth_db.setdefault("security_events", [])
+    row = {
+        "ts": int(time.time()),
+        "event": str(event or "event")[:64],
+        "path": str(request.url.path)[:200],
+        "method": str(request.method)[:12],
+        "ip": _client_ip(request)[:80],
+        "user_id": str(user_id or _request_user_id(request) or "")[:120],
+        "detail": str(detail or "")[:240],
+    }
+    logs.append(row)
+    if len(logs) > SECURITY_EVENT_CAP:
+        _growth_db["security_events"] = logs[-SECURITY_EVENT_CAP:]
+    _save_growth_db()
+
+
+def _velocity_allow(scope: str, key: str, limit: int, window_seconds: int) -> tuple[bool, int, int]:
+    if limit <= 0:
+        return True, 0, 0
+    now = int(time.time())
+    bucket = _growth_db.setdefault("velocity", {})
+    rows = bucket.get(scope, [])
+    if not isinstance(rows, list):
+        rows = []
+    rows = [r for r in rows if isinstance(r, dict) and int(r.get("ts", 0) or 0) >= (now - window_seconds)]
+    count = len([r for r in rows if str(r.get("key", "")) == key])
+    allow = count < limit
+    if allow:
+        rows.append({"key": key, "ts": now})
+    bucket[scope] = rows[-20000:]
+    _growth_db["velocity"] = bucket
+    _save_growth_db()
+    retry_after = 0
+    if not allow:
+        matching = [int(r.get("ts", now)) for r in rows if str(r.get("key", "")) == key]
+        oldest = min(matching) if matching else now
+        retry_after = max(1, window_seconds - (now - oldest))
+    return allow, count + (1 if allow else 0), retry_after
 
 
 def _user_referral_code(user_id: str) -> str:
@@ -1482,7 +1622,16 @@ COMMUNITY_POST_MAX_PER_DAY = 15
 
 
 def _request_user_id(request: Request) -> str:
-    return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
+    state_uid = str(getattr(request.state, "user_id", "") or "").strip().lower()
+    if state_uid:
+        return state_uid
+    return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip().lower()
+
+
+def _require_admin(request: Request):
+    token = str(request.headers.get("x-admin-token", "")).strip()
+    if not ADMIN_API_TOKEN or token != ADMIN_API_TOKEN:
+        raise HTTPException(status_code=401, detail="Admin token required.")
 
 
 def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str] = "monthly") -> str:
@@ -1542,6 +1691,87 @@ async def health_check():
         "data_source": "odds_api" if ODDS_API_KEY else "none",
         "quota_remaining": _quota_remaining,
     }
+
+
+@app.get("/api/legal/terms")
+async def legal_terms():
+    return {
+        "title": "Algobets Terms (Summary)",
+        "updated_at": "2026-03-06",
+        "sections": [
+            "Informational use only. Not financial advice.",
+            "User responsible for legal compliance in their jurisdiction.",
+            "Subscriptions auto-renew until canceled via billing portal.",
+            "Abuse, scraping, or fraud may result in account termination.",
+        ],
+    }
+
+
+@app.get("/api/legal/privacy")
+async def legal_privacy():
+    return {
+        "title": "Algobets Privacy (Summary)",
+        "updated_at": "2026-03-06",
+        "sections": [
+            "We store account identifiers, subscription status, and feature usage metadata.",
+            "We store community and alert content submitted by users.",
+            "Payment details are processed by Stripe and not stored directly by this app.",
+            "You may request account data deletion via /api/privacy/delete-request.",
+        ],
+    }
+
+
+@app.post("/api/privacy/delete-request")
+@limiter.limit("5/day")
+async def privacy_delete_request(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Authenticated user id is required.")
+    pending = _growth_db.setdefault("privacy_delete_requests", [])
+    if not any(str(x.get("user_id", "")) == user_id for x in pending if isinstance(x, dict)):
+        pending.append({"user_id": user_id, "ts": int(time.time()), "status": "pending"})
+        _growth_db["privacy_delete_requests"] = pending[-2000:]
+        _save_growth_db()
+    _audit_security_event(request, "privacy.delete_request", user_id=user_id)
+    return {"ok": True, "status": "pending"}
+
+
+@app.get("/api/admin/security/events")
+async def admin_security_events(request: Request, limit: int = 200):
+    _require_admin(request)
+    rows = list(_growth_db.get("security_events", []))
+    rows.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    safe_limit = max(1, min(int(limit or 200), 1000))
+    return {"events": rows[:safe_limit], "count": len(rows)}
+
+
+@app.get("/api/admin/backup/export")
+async def admin_backup_export(request: Request):
+    _require_admin(request)
+    payload = {
+        "exported_at": int(time.time()),
+        "growth_db": _growth_db,
+    }
+    _audit_security_event(request, "admin.backup_export")
+    return payload
+
+
+@app.post("/api/admin/backup/restore")
+@limiter.limit("2/hour")
+async def admin_backup_restore(request: Request):
+    _require_admin(request)
+    restore_enabled = _bool_env("ADMIN_RESTORE_ENABLED", "false")
+    if not restore_enabled:
+        raise HTTPException(status_code=403, detail="Restore is disabled.")
+    body = await request.json()
+    incoming = body.get("growth_db")
+    if not isinstance(incoming, dict):
+        raise HTTPException(status_code=400, detail="growth_db object is required.")
+    global _growth_db
+    _growth_db = incoming
+    _save_growth_db()
+    _audit_security_event(request, "admin.backup_restore")
+    return {"ok": True}
 
 
 @app.get("/api/pricing")
@@ -1703,6 +1933,13 @@ async def trial_start(request: Request):
     user_id = _request_user_id(request)
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id is required.")
+    ip = _client_ip(request)
+    allow_user, _, retry_user = _velocity_allow("trial_user", user_id.lower(), TRIAL_MAX_PER_DAY, 86400)
+    allow_ip, _, retry_ip = _velocity_allow("trial_ip", ip, max(2, TRIAL_MAX_PER_DAY * 4), 86400)
+    if not allow_user or not allow_ip:
+        retry_after = max(retry_user, retry_ip)
+        _audit_security_event(request, "fraud.trial_velocity_block", f"user={user_id} retry={retry_after}", user_id=user_id)
+        raise HTTPException(status_code=429, detail=f"Too many trial attempts. Retry in {retry_after}s.")
 
     # Paid users do not need free trial grants.
     stripe_plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
@@ -1797,6 +2034,8 @@ async def alerts_subscribe(body: AlertSubscribeRequest, request: Request):
 
 @app.get("/api/community/posts")
 async def community_posts(limit: int = 40):
+    if not COMMUNITY_ENABLED:
+        raise HTTPException(status_code=503, detail="Community is temporarily disabled.")
     posts = list(_growth_db.get("community_posts", []))
     posts.sort(key=lambda x: x.get("ts", 0), reverse=True)
     safe_limit = max(1, min(int(limit or 40), 100))
@@ -1806,6 +2045,8 @@ async def community_posts(limit: int = 40):
 @app.post("/api/community/posts")
 @limiter.limit("40/hour")
 async def community_create_post(body: CommunityPostRequest, request: Request):
+    if not COMMUNITY_ENABLED:
+        raise HTTPException(status_code=503, detail="Community is temporarily disabled.")
     user_id = _request_user_id(request)
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id is required.")
@@ -1878,6 +2119,8 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
 
 @app.get("/api/community/leaderboard")
 async def community_leaderboard(limit: int = 20):
+    if not COMMUNITY_ENABLED:
+        raise HTTPException(status_code=503, detail="Community is temporarily disabled.")
     posts = list(_growth_db.get("community_posts", []))
     posts.sort(key=lambda x: x.get("ts", 0), reverse=True)
     scores: dict[str, dict[str, Any]] = {}
@@ -2027,6 +2270,11 @@ async def streak_claim(request: Request):
 @app.post("/api/waitlist/join")
 @limiter.limit("20/hour")
 async def waitlist_join(body: WaitlistJoinRequest, request: Request):
+    ip = _client_ip(request)
+    allow_waitlist, _, retry_after = _velocity_allow("waitlist_ip", ip, WAITLIST_MAX_PER_HOUR, 3600)
+    if not allow_waitlist:
+        _audit_security_event(request, "fraud.waitlist_rate_limited", f"retry_after={retry_after}")
+        raise HTTPException(status_code=429, detail=f"Too many waitlist requests. Retry in {retry_after}s.")
     email = (body.email or "").strip().lower()
     if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
         raise HTTPException(status_code=400, detail="Valid email is required.")
@@ -2048,11 +2296,20 @@ async def waitlist_join(body: WaitlistJoinRequest, request: Request):
 @app.post("/api/billing/checkout")
 @limiter.limit("20/hour")
 async def billing_checkout(body: CheckoutRequest, request: Request):
+    if not BILLING_ENABLED:
+        raise HTTPException(status_code=503, detail="Billing is temporarily disabled.")
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
-    user_id = (body.user_id or request.headers.get("x-user-id", "")).strip()
+    user_id = (_request_user_id(request) or body.user_id or "").strip().lower()
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
+    ip = _client_ip(request)
+    allow_user, _, retry_user = _velocity_allow("checkout_user", user_id.lower(), CHECKOUT_MAX_PER_HOUR, 3600)
+    allow_ip, _, retry_ip = _velocity_allow("checkout_ip", ip, CHECKOUT_MAX_PER_HOUR * 2, 3600)
+    if not allow_user or not allow_ip:
+        retry_after = max(retry_user, retry_ip)
+        _audit_security_event(request, "fraud.checkout_velocity_block", f"user={user_id} retry={retry_after}", user_id=user_id)
+        raise HTTPException(status_code=429, detail=f"Too many checkout attempts. Retry in {retry_after}s.")
 
     tier = normalize_plan_name(body.tier)
     billing_cycle = str(body.billing_cycle or "monthly").strip().lower()
@@ -2076,9 +2333,11 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
 @app.post("/api/billing/portal")
 @limiter.limit("20/hour")
 async def billing_portal(body: PortalRequest, request: Request):
+    if not BILLING_ENABLED:
+        raise HTTPException(status_code=503, detail="Billing is temporarily disabled.")
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
-    user_id = (body.user_id or request.headers.get("x-user-id", "")).strip()
+    user_id = (_request_user_id(request) or body.user_id or "").strip().lower()
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
 
@@ -2096,11 +2355,13 @@ async def billing_portal(body: PortalRequest, request: Request):
 async def billing_webhook(request: Request, stripe_signature: str = Header(default="", alias="Stripe-Signature")):
     payload = await request.body()
     if not STRIPE_WEBHOOK:
+        _audit_security_event(request, "billing.webhook_missing_secret")
         raise HTTPException(status_code=500, detail="Webhook secret is not configured.")
 
     try:
         event = stripe.Webhook.construct_event(payload=payload, sig_header=stripe_signature, secret=STRIPE_WEBHOOK)
     except Exception as e:
+        _audit_security_event(request, "billing.webhook_invalid_signature", str(e))
         raise HTTPException(status_code=400, detail=f"Invalid webhook payload: {e}")
 
     event_id = str(event.get("id") or "").strip()
@@ -2115,6 +2376,7 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
         if event_id in processed:
             _growth_db["stripe_webhook_events"] = processed
             _save_growth_db()
+            _audit_security_event(request, "billing.webhook_duplicate", event_id)
             return {"received": True, "duplicate": True}
         processed[event_id] = now_ts
     _growth_db["stripe_webhook_events"] = processed
@@ -2136,6 +2398,7 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
 
     if user_id:
         _invalidate_plan_cache(user_id)
+    _audit_security_event(request, "billing.webhook_processed", event_type, user_id=user_id)
     _save_growth_db()
 
     return {"received": True, "event_type": event_type}
@@ -2184,6 +2447,8 @@ async def arb_detect(plan: str = Depends(get_user_plan)):
 @limiter.limit("90/hour")
 async def scan(request: Request):
     """Main scan endpoint - generates picks + shows all upcoming games."""
+    if not SCAN_ENABLED:
+        raise HTTPException(status_code=503, detail="Scanning is temporarily disabled.")
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip() or "anon"
@@ -2467,6 +2732,8 @@ async def props_lite(
     request: Request,
     sport: str = "basketball_nba",
 ):
+    if not SCAN_ENABLED:
+        raise HTTPException(status_code=503, detail="Props are temporarily disabled.")
     user_plan = await _get_verified_plan(request)
     if plan_rank(user_plan) < plan_rank(PLAN_PREMIUM):
         raise HTTPException(status_code=403, detail="Upgrade to Premium to access Props.")
