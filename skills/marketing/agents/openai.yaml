@@ -1,0 +1,4 @@
+interface:
+  display_name: "Marketing"
+  short_description: "Plan and execute high-impact marketing programs"
+  default_prompt: "Use $marketing to develop a practical marketing plan for this goal."
