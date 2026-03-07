@@ -948,6 +948,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
         </div>
         <div class="growth-card">
+          <div class="growth-title">VIP Discord</div>
+          <div class="growth-sub" id="vip-discord-status">Checking access...</div>
+          <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
+          <div class="growth-note">VIP-only private channel for alerts, card drops, and live discussion.</div>
+        </div>
+        <div class="growth-card">
           <div class="growth-title">Bet Timing Engine</div>
           <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
         </div>
@@ -1662,6 +1668,7 @@ let HOME_SPORTS_NEWS_TS = 0;
 let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
+const VIP_DISCORD_URL = 'https://discord.gg/algobets';
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -2521,12 +2528,26 @@ function generateVipReport() {
   showToast('VIP report generated');
 }
 
+function joinVipDiscord() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  if (!VIP_DISCORD_URL || !/^https?:\/\//i.test(VIP_DISCORD_URL)) {
+    showToast('Discord invite not configured');
+    return;
+  }
+  window.open(VIP_DISCORD_URL, '_blank', 'noopener,noreferrer');
+}
+
 function renderVipTools() {
   const vipOn = canUseVip();
   const clvEl = document.getElementById('vip-clv');
   const earlyEl = document.getElementById('vip-early');
   const timingEl = document.getElementById('vip-timing');
   const podEl = document.getElementById('vip-pod');
+  const discordEl = document.getElementById('vip-discord-status');
   const clvLabEl = document.getElementById('vip-clv-lab');
   const depthEl = document.getElementById('vip-depth');
   const watchEl = document.getElementById('vip-watchlist');
@@ -2545,6 +2566,7 @@ function renderVipTools() {
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
       podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No picks yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Picks</button></div></div>`;
     }
+    if (discordEl) discordEl.textContent = 'VIP Discord is locked for VIP members.';
     if (clvLabEl) clvLabEl.textContent = 'CLV Lab is locked for VIP.';
     if (depthEl) depthEl.textContent = 'Market depth is locked for VIP.';
     if (watchEl) watchEl.value = '';
@@ -2578,6 +2600,7 @@ function renderVipTools() {
         </div>`).join('')
       : 'Run scan to load VIP picks of the day.';
   }
+  if (discordEl) discordEl.textContent = 'Private VIP Discord is active. Tap "Join Discord" to open invite.';
 
   if (timingEl) {
     if (!PICKS.length) {
