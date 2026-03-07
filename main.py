@@ -28,6 +28,7 @@ import math
 import time
 import base64
 import hmac
+import urllib.parse
 import httpx
 import asyncio
 import hashlib
@@ -39,7 +40,7 @@ from typing import Optional, Any
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -563,6 +564,13 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     rec.setdefault("streak_rewards_claimed", 0)
     rec.setdefault("digest", {"enabled": False, "channel": "email", "target": "", "hour_local": 9})
     rec.setdefault("profile", {"state": "auto", "bankroll_mode": "standard"})
+    rec.setdefault("journal", [])
+    rec.setdefault(
+        "agent_weights",
+        {"best_line_ev": 1.0, "market_consensus": 1.0, "devig": 1.0, "steam": 1.0, "fades": 1.0},
+    )
+    rec.setdefault("alert_packs", [])
+    rec.setdefault("affiliate_clicks", [])
     users[user_id] = rec
     return rec
 
@@ -1190,6 +1198,81 @@ def _scan_streak_status(user_rec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _clv_report(user_rec: dict[str, Any]) -> dict[str, Any]:
+    rows = [r for r in user_rec.get("tracked_picks", []) if r.get("status") in {"win", "loss", "push"}]
+    samples = []
+    wins = 0
+    for r in rows:
+        try:
+            open_line = int(r.get("line_at_pick"))
+            close_line = int(r.get("closing_line"))
+        except Exception:
+            continue
+        # Positive means user beat the closing line (better payout than close).
+        delta = close_line - open_line
+        samples.append(delta)
+        if delta > 0:
+            wins += 1
+    count = len(samples)
+    avg_delta = round(sum(samples) / count, 2) if count else 0.0
+    beat_pct = round((wins / count) * 100.0, 1) if count else 0.0
+    return {"samples": count, "avg_clv_delta": avg_delta, "beat_closing_pct": beat_pct}
+
+
+def _agent_weighted_pick_score(pick: dict[str, Any], weights: dict[str, Any]) -> float:
+    ev = float(pick.get("edge", 0.0) or 0.0)
+    steam = 1.0 if float(pick.get("line_movement", 0.0) or 0.0) > 0 else 0.0
+    fades = 1.0 if float(pick.get("public_pct", 0.0) or 0.0) >= 60 else 0.0
+    return (
+        ev * float(weights.get("best_line_ev", 1.0) or 1.0)
+        + ev * 0.5 * float(weights.get("market_consensus", 1.0) or 1.0)
+        + ev * 0.35 * float(weights.get("devig", 1.0) or 1.0)
+        + steam * float(weights.get("steam", 1.0) or 1.0)
+        + fades * float(weights.get("fades", 1.0) or 1.0)
+    )
+
+
+def _timeline_for_pick(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    ts = int(entry.get("ts", 0) or int(time.time()))
+    ev = float(entry.get("ev", 0.0) or 0.0)
+    line_at_pick = entry.get("line_at_pick")
+    close = entry.get("closing_line")
+    status = str(entry.get("status", "open"))
+    out = [
+        {"ts": ts, "event": "Pick published", "detail": f"{entry.get('bet')} {entry.get('odds')}"},
+        {"ts": ts + 120, "event": "Market check", "detail": f"EV signal +{round(ev,2)}%"},
+    ]
+    if line_at_pick is not None:
+        out.append({"ts": ts + 240, "event": "Line at pick", "detail": str(line_at_pick)})
+    if close is not None:
+        out.append({"ts": ts + 600, "event": "Closing line", "detail": str(close)})
+    out.append({"ts": int(entry.get("settled_ts", ts + 900) or (ts + 900)), "event": "Settlement", "detail": status.upper()})
+    return out
+
+
+_BOOK_DEEPLINKS = {
+    "draftkings": "https://sportsbook.draftkings.com",
+    "fanduel": "https://sportsbook.fanduel.com",
+    "betmgm": "https://sports.betmgm.com",
+    "caesars": "https://sportsbook.caesars.com",
+    "pinnacle": "https://www.pinnacle.com",
+}
+
+_ALERT_PACKS = {
+    "a_grade_ev4": {"name": "A-grade +EV (4%+)", "min_ev": 4.0, "grade": "a"},
+    "underdog_steam": {"name": "Underdog Steam", "min_ev": 2.0, "steam_only": True},
+    "totals_only": {"name": "Totals Focus", "min_ev": 2.0, "bet_type": "totals"},
+}
+
+
+def _build_betslip_url(book: str, game: str, bet: str, odds: Any) -> str:
+    base = _BOOK_DEEPLINKS.get(str(book or "").strip().lower())
+    if not base:
+        return ""
+    q = urllib.parse.quote_plus(f"{game} {bet} {odds}")
+    return f"{base}?q={q}"
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PINNACLE - CLV BENCHMARK (still free!)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1614,6 +1697,34 @@ class WaitlistJoinRequest(BaseModel):
 class ProfileSettingsRequest(BaseModel):
     state: Optional[str] = "auto"
     bankroll_mode: Optional[str] = "standard"
+
+
+class BankrollPlanRequest(BaseModel):
+    bankroll: float
+    risk_mode: Optional[str] = "standard"
+    max_open_bets: Optional[int] = 8
+
+
+class JournalEntryRequest(BaseModel):
+    game: str
+    bet: str
+    odds: str
+    stake_units: Optional[float] = 1.0
+    result: Optional[str] = "open"
+    notes: Optional[str] = ""
+
+
+class AgentWeightsRequest(BaseModel):
+    best_line_ev: Optional[float] = 1.0
+    market_consensus: Optional[float] = 1.0
+    devig: Optional[float] = 1.0
+    steam: Optional[float] = 1.0
+    fades: Optional[float] = 1.0
+
+
+class AlertPackRequest(BaseModel):
+    pack: str
+    enabled: Optional[bool] = True
 
 
 COMMUNITY_POST_WINDOW_SECONDS = 10 * 60
@@ -2443,6 +2554,272 @@ async def arb_detect(plan: str = Depends(get_user_plan)):
     }
 
 
+@app.get("/api/live")
+async def live_mode(request: Request):
+    user_plan = await _get_verified_plan(request)
+    tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
+    now = datetime.utcnow()
+    rows: list[dict[str, Any]] = []
+    for sport in tier.get("sports_allowed") or SPORTS:
+        games = await fetch_odds_api_games(sport)
+        for g in games:
+            ct = str(g.get("commence_time") or "")
+            try:
+                dt = datetime.fromisoformat(ct.replace("Z", "+00:00")).replace(tzinfo=None)
+            except Exception:
+                continue
+            minutes = int((now - dt).total_seconds() / 60)
+            if minutes < -15 or minutes > 180:
+                continue
+            rows.append(
+                {
+                    "sport": SPORT_META.get(sport, {}).get("label", sport),
+                    "game": f"{g.get('away_team','')} @ {g.get('home_team','')}",
+                    "minutes_since_start": minutes,
+                    "home_ml": g.get("home_ml"),
+                    "away_ml": g.get("away_ml"),
+                    "home_team": g.get("home_team"),
+                    "away_team": g.get("away_team"),
+                }
+            )
+    rows.sort(key=lambda x: abs(int(x.get("minutes_since_start", 0))))
+    max_rows = 20 if plan_rank(user_plan) >= plan_rank(PLAN_PREMIUM) else 6
+    return {"live": rows[:max_rows], "count": len(rows)}
+
+
+@app.get("/api/news-impact")
+async def news_impact(request: Request):
+    user_plan = await _get_verified_plan(request)
+    if plan_rank(user_plan) < plan_rank(PLAN_PREMIUM):
+        raise HTTPException(status_code=403, detail="Upgrade to Premium for news impact feed.")
+    scans: list[dict[str, Any]] = []
+    for sport in ["basketball_nba", "americanfootball_nfl"]:
+        games = await fetch_odds_api_games(sport)
+        for g in games[:25]:
+            by_book = g.get("moneyline_by_book") or {}
+            if len(by_book) < 2:
+                continue
+            h = [int(v.get("home")) for v in by_book.values() if v.get("home") is not None]
+            a = [int(v.get("away")) for v in by_book.values() if v.get("away") is not None]
+            if len(h) < 2 or len(a) < 2:
+                continue
+            dispersion = max(h) - min(h) + max(a) - min(a)
+            impact = round(min(100.0, max(0.0, abs(dispersion) / 4.0)), 1)
+            if impact < 20:
+                continue
+            scans.append(
+                {
+                    "sport": SPORT_META.get(sport, {}).get("label", sport),
+                    "game": f"{g.get('away_team','')} @ {g.get('home_team','')}",
+                    "impact_score": impact,
+                    "note": "Market dispersion spike suggests lineup/news re-pricing.",
+                }
+            )
+    scans.sort(key=lambda x: x.get("impact_score", 0), reverse=True)
+    return {"impacts": scans[:30], "count": len(scans)}
+
+
+@app.get("/api/clv")
+async def clv_status(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"clv": _clv_report(rec)}
+
+
+@app.post("/api/bankroll/plan")
+@limiter.limit("30/hour")
+async def bankroll_plan(body: BankrollPlanRequest, request: Request):
+    bankroll = max(10.0, float(body.bankroll or 0.0))
+    mode = str(body.risk_mode or "standard").strip().lower()
+    if mode not in {"conservative", "standard", "aggressive"}:
+        mode = "standard"
+    unit_pct = 0.01 if mode == "standard" else (0.0075 if mode == "conservative" else 0.015)
+    unit = round(bankroll * unit_pct, 2)
+    max_open = max(1, min(int(body.max_open_bets or 8), 20))
+    cap_pct = 0.06 if mode == "conservative" else (0.10 if mode == "standard" else 0.14)
+    exposure_cap = round(bankroll * cap_pct, 2)
+    return {
+        "plan": {
+            "bankroll": bankroll,
+            "risk_mode": mode,
+            "unit_size": unit,
+            "max_open_bets": max_open,
+            "max_exposure_dollars": exposure_cap,
+            "stop_loss_daily_dollars": round(bankroll * 0.03, 2),
+        }
+    }
+
+
+@app.get("/api/journal")
+async def journal_list(request: Request, limit: int = 100):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    rows = list(rec.get("journal", []))
+    rows.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    safe = max(1, min(int(limit or 100), 500))
+    return {"entries": rows[:safe], "count": len(rows)}
+
+
+@app.post("/api/journal/add")
+@limiter.limit("60/hour")
+async def journal_add(body: JournalEntryRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    result = str(body.result or "open").strip().lower()
+    if result not in {"open", "win", "loss", "push"}:
+        result = "open"
+    entry = {
+        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8")).hexdigest()[:14],
+        "ts": int(time.time()),
+        "game": str(body.game or "").strip()[:120],
+        "bet": str(body.bet or "").strip()[:140],
+        "odds": str(body.odds or "").strip()[:24],
+        "stake_units": round(max(0.01, float(body.stake_units or 1.0)), 2),
+        "result": result,
+        "notes": str(body.notes or "").strip()[:300],
+    }
+    rows = rec.setdefault("journal", [])
+    rows.append(entry)
+    rec["journal"] = rows[-1000:]
+    _save_growth_db()
+    return {"ok": True, "entry": entry}
+
+
+@app.get("/api/journal/export.csv")
+async def journal_export_csv(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    rows = list(rec.get("journal", []))
+    rows.sort(key=lambda x: x.get("ts", 0))
+    lines = ["id,ts,game,bet,odds,stake_units,result,notes"]
+    for r in rows:
+        vals = [
+            str(r.get("id", "")),
+            str(r.get("ts", "")),
+            str(r.get("game", "")).replace(",", " "),
+            str(r.get("bet", "")).replace(",", " "),
+            str(r.get("odds", "")),
+            str(r.get("stake_units", "")),
+            str(r.get("result", "")),
+            str(r.get("notes", "")).replace(",", " "),
+        ]
+        lines.append(",".join(vals))
+    return PlainTextResponse("\n".join(lines), media_type="text/csv")
+
+
+@app.get("/api/pick/timeline")
+async def pick_timeline(request: Request, key: str):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    rows = list(rec.get("tracked_picks", []))
+    item = next((r for r in rows if str(r.get("key", "")) == str(key)), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Pick not found.")
+    return {"timeline": _timeline_for_pick(item), "pick": item}
+
+
+@app.get("/api/agents/weights")
+async def agent_weights_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"weights": rec.get("agent_weights", {})}
+
+
+@app.post("/api/agents/weights")
+@limiter.limit("30/hour")
+async def agent_weights_set(body: AgentWeightsRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    data = {
+        "best_line_ev": max(0.2, min(3.0, float(body.best_line_ev or 1.0))),
+        "market_consensus": max(0.2, min(3.0, float(body.market_consensus or 1.0))),
+        "devig": max(0.2, min(3.0, float(body.devig or 1.0))),
+        "steam": max(0.2, min(3.0, float(body.steam or 1.0))),
+        "fades": max(0.2, min(3.0, float(body.fades or 1.0))),
+    }
+    rec["agent_weights"] = data
+    _save_growth_db()
+    return {"ok": True, "weights": data}
+
+
+@app.get("/api/alerts/packs")
+async def alerts_packs_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"packs": _ALERT_PACKS, "enabled": rec.get("alert_packs", [])}
+
+
+@app.post("/api/alerts/packs")
+@limiter.limit("20/hour")
+async def alerts_packs_set(body: AlertPackRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    if body.pack not in _ALERT_PACKS:
+        raise HTTPException(status_code=400, detail="Unknown alert pack.")
+    rec = _ensure_growth_user(user_id)
+    enabled = set(rec.get("alert_packs", []))
+    if body.enabled:
+        enabled.add(body.pack)
+    else:
+        enabled.discard(body.pack)
+    rec["alert_packs"] = sorted(enabled)
+    _save_growth_db()
+    return {"ok": True, "enabled": rec["alert_packs"]}
+
+
+@app.get("/api/affiliate/status")
+async def affiliate_status(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    code = rec.get("referral_code")
+    clicks = list(rec.get("affiliate_clicks", []))
+    clicks_30d = [c for c in clicks if int(c.get("ts", 0) or 0) >= int(time.time()) - 30 * 86400]
+    refs = list(rec.get("referrals", []))
+    return {
+        "affiliate": {
+            "code": code,
+            "link": f"{FRONTEND_URL.rstrip('/')}/1.html?ref={code}",
+            "clicks_30d": len(clicks_30d),
+            "referrals_total": len(refs),
+            "estimated_conversion_pct": round((len(refs) / max(1, len(clicks_30d))) * 100.0, 1),
+        }
+    }
+
+
+@app.post("/api/affiliate/click")
+@limiter.limit("120/hour")
+async def affiliate_click(request: Request, code: str = ""):
+    code_u = str(code or "").strip().upper()
+    owner = _find_user_by_ref_code(code_u)
+    if not owner:
+        raise HTTPException(status_code=404, detail="Referral code not found.")
+    rec = _ensure_growth_user(owner)
+    arr = rec.setdefault("affiliate_clicks", [])
+    arr.append({"ts": int(time.time()), "ip": _client_ip(request)[:80]})
+    rec["affiliate_clicks"] = arr[-20000:]
+    _save_growth_db()
+    return {"ok": True}
+
+
 @app.get("/scan")
 @limiter.limit("90/hour")
 async def scan(request: Request):
@@ -2451,7 +2828,9 @@ async def scan(request: Request):
         raise HTTPException(status_code=503, detail="Scanning is temporarily disabled.")
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
-    user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip() or "anon"
+    user_id = _request_user_id(request) or "anon"
+    user_growth = _ensure_growth_user(user_id)
+    agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
     force_refresh = str(request.query_params.get("refresh", "false")).lower() == "true"
 
@@ -2516,8 +2895,11 @@ async def scan(request: Request):
             picks = await generate_picks_for_sport(sport, [game])
             all_picks.extend(picks)
     
-    # Sort by edge (highest first)
-    all_picks.sort(key=lambda x: x.get("edge", 0), reverse=True)
+    # Sort by personalized agent-weighted score.
+    for p in all_picks:
+        p["agent_score"] = round(_agent_weighted_pick_score(p, agent_weights), 3)
+        p["betslip_url"] = _build_betslip_url(p.get("book"), p.get("game"), p.get("bet"), p.get("odds"))
+    all_picks.sort(key=lambda x: x.get("agent_score", x.get("edge", 0)), reverse=True)
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
@@ -2565,7 +2947,6 @@ async def scan(request: Request):
             for p in visible_picks[:3]
         ],
     }
-    user_growth = _ensure_growth_user(user_id)
     history = user_growth.setdefault("history", [])
     history.append(history_row)
     if len(history) > 120:
