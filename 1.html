@@ -1465,16 +1465,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
     <div class="auth-title">Create Free Account</div>
-    <div class="auth-sub">Optional for browsing. Needed for saved history, alerts, and synced profile.</div>
+    <div class="auth-sub">Optional for browsing. Needed for saved history, alerts, billing, and synced profile.</div>
     <div class="auth-methods">
-      <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
-      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
+      <button class="auth-m on" id="am-email" onclick="selectAuthMethod('email')">Email</button>
       <button class="auth-m" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
-      <button class="auth-m" id="am-facebook" onclick="selectAuthMethod('facebook')">Facebook</button>
     </div>
     <div class="auth-field">
-      <div class="auth-lbl" id="auth-lbl">Gmail Address</div>
-      <input class="auth-in" id="auth-input" type="text" placeholder="you@gmail.com"/>
+      <div class="auth-lbl" id="auth-lbl">Email Address</div>
+      <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
     </div>
     <div class="auth-actions">
       <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
@@ -1488,10 +1486,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="auth-title">Create Account in 10 Seconds</div>
     <div class="auth-sub">Save picks, alerts, and billing under one profile.</div>
     <div class="nudge-actions">
-      <button class="nudge-btn primary" onclick="startNudgeAuth('gmail')">Continue with Google (Recommended)</button>
-      <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
+      <button class="nudge-btn primary" onclick="startNudgeAuth('email')">Continue with Email (Recommended)</button>
       <button class="nudge-btn" onclick="startNudgeAuth('phone')">Continue with Phone</button>
-      <button class="nudge-btn" onclick="startNudgeAuth('facebook')">Continue with Facebook</button>
       <button class="bill-link" style="justify-self:end" onclick="skipAuthNudge()">Skip for now</button>
     </div>
   </div>
@@ -1528,6 +1524,7 @@ const _backendKeyFromQp = String(_qp.get('backend_key') || '').trim();
 if (_backendKeyFromQp) localStorage.setItem('algobets-backend-key', _backendKeyFromQp);
 const BACKEND_KEY = String(localStorage.getItem('algobets-backend-key') || '').trim();
 const PROFILE_KEY = 'algobets-profile-v1';
+const AUTH_TOKEN_KEY = 'algobets-auth-token-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
 const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
 const PREF_KEY = 'algobets-pref-v1';
@@ -1537,54 +1534,24 @@ const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
 
-function makeGuestId() {
-  return `guest_${Math.random().toString(36).slice(2, 10)}`;
+function makeUserId() {
+  return `usr_${Math.random().toString(36).slice(2, 14)}`;
 }
 
-const _uidFromQp = (_qp.get('uid') || '').trim();
-if (_uidFromQp) localStorage.setItem('algobets-user-id', _uidFromQp);
 let USER_ID = (localStorage.getItem('algobets-user-id') || '').trim();
+if (!/^[a-z0-9:_-]{6,64}$/.test(USER_ID)) {
+  USER_ID = '';
+}
 if (!USER_ID) {
-  USER_ID = makeGuestId();
+  USER_ID = makeUserId();
   localStorage.setItem('algobets-user-id', USER_ID);
 }
-
-// Landing signup handoff: /1.html?signup=1&method=email|gmail|phone|facebook&id=...
-const _signupFlag = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('signup') || '').trim().toLowerCase());
-if (_signupFlag) {
-  let method = String(_qp.get('method') || '').trim().toLowerCase();
-  let identifier = String(_qp.get('id') || _qp.get('email') || '').trim();
-  if (!['gmail', 'email', 'phone', 'facebook'].includes(method)) {
-    method = identifier.includes('@gmail.com') ? 'gmail' : 'email';
-  }
-  if (identifier) {
-    if (method === 'phone') {
-      identifier = identifier.replace(/\D/g, '');
-    } else {
-      identifier = identifier.toLowerCase();
-    }
-    const valid =
-      (method === 'phone' && identifier.length >= 7) ||
-      ((method === 'gmail' || method === 'email' || method === 'facebook') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier));
-    if (valid) {
-      try {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify({method, identifier, name: ''}));
-      } catch (_) {}
-      const uid = method === 'phone' ? `phone:${identifier}` : identifier;
-      USER_ID = uid;
-      localStorage.setItem('algobets-user-id', uid);
-      if (history.replaceState) {
-        const cleaned = new URL(window.location.href);
-        ['signup', 'method', 'id', 'email'].forEach(k => cleaned.searchParams.delete(k));
-        history.replaceState({}, document.title, cleaned.toString());
-      }
-    }
-  }
-}
+let AUTH_TOKEN = String(localStorage.getItem(AUTH_TOKEN_KEY) || '').trim();
 
 window.setAlgobetsUserId = function(uid) {
-  if (!uid) return;
-  USER_ID = String(uid).trim();
+  const next = String(uid || '').trim().toLowerCase();
+  if (!/^[a-z0-9:_-]{6,64}$/.test(next)) return;
+  USER_ID = next;
   localStorage.setItem('algobets-user-id', USER_ID);
 };
 
@@ -1596,7 +1563,7 @@ if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
 }
 if (!DEMO_QP_SET && localStorage.getItem(DEMO_MODE_KEY) == null) {
-  localStorage.setItem(DEMO_MODE_KEY, '1');
+  localStorage.setItem(DEMO_MODE_KEY, '0');
 }
 if (_checkoutStatus === 'success') {
   setTimeout(() => showToast('Checkout successful. Syncing plan...'), 80);
@@ -1668,7 +1635,7 @@ let HOME_SPORTS_NEWS_TS = 0;
 let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
 let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
-const VIP_DISCORD_URL = 'https://discord.gg/algobets';
+let VIP_DISCORD_URL = '';
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -1855,16 +1822,15 @@ function saveTrialUiState() {
 
 function normalizeAuthMethod(method) {
   const m = String(method || '').toLowerCase();
-  if (m === 'gmail' || m === 'email' || m === 'phone' || m === 'facebook') return m;
+  if (m === 'gmail' || m === 'facebook') return 'email';
+  if (m === 'email' || m === 'phone') return m;
   return 'guest';
 }
 
 function authMethodLabel(method) {
   const m = normalizeAuthMethod(method);
-  if (m === 'gmail') return 'Gmail';
   if (m === 'email') return 'Email';
   if (m === 'phone') return 'Phone';
-  if (m === 'facebook') return 'Facebook';
   return 'Guest';
 }
 
@@ -2176,7 +2142,7 @@ async function loadJournalStats() {
 }
 
 function exportJournalCsv() {
-  const url = `${BACKEND}/api/journal/export.csv?uid=${encodeURIComponent(USER_ID)}`;
+  const url = `${BACKEND}/api/journal/export.csv`;
   window.open(url, '_blank', 'noopener');
 }
 
@@ -2273,6 +2239,16 @@ async function loadAffiliate() {
     if (note) note.textContent = `Code ${AFFILIATE.code} · Clicks 30d ${AFFILIATE.clicks_30d} · Referrals ${AFFILIATE.referrals_total} · Conv ${AFFILIATE.estimated_conversion_pct}%`;
   } catch (err) {
     if (note) note.textContent = 'Affiliate data unavailable.';
+  }
+}
+
+async function loadPublicConfig() {
+  try {
+    const res = await backendGet('/api/config/public');
+    const invite = String(res?.vip_discord_url || '').trim();
+    VIP_DISCORD_URL = invite;
+  } catch (_) {
+    VIP_DISCORD_URL = '';
   }
 }
 
@@ -2662,7 +2638,7 @@ function renderVipTools() {
 async function joinVipWaitlistPrompt(source = 'props_cap') {
   let email = '';
   const method = normalizeAuthMethod(userProfile.method);
-  if ((method === 'email' || method === 'gmail') && String(userProfile.identifier || '').includes('@')) {
+  if (method === 'email' && String(userProfile.identifier || '').includes('@')) {
     email = String(userProfile.identifier || '').trim().toLowerCase();
   }
   if (!email) {
@@ -2694,9 +2670,6 @@ function loadProfile() {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (!raw) {
-      if (USER_ID.includes('@')) {
-        userProfile = {method: USER_ID.endsWith('@gmail.com') ? 'gmail' : 'email', identifier: USER_ID, name: ''};
-      }
       renderProfile();
       return;
     }
@@ -2706,9 +2679,6 @@ function loadProfile() {
       identifier: String(p.identifier || '').trim(),
       name: String(p.name || '').trim(),
     };
-    if (userProfile.identifier && USER_ID.startsWith('guest_')) {
-      window.setAlgobetsUserId(authIdentityForBilling(userProfile.method, userProfile.identifier));
-    }
   } catch (err) {
     console.warn('[Algobets] Could not load profile:', err);
   }
@@ -2725,11 +2695,7 @@ function selectAuthMethod(method) {
   const input = document.getElementById('auth-input');
   if (!lbl || !input) return;
 
-  if (m === 'gmail') {
-    lbl.textContent = 'Gmail Address';
-    input.placeholder = 'you@gmail.com';
-    input.type = 'email';
-  } else if (m === 'email') {
+  if (m === 'email') {
     lbl.textContent = 'Email Address';
     input.placeholder = 'you@example.com';
     input.type = 'email';
@@ -2738,8 +2704,8 @@ function selectAuthMethod(method) {
     input.placeholder = '+1 (555) 123-4567';
     input.type = 'tel';
   } else {
-    lbl.textContent = 'Facebook Email or Username';
-    input.placeholder = 'yourprofile or you@facebookmail.com';
+    lbl.textContent = 'Account';
+    input.placeholder = 'your account';
     input.type = 'text';
   }
 }
@@ -2748,10 +2714,10 @@ function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'gmail' : userProfile.method));
+  const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'email' : userProfile.method));
   selectAuthMethod(m);
   const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
-  if (m === 'gmail' || m === 'email') {
+  if (m === 'email') {
     input.value = userProfile.identifier || landingEmail || '';
   } else {
     input.value = userProfile.identifier || '';
@@ -2797,16 +2763,9 @@ function maybePromptAuthNudge() {
   return;
 }
 
-function authIdentityForBilling(method, rawValue) {
-  const v = String(rawValue || '').trim();
-  const m = normalizeAuthMethod(method);
-  if (m === 'phone') return `phone:${v.replace(/\D/g, '')}`;
-  return v.toLowerCase();
-}
-
 async function submitAuthProfile() {
   const active = document.querySelector('.auth-m.on');
-  const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'gmail');
+  const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'email');
   const input = document.getElementById('auth-input');
   if (!input) return;
   const value = String(input.value || '').trim();
@@ -2814,12 +2773,8 @@ async function submitAuthProfile() {
     showToast('Enter your account details');
     return;
   }
-  if ((method === 'gmail' || method === 'email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+  if (method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     showToast('Enter a valid email');
-    return;
-  }
-  if (method === 'gmail' && !/@gmail\.com$/i.test(value)) {
-    showToast('Use a Gmail address');
     return;
   }
   if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
@@ -2829,7 +2784,7 @@ async function submitAuthProfile() {
 
   userProfile = {method, identifier: value, name: ''};
   saveProfile();
-  window.setAlgobetsUserId(authIdentityForBilling(method, value));
+  await ensureAuthSession(true);
   authNudgeState.completed = true;
   saveAuthNudgeState();
   trackEvent('auth_completed', {method});
@@ -2846,9 +2801,12 @@ async function submitAuthProfile() {
 function signOutProfile() {
   userProfile = {method: 'guest', identifier: '', name: ''};
   saveProfile();
-  window.setAlgobetsUserId(makeGuestId());
+  window.setAlgobetsUserId(makeUserId());
+  AUTH_TOKEN = '';
+  localStorage.removeItem(AUTH_TOKEN_KEY);
   renderProfile();
   showToast('Signed out');
+  ensureAuthSession(true).catch(() => {});
   fetchPlan();
   loadTrialStatus();
   loadDigestSubscription();
@@ -2857,10 +2815,11 @@ function signOutProfile() {
 }
 
 function ensureRegisteredUser(redirectToProfile = true) {
-  if (!USER_ID || USER_ID.startsWith('guest_')) {
+  const method = normalizeAuthMethod(userProfile.method);
+  if (!USER_ID || method === 'guest' || !String(userProfile.identifier || '').trim()) {
     if (redirectToProfile) {
       showToast('Create your free account to continue');
-      openAuthModal('gmail');
+      openAuthModal('email');
       if (currentTab !== 'profile') trackEvent('signup_prompted', {from_tab: currentTab});
     }
     return false;
@@ -3189,57 +3148,105 @@ async function saveAlertSubscription() {
 
 // ─── BACKEND ─────────────────────────────────────────────────────────────────
 // Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
-async function backendGet(path, timeout = 60000) {
-  const url = `${BACKEND}${path}`;
-  const hdrs = {'x-user-id': USER_ID};
+function buildAuthHeaders(base = {}) {
+  const hdrs = Object.assign({}, base || {}, {'x-user-id': USER_ID});
+  if (AUTH_TOKEN) hdrs.authorization = `Bearer ${AUTH_TOKEN}`;
   if (BACKEND_KEY) hdrs['x-api-key'] = BACKEND_KEY;
+  return hdrs;
+}
 
-  // 1. Direct fetch
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeout);
-    const res = await fetch(url, {headers: hdrs, signal: ctrl.signal});
-    clearTimeout(t);
-    if (!res.ok) {
-      let detail = `HTTP ${res.status}`;
-      try {
-        const payload = await res.json();
-        if (payload?.detail) detail = String(payload.detail);
-      } catch (_) {}
-      const e = new Error(detail);
-      e.status = res.status;
-      e.detail = detail;
-      throw e;
+async function ensureAuthSession(force = false) {
+  if (!force && AUTH_TOKEN) return AUTH_TOKEN;
+  const method = normalizeAuthMethod(userProfile.method);
+  const identifier = String(userProfile.identifier || '').trim();
+  const body = {
+    user_id: USER_ID,
+    method: method === 'guest' ? 'guest' : method,
+    identifier: identifier || '',
+  };
+  const res = await fetch(`${BACKEND}/api/auth/session`, {
+    method: 'POST',
+    headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      if (payload?.detail) msg = String(payload.detail);
+    } catch (_) {}
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  AUTH_TOKEN = String(data.token || '').trim();
+  if (AUTH_TOKEN) localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
+  if (data.user_id && data.user_id !== USER_ID) window.setAlgobetsUserId(String(data.user_id).trim().toLowerCase());
+  return AUTH_TOKEN;
+}
+
+async function backendGet(path, timeout = 60000) {
+  if (!AUTH_TOKEN) await ensureAuthSession();
+  const url = `${BACKEND}${path}`;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const hdrs = buildAuthHeaders();
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeout);
+      const res = await fetch(url, {headers: hdrs, signal: ctrl.signal});
+      clearTimeout(t);
+      if (res.status === 401 && attempt === 0) {
+        await ensureAuthSession(true);
+        continue;
+      }
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const payload = await res.json();
+          if (payload?.detail) detail = String(payload.detail);
+        } catch (_) {}
+        const e = new Error(detail);
+        e.status = res.status;
+        e.detail = detail;
+        throw e;
+      }
+      return await res.json();
+    } catch(directErr) {
+      if (attempt === 1) {
+        console.warn('[Algobets] Direct backend request failed:', directErr.message);
+        throw directErr;
+      }
     }
-    return await res.json();
-  } catch(directErr) {
-    console.warn('[Algobets] Direct backend request failed:', directErr.message);
-    throw directErr;
   }
 }
 
 async function backendPost(path, body, timeout = 60000) {
+  if (!AUTH_TOKEN) await ensureAuthSession();
   const url = `${BACKEND}${path}`;
-  const hdrs = {'x-user-id': USER_ID, 'content-type': 'application/json'};
-  if (BACKEND_KEY) hdrs['x-api-key'] = BACKEND_KEY;
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeout);
-  try {
-    const res = await fetch(url, {method: 'POST', headers: hdrs, body: JSON.stringify(body || {}), signal: ctrl.signal});
-    if (!res.ok) {
-      let detail = `HTTP ${res.status}`;
-      try {
-        const payload = await res.json();
-        if (payload?.detail) detail = String(payload.detail);
-      } catch (_) {}
-      const e = new Error(detail);
-      e.status = res.status;
-      e.detail = detail;
-      throw e;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const hdrs = buildAuthHeaders({'content-type': 'application/json'});
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeout);
+    try {
+      const res = await fetch(url, {method: 'POST', headers: hdrs, body: JSON.stringify(body || {}), signal: ctrl.signal});
+      if (res.status === 401 && attempt === 0) {
+        await ensureAuthSession(true);
+        continue;
+      }
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const payload = await res.json();
+          if (payload?.detail) detail = String(payload.detail);
+        } catch (_) {}
+        const e = new Error(detail);
+        e.status = res.status;
+        e.detail = detail;
+        throw e;
+      }
+      return await res.json();
+    } finally {
+      clearTimeout(t);
     }
-    return await res.json();
-  } finally {
-    clearTimeout(t);
   }
 }
 
@@ -3250,7 +3257,7 @@ function trackEvent(name, props = {}) {
     const body = JSON.stringify(payload);
     fetch(url, {
       method: 'POST',
-      headers: Object.assign({'content-type': 'application/json', 'x-user-id': USER_ID}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      headers: buildAuthHeaders({'content-type': 'application/json'}),
       body,
       keepalive: true
     }).catch(() => {});
@@ -3635,8 +3642,8 @@ async function startCheckout(tier, cycle = billingCycle) {
     const res = await backendPost('/api/billing/checkout', {
       tier: desired,
       billing_cycle: finalCycle,
-      success_url: `${origin}?checkout=success&uid=${encodeURIComponent(USER_ID)}`,
-      cancel_url: `${origin}?checkout=cancel&uid=${encodeURIComponent(USER_ID)}`
+      success_url: `${origin}?checkout=success`,
+      cancel_url: `${origin}?checkout=cancel`
     });
     if (res.checkout_url) {
       trackEvent('checkout_redirected', {tier: desired, billing_cycle: finalCycle});
@@ -3716,7 +3723,7 @@ async function openBillingPortal() {
   if (!ensureBillingUser()) return;
   try {
     const origin = window.location.origin + window.location.pathname;
-    const res = await backendPost('/api/billing/portal', {return_url: `${origin}?uid=${encodeURIComponent(USER_ID)}`});
+    const res = await backendPost('/api/billing/portal', {return_url: origin});
     if (res.portal_url) window.open(res.portal_url, '_blank', 'noopener');
   } catch (err) {
     console.error(err);
@@ -4937,6 +4944,18 @@ loadPremiumSettings();
 loadVipSettings();
 loadTrialUiState();
 loadProfile();
+bindUiAccessibility();
+updateDemoToggleUi();
+if (demoMode) applyDemoDataset();
+applySavedSelections();
+updateScanCooldownUi();
+renderPerf();
+loadBoostExamples();
+renderFades();
+renderPremiumTools();
+maybeOpenUpgradeFromQuery();
+ensureAuthSession().catch(err => console.warn('[Algobets] auth session init failed:', err?.message || err));
+loadPublicConfig();
 try {
   if (!sessionStorage.getItem('algobets-app-open-tracked')) {
     trackEvent('app_open', {tab: currentTab});
@@ -4947,19 +4966,9 @@ loadProfileSettings();
 loadQuotaDashboard();
 loadTomorrowGames();
 loadHomeSportsNews();
-bindUiAccessibility();
-updateDemoToggleUi();
-if (demoMode) applyDemoDataset();
-applySavedSelections();
-updateScanCooldownUi();
 fetchPlan();
 fetchPricing();
 loadTrialStatus();
-renderPerf();
-loadBoostExamples();
-renderFades();
-renderPremiumTools();
-maybeOpenUpgradeFromQuery();
 doScan();
 startAutoRefresh();
 </script>

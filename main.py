@@ -28,6 +28,7 @@ import math
 import time
 import base64
 import hmac
+import secrets
 import urllib.parse
 import httpx
 import asyncio
@@ -61,6 +62,7 @@ JWT_ISSUER = os.getenv("JWT_ISSUER", "").strip()
 JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "").strip()
 ADMIN_API_TOKEN = os.getenv("ADMIN_API_TOKEN", "").strip()
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/New_York").strip() or "America/New_York"
+VIP_DISCORD_URL = os.getenv("VIP_DISCORD_URL", "").strip()
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -88,12 +90,13 @@ VIP_PRICE_IDS = _csv_env("STRIPE_VIP_PRICE_IDS") or _csv_env("STRIPE_SHARP_PRICE
 PREMIUM_ANNUAL_PRICE_IDS = _csv_env("STRIPE_PREMIUM_ANNUAL_PRICE_IDS")
 VIP_ANNUAL_PRICE_IDS = _csv_env("STRIPE_VIP_ANNUAL_PRICE_IDS")
 ALLOWED_ORIGINS = [o for o in (_csv_env("ALLOWED_ORIGINS") or [FRONTEND_URL]) if o]
+BILLING_RETURN_ORIGINS = [o.rstrip("/").lower() for o in (_csv_env("BILLING_RETURN_ORIGINS") or ALLOWED_ORIGINS) if o]
 ENFORCE_ORIGIN_CHECKS = _bool_env("ENFORCE_ORIGIN_CHECKS", "true")
-REQUIRE_BACKEND_API_KEY = _bool_env("REQUIRE_BACKEND_API_KEY", "false")
+REQUIRE_BACKEND_API_KEY = _bool_env("REQUIRE_BACKEND_API_KEY", "true") and bool(BACKEND_API_KEY)
 SECURITY_HEADERS_ENABLED = _bool_env("SECURITY_HEADERS_ENABLED", "true")
 DEBUG_ENDPOINTS_PUBLIC = _bool_env("DEBUG_ENDPOINTS_PUBLIC", "false")
 WEBHOOK_EVENT_TTL_SECONDS = int(os.getenv("WEBHOOK_EVENT_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
-REQUIRE_AUTH_TOKEN = _bool_env("REQUIRE_AUTH_TOKEN", "false")
+REQUIRE_AUTH_TOKEN = _bool_env("REQUIRE_AUTH_TOKEN", "true")
 COMMUNITY_ENABLED = _bool_env("COMMUNITY_ENABLED", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
@@ -101,6 +104,11 @@ CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
 SECURITY_EVENT_CAP = int(os.getenv("SECURITY_EVENT_CAP", "5000") or 5000)
+AUTH_TOKEN_TTL_SECONDS = int(os.getenv("AUTH_TOKEN_TTL_SECONDS", str(30 * 24 * 3600)) or (30 * 24 * 3600))
+
+if not JWT_SECRET:
+    JWT_SECRET = secrets.token_hex(32)
+    print("[Security] JWT_SECRET not set. Generated ephemeral secret for this process.")
 
 
 def normalize_plan_name(plan: str) -> str:
@@ -130,6 +138,9 @@ def verify_api_key(request: Request, x_api_key: str = Header(default="")):
 def _b64url_decode(segment: str) -> bytes:
     s = segment + "=" * ((4 - len(segment) % 4) % 4)
     return base64.urlsafe_b64decode(s.encode("utf-8"))
+
+def _b64url_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
 
 
 def _json_b64url_decode(segment: str) -> dict[str, Any]:
@@ -175,6 +186,31 @@ def _verify_hs256_jwt(token: str) -> dict[str, Any]:
     return payload
 
 
+def _normalize_user_id(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    if not re.fullmatch(r"[a-z0-9:_-]{6,64}", raw):
+        return ""
+    return raw
+
+
+def _issue_hs256_jwt(subject: str, ttl_seconds: int = AUTH_TOKEN_TTL_SECONDS) -> str:
+    now = int(time.time())
+    exp = now + max(300, int(ttl_seconds or AUTH_TOKEN_TTL_SECONDS))
+    header = {"alg": "HS256", "typ": "JWT"}
+    payload = {"sub": subject, "iat": now, "exp": exp}
+    if JWT_ISSUER:
+        payload["iss"] = JWT_ISSUER
+    if JWT_AUDIENCE:
+        payload["aud"] = JWT_AUDIENCE
+    h = _b64url_encode(json.dumps(header, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+    p = _b64url_encode(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+    sig = hmac.new(JWT_SECRET.encode("utf-8"), f"{h}.{p}".encode("utf-8"), hashlib.sha256).digest()
+    s = _b64url_encode(sig)
+    return f"{h}.{p}.{s}"
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PLAN VERIFICATION (Stripe)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -184,39 +220,32 @@ _PLAN_CACHE_TTL = 300
 _scan_state: dict = {}
 _SCAN_STATE_TTL = 3600 * 24
 
+def _get_billing_entitlement(user_id: str) -> str:
+    if not user_id:
+        return PLAN_FREE
+    rows = _growth_db.get("billing_entitlements", {})
+    if not isinstance(rows, dict):
+        return PLAN_FREE
+    rec = rows.get(user_id)
+    if not isinstance(rec, dict):
+        return PLAN_FREE
+    return normalize_plan_name(rec.get("plan", PLAN_FREE))
+
+
+def _set_billing_entitlement(user_id: str, plan: str, source: str = "stripe_webhook"):
+    if not user_id:
+        return
+    plan_norm = normalize_plan_name(plan)
+    rows = _growth_db.setdefault("billing_entitlements", {})
+    if not isinstance(rows, dict):
+        rows = {}
+    rows[user_id] = {"plan": plan_norm, "updated_at": int(time.time()), "source": str(source or "stripe_webhook")[:48]}
+    _growth_db["billing_entitlements"] = rows
+    _save_growth_db()
+
+
 def _verify_plan_stripe_sync(user_id: str) -> str:
-    if not STRIPE_SECRET or not user_id:
-        return PLAN_FREE
-    try:
-        customers = stripe.Customer.search(query=f'email:"{user_id}"', limit=1)
-        if not customers.data:
-            customers = stripe.Customer.list(limit=100)
-            matching = [c for c in customers.data if
-                        c.metadata.get("userId") == user_id or c.email == user_id]
-            if not matching:
-                return PLAN_FREE
-            customer = matching[0]
-        else:
-            customer = customers.data[0]
-
-        subs = stripe.Subscription.list(customer=customer.id, status="active", limit=5)
-        if not subs.data:
-            return PLAN_FREE
-
-        price_id  = subs.data[0]["items"]["data"][0]["price"]["id"]
-        if price_id in VIP_PRICE_IDS:
-            return PLAN_VIP
-        if price_id in PREMIUM_PRICE_IDS:
-            return PLAN_PREMIUM
-        # Unknown paid subscription still gets paid access.
-        return PLAN_PREMIUM
-
-    except stripe.error.StripeError as e:
-        print(f"[Plan] Stripe error for {user_id}: {e}")
-        return PLAN_FREE
-    except Exception as e:
-        print(f"[Plan] Unexpected error for {user_id}: {e}")
-        return PLAN_FREE
+    return _get_billing_entitlement(user_id)
 
 
 OWNER_EMAILS = {"grandrichlife727@gmail.com"}
@@ -360,10 +389,23 @@ def _is_sensitive_path(path: str) -> bool:
         "/api/alerts/subscribe",
         "/api/waitlist/join",
         "/api/referral/redeem",
+        "/api/referral/status",
         "/api/trial/start",
+        "/api/trial/status",
         "/api/profile/settings",
+        "/api/history",
+        "/api/alerts/subscriptions",
         "/api/digest/subscription",
+        "/api/streak/status",
         "/api/streak/claim",
+        "/api/quota",
+        "/api/agents/weights",
+        "/api/alerts/packs",
+        "/api/affiliate/status",
+        "/api/news-impact",
+        "/api/bankroll/plan",
+        "/api/journal",
+        "/api/journal/export.csv",
         "/api/ev-finder",
         "/api/arb-detect",
         "/api/props",
@@ -1916,6 +1958,12 @@ class PortalRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class AuthSessionRequest(BaseModel):
+    user_id: str
+    method: Optional[str] = "guest"
+    identifier: Optional[str] = ""
+
+
 class ReferralRedeemRequest(BaseModel):
     code: str
 
@@ -1993,10 +2041,10 @@ COMMUNITY_POST_MAX_PER_DAY = 15
 
 
 def _request_user_id(request: Request) -> str:
-    state_uid = str(getattr(request.state, "user_id", "") or "").strip().lower()
+    state_uid = _normalize_user_id(str(getattr(request.state, "user_id", "") or ""))
     if state_uid:
         return state_uid
-    return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip().lower()
+    return _normalize_user_id(request.headers.get("x-user-id", ""))
 
 
 def _require_admin(request: Request):
@@ -2009,6 +2057,34 @@ def _require_debug_access(request: Request):
     if DEBUG_ENDPOINTS_PUBLIC:
         return
     _require_admin(request)
+
+
+def _is_allowed_billing_return_url(url: str) -> bool:
+    try:
+        parsed = urllib.parse.urlparse(str(url or "").strip())
+    except Exception:
+        return False
+    if parsed.scheme not in {"https", "http"}:
+        return False
+    if not parsed.netloc:
+        return False
+    origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/").lower()
+    if origin in BILLING_RETURN_ORIGINS:
+        return True
+    if parsed.hostname in {"localhost", "127.0.0.1"}:
+        return True
+    return False
+
+
+def _plan_from_price_id(price_id: str) -> str:
+    p = str(price_id or "").strip()
+    if not p:
+        return PLAN_FREE
+    if p in VIP_PRICE_IDS or p in VIP_ANNUAL_PRICE_IDS:
+        return PLAN_VIP
+    if p in PREMIUM_PRICE_IDS or p in PREMIUM_ANNUAL_PRICE_IDS:
+        return PLAN_PREMIUM
+    return PLAN_PREMIUM
 
 
 def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str] = "monthly") -> str:
@@ -2030,14 +2106,24 @@ def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str]
     raise HTTPException(status_code=400, detail="Free tier does not require checkout.")
 
 
-def _find_or_create_customer(email: str):
+def _billing_customer_email_for_user(user_id: str) -> str:
+    rec = _ensure_growth_user(user_id)
+    identity = rec.get("profile_identity", {}) if isinstance(rec, dict) else {}
+    identifier = str((identity or {}).get("identifier", "")).strip().lower()
+    if re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", identifier):
+        return identifier
+    return f"{user_id}@users.algobets.local"
+
+
+def _find_or_create_customer(user_id: str):
+    email = _billing_customer_email_for_user(user_id)
     try:
-        customers = stripe.Customer.search(query=f'email:"{email}"', limit=1)
+        customers = stripe.Customer.search(query=f'metadata["userId"]:"{user_id}"', limit=1)
         if customers.data:
             return customers.data[0]
     except Exception:
         pass
-    return stripe.Customer.create(email=email, metadata={"userId": email})
+    return stripe.Customer.create(email=email, metadata={"userId": user_id})
 
 
 def _invalidate_plan_cache(user_id: str):
@@ -2069,6 +2155,31 @@ async def health_check():
         "data_source": "odds_api" if ODDS_API_KEY else "none",
         "quota_remaining": _quota_remaining,
     }
+
+
+@app.get("/api/config/public")
+async def public_config():
+    return {
+        "vip_discord_url": VIP_DISCORD_URL,
+        "billing_enabled": BILLING_ENABLED,
+        "auth_required": REQUIRE_AUTH_TOKEN,
+    }
+
+
+@app.post("/api/auth/session")
+@limiter.limit("60/hour")
+async def auth_session(body: AuthSessionRequest, request: Request):
+    user_id = _normalize_user_id(body.user_id)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid user_id.")
+    method = str(body.method or "guest").strip().lower()[:24]
+    identifier = str(body.identifier or "").strip().lower()[:160]
+    rec = _ensure_growth_user(user_id)
+    profile = rec.setdefault("profile_identity", {})
+    profile.update({"method": method or "guest", "identifier": identifier, "updated_at": int(time.time())})
+    _save_growth_db()
+    token = _issue_hs256_jwt(user_id)
+    return {"token": token, "user_id": user_id, "expires_in": AUTH_TOKEN_TTL_SECONDS}
 
 
 @app.get("/api/legal/terms")
@@ -2767,9 +2878,11 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
         raise HTTPException(status_code=503, detail="Billing is temporarily disabled.")
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
-    user_id = (_request_user_id(request) or body.user_id or "").strip().lower()
+    user_id = _normalize_user_id(_request_user_id(request))
     if not user_id:
-        raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
+        raise HTTPException(status_code=400, detail="Authenticated user required.")
+    if not _is_allowed_billing_return_url(body.success_url) or not _is_allowed_billing_return_url(body.cancel_url):
+        raise HTTPException(status_code=400, detail="Invalid checkout redirect URL.")
     ip = _client_ip(request)
     allow_user, _, retry_user = _velocity_allow("checkout_user", user_id.lower(), CHECKOUT_MAX_PER_HOUR, 3600)
     allow_ip, _, retry_ip = _velocity_allow("checkout_ip", ip, CHECKOUT_MAX_PER_HOUR * 2, 3600)
@@ -2804,9 +2917,11 @@ async def billing_portal(body: PortalRequest, request: Request):
         raise HTTPException(status_code=503, detail="Billing is temporarily disabled.")
     if not STRIPE_SECRET:
         raise HTTPException(status_code=500, detail="Stripe is not configured.")
-    user_id = (_request_user_id(request) or body.user_id or "").strip().lower()
+    user_id = _normalize_user_id(_request_user_id(request))
     if not user_id:
-        raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
+        raise HTTPException(status_code=400, detail="Authenticated user required.")
+    if not _is_allowed_billing_return_url(body.return_url):
+        raise HTTPException(status_code=400, detail="Invalid portal return URL.")
 
     customer = await asyncio.to_thread(_find_or_create_customer, user_id)
     session = await asyncio.to_thread(
@@ -2851,19 +2966,38 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
     event_type = event.get("type", "")
     obj = event.get("data", {}).get("object", {})
     user_id = ""
+    resolved_plan = PLAN_FREE
 
     if event_type == "checkout.session.completed":
-        user_id = (obj.get("client_reference_id") or obj.get("metadata", {}).get("userId") or obj.get("customer_email") or "").strip()
+        user_id = _normalize_user_id(obj.get("client_reference_id") or obj.get("metadata", {}).get("userId") or "")
+        meta_tier = normalize_plan_name(obj.get("metadata", {}).get("tier", ""))
+        if meta_tier in {PLAN_PREMIUM, PLAN_VIP}:
+            resolved_plan = meta_tier
+        else:
+            resolved_plan = PLAN_PREMIUM
     elif event_type.startswith("customer.subscription."):
         customer_id = obj.get("customer")
         try:
             if customer_id:
                 customer = await asyncio.to_thread(stripe.Customer.retrieve, customer_id)
-                user_id = (customer.get("email") or customer.get("metadata", {}).get("userId") or "").strip()
+                user_id = _normalize_user_id(customer.get("metadata", {}).get("userId") or "")
         except Exception:
             user_id = ""
+        status = str(obj.get("status") or "").strip().lower()
+        if status in {"active", "trialing", "past_due", "unpaid"}:
+            items = obj.get("items", {}).get("data", [])
+            price_id = ""
+            if isinstance(items, list) and items:
+                first = items[0] if isinstance(items[0], dict) else {}
+                price = first.get("price", {}) if isinstance(first, dict) else {}
+                if isinstance(price, dict):
+                    price_id = str(price.get("id") or "").strip()
+            resolved_plan = _plan_from_price_id(price_id) if price_id else PLAN_PREMIUM
+        else:
+            resolved_plan = PLAN_FREE
 
     if user_id:
+        _set_billing_entitlement(user_id, resolved_plan, source=event_type)
         _invalidate_plan_cache(user_id)
     _audit_security_event(request, "billing.webhook_processed", event_type, user_id=user_id)
     _save_growth_db()
