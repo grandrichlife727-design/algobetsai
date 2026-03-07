@@ -1099,6 +1099,7 @@ function updatePlanUi() {
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
   renderProfile();
+  updateScanCooldownUi();
 }
 
 function updatePaywallUi() {
@@ -1218,6 +1219,42 @@ function setApiStatus(state) {
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
 }
 
+function fmtCountdown(totalSec) {
+  const s = Math.max(0, Math.floor(Number(totalSec) || 0));
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${m}:${String(ss).padStart(2, '0')}`;
+}
+
+function updateScanCooldownUi() {
+  const pill = document.getElementById('scan-cooldown');
+  const btn = document.getElementById('scan-btn');
+  if (!pill || !btn) return;
+  const blocked = scanCooldownRemaining > 0 && !isScanning;
+  pill.textContent = `Next scan in ${fmtCountdown(scanCooldownRemaining)}`;
+  pill.classList.toggle('on', blocked);
+  btn.disabled = blocked;
+}
+
+function setScanCooldown(seconds) {
+  const next = Math.max(0, Math.floor(Number(seconds) || 0));
+  scanCooldownRemaining = next;
+  if (scanCooldownTicker) {
+    clearInterval(scanCooldownTicker);
+    scanCooldownTicker = null;
+  }
+  updateScanCooldownUi();
+  if (scanCooldownRemaining <= 0) return;
+  scanCooldownTicker = setInterval(() => {
+    scanCooldownRemaining = Math.max(0, scanCooldownRemaining - 1);
+    updateScanCooldownUi();
+    if (scanCooldownRemaining <= 0 && scanCooldownTicker) {
+      clearInterval(scanCooldownTicker);
+      scanCooldownTicker = null;
+    }
+  }, 1000);
+}
+
 // ─── NORMALIZERS ──────────────────────────────────────────────────────────────
 function normalizePick(p, idx) {
   const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
@@ -1295,6 +1332,11 @@ function normalizeArb(a) {
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
 async function doScan(silent = false) {
   if (isScanning) return;
+  if (scanCooldownRemaining > 0) {
+    if (!silent) showToast(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`);
+    updateScanCooldownUi();
+    return;
+  }
   isScanning = true;
 
   const btn = document.getElementById('scan-btn');
@@ -1341,8 +1383,13 @@ async function doScan(silent = false) {
       if (!Array.isArray(raw)) {
         currentPlan = normalizePlan(raw.plan || currentPlan);
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
+        setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
+        if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
+          showToast(`Using cached scan. Fresh data in ${fmtCountdown(scanCooldownRemaining)}`);
+        }
       } else {
         paywallMeta = null;
+        setScanCooldown(0);
       }
       PICKS = arr
         .map((p, i) => normalizePick(p, i))
@@ -1412,6 +1459,7 @@ async function doScan(silent = false) {
   btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
   loadBar.classList.remove('on');
   isScanning = false;
+  updateScanCooldownUi();
 }
 
 // ─── RENDER PICKS ─────────────────────────────────────────────────────────────
@@ -1724,6 +1772,7 @@ loadState();
 loadProfile();
 bindUiAccessibility();
 applySavedSelections();
+updateScanCooldownUi();
 fetchPlan();
 renderPerf();
 loadBoostExamples();
