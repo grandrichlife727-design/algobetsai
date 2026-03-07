@@ -167,6 +167,7 @@ html, body {
 .pick-book{font-size:11px;color:var(--sub)}
 .pick-book-link{font-size:11px;color:var(--sub);text-decoration:none;transition:color .12s}
 .pick-book-link:hover{color:var(--cyan)}
+.pick-stake{font-size:11px;color:var(--muted);margin:-2px 0 8px}
 
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono)}
@@ -221,6 +222,14 @@ html, body {
 .odds-head{color:var(--muted)}
 .odds-book{color:var(--sub);font-size:10px}
 .odds-line{color:var(--green)}
+.props-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.props-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.props-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
+.props-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:7px}
+.props-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.props-player{font-size:14px;font-weight:700;color:var(--text)}
+.props-badge{font-size:10px;font-family:var(--mono);padding:2px 7px;border:1px solid rgba(34,211,238,.24);border-radius:999px;color:var(--cyan);background:rgba(34,211,238,.08)}
+.props-meta{font-size:11px;color:var(--sub)}
 
 /* ARB */
 .steam-card{background:var(--card);border:1px solid rgba(34,211,238,.14);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:9px;animation:fadein .3s ease both}
@@ -300,7 +309,7 @@ html, body {
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
   color:var(--sub);font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
@@ -473,6 +482,10 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Odds
   </button>
+  <button class="nav-item" onclick="go('props')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    Props
+  </button>
   <button class="nav-item" onclick="go('ev')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     +EV Finder
@@ -512,22 +525,22 @@ html, body {
   </button>
   <div class="sidebar-bot">
     <span class="nav-section" style="padding-top:4px">Open an Account</span>
-    <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link">
+    <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link" data-book="draftkings">
       <div class="book-icon" style="background:#53D338;color:#000">DK</div>
       <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
       <span class="book-arrow">&rarr;</span>
     </a>
-    <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link">
+    <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link" data-book="fanduel">
       <div class="book-icon" style="background:#1493FF;color:#fff">FD</div>
       <div class="book-info"><div class="book-name">FanDuel</div><div class="book-promo">$1,000 No Sweat Bet</div></div>
       <span class="book-arrow">&rarr;</span>
     </a>
-    <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link">
+    <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link" data-book="betmgm">
       <div class="book-icon" style="background:#C9A96E;color:#000">MGM</div>
       <div class="book-info"><div class="book-name">BetMGM</div><div class="book-promo">First Bet up to $1,500</div></div>
       <span class="book-arrow">&rarr;</span>
     </a>
-    <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link">
+    <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link" data-book="caesars">
       <div class="book-icon" style="background:#003087;color:#fff">CZ</div>
       <div class="book-info"><div class="book-name">Caesars</div><div class="book-promo">Get up to $1,000 back</div></div>
       <span class="book-arrow">&rarr;</span>
@@ -631,6 +644,12 @@ html, body {
       <div class="picks-list" id="odds-list"></div>
     </div>
 
+    <div id="v-props" style="display:none">
+      <div class="page-hdr"><div class="page-title">Props <span>Lite</span></div><div class="page-sub">Budget-safe player props (NBA/NFL) with limited markets and best available book</div></div>
+      <div class="props-sports" id="props-sports"></div>
+      <div class="picks-list" id="props-list"></div>
+    </div>
+
     <div id="v-ev" style="display:none">
       <div class="page-hdr"><div class="page-title">+EV <span>Finder</span></div><div class="page-sub">Bets priced better than fair value — powered by live Odds API data</div></div>
       <div class="error-banner" id="ev-err-banner" role="status" aria-live="polite"></div>
@@ -692,18 +711,18 @@ html, body {
     <div id="v-perf" style="display:none">
       <div class="page-hdr"><div class="page-title">Track <span>Record</span></div><div class="page-sub">CLV-verified results — measured against Pinnacle's closing line</div></div>
       <div class="perf-grid">
-        <div class="stat s-green"><div class="stat-val" style="color:var(--green)">64.2%</div><div class="stat-label">All-time win rate · 143W 80L</div></div>
-        <div class="stat s-cyan"><div class="stat-val" style="color:var(--cyan)">+18.4u</div><div class="stat-label">Total units won</div></div>
-        <div class="stat s-violet"><div class="stat-val" style="color:var(--violet)">+4.2%</div><div class="stat-label">Avg CLV vs close</div></div>
-        <div class="stat s-green"><div class="stat-val" style="color:var(--amber)">67.1%</div><div class="stat-label">Last 30 days · 44W 22L</div></div>
-        <div class="stat s-cyan"><div class="stat-val" style="color:var(--green)">+8.2u</div><div class="stat-label">30-day units</div></div>
-        <div class="stat s-violet"><div class="stat-val" style="color:var(--cyan)">228</div><div class="stat-label">Picks tracked</div></div>
+        <div class="stat s-green"><div class="stat-val" id="pf-win" style="color:var(--green)">—</div><div class="stat-label" id="pf-win-lbl">All-time win rate</div></div>
+        <div class="stat s-cyan"><div class="stat-val" id="pf-units" style="color:var(--cyan)">—</div><div class="stat-label">Total units won</div></div>
+        <div class="stat s-violet"><div class="stat-val" id="pf-roi" style="color:var(--violet)">—</div><div class="stat-label">ROI</div></div>
+        <div class="stat s-green"><div class="stat-val" id="pf-open" style="color:var(--amber)">—</div><div class="stat-label">Open picks</div></div>
+        <div class="stat s-cyan"><div class="stat-val" id="pf-streak" style="color:var(--green)">—</div><div class="stat-label">Scan streak</div></div>
+        <div class="stat s-violet"><div class="stat-val" id="pf-graded" style="color:var(--cyan)">—</div><div class="stat-label">Graded picks</div></div>
       </div>
       <div class="perf-chart">
         <div style="font-size:13px;font-weight:700">Monthly P&L (Units)</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px">Oct 2025 – Mar 2026</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px" id="pf-month-range">Recent six months</div>
         <div class="bars" id="perf-bars"></div>
-        <div class="bar-labels"><span class="bar-lbl">Oct</span><span class="bar-lbl">Nov</span><span class="bar-lbl">Dec</span><span class="bar-lbl">Jan</span><span class="bar-lbl">Feb</span><span class="bar-lbl">Mar</span></div>
+        <div class="bar-labels" id="perf-labels"></div>
       </div>
       <div class="agent-tbl">
         <div class="agent-row agent-hdr"><span>AI Agent</span><span>Win % fired</span><span>Weight</span></div>
@@ -730,6 +749,11 @@ html, body {
           <div class="community-row">
             <button class="bill-link" onclick="loadCommunityFeed()">Refresh</button>
           </div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Creator Leaderboard</div>
+          <div class="growth-sub">Verified picks/wins only. Anti-spam weighted.</div>
+          <div class="growth-note" id="leaderboard-note">Loading leaderboard...</div>
         </div>
         <div class="community-feed" id="community-feed"></div>
       </div>
@@ -779,6 +803,51 @@ html, body {
           </div>
           <div class="growth-note" id="al-note">No subscriptions yet.</div>
         </div>
+        <div class="growth-card">
+          <div class="growth-title">Daily Digest</div>
+          <div class="growth-sub">Get your top edges delivered daily.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="dg-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="dg-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="dg-hour" type="number" min="0" max="23" step="1" value="9"/>
+            <button class="paywall-cta" onclick="saveDigestSubscription()">Save Digest</button>
+          </div>
+          <div class="growth-note" id="dg-note">Digest disabled.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Streak Reward</div>
+          <div class="growth-sub">Hit 5-day streak milestones to claim bonus Premium hours.</div>
+          <div class="rf-row">
+            <div class="growth-note" id="streak-note">Loading streak...</div>
+            <button class="paywall-cta" onclick="claimStreakReward()">Claim</button>
+          </div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">API Budget Dashboard</div>
+          <div class="growth-sub">Track usage and keep monthly API spend under control.</div>
+          <div class="growth-note" id="quota-note">Loading quota...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Personal Settings</div>
+          <div class="growth-sub">Set bankroll mode and state to personalize stakes and book links.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="pf-bankroll" style="font-family:var(--sans)">
+              <option value="conservative">Conservative</option>
+              <option value="standard">Standard</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+            <input class="auth-in" id="pf-state" type="text" maxlength="5" placeholder="auto or NY"/>
+          </div>
+          <div class="rf-row">
+            <button class="paywall-cta" onclick="saveProfileSettings()">Save Settings</button>
+          </div>
+          <div class="growth-note" id="pf-note">Using default settings.</div>
+        </div>
       </div>
     </div>
 
@@ -791,6 +860,10 @@ html, body {
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
+  </button>
+  <button class="mnav-btn" id="mn-props" onclick="go('props')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    <span class="mnav-label">Props</span>
   </button>
   <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -877,6 +950,7 @@ const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa3762
 const PROFILE_KEY = 'algobets-profile-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
 const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
+const PREF_KEY = 'algobets-pref-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -912,7 +986,12 @@ let EVDATA = [];
 let STEAMDATA = [];
 let FADESDATA = [];
 let ODDSGAMES = [];
+let PROPSDATA = [];
+let propsError = null;
 let activeOddsSport = '';
+let activePropsSport = 'basketball_nba';
+let propsLoading = false;
+let propsFetchedAt = 0;
 let lastRefresh = null;
 let isScanning = false;
 let currentTab = 'picks';
@@ -929,6 +1008,16 @@ let billingCycle = 'monthly';
 let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
 let trialUiState = {dismissed: false};
 let hasScannedAtLeastOnce = false;
+let PERFDATA = null;
+let LEADERDATA = [];
+let DIGESTDATA = null;
+let STREAKDATA = null;
+let growthNudges = {steamLocks: 0, fadeLocks: 0};
+let pickPrefs = {sports: {}, bets: {}};
+let quotaData = null;
+let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
+const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
+localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -1022,6 +1111,47 @@ function saveState() {
   }
 }
 
+function loadPickPrefs() {
+  try {
+    const raw = localStorage.getItem(PREF_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    pickPrefs = {
+      sports: p?.sports && typeof p.sports === 'object' ? p.sports : {},
+      bets: p?.bets && typeof p.bets === 'object' ? p.bets : {},
+    };
+  } catch (err) {
+    pickPrefs = {sports: {}, bets: {}};
+  }
+}
+
+function savePickPrefs() {
+  try {
+    localStorage.setItem(PREF_KEY, JSON.stringify(pickPrefs));
+  } catch (err) {}
+}
+
+function learnFromPick(p, action = 'view') {
+  if (!p) return;
+  const sport = String(p.sk || '').toLowerCase();
+  const bet = String(p.bet || '').toLowerCase();
+  const w = action === 'post' ? 3 : action === 'parlay' ? 2 : action === 'share' ? 2 : 1;
+  if (sport) pickPrefs.sports[sport] = Number(pickPrefs.sports[sport] || 0) + w;
+  if (bet) {
+    const key = bet.includes(' ml') ? 'ml' : bet.includes('over') || bet.includes('under') ? 'total' : 'other';
+    pickPrefs.bets[key] = Number(pickPrefs.bets[key] || 0) + w;
+  }
+  savePickPrefs();
+}
+
+function personalizedPickScore(p) {
+  const sportW = Number(pickPrefs.sports[p.sk] || 0);
+  const betText = String(p.bet || '').toLowerCase();
+  const betKey = betText.includes(' ml') ? 'ml' : betText.includes('over') || betText.includes('under') ? 'total' : 'other';
+  const betW = Number(pickPrefs.bets[betKey] || 0);
+  return Number(p.ev || 0) + (sportW * 0.08) + (betW * 0.05);
+}
+
 function loadTrialUiState() {
   try {
     const raw = localStorage.getItem(TRIAL_UI_KEY);
@@ -1083,6 +1213,14 @@ function profilePickLimit() {
   return 2;
 }
 
+function suggestedStakeText(ev) {
+  const mode = String(profileSettings?.bankroll_mode || 'standard');
+  const base = mode === 'conservative' ? 0.5 : mode === 'aggressive' ? 1.5 : 1.0;
+  const mult = ev >= 7 ? 1.5 : ev >= 4 ? 1.0 : 0.6;
+  const pct = Math.max(0.25, Math.min(3.0, base * mult));
+  return `${pct.toFixed(2)}% bankroll`;
+}
+
 function updateAuthUi() {
   const btn = document.getElementById('auth-btn');
   if (!btn) return;
@@ -1100,6 +1238,105 @@ function renderProfile() {
   if (plan) plan.textContent = planLabel(currentPlan);
   if (limit) limit.textContent = String(profilePickLimit());
   updateAuthUi();
+}
+
+function applyStateBookOrdering() {
+  const state = String(profileSettings?.state || 'auto').toUpperCase();
+  const root = document.querySelector('.sidebar-bot');
+  if (!root) return;
+  const links = Array.from(root.querySelectorAll('.book-link'));
+  if (!links.length) return;
+  const rankByState = {
+    NY: ['fanduel', 'draftkings', 'caesars', 'betmgm'],
+    NJ: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
+    PA: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
+    IL: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
+    AZ: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
+    CO: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
+  };
+  const pref = rankByState[state] || ['draftkings', 'fanduel', 'betmgm', 'caesars'];
+  links.sort((a, b) => {
+    const ab = String(a.getAttribute('data-book') || '');
+    const bb = String(b.getAttribute('data-book') || '');
+    return pref.indexOf(ab) - pref.indexOf(bb);
+  });
+  links.forEach(l => root.appendChild(l));
+}
+
+async function loadProfileSettings() {
+  const note = document.getElementById('pf-note');
+  try {
+    if (!ensureRegisteredUser(false)) throw new Error('guest');
+    const res = await backendGet('/api/profile/settings');
+    profileSettings = res.settings || profileSettings;
+  } catch (err) {
+    const localState = localStorage.getItem('algobets-state') || 'auto';
+    const localBank = localStorage.getItem('algobets-bankroll') || 'standard';
+    profileSettings = {state: localState, bankroll_mode: localBank};
+  }
+  const st = document.getElementById('pf-state');
+  const bk = document.getElementById('pf-bankroll');
+  if (st) st.value = profileSettings.state || 'auto';
+  if (bk) bk.value = profileSettings.bankroll_mode || 'standard';
+  if (note) note.textContent = `State: ${(profileSettings.state || 'auto').toUpperCase()} · Bankroll: ${profileSettings.bankroll_mode || 'standard'}`;
+  applyStateBookOrdering();
+}
+
+async function saveProfileSettings() {
+  const st = String(document.getElementById('pf-state')?.value || 'auto').trim();
+  const bk = String(document.getElementById('pf-bankroll')?.value || 'standard').trim().toLowerCase();
+  const state = st ? st : 'auto';
+  profileSettings = {state, bankroll_mode: bk};
+  localStorage.setItem('algobets-state', state);
+  localStorage.setItem('algobets-bankroll', bk);
+  try {
+    if (ensureRegisteredUser(false)) {
+      await backendPost('/api/profile/settings', {state, bankroll_mode: bk});
+    }
+    showToast('Settings saved');
+  } catch (err) {
+    showToast('Saved locally');
+  }
+  loadProfileSettings();
+  renderPicks();
+}
+
+async function loadQuotaDashboard() {
+  const note = document.getElementById('quota-note');
+  if (!note) return;
+  try {
+    quotaData = await backendGet('/api/quota');
+    const rem = Number(quotaData?.quota_remaining || 0);
+    const used = Number(quotaData?.quota_used_last || 0);
+    const cap = Number(quotaData?.props_monthly_credit_cap || 0);
+    const pct = Number(quotaData?.props_budget_used_pct || 0);
+    note.textContent = `Used: ${used} · Remaining: ${rem} · Props cap: ${cap} (${pct}%)`;
+  } catch (err) {
+    note.textContent = 'Could not load quota dashboard.';
+  }
+}
+
+async function joinVipWaitlistPrompt(source = 'props_cap') {
+  let email = '';
+  const method = normalizeAuthMethod(userProfile.method);
+  if ((method === 'email' || method === 'gmail') && String(userProfile.identifier || '').includes('@')) {
+    email = String(userProfile.identifier || '').trim().toLowerCase();
+  }
+  if (!email) {
+    const entered = prompt('Enter email for VIP props waitlist:');
+    if (!entered) return;
+    email = String(entered).trim().toLowerCase();
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Enter a valid email');
+    return;
+  }
+  try {
+    await backendPost('/api/waitlist/join', {email, source});
+    showToast('Added to VIP props waitlist');
+  } catch (err) {
+    showToast('Could not join waitlist');
+  }
 }
 
 function saveProfile() {
@@ -1219,6 +1456,8 @@ async function submitAuthProfile() {
   showToast(`Signed in with ${authMethodLabel(method)}`);
   await fetchPlan();
   await loadTrialStatus();
+  loadDigestSubscription();
+  loadStreakStatus();
   doScan(true);
 }
 
@@ -1230,6 +1469,8 @@ function signOutProfile() {
   showToast('Signed out');
   fetchPlan();
   loadTrialStatus();
+  loadDigestSubscription();
+  loadStreakStatus();
   doScan(true);
 }
 
@@ -1309,6 +1550,7 @@ function buildShareTextFromPick(p, mode = 'pick') {
 async function sharePick(id, mode = 'pick') {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
+  learnFromPick(p, 'share');
   const text = buildShareTextFromPick(p, mode);
   const url = window.location.href.split('?')[0];
   try {
@@ -1327,6 +1569,7 @@ async function postPickToCommunity(id, mode = 'pick') {
   if (!ensureRegisteredUser()) return;
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
+  learnFromPick(p, 'post');
   try {
     await backendPost('/api/community/posts', {
       mode,
@@ -1367,15 +1610,32 @@ function renderCommunityFeed() {
   `).join('');
 }
 
+function renderLeaderboard() {
+  const note = document.getElementById('leaderboard-note');
+  if (!note) return;
+  if (!LEADERDATA.length) {
+    note.textContent = 'No ranked creators yet.';
+    return;
+  }
+  note.innerHTML = LEADERDATA.slice(0, 5).map((r, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+    return `${medal} ${esc(r.user)} · ${Number(r.wins || 0)} wins · score ${Number(r.score || 0).toFixed(1)}`;
+  }).join('<br/>');
+}
+
 async function loadCommunityFeed() {
   try {
     const res = await backendGet('/api/community/posts?limit=50');
     COMMUNITYDATA = Array.isArray(res.posts) ? res.posts : [];
+    const lb = await backendGet('/api/community/leaderboard?limit=20');
+    LEADERDATA = Array.isArray(lb.leaders) ? lb.leaders : [];
   } catch (err) {
     console.error(err);
     COMMUNITYDATA = [];
+    LEADERDATA = [];
   }
   renderCommunityFeed();
+  renderLeaderboard();
 }
 
 async function loadReferralStatus() {
@@ -1453,6 +1713,76 @@ async function loadAlertSubscriptions() {
   }
 }
 
+async function loadDigestSubscription() {
+  const note = document.getElementById('dg-note');
+  if (!note) return;
+  if (!ensureRegisteredUser(false)) {
+    note.textContent = 'Sign in to configure daily digest.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/digest/subscription');
+    DIGESTDATA = res.digest || null;
+    document.getElementById('dg-channel').value = DIGESTDATA?.channel || 'email';
+    document.getElementById('dg-target').value = DIGESTDATA?.target || '';
+    document.getElementById('dg-hour').value = Number(DIGESTDATA?.hour_local ?? 9);
+    const prev = await backendGet('/api/digest/preview');
+    const topN = Array.isArray(prev?.preview?.top_picks) ? prev.preview.top_picks.length : 0;
+    note.textContent = DIGESTDATA?.enabled
+      ? `Digest enabled for ${DIGESTDATA.channel.toUpperCase()} at ${DIGESTDATA.hour_local}:00 · ${topN} picks in latest preview.`
+      : `Digest disabled.`;
+  } catch (err) {
+    note.textContent = 'Could not load digest settings.';
+  }
+}
+
+async function saveDigestSubscription() {
+  if (!ensureRegisteredUser()) return;
+  const channel = document.getElementById('dg-channel')?.value || 'email';
+  const target = String(document.getElementById('dg-target')?.value || '').trim();
+  const hour = Number(document.getElementById('dg-hour')?.value || 9);
+  try {
+    await backendPost('/api/digest/subscription', {
+      enabled: !!target,
+      channel,
+      target,
+      hour_local: hour,
+    });
+    showToast('Digest settings saved');
+    loadDigestSubscription();
+  } catch (err) {
+    showToast('Could not save digest');
+  }
+}
+
+async function loadStreakStatus() {
+  const note = document.getElementById('streak-note');
+  if (!note) return;
+  if (!ensureRegisteredUser(false)) {
+    note.textContent = 'Sign in to track streak rewards.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/streak/status');
+    STREAKDATA = res.streak || null;
+    note.textContent = `Current: ${STREAKDATA?.current_days || 0}d · Best: ${STREAKDATA?.best_days || 0}d · Next reward: ${STREAKDATA?.next_reward_at || 5}d`;
+  } catch (err) {
+    note.textContent = 'Could not load streak.';
+  }
+}
+
+async function claimStreakReward() {
+  if (!ensureRegisteredUser()) return;
+  try {
+    const res = await backendPost('/api/streak/claim', {});
+    showToast(`Streak reward claimed: +${res.granted_hours || 24}h Premium`);
+    await fetchPlan();
+    loadStreakStatus();
+  } catch (err) {
+    showToast('No streak reward available yet');
+  }
+}
+
 async function saveAlertSubscription() {
   if (!ensureRegisteredUser()) return;
   const channel = document.getElementById('al-channel')?.value || 'email';
@@ -1484,7 +1814,17 @@ async function backendGet(path, timeout = 60000) {
     const t = setTimeout(() => ctrl.abort(), timeout);
     const res = await fetch(url, {headers: hdrs, signal: ctrl.signal});
     clearTimeout(t);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const payload = await res.json();
+        if (payload?.detail) detail = String(payload.detail);
+      } catch (_) {}
+      const e = new Error(detail);
+      e.status = res.status;
+      e.detail = detail;
+      throw e;
+    }
     return await res.json();
   } catch(directErr) {
     console.warn('[Algobets] Direct fetch failed, trying proxy:', directErr.message);
@@ -1509,7 +1849,17 @@ async function backendPost(path, body, timeout = 60000) {
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
     const res = await fetch(url, {method: 'POST', headers: hdrs, body: JSON.stringify(body || {}), signal: ctrl.signal});
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const payload = await res.json();
+        if (payload?.detail) detail = String(payload.detail);
+      } catch (_) {}
+      const e = new Error(detail);
+      e.status = res.status;
+      e.detail = detail;
+      throw e;
+    }
     return await res.json();
   } finally {
     clearTimeout(t);
@@ -1590,8 +1940,13 @@ function updatePaywallUi() {
     if (cmp) cmp.classList.toggle('on', p !== 'vip');
     return;
   }
-  copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
-  cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
+  if (PAYWALL_VARIANT === 'B') {
+    copy.innerHTML = `<strong>${planLabel(p)}</strong> gives ${visible}/${total} picks. <strong>${planLabel(nxt)}</strong> unlocks full card access, props, and faster refresh windows.`;
+    cta.textContent = nxt === 'vip' ? 'Unlock VIP' : 'Unlock Premium';
+  } else {
+    copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
+    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
+  }
   card.classList.add('on');
   const cmp = document.getElementById('tier-compare');
   if (cmp) cmp.classList.toggle('on', p !== 'vip');
@@ -1989,6 +2344,116 @@ function setOddsSport(sport) {
   renderOdds();
 }
 
+function propsMarketLabel(k) {
+  const m = String(k || '').toLowerCase();
+  if (m === 'player_points') return 'Points';
+  if (m === 'player_rebounds') return 'Rebounds';
+  if (m === 'player_pass_yds') return 'Pass Yds';
+  if (m === 'player_rush_yds') return 'Rush Yds';
+  return m.replace(/_/g, ' ');
+}
+
+function renderProps() {
+  const sportsEl = document.getElementById('props-sports');
+  const listEl = document.getElementById('props-list');
+  if (!sportsEl || !listEl) return;
+  const options = [
+    {key: 'basketball_nba', label: 'NBA Props'},
+    {key: 'americanfootball_nfl', label: 'NFL Props'},
+  ];
+  sportsEl.innerHTML = options.map(o => `<button class="props-sport ${o.key === activePropsSport ? 'active' : ''}" onclick="setPropsSport('${o.key}')">${o.label}</button>`).join('');
+
+  if (!canUsePremium()) {
+    listEl.innerHTML = `<div class="feature-lock">
+      <div class="blur-wrap">
+        <div class="props-card"><div class="props-top"><div class="props-player">Jayson Tatum</div><div class="props-badge">Points</div></div><div class="props-meta">Over 27.5 · -110 · FanDuel</div><div class="props-meta">Celtics @ Knicks</div></div>
+        <div class="props-card"><div class="props-top"><div class="props-player">Patrick Mahomes</div><div class="props-badge">Pass Yds</div></div><div class="props-meta">Over 279.5 · -105 · DraftKings</div><div class="props-meta">Chiefs @ Bills</div></div>
+      </div>
+      <div class="lock-overlay"><div class="lock-card"><div class="lock-title">Props are Premium+</div><div class="lock-sub">Upgrade to unlock budget-safe player props.</div><button class="paywall-cta" onclick="openUpgradePicker()">Go Premium</button></div></div>
+    </div>`;
+    return;
+  }
+  if (propsError) {
+    if (propsError.type === 'budget') {
+      listEl.innerHTML = `<div class="empty">
+        <div class="empty-icon">📈</div>
+        <div class="empty-title">Monthly props cap reached</div>
+        <div class="empty-sub">Lite props is capped to protect budget. Join waitlist for VIP props expansion.</div>
+        <div style="margin-top:10px"><button class="paywall-cta" onclick="joinVipWaitlistPrompt('props_cap')">Join VIP Waitlist</button></div>
+      </div>`;
+    } else if (propsError.type === 'plan') {
+      listEl.innerHTML = `<div class="empty">
+        <div class="empty-icon">🔒</div>
+        <div class="empty-title">Props are Premium+</div>
+        <div class="empty-sub">Upgrade to unlock player props.</div>
+      </div>`;
+    } else {
+      listEl.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Props unavailable right now</div><div class="empty-sub">Budget guard or API limit may be active.</div></div>`;
+    }
+    return;
+  }
+  if (!PROPSDATA.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">No props loaded yet</div><div class="empty-sub">Tap a league chip to load props.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = PROPSDATA.map(p => `
+    <div class="props-card">
+      <div class="props-top"><div class="props-player">${esc(p.player || 'Player')}</div><div class="props-badge">${esc(propsMarketLabel(p.market))}</div></div>
+      <div class="props-meta">${esc(p.side)} ${esc(String(p.line))} · ${esc(String(p.odds > 0 ? '+'+p.odds : p.odds))} · ${esc(p.book)}</div>
+      <div class="props-meta">${esc(p.game)} · ${esc(formatOddsTime(p.game_time))}</div>
+    </div>
+  `).join('');
+}
+
+async function loadProps(force = false) {
+  if (!canUsePremium()) {
+    renderProps();
+    return;
+  }
+  const ttlMs = 20 * 60 * 1000;
+  if (!force && PROPSDATA.length && (Date.now() - propsFetchedAt) < ttlMs) {
+    renderProps();
+    return;
+  }
+  if (propsLoading) return;
+  propsLoading = true;
+  propsError = null;
+  const listEl = document.getElementById('props-list');
+  if (listEl) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading props...</div><div class="empty-sub">Keeping this endpoint budget-safe.</div></div>`;
+  }
+  try {
+    const res = await backendGet(`/api/props?sport=${encodeURIComponent(activePropsSport)}`);
+    PROPSDATA = Array.isArray(res.props) ? res.props : [];
+    propsFetchedAt = Date.now();
+    if (res?.budget && Number(res?.budget?.monthly_credit_cap || 0) > 0) {
+      const used = Number(res.budget.quota_used_last || 0);
+      const cap = Number(res.budget.monthly_credit_cap || 0);
+      if (used > 0 && cap > 0 && used / cap > 0.9) showToast(`Props budget ${Math.round((used/cap)*100)}% used`);
+    }
+  } catch (err) {
+    PROPSDATA = [];
+    const status = Number(err?.status || 0);
+    const msg = String(err?.detail || err?.message || '');
+    if (status === 402 || /budget limit/i.test(msg)) {
+      propsError = {type: 'budget'};
+      showToast('Props cap reached for this month');
+    } else if (status === 403) {
+      propsError = {type: 'plan'};
+    } else {
+      propsError = {type: 'generic'};
+    }
+  } finally {
+    propsLoading = false;
+  }
+  renderProps();
+}
+
+function setPropsSport(sport) {
+  activePropsSport = sport;
+  loadProps(true);
+}
+
 
 
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
@@ -2046,6 +2511,12 @@ async function doScan(silent = false) {
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
         ODDSGAMES = normalizeOddsGames(raw.games || []);
         STEAMDATA = computeSteamSignals(raw.games || []);
+        if (raw.performance || raw.streak) {
+          PERFDATA = {
+            overall: raw.performance || PERFDATA?.overall || {},
+            streak: raw.streak || PERFDATA?.streak || {},
+          };
+        }
         if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
         setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
         if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
@@ -2116,9 +2587,11 @@ async function doScan(silent = false) {
 
   renderPicks();
   renderOdds();
+  renderProps();
   renderEV();
   renderSteam();
   renderFades();
+  if (currentTab === 'perf') renderPerf();
   if (currentTab === 'history') loadHistory();
 
   btn.classList.remove('loading');
@@ -2136,7 +2609,7 @@ function renderPicks() {
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
     return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
-  });
+  }).sort((a, b) => personalizedPickScore(b) - personalizedPickScore(a));
 
   document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
   document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
@@ -2170,6 +2643,7 @@ function renderPicks() {
         <span class="pick-odds">${p.odds}</span>
         ${bookLink(p.bookRaw)}
       </div>
+      <div class="pick-stake">Suggested stake: <strong>${suggestedStakeText(Number(p.ev || 0))}</strong></div>
       <div class="chips">${chips}</div>
       ${bars}
     </div>
@@ -2321,15 +2795,73 @@ function renderFades() {
 
 // ─── PERF CHART ───────────────────────────────────────────────────────────────
 function renderPerf() {
-  const data = [2.1, 3.8, 1.4, 4.2, 3.1, 2.8];
-  const max = Math.max(...data);
-  document.getElementById('perf-bars').innerHTML = data.map((v, i) => `<div class="bar" style="height:${(v/max)*100}%;background:${v > 3 ? 'var(--green)' : 'var(--cyan)'};opacity:${0.7 + i*0.05}" title="${v > 0 ? '+' : ''}${v}u"></div>`).join('');
+  const o = PERFDATA?.overall || {};
+  const streak = PERFDATA?.streak || {};
+  const wins = Number(o.wins || 0);
+  const losses = Number(o.losses || 0);
+  const winPct = Number(o.win_pct || 0);
+  const units = Number(o.units || 0);
+  const roi = Number(o.roi_pct || 0);
+  const graded = Number(o.graded_picks || 0);
+  const open = Number(o.open_picks || 0);
+  const pfWin = document.getElementById('pf-win');
+  const pfWinLbl = document.getElementById('pf-win-lbl');
+  const pfUnits = document.getElementById('pf-units');
+  const pfRoi = document.getElementById('pf-roi');
+  const pfOpen = document.getElementById('pf-open');
+  const pfStreak = document.getElementById('pf-streak');
+  const pfGraded = document.getElementById('pf-graded');
+  if (pfWin) pfWin.textContent = `${winPct.toFixed(1)}%`;
+  if (pfWinLbl) pfWinLbl.textContent = `All-time · ${wins}W ${losses}L`;
+  if (pfUnits) pfUnits.textContent = `${units >= 0 ? '+' : ''}${units.toFixed(1)}u`;
+  if (pfRoi) pfRoi.textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
+  if (pfOpen) pfOpen.textContent = `${open}`;
+  if (pfStreak) pfStreak.textContent = `${Number(streak.current_days || 0)}d`;
+  if (pfGraded) pfGraded.textContent = `${graded}`;
+
+  const rows = Array.isArray(o.monthly_units) && o.monthly_units.length
+    ? o.monthly_units
+    : [{month:'-', units:0}];
+  const vals = rows.map(r => Number(r.units || 0));
+  const maxAbs = Math.max(1, ...vals.map(v => Math.abs(v)));
+  const barsEl = document.getElementById('perf-bars');
+  const labelsEl = document.getElementById('perf-labels');
+  const rangeEl = document.getElementById('pf-month-range');
+  if (rangeEl && rows.length > 1) {
+    rangeEl.textContent = `${rows[0].month} – ${rows[rows.length - 1].month}`;
+  }
+  if (barsEl) {
+    barsEl.innerHTML = rows.map((r, i) => {
+      const v = Number(r.units || 0);
+      const h = Math.max(8, (Math.abs(v) / maxAbs) * 100);
+      const col = v >= 0 ? 'var(--green)' : 'var(--red)';
+      return `<div class="bar" style="height:${h}%;background:${col};opacity:${0.75 + i*0.03}" title="${v >= 0 ? '+' : ''}${v.toFixed(2)}u"></div>`;
+    }).join('');
+  }
+  if (labelsEl) {
+    labelsEl.innerHTML = rows.map(r => `<span class="bar-lbl">${esc(String(r.month || '-').slice(5))}</span>`).join('');
+  }
+}
+
+async function loadPerformance() {
+  if (!ensureRegisteredUser(false)) {
+    PERFDATA = {overall: {monthly_units: []}, streak: {current_days: 0}};
+    renderPerf();
+    return;
+  }
+  try {
+    PERFDATA = await backendGet('/api/performance');
+  } catch (err) {
+    PERFDATA = {overall: {monthly_units: []}, streak: {current_days: 0}};
+  }
+  renderPerf();
 }
 
 // ─── PARLAY ───────────────────────────────────────────────────────────────────
 function addParlay(id) {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
+  learnFromPick(p, 'parlay');
   if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
   legs.push({id: p.id, bet: p.bet, odds: p.odds});
   updateParlay();
@@ -2418,7 +2950,9 @@ function bookLink(name) {
 function showAction(id) {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
+  learnFromPick(p, 'view');
   const size = p.grade === 'a' ? 'a full unit (1–2% of bankroll)' : p.grade === 'b' ? 'half a unit (~1%)' : 'a quarter unit (~0.5%)';
+  const suggested = suggestedStakeText(Number(p.ev || 0));
   const bookName = esc(p.bookRaw || p.book);
   const bookUrl = BOOK_URLS[p.bookRaw] || '#';
   document.getElementById('act-content').innerHTML = `
@@ -2427,7 +2961,7 @@ function showAction(id) {
     <div class="act-step"><div class="act-num">1</div><div class="act-text">Open <strong>${bookName}</strong> — <a href="${bookUrl}" target="_blank" rel="noopener">Go to ${bookName} ↗</a></div></div>
     <div class="act-step"><div class="act-num">2</div><div class="act-text">Find <strong>${p.game}</strong> and place: <strong>${p.bet}</strong></div></div>
     <div class="act-step"><div class="act-num">3</div><div class="act-text">Confirm odds show <strong>${p.odds}</strong> or better. If they've moved against you, the edge may be gone.</div></div>
-    <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
+    <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. Suggested size from your profile: <strong>${suggested}</strong>. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
     <div class="act-note">⏱ <strong>Game: ${p.time}</strong> — lines can move fast. Lock this in before the edge closes.</div>`;
   const ov = document.getElementById('act-overlay');
   const md = document.getElementById('act-modal');
@@ -2443,7 +2977,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','ev','steam','fades','parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','props','ev','steam','fades','parlay','boost','perf','history','community','profile'];
 const MOBILE_MORE_TABS = ['boost','perf','history','community','profile'];
 
 function closeMobileMore() {
@@ -2460,6 +2994,18 @@ function toggleMobileMore(e) {
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
+  if (name === 'steam' && !canUseVip()) {
+    growthNudges.steamLocks += 1;
+    if (growthNudges.steamLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
+  }
+  if (name === 'fades' && !canUsePremium()) {
+    growthNudges.fadeLocks += 1;
+    if (growthNudges.fadeLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
+  }
+  if (name === 'props' && !canUsePremium()) {
+    growthNudges.fadeLocks += 1;
+    if (growthNudges.fadeLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
+  }
   currentTab = name;
   closeMobileMore();
   ALL_TABS.forEach(t => {
@@ -2471,13 +3017,19 @@ function go(name) {
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') renderOdds();
+  if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
+  if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'profile') {
     loadReferralStatus();
     loadAlertSubscriptions();
+    loadDigestSubscription();
+    loadStreakStatus();
+    loadProfileSettings();
+    loadQuotaDashboard();
   }
   saveState();
 }
@@ -2551,8 +3103,11 @@ function applySavedSelections() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+loadPickPrefs();
 loadTrialUiState();
 loadProfile();
+loadProfileSettings();
+loadQuotaDashboard();
 bindUiAccessibility();
 applySavedSelections();
 updateScanCooldownUi();
