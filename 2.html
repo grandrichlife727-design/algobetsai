@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Algobets AI surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
+<meta name="theme-color" content="#06060a"/>
+<title>Algobets AI — Smart Picks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #06060a;
+  --surface: #0d0d12;
+  --card: #12121a;
+  --border: rgba(255,255,255,.07);
+  --border2: rgba(255,255,255,.14);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,.09);
+  --cyan-glow: rgba(34,211,238,.2);
+  --cyan2: #0891b2;
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,.07);
+  --red: #ff4d6a;
+  --red-dim: rgba(255,77,106,.07);
+  --amber: #ffb700;
+  --amber-dim: rgba(255,183,0,.08);
+  --violet: #7c3aed;
+  --muted: #a1a1aa;
+  --sub: #b8b8c3;
+  --text: #e4e4e7;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+  --grad: linear-gradient(135deg, var(--cyan2), var(--violet));
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html, body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  min-height:100vh;
+  /* Fix for mobile horizontal scrolling */
+  max-width: 100vw;
+  overflow-x: hidden; 
+  width: 100%;
+}
+
+/* LAYOUT */
+.shell{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  min-height:100vh;
+  max-width:1280px;
+  margin:0 auto;
+  width: 100%;
+  min-width: 0; /* Prevent flex blowout */
+}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}}
+
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+@media(max-width:900px){.sidebar{display:none}}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;box-shadow:0 0 20px rgba(8,145,178,.35)}
+.logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
+.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+.sidebar-bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
+.resp-notice{font-size:10px;color:var(--muted);line-height:1.55;padding:8px 8px 0}
+
+/* BOOK AFFILIATE LINKS */
+.book-link{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;text-decoration:none;transition:background .12s;margin-bottom:2px}
+.book-link:hover{background:rgba(255,255,255,.04)}
+.book-icon{width:28px;height:28px;border-radius:7px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.book-info{flex:1;min-width:0}
+.book-name{font-size:12px;font-weight:600;color:var(--text)}
+.book-promo{font-size:10px;color:var(--green);margin-top:1px}
+.book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:24px;letter-spacing:1px;white-space:nowrap;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 14px rgba(8,145,178,.3);-webkit-text-fill-color:initial;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+@media(max-width:380px){.api-status{display:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
+.scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
+.scan-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+.plan-pill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid var(--border2);font-size:10px;font-family:var(--mono);font-weight:700;color:var(--sub);text-transform:uppercase}
+.plan-pill.free{color:var(--amber);border-color:rgba(255,183,0,.28);background:rgba(255,183,0,.08)}
+.plan-pill.premium{color:var(--cyan);border-color:rgba(0,212,255,.25);background:rgba(0,212,255,.08)}
+.plan-pill.vip{color:var(--green);border-color:rgba(0,229,160,.25);background:rgba(0,229,160,.08)}
+.cooldown-pill{display:none;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,183,0,.3);background:rgba(255,183,0,.09);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700;white-space:nowrap}
+.cooldown-pill.on{display:inline-flex}
+.bill-btn{background:rgba(0,229,160,.9);color:#00160f;padding:6px 10px;font-size:11px}
+.bill-link{background:none;border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.bill-link:hover{border-color:var(--border2);color:var(--text)}
+@media(max-width:520px){.bill-link{display:none}}
+.auth-btn{display:inline-flex}
+.loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
+.loading-bar.on{display:block}
+@keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh;min-width:0;width:100%;}
+.content{padding:14px;flex:1;padding-bottom:90px;min-width:0;}
+@media(min-width:901px){.content{padding:20px;padding-bottom:20px}}
+@media(max-width:900px){.content{padding-bottom:165px}}
+
+/* HERO STATS */
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.stat.s-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.stat.s-cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.stat.s-violet::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
+.stat-val{font-size:20px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+.stat-label{font-size:10px;color:var(--sub);margin-top:4px}
+@media(max-width:400px){.hero-stats{grid-template-columns:1fr 1fr}.stat:last-child{display:none}.stat-val{font-size:17px}}
+
+/* PAGE HEADER */
+.page-hdr{margin-bottom:16px}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.4px}.page-title span{color:var(--cyan)}
+.page-sub{font-size:12px;color:var(--sub);margin-top:3px;word-break:break-word;}
+
+/* FILTERS */
+.filters{display:flex;gap:5px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.filters::-webkit-scrollbar{display:none}
+.filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
+.filter:hover{border-color:var(--border2);color:var(--text)}
+.filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+
+/* SECTION */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:4px}
+.sec-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.sec-meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+/* PICK CARD */
+.picks-list{display:flex;flex-direction:column;gap:8px}
+.pick{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s;animation:fadein .35s ease both}
+.pick:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.pick.grade-a{border-left:2px solid var(--cyan)}.pick.grade-b{border-left:2px solid var(--violet)}.pick.grade-c{border-left:2px solid var(--amber)}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.pick-inner{padding:12px 12px 12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+@media(max-width:360px){.pick-inner{grid-template-columns:1fr}.pick-right{display:none}}
+.pick-sport-row{display:flex;align-items:center;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.sport-tag{background:rgba(255,255,255,.05);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sub);white-space:nowrap}
+.game-label{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.game-time{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.grade-tag{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 5px;border-radius:4px;white-space:nowrap}
+.grade-tag.a{background:rgba(0,212,255,.1);color:var(--cyan)}.grade-tag.b{background:rgba(155,121,255,.1);color:var(--violet)}.grade-tag.c{background:rgba(255,183,0,.1);color:var(--amber)}
+
+.pick-bet{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px;word-break:break-word}
+.pick-odds-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.pick-odds{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)}
+.pick-book{font-size:11px;color:var(--sub)}
+.pick-book-link{font-size:11px;color:var(--sub);text-decoration:none;transition:color .12s}
+.pick-book-link:hover{color:var(--cyan)}
+
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.chip.clv{background:rgba(0,212,255,.08);color:var(--cyan)}.chip.steam{background:rgba(255,77,106,.08);color:var(--red)}
+.chip.rlm{background:rgba(155,121,255,.08);color:var(--violet)}.chip.elo{background:rgba(255,183,0,.08);color:var(--amber)}
+.chip.ev{background:rgba(0,229,160,.08);color:var(--green)}
+
+.pick-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.ev-circle{position:relative}
+.ev-circle svg{display:block}
+
+.pick-actions{display:flex;gap:5px;align-items:center;padding:8px 12px 10px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.08);flex-wrap:wrap}
+.btn-how{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-how:hover{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.3)}
+.btn-parlay{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-parlay:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-share{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:6px;color:#c6b0ff;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-share:hover{background:rgba(124,58,237,.16);border-color:rgba(124,58,237,.35);color:#e0d6ff}
+.btn-win{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.2);border-radius:6px;color:var(--green);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-win:hover{background:rgba(0,229,160,.15);border-color:rgba(0,229,160,.35)}
+.pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
+.pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
+.explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
+.explain-toggle:hover{color:var(--sub)}
+
+/* SIGNAL BARS (expert mode) */
+.sig-bars{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.sig-row{display:flex;align-items:center;gap:6px}
+.sig-lbl{font-size:9px;color:var(--muted);width:46px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}
+.sig-track{flex:1;height:2px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.sig-fill{height:100%;border-radius:99px}
+.sig-num{font-size:10px;font-family:var(--mono);color:var(--sub);width:32px;text-align:right;flex-shrink:0}
+
+/* EV TABLE */
+.ev-table{background:var(--card);border:1px solid var(--border);border-radius:10px;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ev-hdr{display:grid;grid-template-columns:1fr 90px 80px 80px;gap:0;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;min-width:300px}
+.ev-row{display:grid;grid-template-columns:1fr 90px 80px 80px;gap:0;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s;cursor:default;min-width:300px}
+.ev-row:last-child{border-bottom:none}
+.ev-row:hover{background:rgba(255,255,255,.02)}
+.ev-bet{font-size:13px;font-weight:600;margin-bottom:2px;word-break:break-word}
+.ev-game{font-size:11px;color:var(--sub)}
+.ev-pct{font-family:var(--mono);font-weight:700;font-size:14px}
+.ev-book{font-size:11px;font-weight:600}
+.ev-odds{font-family:var(--mono);font-size:13px;font-weight:600}
+.odds-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.odds-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.odds-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
+.odds-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.odds-time{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:6px}
+.odds-game{font-size:14px;font-weight:700;margin-bottom:9px}
+.odds-grid{display:grid;grid-template-columns:88px 1fr 1fr;gap:4px;font-family:var(--mono);font-size:11px}
+.odds-head{color:var(--muted)}
+.odds-book{color:var(--sub);font-size:10px}
+.odds-line{color:var(--green)}
+
+/* ARB */
+.steam-card{background:var(--card);border:1px solid rgba(34,211,238,.14);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:9px;animation:fadein .3s ease both}
+.steam-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.steam-game{font-size:11px;color:var(--sub)}
+.steam-signal{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)}
+.steam-meta{font-size:11px;color:var(--sub);line-height:1.45}
+.steam-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid rgba(34,211,238,.2);background:rgba(34,211,238,.08);color:var(--cyan);font-size:10px;font-weight:700;font-family:var(--mono)}
+.leg{background:rgba(0,0,0,.15);border-radius:8px;padding:10px;border:1px solid var(--border)}
+.leg-book{font-size:9px;color:var(--muted);font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.leg-bet{font-size:13px;font-weight:700;margin-bottom:3px}
+.leg-odds{font-size:12px;font-family:var(--mono);font-weight:700;color:var(--cyan)}
+.leg-stake{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+
+/* PARLAY BUILDER */
+.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:480px;width:100%}
+.parlay-leg{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.parlay-leg:last-child{border-bottom:none}
+.pl-bet{font-size:13px;font-weight:600}
+.pl-odds{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-top:1px}
+.pl-rm{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
+.parlay-result{background:var(--green-dim);border:1px solid rgba(0,229,160,.12);border-radius:8px;padding:12px;margin-top:12px}
+.pl-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.pl-row:last-of-type{margin-bottom:0}
+.pl-val{font-family:var(--mono);font-weight:700;color:var(--green)}
+.parlay-clear{width:100%;margin-top:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:12px;font-weight:600;padding:6px;cursor:pointer;font-family:var(--sans)}
+.parlay-empty{font-size:13px;color:var(--sub)}
+
+/* BOOST */
+.boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:460px;width:100%}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+@media(max-width:480px){.field-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.field-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:15px;font-weight:700;font-family:var(--mono);outline:none;transition:border-color .12s;width:100%}
+.field-input:focus{border-color:rgba(0,212,255,.3)}
+.boost-result{background:rgba(155,121,255,.05);border:1px solid rgba(155,121,255,.15);border-radius:8px;padding:14px;margin-top:12px;display:none}
+.boost-result.on{display:block}
+.boost-ev{font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+.boost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;text-align:center}
+.bst-val{font-size:14px;font-weight:700;font-family:var(--mono)}
+.bst-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.examples-list{margin-top:14px;display:flex;flex-direction:column;gap:5px}
+.ex-btn{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:7px;padding:8px 12px;cursor:pointer;transition:background .12s;text-align:left;width:100%;font-family:var(--sans);gap:8px}
+.ex-btn:hover{background:rgba(255,255,255,.05)}
+.ex-btn span:last-child{flex-shrink:0}
+
+/* PERFORMANCE */
+.perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:580px){.perf-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:360px){.perf-grid{grid-template-columns:1fr 1fr}}
+.perf-chart{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:56px;margin-top:12px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:opacity .2s;cursor:pointer}
+.bar:hover{opacity:.7}
+.bar-labels{display:flex;gap:5px;margin-top:5px}
+.bar-lbl{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.agent-tbl{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.agent-row{display:grid;grid-template-columns:1fr 100px 60px;gap:0;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center;min-width:300px;}
+.agent-row:last-child{border-bottom:none}
+.agent-hdr{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:7px 14px}
+
+/* HOW-TO MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.on{opacity:1;pointer-events:all}
+@media(min-width:640px){.overlay{align-items:center}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px 14px 0 0;padding:22px;width:100%;max-width:520px;transform:translateY(30px);transition:transform .25s;max-height:85vh;overflow-y:auto}
+.modal.on{transform:translateY(0)}
+@media(min-width:640px){.modal{border-radius:14px;transform:scale(.95)}.modal.on{transform:scale(1)}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:3px}
+.modal-sub{font-size:11px;color:var(--sub);margin-bottom:18px;font-family:var(--mono)}
+.act-step{display:flex;gap:10px;margin-bottom:14px;align-items:flex-start}
+.act-num{width:22px;height:22px;border-radius:50%;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);color:var(--cyan);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.act-text{font-size:13px;color:var(--sub);line-height:1.55}.act-text strong{color:var(--text)}
+.act-text a{color:var(--cyan);text-decoration:none}.act-text a:hover{text-decoration:underline}
+.act-note{background:var(--amber-dim);border:1px solid rgba(255,183,0,.15);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--sub);line-height:1.55;margin-top:14px}
+.modal-close{width:100%;margin-top:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:13px;font-weight:600;padding:9px;cursor:pointer;font-family:var(--sans)}
+
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
+  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+@media(max-width:900px){.mobile-nav{display:grid}}
+.mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
+  color:var(--sub);font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
+.mnav-btn.active{color:var(--cyan)}
+.mnav-btn svg{width:24px;height:24px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
+.mnav-label{font-size:10px;font-weight:700;line-height:1;margin-top:1px}
+.mnav-more-wrap{position:relative}
+.mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:150px;background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
+.mnav-more-panel.on{display:block}
+.mnav-more-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);padding:8px;border-radius:7px;cursor:pointer;text-align:left}
+.mnav-more-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.mnav-more-item svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
+
+/* LOADING SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
+@keyframes skeleton{0%{background-position:100%}100%{background-position:-100%}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
+
+/* EMPTY / ERROR */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:28px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.empty-sub{font-size:12px;color:var(--muted)}
+.error-banner{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--sub);margin-bottom:16px;display:none;line-height:1.5}
+.error-banner.on{display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--cyan);color:#000;padding:7px 16px;border-radius:99px;font-weight:700;font-size:12px;z-index:9999;opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* MODE TOGGLE */
+.mode-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mode-group{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:3px;gap:2px}
+.mode-btn{padding:5px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
+.mode-btn.active{background:var(--card);color:var(--text)}
+.mode-hint{font-size:11px;color:var(--muted)}
+.trial-card{display:none;justify-content:space-between;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(124,58,237,.14));border:1px solid rgba(34,211,238,.24);border-radius:10px;padding:12px;margin:-6px 0 14px}
+.trial-card.on{display:flex}
+.trial-copy{font-size:12px;color:var(--sub);line-height:1.45}
+.trial-copy strong{color:var(--text)}
+.trial-actions{display:flex;gap:8px;align-items:center}
+.trial-claim{background:var(--green);border:none;border-radius:6px;padding:6px 10px;color:#002116;font-weight:800;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.trial-dismiss{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--sub);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.paywall-card{display:none;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:9px;padding:10px 12px;margin:-6px 0 14px}
+.paywall-card.on{display:flex}
+.paywall-copy{font-size:12px;color:var(--sub);line-height:1.45}
+.paywall-copy strong{color:var(--text)}
+.paywall-cta{background:var(--cyan);border:none;border-radius:6px;padding:6px 10px;color:#001722;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.tier-compare{display:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:0 0 14px}
+.tier-compare.on{display:block}
+.tier-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px}
+.tier-strip{display:flex;flex-wrap:wrap;gap:6px}
+.tier-tag{font-size:11px;color:var(--sub);padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02)}
+.tier-tag strong{color:var(--text)}
+.tier-tag.premium{border-color:rgba(0,212,255,.28)}
+.tier-tag.vip{border-color:rgba(0,229,160,.28)}
+.up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
+.up-ov.on{display:flex}
+.up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.up-title{font-size:16px;font-weight:800;margin-bottom:8px}
+.up-sub{font-size:12px;color:var(--sub);margin-bottom:12px}
+.cycle-toggle{display:flex;gap:6px;margin-bottom:10px}
+.cycle-btn{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--sub);font-size:11px;font-weight:700;font-family:var(--sans)}
+.cycle-btn.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.08);color:var(--cyan)}
+.cycle-note{font-size:10px;color:var(--muted);margin-bottom:10px}
+.up-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.up-btn{width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--text);font-family:var(--sans)}
+.up-btn:hover{border-color:var(--border2)}
+.up-btn b{display:block;font-size:12px}
+.up-btn span{font-size:11px;color:var(--sub)}
+.up-badge{display:inline-flex;align-items:center;border:1px solid rgba(0,229,160,.3);background:rgba(0,229,160,.1);border-radius:999px;padding:2px 7px;font-size:9px;font-family:var(--mono);color:var(--green);margin-left:6px}
+.up-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.pf-row:last-child{border-bottom:none}
+.pf-k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.pf-v{font-size:13px;color:var(--text);font-weight:600;text-align:right;word-break:break-word}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pf-btn{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:12px;font-weight:700;padding:7px 10px;cursor:pointer;font-family:var(--sans)}
+.pf-btn:hover{color:var(--text);border-color:var(--border2)}
+.pf-btn.primary{background:var(--cyan);border-color:rgba(0,212,255,.4);color:#001722}
+.growth-grid{display:grid;grid-template-columns:1fr;gap:10px;max-width:700px;margin-top:10px}
+@media(min-width:980px){.growth-grid{grid-template-columns:1fr 1fr}}
+.growth-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.growth-title{font-size:12px;font-weight:800;color:var(--text)}
+.growth-sub{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.45}
+.rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
+.rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
+.growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.h-time{font-size:11px;color:var(--muted)}
+.h-pill{font-size:10px;font-family:var(--mono);padding:3px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--sub)}
+.h-pill.free{color:var(--amber);border-color:rgba(255,183,0,.24)}
+.h-pill.premium{color:var(--cyan);border-color:rgba(0,212,255,.24)}
+.h-pill.vip{color:var(--green);border-color:rgba(0,229,160,.24)}
+.h-meta{font-size:11px;color:var(--sub);margin-top:6px}
+.h-list{margin-top:7px;display:flex;flex-direction:column;gap:5px}
+.h-item{font-size:11px;color:var(--sub)}
+.community-wrap{display:grid;grid-template-columns:1fr;gap:10px}
+.community-composer{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.community-title{font-size:12px;font-weight:800;color:var(--text)}
+.community-sub{font-size:11px;color:var(--sub);margin-top:3px}
+.community-row{display:flex;gap:8px;margin-top:9px}
+.community-feed{display:flex;flex-direction:column;gap:8px}
+.cpost{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.c-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.c-user{font-size:11px;color:var(--text);font-weight:700}
+.c-time{font-size:10px;color:var(--muted)}
+.c-mode{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--sub)}
+.c-mode.win{color:var(--green);border-color:rgba(0,229,160,.25)}
+.c-mode.pick{color:var(--cyan);border-color:rgba(34,211,238,.25)}
+.c-verified{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:999px;border:1px solid rgba(255,183,0,.25);color:var(--amber);background:rgba(255,183,0,.08)}
+.c-text{font-size:12px;color:var(--sub);margin-top:7px;line-height:1.45}
+.feature-lock{position:relative;overflow:hidden}
+.blur-wrap{filter:blur(4px);pointer-events:none;user-select:none;opacity:.7}
+.lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(180deg,rgba(6,6,10,.2),rgba(6,6,10,.88))}
+.lock-card{width:100%;max-width:380px;background:rgba(13,13,18,.96);border:1px solid var(--border2);border-radius:10px;padding:12px;text-align:center}
+.lock-title{font-size:13px;font-weight:800;color:var(--text)}
+.lock-sub{font-size:11px;color:var(--sub);margin:6px 0 10px;line-height:1.45}
+.fade-card{background:var(--card);border:1px solid rgba(255,183,0,.2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.fade-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.fade-game{font-size:11px;color:var(--sub)}
+.fade-bet{font-size:15px;font-weight:700;color:var(--text)}
+.fade-meta{font-size:11px;color:var(--sub);line-height:1.45}
+.fade-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,183,0,.24);background:rgba(255,183,0,.1);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700}
+.auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
+.auth-ov.on{display:flex}
+.auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.auth-title{font-size:16px;font-weight:800}
+.auth-sub{font-size:12px;color:var(--sub);margin:5px 0 10px}
+.auth-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.auth-m{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;font-family:var(--sans);text-align:left}
+.auth-m.on{border-color:rgba(0,212,255,.35);color:var(--cyan)}
+.auth-field{margin-top:10px}
+.auth-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px}
+.auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
+.auth-in:focus{outline:none;border-color:rgba(0,212,255,.35)}
+.auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
+/* API STATUS */
+.api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.api-dot.ok{background:var(--green)}.api-dot.err{background:var(--red)}.api-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+.api-lbl{font-size:10px;color:var(--muted)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:99px}
+
+</style>
+</head>
+<body>
+
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">⚡</div>
+    <div class="logo-text">Algobets Ai</div>
+  </div>
+  <span class="nav-section">Picks</span>
+  <button class="nav-item active" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    Today's Edges <span class="nav-badge" id="nb-picks">0</span>
+  </button>
+  <button class="nav-item" onclick="go('odds')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Odds
+  </button>
+  <button class="nav-item" onclick="go('ev')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    +EV Finder
+  </button>
+  <button class="nav-item" onclick="go('steam')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    Steam
+  </button>
+  <button class="nav-item" onclick="go('fades')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    Public Fades
+  </button>
+  <button class="nav-item" onclick="go('parlay')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+    Parlay Builder <span class="nav-badge" style="display:none" id="nb-parlay">0</span>
+  </button>
+  <span class="nav-section">More</span>
+  <button class="nav-item" onclick="go('boost')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Boost Checker
+  </button>
+  <button class="nav-item" onclick="go('perf')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    Track Record
+  </button>
+  <button class="nav-item" onclick="go('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    History
+  </button>
+  <button class="nav-item" onclick="go('community')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Community
+  </button>
+  <button class="nav-item" onclick="go('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
+    Profile
+  </button>
+  <div class="sidebar-bot">
+    <span class="nav-section" style="padding-top:4px">Open an Account</span>
+    <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#53D338;color:#000">DK</div>
+      <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#1493FF;color:#fff">FD</div>
+      <div class="book-info"><div class="book-name">FanDuel</div><div class="book-promo">$1,000 No Sweat Bet</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sports.betmgm.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#C9A96E;color:#000">MGM</div>
+      <div class="book-info"><div class="book-name">BetMGM</div><div class="book-promo">First Bet up to $1,500</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <a href="https://sportsbook.caesars.com" target="_blank" rel="noopener" class="book-link">
+      <div class="book-icon" style="background:#003087;color:#fff">CZ</div>
+      <div class="book-info"><div class="book-name">Caesars</div><div class="book-promo">Get up to $1,000 back</div></div>
+      <span class="book-arrow">&rarr;</span>
+    </a>
+    <div class="resp-notice">🛡️ Gamble responsibly &middot; <strong>1-800-522-4700</strong></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="topbar-mark">⚡</span>
+      Algobets Ai
+    </div>
+    <div class="topbar-right">
+      <div class="plan-pill free" id="plan-pill">FREE</div>
+      <div class="api-status">
+        <div class="api-dot loading" id="api-dot"></div>
+        <span class="api-lbl" id="api-lbl">Connecting</span>
+      </div>
+      <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
+      <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
+      <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
+      <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
+      <button class="scan-btn" id="scan-btn" onclick="doScan()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Scan Now
+      </button>
+    </div>
+  </div>
+  <div class="loading-bar" id="load-bar"></div>
+
+  <div class="content">
+
+    <div id="v-picks">
+      <div class="page-hdr">
+        <div class="page-sub">5-agent AI consensus · Live multi-book odds · Real-time edge detection</div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat s-green"><div class="stat-val" id="s-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
+        <div class="stat s-cyan"><div class="stat-val" id="s-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
+        <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">64.2%</div><div class="stat-label">30-day win rate</div></div>
+      </div>
+      <div class="error-banner" id="err-banner" role="status" aria-live="polite"></div>
+      <div class="mode-row">
+        <div class="mode-group">
+          <button class="mode-btn active" id="m-simple" onclick="setMode('simple')">Simple</button>
+          <button class="mode-btn" id="m-expert" onclick="setMode('expert')">Expert</button>
+        </div>
+        <span class="mode-hint" id="mode-hint">Plain English</span>
+      </div>
+      <div class="trial-card" id="trial-card">
+        <div class="trial-copy" id="trial-copy"><strong>3-day Premium trial</strong> unlocked after your first scan.</div>
+        <div class="trial-actions">
+          <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
+          <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
+        </div>
+      </div>
+      <div class="paywall-card" id="paywall-card">
+        <div class="paywall-copy" id="paywall-copy"></div>
+        <button class="paywall-cta" id="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
+      </div>
+      <div class="tier-compare" id="tier-compare">
+        <div class="tier-title">Upgrade Highlights</div>
+        <div class="tier-strip">
+          <div class="tier-tag">Free: <strong>2 picks</strong> · NBA/NHL · 20m refresh</div>
+          <div class="tier-tag premium">Premium: <strong>15 picks</strong> + full +EV</div>
+          <div class="tier-tag vip">VIP: <strong>50 picks</strong> + Steam feed + 1m refresh</div>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
+      </div>
+      <div class="sec-hdr">
+        <span class="sec-title" id="picks-count">Loading...</span>
+        <span class="sec-meta" id="picks-refreshed">—</span>
+      </div>
+      <div class="picks-list" id="picklist">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+          <div class="skeleton" style="height:12px;width:40%"></div>
+          <div class="skeleton" style="height:18px;width:65%"></div>
+          <div class="skeleton" style="height:10px;width:30%"></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+          <div class="skeleton" style="height:12px;width:35%"></div>
+          <div class="skeleton" style="height:18px;width:55%"></div>
+          <div class="skeleton" style="height:10px;width:28%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-odds" style="display:none">
+      <div class="page-hdr"><div class="page-title">Live <span>Odds</span></div><div class="page-sub">Book-by-book moneylines from latest scan</div></div>
+      <div class="odds-sports" id="odds-sports"></div>
+      <div class="picks-list" id="odds-list"></div>
+    </div>
+
+    <div id="v-ev" style="display:none">
+      <div class="page-hdr"><div class="page-title">+EV <span>Finder</span></div><div class="page-sub">Bets priced better than fair value — powered by live Odds API data</div></div>
+      <div class="error-banner" id="ev-err-banner" role="status" aria-live="polite"></div>
+      <div class="sec-hdr"><span class="sec-title" id="ev-count">Loading...</span><span class="sec-meta">Pinnacle devig method</span></div>
+      <div class="ev-table">
+        <div class="ev-hdr"><div>Bet</div><div>EV %</div><div>Best book</div><div>Odds</div></div>
+        <div id="evlist"></div>
+      </div>
+    </div>
+
+    <div id="v-steam" style="display:none">
+      <div class="page-hdr"><div class="page-title">Steam <span>Moves</span></div><div class="page-sub">Sharp line movement and best-line gaps by game</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="steam-count">Loading...</span><span class="sec-meta">Follow real market pressure</span></div>
+      <div class="picks-list" id="steamlist"></div>
+    </div>
+
+    <div id="v-fades" style="display:none">
+      <div class="page-hdr"><div class="page-title">Public % <span>Fades</span></div><div class="page-sub">Contrarian spots where public money is heavy on one side</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="fades-count">Loading...</span><span class="sec-meta">Fade crowded tickets, tail sharp pricing</span></div>
+      <div class="picks-list" id="fades-list"></div>
+    </div>
+
+    <div id="v-parlay" style="display:none">
+      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Add picks with the + button on any pick card</div></div>
+      <div class="parlay-section">
+        <div class="parlay-empty" id="parlay-empty">No picks yet — hit <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
+        <div id="parlay-legs"></div>
+        <div id="parlay-result" style="display:none" class="parlay-result">
+          <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
+          <div class="pl-row"><span>$100 wins</span><span class="pl-val" id="parlay-win"></span></div>
+          <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-boost" style="display:none">
+      <div class="page-hdr"><div class="page-title">Boost <span>Checker</span></div><div class="page-sub">Is that sportsbook promo actually worth taking?</div></div>
+      <div class="boost-card">
+        <div style="font-size:12px;color:var(--sub);line-height:1.6">Paste the normal and boosted odds — we'll tell you if it's +EV instantly.</div>
+        <div class="field-grid">
+          <div class="field"><div class="field-label">Normal odds</div><input class="field-input" id="bc-normal" placeholder="-110" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Boosted odds</div><input class="field-input" id="bc-boost" placeholder="+100" style="color:var(--violet)" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Your stake ($)</div><input class="field-input" id="bc-stake" type="number" placeholder="50" oninput="calcBoost()"/></div>
+          <div class="field"><div class="field-label">Fair odds (optional)</div><input class="field-input" id="bc-fair" placeholder="-115" oninput="calcBoost()"/></div>
+        </div>
+        <div class="boost-result" id="bc-result">
+          <div class="boost-ev" id="bc-ev">+0.0%</div>
+          <div style="font-size:12px;font-weight:700;margin-top:3px" id="bc-verdict"></div>
+          <div class="boost-grid">
+            <div><div class="bst-val" id="bc-win" style="color:var(--green)">$0</div><div class="bst-lbl">If it wins</div></div>
+            <div><div class="bst-val" id="bc-lose" style="color:var(--red)">-$0</div><div class="bst-lbl">If it loses</div></div>
+            <div><div class="bst-val" id="bc-edge" style="color:var(--amber)">+$0</div><div class="bst-lbl">Edge vs normal</div></div>
+          </div>
+        </div>
+        <div class="examples-list" id="boost-examples"></div>
+      </div>
+    </div>
+
+    <div id="v-perf" style="display:none">
+      <div class="page-hdr"><div class="page-title">Track <span>Record</span></div><div class="page-sub">CLV-verified results — measured against Pinnacle's closing line</div></div>
+      <div class="perf-grid">
+        <div class="stat s-green"><div class="stat-val" style="color:var(--green)">64.2%</div><div class="stat-label">All-time win rate · 143W 80L</div></div>
+        <div class="stat s-cyan"><div class="stat-val" style="color:var(--cyan)">+18.4u</div><div class="stat-label">Total units won</div></div>
+        <div class="stat s-violet"><div class="stat-val" style="color:var(--violet)">+4.2%</div><div class="stat-label">Avg CLV vs close</div></div>
+        <div class="stat s-green"><div class="stat-val" style="color:var(--amber)">67.1%</div><div class="stat-label">Last 30 days · 44W 22L</div></div>
+        <div class="stat s-cyan"><div class="stat-val" style="color:var(--green)">+8.2u</div><div class="stat-label">30-day units</div></div>
+        <div class="stat s-violet"><div class="stat-val" style="color:var(--cyan)">228</div><div class="stat-label">Picks tracked</div></div>
+      </div>
+      <div class="perf-chart">
+        <div style="font-size:13px;font-weight:700">Monthly P&L (Units)</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">Oct 2025 – Mar 2026</div>
+        <div class="bars" id="perf-bars"></div>
+        <div class="bar-labels"><span class="bar-lbl">Oct</span><span class="bar-lbl">Nov</span><span class="bar-lbl">Dec</span><span class="bar-lbl">Jan</span><span class="bar-lbl">Feb</span><span class="bar-lbl">Mar</span></div>
+      </div>
+      <div class="agent-tbl">
+        <div class="agent-row agent-hdr"><span>AI Agent</span><span>Win % fired</span><span>Weight</span></div>
+        <div class="agent-row"><span>Best-Line EV</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">68.4%</span><span style="color:var(--cyan);font-family:var(--mono)">+4.0</span></div>
+        <div class="agent-row"><span>De-vig Consensus</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">65.1%</span><span style="color:var(--cyan);font-family:var(--mono)">+4.2</span></div>
+        <div class="agent-row"><span>Sharp-Book Weighting</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">62.8%</span><span style="color:var(--cyan);font-family:var(--mono)">+3.6</span></div>
+        <div class="agent-row"><span>Steam Moves</span><span style="color:var(--amber);font-family:var(--mono);font-weight:700">59.3%</span><span style="color:var(--amber);font-family:var(--mono)">+8.0</span></div>
+        <div class="agent-row"><span>Public Fades</span><span style="color:var(--sub);font-family:var(--mono);font-weight:700">57.2%</span><span style="color:var(--sub);font-family:var(--mono)">+5.0</span></div>
+      </div>
+    </div>
+
+    <div id="v-history" style="display:none">
+      <div class="page-hdr"><div class="page-title">Pick <span>History</span></div><div class="page-sub">Recent scans and top edges captured for your account</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="history-count">Loading...</span><span class="sec-meta">Retention + trust proof</span></div>
+      <div class="picks-list" id="history-list"></div>
+    </div>
+
+    <div id="v-community" style="display:none">
+      <div class="page-hdr"><div class="page-title">Community <span>Feed</span></div><div class="page-sub">Share your picks, post wins, and see what others are betting</div></div>
+      <div class="community-wrap">
+        <div class="community-composer">
+          <div class="community-title">Verified feed only</div>
+          <div class="community-sub">To reduce spam, posts can only be created from live pick cards using the post buttons.</div>
+          <div class="community-row">
+            <button class="bill-link" onclick="loadCommunityFeed()">Refresh</button>
+          </div>
+        </div>
+        <div class="community-feed" id="community-feed"></div>
+      </div>
+    </div>
+
+    <div id="v-profile" style="display:none">
+      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage sign-in identity and billing access</div></div>
+      <div class="profile-card">
+        <div class="pf-row"><div class="pf-k">Account</div><div class="pf-v" id="pf-account">Guest</div></div>
+        <div class="pf-row"><div class="pf-k">Method</div><div class="pf-v" id="pf-method">Guest</div></div>
+        <div class="pf-row"><div class="pf-k">Plan</div><div class="pf-v" id="pf-plan">Free</div></div>
+        <div class="pf-row"><div class="pf-k">Pick Limit</div><div class="pf-v" id="pf-limit">2</div></div>
+        <div class="pf-actions">
+          <button class="pf-btn primary" onclick="openAuthModal()">Register / Sign In</button>
+          <button class="pf-btn" onclick="openUpgradePicker()">Upgrade</button>
+          <button class="pf-btn" onclick="openBillingPortal()">Manage Billing</button>
+          <button class="pf-btn" onclick="signOutProfile()">Sign Out</button>
+        </div>
+      </div>
+      <div class="growth-grid">
+        <div class="growth-card">
+          <div class="growth-title">Referral Unlock</div>
+          <div class="growth-sub">Share your code. Both users get 72h Premium trial when redeemed.</div>
+          <div class="rf-row">
+            <div class="rf-code" id="ref-code">ALGO--------</div>
+            <button class="pf-btn" onclick="copyReferralCode()">Copy</button>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="ref-input" type="text" placeholder="Enter referral code"/>
+            <button class="paywall-cta" onclick="redeemReferral()">Redeem</button>
+          </div>
+          <div class="growth-note" id="ref-note">Loading referral status...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Alert Capture</div>
+          <div class="growth-sub">Save alerts to email or SMS for +EV thresholds.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="al-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="al-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="al-min-ev" type="number" min="0.5" max="25" step="0.5" value="2"/>
+            <button class="paywall-cta" onclick="saveAlertSubscription()">Save Alert</button>
+          </div>
+          <div class="growth-note" id="al-note">No subscriptions yet.</div>
+        </div>
+      </div>
+    </div>
+
+</div></main>
+</div><nav class="mobile-nav" id="mobile-nav">
+  <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    <span class="mnav-label">Picks</span>
+  </button>
+  <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span class="mnav-label">Odds</span>
+  </button>
+  <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span class="mnav-label">+EV</span>
+  </button>
+  <button class="mnav-btn" id="mn-steam" onclick="go('steam')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    <span class="mnav-label">Steam</span>
+  </button>
+  <button class="mnav-btn" id="mn-fades" onclick="go('fades')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    <span class="mnav-label">Fades</span>
+  </button>
+  <button class="mnav-btn" id="mn-parlay" onclick="go('parlay')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+    <span class="mnav-label">Parlay</span>
+  </button>
+  <div class="mnav-more-wrap">
+    <button class="mnav-btn" id="mn-more" onclick="toggleMobileMore(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+      <span class="mnav-label">More</span>
+    </button>
+    <div class="mnav-more-panel" id="mnav-more-panel">
+      <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
+      <button class="mnav-more-item" onclick="go('perf')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Record</button>
+      <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
+      <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
+      <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
+    </div>
+  </div>
+</nav>
+
+<div class="overlay" id="act-overlay" onclick="closeModal(event)">
+  <div class="modal" id="act-modal">
+    <div id="act-content"></div>
+    <button class="modal-close" onclick="document.getElementById('act-overlay').classList.remove('on');document.getElementById('act-modal').classList.remove('on')">Close</button>
+  </div>
+</div>
+
+<div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
+  <div class="up-modal">
+    <div class="up-title">Choose your plan</div>
+    <div class="up-sub" id="up-sub">Pick Premium or VIP before checkout.</div>
+    <div class="cycle-toggle">
+      <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
+      <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
+    </div>
+    <div class="cycle-note" id="cycle-note">Annual plans save ~2 months when available.</div>
+    <div class="up-grid" id="up-grid"></div>
+    <div class="up-actions"><button class="bill-link" onclick="closeUpgradePicker()">Cancel</button></div>
+  </div>
+</div>
+
+<div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
+  <div class="auth-modal">
+    <div class="auth-title">Register / Sign In</div>
+    <div class="auth-sub">Choose a method: Gmail, Email, Phone, or Facebook.</div>
+    <div class="auth-methods">
+      <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
+      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
+      <button class="auth-m" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
+      <button class="auth-m" id="am-facebook" onclick="selectAuthMethod('facebook')">Facebook</button>
+    </div>
+    <div class="auth-field">
+      <div class="auth-lbl" id="auth-lbl">Gmail Address</div>
+      <input class="auth-in" id="auth-input" type="text" placeholder="you@gmail.com"/>
+    </div>
+    <div class="auth-actions">
+      <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
+      <button class="paywall-cta" onclick="submitAuthProfile()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const _qp = new URLSearchParams(window.location.search);
+const _backendFromQp = (_qp.get('backend') || '').trim();
+if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
+const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
+const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+const PROFILE_KEY = 'algobets-profile-v1';
+const STATE_KEY = 'algobets-ui-state-v1';
+const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
+
+function makeGuestId() {
+  return `guest_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const _uidFromQp = (_qp.get('uid') || '').trim();
+if (_uidFromQp) localStorage.setItem('algobets-user-id', _uidFromQp);
+let USER_ID = (localStorage.getItem('algobets-user-id') || '').trim();
+if (!USER_ID) {
+  USER_ID = makeGuestId();
+  localStorage.setItem('algobets-user-id', USER_ID);
+}
+window.setAlgobetsUserId = function(uid) {
+  if (!uid) return;
+  USER_ID = String(uid).trim();
+  localStorage.setItem('algobets-user-id', USER_ID);
+};
+
+const SPORTS = [
+  {key:'basketball_nba',   label:'NBA 🏀'},
+  {key:'basketball_ncaab', label:'NCAAB 🎓'},
+  {key:'icehockey_nhl',    label:'NHL 🏒'},
+  {key:'baseball_mlb',     label:'MLB ⚾'},
+  {key:'soccer_epl',       label:'EPL ⚽'},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let mode = 'simple';
+let filter = 'all';
+let legs = [];
+let PICKS = [];
+let EVDATA = [];
+let STEAMDATA = [];
+let FADESDATA = [];
+let ODDSGAMES = [];
+let activeOddsSport = '';
+let lastRefresh = null;
+let isScanning = false;
+let currentTab = 'picks';
+let currentPlan = 'free';
+let planConfig = {};
+let paywallMeta = null;
+let userProfile = {method: 'guest', identifier: '', name: ''};
+let scanCooldownRemaining = 0;
+let scanCooldownTicker = null;
+let HISTORYDATA = [];
+let COMMUNITYDATA = [];
+let PRICING = {};
+let billingCycle = 'monthly';
+let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
+let trialUiState = {dismissed: false};
+let hasScannedAtLeastOnce = false;
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function americanToDecimal(odds) {
+  const o = parseInt(odds);
+  if (isNaN(o)) return 1;
+  return o > 0 ? (o / 100) + 1 : 1 + (100 / Math.abs(o));
+}
+
+function impliedProb(odds) {
+  const o = parseInt(odds);
+  if (isNaN(o)) return 0.5;
+  return o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100);
+}
+
+function calcEV(odds, fairProb) {
+  const dec = americanToDecimal(odds);
+  return ((dec - 1) * fairProb - (1 - fairProb)) * 100;
+}
+
+function evColor(ev) {
+  return ev >= 6 ? 'var(--cyan)' : ev >= 3 ? 'var(--violet)' : 'var(--amber)';
+}
+
+function evRing(ev, sz = 50) {
+  const r = sz / 2 - 5, c = sz / 2;
+  function arc(a1, a2) {
+    const R = a => a * Math.PI / 180;
+    const x1 = c + r * Math.cos(R(a1)), y1 = c + r * Math.sin(R(a1));
+    const x2 = c + r * Math.cos(R(a2)), y2 = c + r * Math.sin(R(a2));
+    const lg = (a2 - a1) > 180 ? 1 : 0;
+    return `M${x1},${y1}A${r},${r},0,${lg},1,${x2},${y2}`;
+  }
+  const pct = Math.min(100, Math.max(0, ev * 8));
+  const end = -90 + pct * 3.6;
+  const col = evColor(ev);
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="flex-shrink:0">
+    <path d="${arc(-90, 270)}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4" stroke-linecap="round"/>
+    ${ev > 0 ? `<path d="${arc(-90, end)}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` : ''}
+    <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="DM Mono,monospace">+${ev}%</text>
+    <text x="${c}" y="${c+10}" text-anchor="middle" dominant-baseline="middle" fill="#3d4554" font-size="7" font-family="DM Sans,sans-serif">EV</text>
+  </svg>`;
+}
+
+function timeAgo(date) {
+  if (!date) return '—';
+  const s = Math.round((Date.now() - date) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  return `${Math.round(s/3600)}h ago`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function bookLabel(bk) {
+  const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
+  return map[bk] || bk;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    if (st.mode === 'simple' || st.mode === 'expert') mode = st.mode;
+    if (typeof st.filter === 'string') filter = st.filter;
+    if (typeof st.currentTab === 'string') currentTab = st.currentTab;
+    if (Array.isArray(st.legs)) {
+      legs = st.legs
+        .map(l => ({id: Number(l.id), bet: String(l.bet || ''), odds: String(l.odds || '')}))
+        .filter(l => Number.isFinite(l.id) && l.bet && l.odds);
+    }
+  } catch(err) {
+    console.warn('[Algobets] Could not read saved UI state:', err);
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab}));
+  } catch(err) {
+    console.warn('[Algobets] Could not save UI state:', err);
+  }
+}
+
+function loadTrialUiState() {
+  try {
+    const raw = localStorage.getItem(TRIAL_UI_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    trialUiState.dismissed = !!st.dismissed;
+  } catch(err) {
+    console.warn('[Algobets] Could not load trial UI state:', err);
+  }
+}
+
+function saveTrialUiState() {
+  try {
+    localStorage.setItem(TRIAL_UI_KEY, JSON.stringify({dismissed: !!trialUiState.dismissed}));
+  } catch(err) {
+    console.warn('[Algobets] Could not save trial UI state:', err);
+  }
+}
+
+function normalizeAuthMethod(method) {
+  const m = String(method || '').toLowerCase();
+  if (m === 'gmail' || m === 'email' || m === 'phone' || m === 'facebook') return m;
+  return 'guest';
+}
+
+function authMethodLabel(method) {
+  const m = normalizeAuthMethod(method);
+  if (m === 'gmail') return 'Gmail';
+  if (m === 'email') return 'Email';
+  if (m === 'phone') return 'Phone';
+  if (m === 'facebook') return 'Facebook';
+  return 'Guest';
+}
+
+function maskIdentifier(method, identifier) {
+  const raw = String(identifier || '').trim();
+  if (!raw) return 'Guest';
+  const m = normalizeAuthMethod(method);
+  if (m === 'phone') {
+    const d = raw.replace(/\D/g, '');
+    if (d.length < 4) return raw;
+    return `***-***-${d.slice(-4)}`;
+  }
+  if (raw.includes('@')) {
+    const [name, domain] = raw.split('@');
+    if (!domain) return raw;
+    const pre = name.length > 2 ? `${name[0]}***${name[name.length - 1]}` : `${name[0] || '*'}*`;
+    return `${pre}@${domain}`;
+  }
+  return raw.length > 3 ? `${raw.slice(0, 2)}***` : raw;
+}
+
+function profilePickLimit() {
+  const p = normalizePlan(currentPlan);
+  const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
+  if (fromTier > 0) return fromTier;
+  if (p === 'vip') return 50;
+  if (p === 'premium') return 15;
+  return 2;
+}
+
+function updateAuthUi() {
+  const btn = document.getElementById('auth-btn');
+  if (!btn) return;
+  const loggedIn = normalizeAuthMethod(userProfile.method) !== 'guest' && !!String(userProfile.identifier || '').trim();
+  btn.textContent = loggedIn ? 'Account' : 'Sign In';
+}
+
+function renderProfile() {
+  const account = document.getElementById('pf-account');
+  const method = document.getElementById('pf-method');
+  const plan = document.getElementById('pf-plan');
+  const limit = document.getElementById('pf-limit');
+  if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
+  if (method) method.textContent = authMethodLabel(userProfile.method);
+  if (plan) plan.textContent = planLabel(currentPlan);
+  if (limit) limit.textContent = String(profilePickLimit());
+  updateAuthUi();
+}
+
+function saveProfile() {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
+  } catch (err) {
+    console.warn('[Algobets] Could not save profile:', err);
+  }
+}
+
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) {
+      if (USER_ID.includes('@')) {
+        userProfile = {method: USER_ID.endsWith('@gmail.com') ? 'gmail' : 'email', identifier: USER_ID, name: ''};
+      }
+      renderProfile();
+      return;
+    }
+    const p = JSON.parse(raw);
+    userProfile = {
+      method: normalizeAuthMethod(p.method),
+      identifier: String(p.identifier || '').trim(),
+      name: String(p.name || '').trim(),
+    };
+    if (userProfile.identifier && USER_ID.startsWith('guest_')) {
+      window.setAlgobetsUserId(authIdentityForBilling(userProfile.method, userProfile.identifier));
+    }
+  } catch (err) {
+    console.warn('[Algobets] Could not load profile:', err);
+  }
+  renderProfile();
+}
+
+function selectAuthMethod(method) {
+  const m = normalizeAuthMethod(method);
+  document.querySelectorAll('.auth-m').forEach(el => el.classList.remove('on'));
+  const active = document.getElementById(`am-${m}`);
+  if (active) active.classList.add('on');
+
+  const lbl = document.getElementById('auth-lbl');
+  const input = document.getElementById('auth-input');
+  if (!lbl || !input) return;
+
+  if (m === 'gmail') {
+    lbl.textContent = 'Gmail Address';
+    input.placeholder = 'you@gmail.com';
+    input.type = 'email';
+  } else if (m === 'email') {
+    lbl.textContent = 'Email Address';
+    input.placeholder = 'you@example.com';
+    input.type = 'email';
+  } else if (m === 'phone') {
+    lbl.textContent = 'Phone Number';
+    input.placeholder = '+1 (555) 123-4567';
+    input.type = 'tel';
+  } else {
+    lbl.textContent = 'Facebook Email or Username';
+    input.placeholder = 'yourprofile or you@facebookmail.com';
+    input.type = 'text';
+  }
+}
+
+function openAuthModal() {
+  const ov = document.getElementById('auth-ov');
+  const input = document.getElementById('auth-input');
+  if (!ov || !input) return;
+  const m = normalizeAuthMethod(userProfile.method === 'guest' ? 'gmail' : userProfile.method);
+  selectAuthMethod(m);
+  input.value = userProfile.identifier || '';
+  ov.classList.add('on');
+  requestAnimationFrame(() => input.focus());
+}
+
+function closeAuthModal(e) {
+  const ov = document.getElementById('auth-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function authIdentityForBilling(method, rawValue) {
+  const v = String(rawValue || '').trim();
+  const m = normalizeAuthMethod(method);
+  if (m === 'phone') return `phone:${v.replace(/\D/g, '')}`;
+  return v.toLowerCase();
+}
+
+async function submitAuthProfile() {
+  const active = document.querySelector('.auth-m.on');
+  const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'gmail');
+  const input = document.getElementById('auth-input');
+  if (!input) return;
+  const value = String(input.value || '').trim();
+  if (!value) {
+    showToast('Enter your account details');
+    return;
+  }
+  if ((method === 'gmail' || method === 'email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    showToast('Enter a valid email');
+    return;
+  }
+  if (method === 'gmail' && !/@gmail\.com$/i.test(value)) {
+    showToast('Use a Gmail address');
+    return;
+  }
+  if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
+    showToast('Enter a valid phone number');
+    return;
+  }
+
+  userProfile = {method, identifier: value, name: ''};
+  saveProfile();
+  window.setAlgobetsUserId(authIdentityForBilling(method, value));
+  closeAuthModal();
+  renderProfile();
+  showToast(`Signed in with ${authMethodLabel(method)}`);
+  await fetchPlan();
+  await loadTrialStatus();
+  doScan(true);
+}
+
+function signOutProfile() {
+  userProfile = {method: 'guest', identifier: '', name: ''};
+  saveProfile();
+  window.setAlgobetsUserId(makeGuestId());
+  renderProfile();
+  showToast('Signed out');
+  fetchPlan();
+  loadTrialStatus();
+  doScan(true);
+}
+
+function ensureRegisteredUser(redirectToProfile = true) {
+  if (!USER_ID || USER_ID.startsWith('guest_')) {
+    showToast('Sign in first to use this feature');
+    if (redirectToProfile && currentTab !== 'profile') go('profile');
+    return false;
+  }
+  return true;
+}
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  try {
+    return new Date(Number(ts) * 1000).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  } catch (e) {
+    return '—';
+  }
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  const ct = document.getElementById('history-count');
+  if (!el || !ct) return;
+  ct.textContent = `${HISTORYDATA.length} recent scan${HISTORYDATA.length !== 1 ? 's' : ''}`;
+  if (!HISTORYDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div></div>`;
+    return;
+  }
+  el.innerHTML = HISTORYDATA.map(h => {
+    const top = (h.top_picks || []).map((p, idx) => `<div class="h-item">${esc(p.sport || '')}: <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} <span style="color:var(--cyan)">(+${esc(String(p.ev || 0))}%)</span> <button class="btn-share" style="padding:2px 6px;margin-left:6px" onclick="shareHistoryPick(${JSON.stringify(h.ts)},${idx})">Share</button></div>`).join('');
+    const plan = normalizePlan(h.plan || 'free');
+    return `<div class="h-card">
+      <div class="h-top"><span class="h-time">${fmtTs(h.ts)}</span><span class="h-pill ${plan}">${planLabel(plan)}</span></div>
+      <div class="h-meta">${h.picks_visible || 0} shown of ${h.picks_total || 0} picks · ${(h.sports_covered || []).length} sports</div>
+      <div class="h-list">${top || '<div class="h-item">No picks captured in this scan.</div>'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function shareHistoryPick(ts, idx) {
+  const row = HISTORYDATA.find(h => Number(h.ts) === Number(ts));
+  const p = row?.top_picks?.[Number(idx)];
+  if (!p) return;
+  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets Ai`;
+  const url = window.location.href.split('?')[0];
+  try {
+    if (navigator.share) {
+      await navigator.share({title: 'Algobets Ai Pick', text, url});
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      showToast('Pick copied to clipboard');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function loadHistory() {
+  if (!ensureRegisteredUser()) return;
+  try {
+    const res = await backendGet('/api/history?limit=30');
+    HISTORYDATA = Array.isArray(res.history) ? res.history : [];
+  } catch (err) {
+    console.error(err);
+    HISTORYDATA = [];
+  }
+  renderHistory();
+}
+
+function buildShareTextFromPick(p, mode = 'pick') {
+  const tag = mode === 'win' ? 'WIN ✅' : 'Pick 🎯';
+  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets Ai`;
+}
+
+async function sharePick(id, mode = 'pick') {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  const text = buildShareTextFromPick(p, mode);
+  const url = window.location.href.split('?')[0];
+  try {
+    if (navigator.share) {
+      await navigator.share({title: 'Algobets Ai Pick', text, url});
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      showToast('Pick copied to clipboard');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function postPickToCommunity(id, mode = 'pick') {
+  if (!ensureRegisteredUser()) return;
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  try {
+    await backendPost('/api/community/posts', {
+      mode,
+      text: mode === 'win' ? `Cashed this edge.` : `Sharing this edge.`,
+      bet: p.bet,
+      game: p.game,
+      odds: p.odds,
+      ev: p.ev,
+      sport: p.sport,
+    });
+    showToast(mode === 'win' ? 'Posted winning pick' : 'Posted to community');
+    if (currentTab === 'community') loadCommunityFeed();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not post right now');
+  }
+}
+
+function renderCommunityFeed() {
+  const el = document.getElementById('community-feed');
+  if (!el) return;
+  if (!COMMUNITYDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div class="empty-title">No posts yet</div><div class="empty-sub">Be the first to share a pick.</div></div>`;
+    return;
+  }
+  el.innerHTML = COMMUNITYDATA.map(p => `
+    <div class="cpost">
+      <div class="c-top">
+        <div><div class="c-user">${esc(p.user || 'anon')}</div><div class="c-time">${fmtTs(p.ts)}</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${p.verified ? '<div class="c-verified">VERIFIED</div>' : ''}
+          <div class="c-mode ${p.mode === 'win' ? 'win' : 'pick'}">${p.mode === 'win' ? 'WIN' : 'PICK'}</div>
+        </div>
+      </div>
+      <div class="c-text">${esc(p.text || '')}</div>
+      <div class="c-text"><strong style="color:var(--text)">${esc(p.bet || '—')}</strong> ${esc(p.odds || '')} · ${esc(p.game || '')}${p.ev !== null && p.ev !== undefined ? ` · +${esc(String(p.ev))}% EV` : ''}</div>
+    </div>
+  `).join('');
+}
+
+async function loadCommunityFeed() {
+  try {
+    const res = await backendGet('/api/community/posts?limit=50');
+    COMMUNITYDATA = Array.isArray(res.posts) ? res.posts : [];
+  } catch (err) {
+    console.error(err);
+    COMMUNITYDATA = [];
+  }
+  renderCommunityFeed();
+}
+
+async function loadReferralStatus() {
+  const codeEl = document.getElementById('ref-code');
+  const noteEl = document.getElementById('ref-note');
+  if (!codeEl || !noteEl) return;
+  if (!ensureRegisteredUser(false)) {
+    codeEl.textContent = 'ALGO--------';
+    noteEl.textContent = 'Sign in to get your referral code.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/referral/status');
+    codeEl.textContent = res.referral_code || 'ALGO--------';
+    const untilBonus = Number(res.referrals_until_bonus || 0);
+    const bonusLine = untilBonus > 0
+      ? `Invite ${untilBonus} more to earn +7 days Premium.`
+      : 'Invite milestone reached: +7 days Premium applied.';
+    if (res.trial_seconds_left > 0) {
+      noteEl.textContent = `Premium trial active for ${fmtCountdown(res.trial_seconds_left)}. Referrals: ${res.referrals_count || 0}. ${bonusLine}`;
+    } else {
+      noteEl.textContent = `Referrals: ${res.referrals_count || 0}. Redeem one code to unlock 72h Premium trial. ${bonusLine}`;
+    }
+  } catch (err) {
+    console.error(err);
+    noteEl.textContent = 'Could not load referral status.';
+  }
+}
+
+function copyReferralCode() {
+  const code = (document.getElementById('ref-code')?.textContent || '').trim();
+  if (!code || code === 'ALGO--------') return;
+  navigator.clipboard?.writeText(code).then(() => showToast('Referral code copied')).catch(() => showToast(code));
+}
+
+async function redeemReferral() {
+  if (!ensureRegisteredUser()) return;
+  const input = document.getElementById('ref-input');
+  const code = String(input?.value || '').trim().toUpperCase();
+  if (!code) {
+    showToast('Enter a referral code');
+    return;
+  }
+  try {
+    await backendPost('/api/referral/redeem', {code});
+    showToast('Referral redeemed: 72h Premium unlocked');
+    if (input) input.value = '';
+    await fetchPlan();
+    await loadReferralStatus();
+    doScan(true);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not redeem code');
+  }
+}
+
+async function loadAlertSubscriptions() {
+  const noteEl = document.getElementById('al-note');
+  if (!noteEl) return;
+  if (!ensureRegisteredUser(false)) {
+    noteEl.textContent = 'Sign in to save alert destinations.';
+    return;
+  }
+  try {
+    const res = await backendGet('/api/alerts/subscriptions');
+    const subs = Array.isArray(res.subscriptions) ? res.subscriptions : [];
+    if (!subs.length) {
+      noteEl.textContent = 'No subscriptions yet.';
+      return;
+    }
+    noteEl.textContent = subs.slice(-2).map(s => `${s.channel.toUpperCase()}: ${s.target} (EV ≥ ${s.min_ev}%)`).join(' · ');
+  } catch (err) {
+    console.error(err);
+    noteEl.textContent = 'Could not load subscriptions.';
+  }
+}
+
+async function saveAlertSubscription() {
+  if (!ensureRegisteredUser()) return;
+  const channel = document.getElementById('al-channel')?.value || 'email';
+  const target = String(document.getElementById('al-target')?.value || '').trim();
+  const minEv = Number(document.getElementById('al-min-ev')?.value || 2);
+  if (!target) {
+    showToast('Enter email or phone destination');
+    return;
+  }
+  try {
+    await backendPost('/api/alerts/subscribe', {channel, target, min_ev: minEv});
+    showToast('Alert subscription saved');
+    loadAlertSubscriptions();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save alert');
+  }
+}
+
+// ─── BACKEND ─────────────────────────────────────────────────────────────────
+// Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
+async function backendGet(path, timeout = 60000) {
+  const url = `${BACKEND}${path}`;
+  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID};
+
+  // 1. Direct fetch
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeout);
+    const res = await fetch(url, {headers: hdrs, signal: ctrl.signal});
+    clearTimeout(t);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch(directErr) {
+    console.warn('[Algobets] Direct fetch failed, trying proxy:', directErr.message);
+  }
+
+  // 2. CORS proxy fallback
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const ctrl2 = new AbortController();
+  const t2 = setTimeout(() => ctrl2.abort(), timeout);
+  const res2 = await fetch(proxyUrl, {signal: ctrl2.signal});
+  clearTimeout(t2);
+  if (!res2.ok) throw new Error(`Proxy HTTP ${res2.status}`);
+  const wrapped = await res2.json();
+  if (!wrapped.contents) throw new Error('Empty proxy response');
+  return JSON.parse(wrapped.contents);
+}
+
+async function backendPost(path, body, timeout = 60000) {
+  const url = `${BACKEND}${path}`;
+  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID, 'content-type': 'application/json'};
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, {method: 'POST', headers: hdrs, body: JSON.stringify(body || {}), signal: ctrl.signal});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function normalizePlan(p) {
+  const plan = String(p || '').toLowerCase();
+  if (plan === 'vip' || plan === 'sharp') return 'vip';
+  if (plan === 'premium' || plan === 'pro') return 'premium';
+  return 'free';
+}
+
+function planLabel(plan) {
+  const p = normalizePlan(plan);
+  return p === 'vip' ? 'VIP' : p === 'premium' ? 'PREMIUM' : 'FREE';
+}
+
+function nextTier(plan) {
+  const p = normalizePlan(plan);
+  if (p === 'free') return 'premium';
+  if (p === 'premium') return 'vip';
+  return null;
+}
+
+function planRank(plan) {
+  const p = normalizePlan(plan);
+  if (p === 'vip') return 2;
+  if (p === 'premium') return 1;
+  return 0;
+}
+
+function canUsePremium() {
+  return planRank(currentPlan) >= 1;
+}
+
+function canUseVip() {
+  return planRank(currentPlan) >= 2;
+}
+
+function annualConfiguredForTier(tier) {
+  const t = normalizePlan(tier);
+  return !!PRICING?.[t]?.billing?.annual_configured;
+}
+
+function updatePlanUi() {
+  const p = normalizePlan(currentPlan);
+  const pill = document.getElementById('plan-pill');
+  if (pill) {
+    pill.className = `plan-pill ${p}`;
+    pill.textContent = planLabel(p);
+  }
+  const up = document.getElementById('upgrade-btn');
+  const manage = document.getElementById('manage-btn');
+  if (up) {
+    const nxt = nextTier(p);
+    up.style.display = nxt ? '' : 'none';
+    up.textContent = nxt ? 'Upgrade' : 'Upgraded';
+  }
+  if (manage) manage.style.display = p === 'free' ? 'none' : '';
+  renderProfile();
+  updateScanCooldownUi();
+  updateTrialCard();
+}
+
+function updatePaywallUi() {
+  const card = document.getElementById('paywall-card');
+  const copy = document.getElementById('paywall-copy');
+  const cta = document.getElementById('paywall-cta');
+  if (!card || !copy || !cta) return;
+  const p = normalizePlan(currentPlan);
+  const nxt = (paywallMeta && paywallMeta.next_tier) ? normalizePlan(paywallMeta.next_tier) : nextTier(p);
+  const visible = Number(paywallMeta?.visible_pick_limit || PICKS.length || 0);
+  const total = Number(paywallMeta?.total_picks || PICKS.length || 0);
+  if (!nxt || total <= visible) {
+    card.classList.remove('on');
+    const cmp = document.getElementById('tier-compare');
+    if (cmp) cmp.classList.toggle('on', p !== 'vip');
+    return;
+  }
+  copy.innerHTML = `<strong>${planLabel(p)}</strong> shows ${visible} of ${total} picks. Upgrade to <strong>${planLabel(nxt)}</strong> for more.`;
+  cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Upgrade';
+  card.classList.add('on');
+  const cmp = document.getElementById('tier-compare');
+  if (cmp) cmp.classList.toggle('on', p !== 'vip');
+}
+
+function ensureBillingUser() {
+  if (USER_ID && USER_ID.includes('@')) return true;
+  const entered = prompt('Enter your email for billing and plan sync:');
+  if (!entered) return false;
+  const email = String(entered).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Enter a valid email');
+    return false;
+  }
+  window.setAlgobetsUserId(email);
+  userProfile = {method: 'email', identifier: email, name: ''};
+  saveProfile();
+  renderProfile();
+  showToast('Email saved');
+  return true;
+}
+
+async function fetchPlan() {
+  try {
+    const res = await backendGet('/api/plan');
+    currentPlan = normalizePlan(res.plan);
+    planConfig = res.tier || {};
+    updatePlanUi();
+  } catch (err) {
+    currentPlan = 'free';
+    updatePlanUi();
+  }
+}
+
+async function fetchPricing() {
+  try {
+    const res = await backendGet('/api/pricing');
+    PRICING = res?.tiers || {};
+  } catch (err) {
+    PRICING = {};
+  }
+}
+
+async function loadTrialStatus() {
+  try {
+    const res = await backendGet('/api/trial/status');
+    trialStatusState = {
+      eligible: !!res.eligible,
+      claimed: !!res.claimed,
+      trial_seconds_left: Number(res.trial_seconds_left || 0),
+    };
+  } catch (err) {
+    trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
+  }
+  updateTrialCard();
+}
+
+function dismissTrialCard() {
+  trialUiState.dismissed = true;
+  saveTrialUiState();
+  updateTrialCard();
+}
+
+async function claimFreeTrial() {
+  if (!ensureRegisteredUser()) return;
+  try {
+    await backendPost('/api/trial/start', {});
+    trialUiState.dismissed = true;
+    saveTrialUiState();
+    await fetchPlan();
+    await loadTrialStatus();
+    showToast('Premium trial started: 72 hours');
+    doScan(true);
+  } catch (err) {
+    console.error(err);
+    showToast('Trial unavailable');
+  }
+}
+
+function updateTrialCard() {
+  const card = document.getElementById('trial-card');
+  const copy = document.getElementById('trial-copy');
+  if (!card || !copy) return;
+  const show = hasScannedAtLeastOnce && normalizePlan(currentPlan) === 'free' && !!trialStatusState.eligible && !trialUiState.dismissed;
+  if (!show) {
+    card.classList.remove('on');
+    return;
+  }
+  copy.innerHTML = `<strong>3-day Premium trial</strong> is ready. Start now to unlock +EV Finder and faster scans.`;
+  card.classList.add('on');
+}
+
+function setBillingCycle(cycle) {
+  billingCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  const monthly = document.getElementById('cycle-monthly');
+  const annual = document.getElementById('cycle-annual');
+  if (monthly) monthly.classList.toggle('active', billingCycle === 'monthly');
+  if (annual) annual.classList.toggle('active', billingCycle === 'annual');
+}
+
+async function startCheckout(tier, cycle = billingCycle) {
+  const desired = normalizePlan(tier || nextTier(currentPlan));
+  if (!desired) return;
+  if (!ensureBillingUser()) return;
+  let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  if (finalCycle === 'annual' && !annualConfiguredForTier(desired)) {
+    finalCycle = 'monthly';
+    showToast('Annual price not configured yet. Using monthly checkout.');
+  }
+  try {
+    const origin = window.location.origin + window.location.pathname;
+    const res = await backendPost('/api/billing/checkout', {
+      tier: desired,
+      billing_cycle: finalCycle,
+      success_url: `${origin}?checkout=success&uid=${encodeURIComponent(USER_ID)}`,
+      cancel_url: `${origin}?checkout=cancel&uid=${encodeURIComponent(USER_ID)}`
+    });
+    if (res.checkout_url) window.location.href = res.checkout_url;
+  } catch (err) {
+    console.error(err);
+    showToast('Checkout unavailable');
+  }
+}
+
+function closeUpgradePicker(e) {
+  const ov = document.getElementById('up-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
+function openUpgradePicker() {
+  const p = normalizePlan(currentPlan);
+  const grid = document.getElementById('up-grid');
+  const sub = document.getElementById('up-sub');
+  const note = document.getElementById('cycle-note');
+  if (!grid) return;
+  setBillingCycle(billingCycle);
+  const opts = p === 'free'
+    ? [
+        {tier: 'premium', title: 'Premium', desc: 'Up to 15 picks/scan + full +EV Finder'},
+        {tier: 'vip', title: 'VIP', desc: 'Up to 50 picks/scan + Steam feed'},
+      ]
+    : p === 'premium'
+      ? [{tier: 'vip', title: 'VIP', desc: 'Jump from 15 to 50 picks + unlock steam feed'}]
+      : [];
+  if (!opts.length) {
+    showToast('You already have highest tier');
+    return;
+  }
+  sub.textContent = p === 'free' ? 'Pick Premium or VIP before checkout.' : 'Move to VIP for full access.';
+  if (note) note.textContent = billingCycle === 'annual'
+    ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
+    : 'Monthly selected. Switch to annual for lower effective monthly cost.';
+  grid.innerHTML = opts.map(o => {
+    const annualOn = annualConfiguredForTier(o.tier);
+    const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
+    const cycleHint = billingCycle === 'annual'
+      ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
+      : 'Monthly billing at checkout';
+    return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${o.desc} · ${cycleHint}</span></button>`;
+  }).join('');
+  document.getElementById('up-ov').classList.add('on');
+}
+
+async function openBillingPortal() {
+  if (!ensureBillingUser()) return;
+  try {
+    const origin = window.location.origin + window.location.pathname;
+    const res = await backendPost('/api/billing/portal', {return_url: `${origin}?uid=${encodeURIComponent(USER_ID)}`});
+    if (res.portal_url) window.open(res.portal_url, '_blank', 'noopener');
+  } catch (err) {
+    console.error(err);
+    showToast('Billing portal unavailable');
+  }
+}
+
+function setApiStatus(state) {
+  const dot = document.getElementById('api-dot');
+  const lbl = document.getElementById('api-lbl');
+  dot.className = 'api-dot ' + state;
+  lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Error' : 'Loading';
+  lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
+}
+
+function fmtCountdown(totalSec) {
+  const s = Math.max(0, Math.floor(Number(totalSec) || 0));
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${m}:${String(ss).padStart(2, '0')}`;
+}
+
+function updateScanCooldownUi() {
+  const pill = document.getElementById('scan-cooldown');
+  const btn = document.getElementById('scan-btn');
+  if (!pill || !btn) return;
+  const blocked = scanCooldownRemaining > 0 && !isScanning;
+  pill.textContent = `Next scan in ${fmtCountdown(scanCooldownRemaining)}`;
+  pill.classList.toggle('on', blocked);
+  btn.disabled = blocked;
+}
+
+function setScanCooldown(seconds) {
+  const next = Math.max(0, Math.floor(Number(seconds) || 0));
+  scanCooldownRemaining = next;
+  if (scanCooldownTicker) {
+    clearInterval(scanCooldownTicker);
+    scanCooldownTicker = null;
+  }
+  updateScanCooldownUi();
+  if (scanCooldownRemaining <= 0) return;
+  scanCooldownTicker = setInterval(() => {
+    scanCooldownRemaining = Math.max(0, scanCooldownRemaining - 1);
+    updateScanCooldownUi();
+    if (scanCooldownRemaining <= 0 && scanCooldownTicker) {
+      clearInterval(scanCooldownTicker);
+      scanCooldownTicker = null;
+    }
+  }, 1000);
+}
+
+// ─── NORMALIZERS ──────────────────────────────────────────────────────────────
+function normalizePick(p, idx) {
+  const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
+  const conf = parseFloat(p.confidence || 50);
+  const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
+  const betText = esc(p.bet || '—');
+  const gameText = esc(p.game || `${p.awayTeam || ''} vs ${p.homeTeam || ''}`);
+  const oddsText = esc(p.odds || '—');
+  const bookText = esc(bookLabel(p.best_book || ''));
+
+  const chips = [];
+  if (p.edge_source === 'pinnacle_clv' || p.clv_edge) chips.push({t:'clv', l:`CLV +${ev}%`});
+  if (p.steam)    chips.push({t:'steam', l:'STEAM'});
+  if (p.rlm)      chips.push({t:'rlm',   l:'RLM'});
+  if (p.elo_edge) chips.push({t:'elo',   l:`ELO +${p.elo_edge}%`});
+  if (p.soft_book_lag) chips.push({t:'ev', l:`LAG`});
+  if (!chips.length)   chips.push({t:'ev', l:`+EV ${ev}%`});
+
+  const mb = p.model_breakdown || {};
+  const explain = mb.pinnacle_clv
+    ? `<strong>${betText}</strong> in <strong>${gameText}</strong>. ${esc(mb.pinnacle_clv)}. ${esc(mb.sharp_money || '')}. ${mb.confirms ? 'Signals: ' + esc(mb.confirms) : ''}`
+    : `<strong>${betText}</strong> at ${oddsText} on <strong>${bookText}</strong> has +${ev}% edge over true probability.`;
+
+  let timeStr = p.game_time || '';
+  if (timeStr) {
+    try { timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}); } catch(e){}
+  }
+
+  return {
+    id:   idx + 1,
+    grade,
+    sport: esc(`${p.emoji||''} ${p.sport||''}`.trim()),
+    sk:   p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
+    game: gameText,
+    time: esc(timeStr),
+    gameTimeRaw: p.game_time || null,
+    bet:  betText,
+    odds: oddsText,
+    ev,
+    conf: Math.round(conf * 100),
+    book: bookText,
+    bookRaw: bookLabel(p.best_book || ''),
+    sh:   Math.round(p.sharpPct  || 0),
+    pu:   Math.round(p.publicPct || 0),
+    lm:   p.lineMove   || 0,
+    elo:  p.elo_edge   || 0,
+    chips,
+    explain,
+  };
+}
+
+function normalizeEV(e) {
+  return {
+    bet:  esc(e.bet  || '—'),
+    game: esc(e.game || '—'),
+    ev:   Math.round(parseFloat(e.ev || 0) * 10) / 10,
+    best: esc(e.books_compared ? `${e.books_compared} books` : '—'),
+    bo:   esc(e.bookOdds || '—'),
+  };
+}
+
+function formatOddsTime(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('en-US', {weekday:'short', hour:'numeric', minute:'2-digit', hour12:true});
+  } catch (e) {
+    return '—';
+  }
+}
+
+function normalizeOddsGames(games) {
+  return (Array.isArray(games) ? games : []).map(g => {
+    const sport = g.sport || g.sport_key || '';
+    const byBook = g.moneyline_by_book || {};
+    const books = Object.keys(byBook).map(book => {
+      const row = byBook[book] || {};
+      return {book, away: row.away, home: row.home};
+    });
+    return {
+      id: g.id || `${sport}_${g.away_team || ''}_${g.home_team || ''}_${g.commence_time || ''}`,
+      sport,
+      sportLabel: g.label || SPORTS.find(s => s.key === sport)?.label || sport,
+      awayTeam: g.away_team || 'Away',
+      homeTeam: g.home_team || 'Home',
+      commence: g.commence_time || '',
+      books,
+    };
+  });
+}
+
+function americanFromDecimal(dec) {
+  const d = Number(dec);
+  if (!Number.isFinite(d) || d <= 1) return '—';
+  if (d >= 2) return `+${Math.round((d - 1) * 100)}`;
+  return `${Math.round(-100 / (d - 1))}`;
+}
+
+function computeSteamSignals(games) {
+  const signals = [];
+  for (const g of (Array.isArray(games) ? games : [])) {
+    const byBook = g.moneyline_by_book || {};
+    const entries = Object.entries(byBook);
+    if (entries.length < 3) continue;
+    const sides = [
+      {key: 'home', team: g.home_team || 'Home'},
+      {key: 'away', team: g.away_team || 'Away'},
+    ];
+    for (const s of sides) {
+      const prices = entries
+        .map(([book, lines]) => ({book, price: Number(lines?.[s.key])}))
+        .filter(x => Number.isFinite(x.price));
+      if (prices.length < 3) continue;
+      const decimals = prices.map(x => americanToDecimal(x.price)).sort((a, b) => a - b);
+      const medianDec = decimals[Math.floor(decimals.length / 2)];
+      const best = prices.reduce((a, b) => americanToDecimal(a.price) >= americanToDecimal(b.price) ? a : b);
+      const gapPct = ((americanToDecimal(best.price) / medianDec) - 1) * 100;
+      if (gapPct < 3) continue;
+      const pinnacle = prices.find(x => x.book === 'pinnacle');
+      const pinnDiff = pinnacle ? ((americanToDecimal(best.price) / americanToDecimal(pinnacle.price)) - 1) * 100 : 0;
+      signals.push({
+        sport: g.label || g.sport || '',
+        game: `${g.away_team || 'Away'} @ ${g.home_team || 'Home'}`,
+        side: s.team,
+        book: bookLabel(best.book),
+        odds: best.price > 0 ? `+${best.price}` : String(best.price),
+        consensus: americanFromDecimal(medianDec),
+        gap: Math.round(gapPct * 10) / 10,
+        confidence: gapPct >= 7 ? 'HIGH' : gapPct >= 5 ? 'MED' : 'LOW',
+        note: pinnacle && pinnDiff >= 1.2
+          ? `Pinnacle is tighter by ${Math.round(pinnDiff * 10) / 10}% — likely sharp move.`
+          : 'Best-book gap vs market median suggests stale pricing.',
+      });
+    }
+  }
+  return signals.sort((a, b) => b.gap - a.gap).slice(0, 30);
+}
+
+function renderOdds() {
+  const sportsEl = document.getElementById('odds-sports');
+  const listEl = document.getElementById('odds-list');
+  if (!sportsEl || !listEl) return;
+
+  if (!ODDSGAMES.length) {
+    sportsEl.innerHTML = '';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📈</div><div class="empty-title">No odds loaded yet</div><div class="empty-sub">Run Scan Now to load live odds.</div></div>`;
+    return;
+  }
+
+  const sports = [...new Set(ODDSGAMES.map(g => g.sport).filter(Boolean))];
+  if (!activeOddsSport || !sports.includes(activeOddsSport)) activeOddsSport = sports[0] || '';
+  sportsEl.innerHTML = sports.map(s => {
+    const label = SPORTS.find(x => x.key === s)?.label || ODDSGAMES.find(g => g.sport === s)?.sportLabel || s;
+    return `<button class="odds-sport ${s === activeOddsSport ? 'active' : ''}" onclick="setOddsSport('${s}')">${esc(label)}</button>`;
+  }).join('');
+
+  const rows = ODDSGAMES.filter(g => g.sport === activeOddsSport);
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No games for this sport</div><div class="empty-sub">Try another sport tab.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(g => `
+    <div class="odds-card">
+      <div class="odds-time">${formatOddsTime(g.commence)}</div>
+      <div class="odds-game">${esc(g.awayTeam)} @ ${esc(g.homeTeam)}</div>
+      <div class="odds-grid">
+        <div class="odds-head">Book</div><div class="odds-head">${esc(g.awayTeam.split(' ').pop() || 'Away')}</div><div class="odds-head">${esc(g.homeTeam.split(' ').pop() || 'Home')}</div>
+        ${g.books.map(b => `<div class="odds-book">${esc(bookLabel(b.book))}</div><div class="odds-line">${b.away ? esc(String(b.away)) : '—'}</div><div class="odds-line">${b.home ? esc(String(b.home)) : '—'}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function setOddsSport(sport) {
+  activeOddsSport = sport;
+  renderOdds();
+}
+
+
+
+// ─── SCAN ─────────────────────────────────────────────────────────────────────
+async function doScan(silent = false) {
+  if (isScanning) return;
+  if (scanCooldownRemaining > 0) {
+    if (!silent) showToast(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`);
+    updateScanCooldownUi();
+    return;
+  }
+  isScanning = true;
+
+  const btn = document.getElementById('scan-btn');
+  const loadBar = document.getElementById('load-bar');
+  btn.classList.add('loading');
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning…';
+  loadBar.classList.add('on');
+  setApiStatus('loading');
+
+  // Always clear stale data before fetching
+  PICKS = [];
+  EVDATA = [];
+  STEAMDATA = [];
+  FADESDATA = [];
+  const eb = document.getElementById('err-banner'); if(eb) eb.classList.remove('on');
+
+  if (!silent) {
+    document.getElementById('picklist').innerHTML = `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+        <div class="skeleton" style="height:12px;width:40%"></div>
+        <div class="skeleton" style="height:18px;width:65%"></div>
+        <div class="skeleton" style="height:10px;width:30%"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
+        <div class="skeleton" style="height:12px;width:35%"></div>
+        <div class="skeleton" style="height:18px;width:55%"></div>
+        <div class="skeleton" style="height:10px;width:28%"></div>
+      </div>`;
+  }
+
+  try {
+    // Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
+    const bust = Date.now();
+    const canSeeEV = planRank(currentPlan) >= 1;
+    const [picksRes, evRes] = await Promise.allSettled([
+      backendGet(`/scan?refresh=true&_=${bust}`),
+      canSeeEV ? backendGet(`/api/ev-finder?_=${bust}`) : Promise.resolve({results: []}),
+    ]);
+
+    if (picksRes.status === 'fulfilled') {
+      const raw = picksRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
+      if (!Array.isArray(raw)) {
+        currentPlan = normalizePlan(raw.plan || currentPlan);
+        paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
+        ODDSGAMES = normalizeOddsGames(raw.games || []);
+        STEAMDATA = computeSteamSignals(raw.games || []);
+        if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
+        setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
+        if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
+          showToast(`Using cached scan. Fresh data in ${fmtCountdown(scanCooldownRemaining)}`);
+        }
+      } else {
+        paywallMeta = null;
+        ODDSGAMES = [];
+        STEAMDATA = [];
+        setScanCooldown(0);
+      }
+      PICKS = arr
+        .map((p, i) => normalizePick(p, i))
+        // REMOVED gameTimeRaw filter to ensure API picks are always shown
+        .sort((a, b) => b.ev - a.ev);
+      FADESDATA = computePublicFadesFromPicks(PICKS);
+      updatePlanUi();
+      updatePaywallUi();
+      hasScannedAtLeastOnce = true;
+      updateTrialCard();
+    } else {
+        console.error("Picks request failed:", picksRes.reason);
+    }
+
+    if (evRes.status === 'fulfilled') {
+      const raw = evRes.value;
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
+      EVDATA = arr.map(normalizeEV).sort((a, b) => b.ev - a.ev);
+    }
+
+    lastRefresh = Date.now();
+
+    if (PICKS.length) {
+      const avgEV = Math.round(PICKS.reduce((s, p) => s + p.ev, 0) / PICKS.length * 10) / 10;
+      document.getElementById('s-edge').textContent = '+' + avgEV + '%';
+      document.getElementById('s-count').textContent = PICKS.length;
+      document.getElementById('nb-picks').textContent = PICKS.length;
+    } else {
+      document.getElementById('s-edge').textContent = '—';
+      document.getElementById('s-count').textContent = '0';
+      document.getElementById('nb-picks').textContent = '0';
+    }
+
+    if (PICKS.length === 0 && EVDATA.length === 0) {
+      const errBanner = document.getElementById('err-banner');
+      if (errBanner) {
+        const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
+        errBanner.textContent = allFailed
+          ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
+          : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.';
+        errBanner.classList.add('on');
+      }
+    } else {
+      setApiStatus('ok');
+    }
+
+    if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
+
+  } catch(err) {
+    console.error('Scan error:', err);
+    setApiStatus('err');
+    const errBanner = document.getElementById('err-banner');
+    if (errBanner) {
+      errBanner.textContent = '⚠ Could not reach backend — check console. Make sure the Render backend is running and allows CORS.';
+      errBanner.classList.add('on');
+    }
+  }
+
+  renderPicks();
+  renderOdds();
+  renderEV();
+  renderSteam();
+  renderFades();
+  if (currentTab === 'history') loadHistory();
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
+  loadBar.classList.remove('on');
+  isScanning = false;
+  updateScanCooldownUi();
+}
+
+// ─── RENDER PICKS ─────────────────────────────────────────────────────────────
+function renderPicks() {
+  const el = document.getElementById('picklist');
+  const pts = PICKS.filter(p => {
+    if (filter === 'all') return true;
+    if (filter === 'a') return p.grade === 'a';
+    // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
+    return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
+  });
+
+  document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
+  document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '—';
+  updatePaywallUi();
+
+  if (!pts.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = pts.map((p, i) => {
+    const chips = p.chips.map(c => `<span class="chip ${c.t}">${c.l}</span>`).join('');
+    const bars = mode === 'expert' ? `<div class="sig-bars">
+      <div class="sig-row"><span class="sig-lbl">Sharp</span><div class="sig-track"><div class="sig-fill" style="width:${p.sh}%;background:${p.sh>=60?'var(--cyan)':'var(--muted)'}"></div></div><span class="sig-num" style="color:${p.sh>=60?'var(--cyan)':'var(--sub)'}">${p.sh}%</span></div>
+      <div class="sig-row"><span class="sig-lbl">Public</span><div class="sig-track"><div class="sig-fill" style="width:${p.pu}%;background:var(--muted)"></div></div><span class="sig-num">${p.pu}%</span></div>
+      <div class="sig-row"><span class="sig-lbl">Line mv</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,Math.abs(p.lm)*20)}%;background:${p.lm>0?'var(--green)':'var(--red)'}"></div></div><span class="sig-num" style="color:${p.lm>0?'var(--green)':'var(--red)'}">${p.lm>0?'+':''}${p.lm}</span></div>
+      <div class="sig-row"><span class="sig-lbl">Elo</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,p.elo*12)}%;background:var(--amber)"></div></div><span class="sig-num" style="color:var(--amber)">+${p.elo}%</span></div>
+    </div>` : '';
+
+    return `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
+  <div class="pick-inner">
+    <div class="pick-left">
+      <div class="pick-sport-row">
+        <span class="sport-tag">${p.sport}</span>
+        <span class="grade-tag ${p.grade}">${p.grade.toUpperCase()}</span>
+        <span class="game-label">${p.game}</span>
+        <span class="game-time">${p.time}</span>
+      </div>
+      <div class="pick-bet">${p.bet}</div>
+      <div class="pick-odds-row">
+        <span class="pick-odds">${p.odds}</span>
+        ${bookLink(p.bookRaw)}
+      </div>
+      <div class="chips">${chips}</div>
+      ${bars}
+    </div>
+    <div class="pick-right">${evRing(p.ev)}</div>
+  </div>
+  <div class="pick-explain${mode === 'simple' ? ' on' : ''}" id="exp-${p.id}">${p.explain}</div>
+  <div class="pick-actions">
+    <button class="btn-how" onclick="showAction(${p.id})">👉 How to bet this</button>
+    <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
+    <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
+    <button class="btn-win" onclick="postPickToCommunity(${p.id},'win')">Post Win</button>
+    <button class="explain-toggle" onclick="toggleExplain(${p.id})" id="etgl-${p.id}">${mode === 'simple' ? '▲ Less' : '▼ Why?'}</button>
+  </div>
+</div>`;
+  }).join('');
+}
+
+function toggleExplain(id) {
+  const el = document.getElementById(`exp-${id}`);
+  const btn = document.getElementById(`etgl-${id}`);
+  el.classList.toggle('on');
+  btn.textContent = el.classList.contains('on') ? '▲ Less' : '▼ Why?';
+}
+
+// ─── RENDER EV ────────────────────────────────────────────────────────────────
+function renderEV() {
+  const el = document.getElementById('evlist');
+  document.getElementById('ev-count').textContent = `${EVDATA.length} +EV bet${EVDATA.length !== 1 ? 's' : ''} found`;
+  if (!EVDATA.length) {
+    el.innerHTML = `<div class="empty" style="padding:32px"><div class="empty-icon">📊</div><div class="empty-title">No +EV bets right now</div><div class="empty-sub">Hit Scan Now to refresh.</div></div>`;
+    return;
+  }
+  el.innerHTML = EVDATA.slice(0, 20).map(e => `
+    <div class="ev-row">
+      <div><div class="ev-bet">${e.bet}</div><div class="ev-game">${e.game}</div></div>
+      <div class="ev-pct" style="color:${evColor(e.ev)}">+${e.ev}%</div>
+      <div class="ev-book" style="color:var(--text)">${e.best}</div>
+      <div class="ev-odds" style="color:var(--cyan)">${e.bo}</div>
+    </div>`).join('');
+}
+
+// ─── RENDER STEAM ─────────────────────────────────────────────────────────────
+function renderLockedFeature(el, title, subtitle, requiredTier) {
+  if (!el) return;
+  el.innerHTML = `
+    <div class="feature-lock">
+      <div class="blur-wrap">
+        <div class="steam-card"><div class="steam-row"><div><div class="steam-game">NBA · Knicks @ Celtics</div><div class="steam-signal">Celtics -145</div></div><div class="steam-chip">HIGH 7.1%</div></div><div class="steam-meta">Best book: FanDuel · Consensus ~ -166</div><div class="steam-meta">Pinnacle tighter by 2.1% — likely sharp move.</div></div>
+        <div class="steam-card"><div class="steam-row"><div><div class="steam-game">NHL · Oilers @ Kings</div><div class="steam-signal">Oilers +112</div></div><div class="steam-chip">MED 5.2%</div></div><div class="steam-meta">Best book: DraftKings · Consensus ~ +102</div><div class="steam-meta">Gap suggests stale public number at one book.</div></div>
+      </div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">${esc(title)}</div>
+          <div class="lock-sub">${esc(subtitle)}</div>
+          <button class="paywall-cta" onclick="openUpgradePicker()">${requiredTier === 'vip' ? 'Go VIP' : 'Go Premium'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSteam() {
+  const el = document.getElementById('steamlist');
+  const countEl = document.getElementById('steam-count');
+  if (!el || !countEl) return;
+  if (!canUseVip()) {
+    countEl.textContent = `VIP feature`;
+    renderLockedFeature(el, 'Steam Moves are VIP only', 'Preview is blurred. Upgrade to VIP for the full live feed.', 'vip');
+    return;
+  }
+  countEl.textContent = `${STEAMDATA.length} steam move${STEAMDATA.length !== 1 ? 's' : ''} found`;
+  if (!STEAMDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No steam moves right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
+    return;
+  }
+  el.innerHTML = STEAMDATA.map((s, i) => `
+    <div class="steam-card" style="animation-delay:${i*.05}s">
+      <div class="steam-row">
+        <div>
+          <div class="steam-game">${esc(s.sport)} · ${esc(s.game)}</div>
+          <div class="steam-signal">${esc(s.side)} ${esc(s.odds)}</div>
+        </div>
+        <div class="steam-chip">${esc(s.confidence)} ${s.gap}%</div>
+      </div>
+      <div class="steam-meta">Best book: <strong style="color:var(--text)">${esc(s.book)}</strong> · Consensus ~ ${esc(s.consensus)}</div>
+      <div class="steam-meta">${esc(s.note)}</div>
+    </div>
+  `).join('');
+}
+
+function computePublicFadesFromPicks(picks) {
+  return (Array.isArray(picks) ? picks : [])
+    .filter(p => Number(p.pu || 0) >= 65 && Number(p.ev || 0) >= 1.5)
+    .map(p => ({
+      sport: p.sport || '',
+      game: p.game || '',
+      bet: p.bet || '',
+      odds: p.odds || '',
+      publicPct: Number(p.pu || 0),
+      sharpPct: Number(p.sh || 0),
+      ev: Number(p.ev || 0),
+      note: Number(p.sh || 0) >= 55
+        ? 'Public heavy on opposite side while sharp money leans this way.'
+        : 'Crowded ticket split with favorable price for contrarian entry.',
+    }))
+    .sort((a, b) => (b.publicPct - a.publicPct) || (b.ev - a.ev))
+    .slice(0, 30);
+}
+
+function renderFades() {
+  const el = document.getElementById('fades-list');
+  const countEl = document.getElementById('fades-count');
+  if (!el || !countEl) return;
+  if (!canUsePremium()) {
+    countEl.textContent = 'Premium feature';
+    el.innerHTML = `
+      <div class="feature-lock">
+        <div class="blur-wrap">
+          <div class="fade-card"><div class="fade-top"><div><div class="fade-game">NBA · Suns @ Nuggets</div><div class="fade-bet">Nuggets -4.5</div></div><div class="fade-chip">Public 73%</div></div><div class="fade-meta">Sharp 59% · +4.2% EV · -110</div><div class="fade-meta">Public piled on the other side after TV narrative.</div></div>
+          <div class="fade-card"><div class="fade-top"><div><div class="fade-game">NHL · Rangers @ Devils</div><div class="fade-bet">Devils ML</div></div><div class="fade-chip">Public 69%</div></div><div class="fade-meta">Sharp 57% · +3.1% EV · +105</div><div class="fade-meta">Contrarian entry as market drifts against crowd position.</div></div>
+        </div>
+        <div class="lock-overlay">
+          <div class="lock-card">
+            <div class="lock-title">Public Fades are Premium+</div>
+            <div class="lock-sub">Unlock every fade signal, not just previews.</div>
+            <button class="paywall-cta" onclick="openUpgradePicker()">Go Premium</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  countEl.textContent = `${FADESDATA.length} fade play${FADESDATA.length !== 1 ? 's' : ''} found`;
+  if (!FADESDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🧊</div><div class="empty-title">No strong fade spots right now</div><div class="empty-sub">Run scans around major game windows.</div></div>`;
+    return;
+  }
+  el.innerHTML = FADESDATA.map((f, i) => `
+    <div class="fade-card" style="animation-delay:${i*.04}s">
+      <div class="fade-top">
+        <div><div class="fade-game">${esc(f.sport)} · ${esc(f.game)}</div><div class="fade-bet">${esc(f.bet)} ${esc(f.odds)}</div></div>
+        <div class="fade-chip">Public ${f.publicPct}%</div>
+      </div>
+      <div class="fade-meta">Sharp ${f.sharpPct}% · +${f.ev}% EV</div>
+      <div class="fade-meta">${esc(f.note)}</div>
+    </div>
+  `).join('');
+}
+
+// ─── PERF CHART ───────────────────────────────────────────────────────────────
+function renderPerf() {
+  const data = [2.1, 3.8, 1.4, 4.2, 3.1, 2.8];
+  const max = Math.max(...data);
+  document.getElementById('perf-bars').innerHTML = data.map((v, i) => `<div class="bar" style="height:${(v/max)*100}%;background:${v > 3 ? 'var(--green)' : 'var(--cyan)'};opacity:${0.7 + i*0.05}" title="${v > 0 ? '+' : ''}${v}u"></div>`).join('');
+}
+
+// ─── PARLAY ───────────────────────────────────────────────────────────────────
+function addParlay(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
+  legs.push({id: p.id, bet: p.bet, odds: p.odds});
+  updateParlay();
+  saveState();
+  showToast(`+ ${p.bet}`);
+}
+
+function clearParlay() { legs = []; updateParlay(); saveState(); }
+
+function updateParlay() {
+  const n = legs.length;
+  const nb = document.getElementById('nb-parlay');
+  nb.textContent = n;
+  nb.style.display = n > 0 ? '' : 'none';
+  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay();saveState()">×</button></div>`).join('');
+  const emptyEl = document.getElementById('parlay-empty');
+  const legsEl = document.getElementById('parlay-legs');
+  if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
+  if (legsEl) legsEl.innerHTML = html;
+  const resEl = document.getElementById('parlay-result');
+  if (n >= 2) {
+    let tot = 1;
+    legs.forEach(l => { const o = parseInt(String(l.odds).replace('+',''), 10); const d = o > 0 ? (o/100)+1 : 1+(100/Math.abs(o)); tot *= d; });
+    const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
+    document.getElementById('parlay-odds').textContent = ao;
+    document.getElementById('parlay-win').textContent = `$${Math.round((tot-1)*100)}`;
+    if (resEl) resEl.style.display = '';
+  } else {
+    if (resEl) resEl.style.display = 'none';
+  }
+}
+
+// ─── BOOST ────────────────────────────────────────────────────────────────────
+const BOOST_EXAMPLES = [
+  {nm:'DraftKings: Celtics ML Boost', normal:'-120', boost:'+100', stake:50},
+  {nm:'FanDuel: Chiefs -3 Boost', normal:'-110', boost:'-100', stake:50},
+  {nm:'BetMGM: Over 225.5 Boost', normal:'-115', boost:'+110', stake:50},
+];
+
+function loadBoostExamples() {
+  document.getElementById('boost-examples').innerHTML =
+    `<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Try an example</div>` +
+    BOOST_EXAMPLES.map(e => `<button class="ex-btn" onclick="loadBoost('${e.normal}','${e.boost}','${e.stake}')">
+      <span style="font-size:12px;font-weight:600;color:var(--text)">${e.nm}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">${e.normal} → ${e.boost}</span>
+    </button>`).join('');
+}
+
+function loadBoost(n, b, s) {
+  document.getElementById('bc-normal').value = n;
+  document.getElementById('bc-boost').value = b;
+  document.getElementById('bc-stake').value = s;
+  calcBoost();
+}
+
+function calcBoost() {
+  const n = document.getElementById('bc-normal').value;
+  const b = document.getElementById('bc-boost').value;
+  const s = parseFloat(document.getElementById('bc-stake').value) || 100;
+  const f = document.getElementById('bc-fair').value;
+  if (!n || !b) return;
+  const pFair = f ? impliedProb(f) : impliedProb(n);
+  const ev = calcEV(b, pFair);
+  const dn = americanToDecimal(n), db = americanToDecimal(b);
+  const winN = (dn - 1) * s, winB = (db - 1) * s;
+  const edge = winB - winN;
+  document.getElementById('bc-ev').textContent = `${ev >= 0 ? '+' : ''}${Math.round(ev*10)/10}%`;
+  document.getElementById('bc-ev').style.color = ev >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('bc-verdict').textContent = ev >= 2 ? '✓ Take this boost — it\'s +EV' : ev >= 0 ? '⚠ Marginal — depends on your edge' : '✗ Skip this boost — it\'s -EV';
+  document.getElementById('bc-verdict').style.color = ev >= 2 ? 'var(--green)' : ev >= 0 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('bc-win').textContent = `$${Math.round(winB)}`;
+  document.getElementById('bc-lose').textContent = `-$${s}`;
+  document.getElementById('bc-edge').textContent = `${edge >= 0 ? '+' : ''}$${Math.round(edge)}`;
+  document.getElementById('bc-result').classList.add('on');
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+const BOOK_URLS = {DraftKings:'https://sportsbook.draftkings.com',FanDuel:'https://sportsbook.fanduel.com',BetMGM:'https://sports.betmgm.com',Caesars:'https://sportsbook.caesars.com',PointsBet:'https://www.pointsbet.com',Pinnacle:'https://www.pinnacle.com',Bet365:'https://www.bet365.com'};
+
+function bookLink(name) {
+  const url = BOOK_URLS[name];
+  if (!url) return `<span class="pick-book">@ ${esc(name)}</span>`;
+  return `<a class="pick-book-link" href="${url}" target="_blank" rel="noopener">@ ${name} ↗</a>`;
+}
+
+function showAction(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  const size = p.grade === 'a' ? 'a full unit (1–2% of bankroll)' : p.grade === 'b' ? 'half a unit (~1%)' : 'a quarter unit (~0.5%)';
+  const bookName = esc(p.bookRaw || p.book);
+  const bookUrl = BOOK_URLS[p.bookRaw] || '#';
+  document.getElementById('act-content').innerHTML = `
+    <div class="modal-title">How to bet this</div>
+    <div class="modal-sub">${p.bet} · ${p.odds} · ${p.sport}</div>
+    <div class="act-step"><div class="act-num">1</div><div class="act-text">Open <strong>${bookName}</strong> — <a href="${bookUrl}" target="_blank" rel="noopener">Go to ${bookName} ↗</a></div></div>
+    <div class="act-step"><div class="act-num">2</div><div class="act-text">Find <strong>${p.game}</strong> and place: <strong>${p.bet}</strong></div></div>
+    <div class="act-step"><div class="act-num">3</div><div class="act-text">Confirm odds show <strong>${p.odds}</strong> or better. If they've moved against you, the edge may be gone.</div></div>
+    <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
+    <div class="act-note">⏱ <strong>Game: ${p.time}</strong> — lines can move fast. Lock this in before the edge closes.</div>`;
+  const ov = document.getElementById('act-overlay');
+  const md = document.getElementById('act-modal');
+  ov.classList.add('on');
+  requestAnimationFrame(() => md.classList.add('on'));
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('act-overlay')) {
+    document.getElementById('act-overlay').classList.remove('on');
+    document.getElementById('act-modal').classList.remove('on');
+  }
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+const ALL_TABS = ['picks','odds','ev','steam','fades','parlay','boost','perf','history','community','profile'];
+const MOBILE_MORE_TABS = ['boost','perf','history','community','profile'];
+
+function closeMobileMore() {
+  const panel = document.getElementById('mnav-more-panel');
+  if (panel) panel.classList.remove('on');
+}
+
+function toggleMobileMore(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('mnav-more-panel');
+  if (!panel) return;
+  panel.classList.toggle('on');
+}
+
+function go(name) {
+  if (!ALL_TABS.includes(name)) return;
+  currentTab = name;
+  closeMobileMore();
+  ALL_TABS.forEach(t => {
+    const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
+    const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
+    const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
+  });
+  const moreBtn = document.getElementById('mn-more');
+  if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (name === 'odds') renderOdds();
+  if (name === 'steam') renderSteam();
+  if (name === 'fades') renderFades();
+  if (name === 'history') loadHistory();
+  if (name === 'community') loadCommunityFeed();
+  if (name === 'profile') {
+    loadReferralStatus();
+    loadAlertSubscriptions();
+  }
+  saveState();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('m-simple').classList.toggle('active', m === 'simple');
+  document.getElementById('m-expert').classList.toggle('active', m === 'expert');
+  document.getElementById('mode-hint').textContent = m === 'simple' ? 'Plain English' : 'Full signal data';
+  saveState();
+  renderPicks();
+}
+
+function setFilter(el, k) {
+  document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  filter = k;
+  saveState();
+  renderPicks();
+}
+
+// ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
+function startAutoRefresh() {
+  // Refresh every 8 minutes in background
+  setInterval(() => { if (!isScanning) doScan(true); }, 8 * 60 * 1000);
+  // Update "Updated X ago" label every 30s
+  setInterval(() => {
+    const el = document.getElementById('picks-refreshed');
+    if (el && lastRefresh) el.textContent = `Updated ${timeAgo(lastRefresh)}`;
+  }, 30000);
+}
+
+function bindUiAccessibility() {
+  document.querySelectorAll('.filter').forEach(f => {
+    f.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        f.click();
+      }
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const ov = document.getElementById('act-overlay');
+      if (ov && ov.classList.contains('on')) {
+        ov.classList.remove('on');
+        document.getElementById('act-modal').classList.remove('on');
+      }
+      const up = document.getElementById('up-ov');
+      if (up && up.classList.contains('on')) up.classList.remove('on');
+      const auth = document.getElementById('auth-ov');
+      if (auth && auth.classList.contains('on')) auth.classList.remove('on');
+      closeMobileMore();
+    }
+  });
+  document.addEventListener('click', e => {
+    const wrap = document.querySelector('.mnav-more-wrap');
+    if (wrap && !wrap.contains(e.target)) closeMobileMore();
+  });
+}
+
+function applySavedSelections() {
+  if (mode === 'expert') setMode('expert');
+  const savedFilterEl = document.querySelector(`.filter[onclick="setFilter(this,'${filter}')"]`);
+  const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
+  const activeFilter = savedFilterEl ? filter : 'all';
+  if (filterEl) setFilter(filterEl, activeFilter);
+  go(currentTab);
+  updateParlay();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadState();
+loadTrialUiState();
+loadProfile();
+bindUiAccessibility();
+applySavedSelections();
+updateScanCooldownUi();
+fetchPlan();
+fetchPricing();
+loadTrialStatus();
+renderPerf();
+loadBoostExamples();
+renderFades();
+doScan();
+startAutoRefresh();
+</script>
+</body>
+</html>
