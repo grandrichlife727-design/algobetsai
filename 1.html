@@ -752,27 +752,27 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
         </div>
       </div>
-      <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
+      <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
           <div class="growth-title">Pick Preview</div>
           <div id="home-top-picks" class="growth-sub">Loading picks...</div>
-          <div class="rf-row"><button class="pf-btn primary" onclick="go('picks')">View All Picks</button></div>
+          <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="home-card-premium" data-home-card="premium_unlocks">
           <div class="growth-title">Premium Unlocks</div>
           <div id="home-premium" class="growth-sub">Props Edge · +EV · Steam · Fades · Parlay</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="go('premium')">Open Premium</button></div>
+          <div class="rf-row"><button class="paywall-cta" data-home-cta="premium_unlocks" onclick="go('premium')">Open Premium</button></div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
           <div class="growth-title">VIP Snapshot</div>
           <div id="home-vip" class="growth-sub">VIP Pick of the Day + live execution modules.</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="go('vip-pod')">Open VIP</button></div>
+          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-pod')">Open VIP</button></div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="home-card-market" data-home-card="market_status">
           <div class="growth-title">Market Status</div>
           <div id="home-glance" class="growth-sub">Games, books, and edge count will appear after scan.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" style="margin-top:8px" data-book="draftkings">
             <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
@@ -795,7 +795,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <span class="offer-cta">Claim</span>
           </a>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="home-card-news" data-home-card="home_news">
           <div class="growth-title">Home News</div>
           <div id="home-news" class="news-feed"></div>
         </div>
@@ -1835,6 +1835,18 @@ let WALK_WEEKS = 12;
 let TOMORROW_GAMES = [];
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
+const HOME_EXP_KEY = 'algobets-home-exp-v1';
+const HOME_FLAGS_KEY = 'algobets-home-flags-v1';
+const HOME_AB = (localStorage.getItem(HOME_EXP_KEY) || (Math.random() < 0.5 ? 'A' : 'B'));
+localStorage.setItem(HOME_EXP_KEY, HOME_AB);
+const HOME_FLAGS_DEFAULT = {
+  show_news: true,
+  show_offers: true,
+  show_vip_snapshot: true,
+  show_market_status: true,
+};
+let homeFlags = {...HOME_FLAGS_DEFAULT};
+const homeSeenCards = new Set();
 const TIER_PRICE_DISPLAY = {
   premium: {monthly: '$19.99/mo', annual: '$179.99/yr'},
   vip: {monthly: '$79.99/mo', annual: '$799.99/yr'},
@@ -4051,6 +4063,79 @@ function toggleDemoMode() {
   doScan(true);
 }
 
+function loadHomeFlags() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HOME_FLAGS_KEY) || '{}');
+    homeFlags = {...HOME_FLAGS_DEFAULT, ...(raw && typeof raw === 'object' ? raw : {})};
+  } catch (_) {
+    homeFlags = {...HOME_FLAGS_DEFAULT};
+  }
+  const qpFlags = String(_qp.get('home_flags') || '').trim();
+  if (qpFlags) {
+    qpFlags.split(',').map(x => x.trim().toLowerCase()).forEach(flag => {
+      if (flag.startsWith('hide_')) {
+        const key = `show_${flag.replace(/^hide_/, '')}`;
+        if (key in homeFlags) homeFlags[key] = false;
+      }
+      if (flag.startsWith('show_')) {
+        const key = flag;
+        if (key in homeFlags) homeFlags[key] = true;
+      }
+    });
+  }
+}
+
+function setHomeCardVisible(cardId, visible) {
+  const el = document.getElementById(cardId);
+  if (!el) return;
+  el.style.display = visible ? '' : 'none';
+}
+
+function applyHomeExperimentLayout() {
+  const grid = document.getElementById('home-grid');
+  if (!grid) return;
+  const orderA = ['home-card-picks', 'home-card-premium', 'home-card-vip', 'home-card-market', 'home-card-offers', 'home-card-news'];
+  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-premium', 'home-card-market', 'home-card-offers', 'home-card-news'];
+  const order = HOME_AB === 'B' ? orderB : orderA;
+  order.forEach(id => {
+    const node = document.getElementById(id);
+    if (node && node.parentElement === grid) grid.appendChild(node);
+  });
+}
+
+function bindHomeTracking() {
+  document.querySelectorAll('[data-home-card]').forEach(card => {
+    if (card.dataset.clickTrackBound === '1') return;
+    card.dataset.clickTrackBound = '1';
+    card.addEventListener('click', (e) => {
+      const hit = e.target && e.target.closest ? e.target.closest('button,a') : null;
+      if (!hit) return;
+      const cardId = String(card.getAttribute('data-home-card') || 'unknown');
+      trackEvent('home_card_click', {card: cardId, plan: normalizePlan(currentPlan), ab: HOME_AB});
+    });
+  });
+  document.querySelectorAll('[data-home-cta]').forEach(btn => {
+    if (btn.dataset.trackBound === '1') return;
+    btn.dataset.trackBound = '1';
+    btn.addEventListener('click', () => {
+      const card = String(btn.getAttribute('data-home-cta') || 'unknown');
+      trackEvent('home_upgrade_click', {card, plan: normalizePlan(currentPlan), ab: HOME_AB, tab: currentTab});
+    });
+  });
+  const cards = Array.from(document.querySelectorAll('[data-home-card]'));
+  if (!('IntersectionObserver' in window) || !cards.length) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card = String(entry.target.getAttribute('data-home-card') || '');
+      if (!card || homeSeenCards.has(card)) return;
+      homeSeenCards.add(card);
+      trackEvent('home_card_view', {card, plan: normalizePlan(currentPlan), ab: HOME_AB});
+    });
+  }, {threshold: 0.5});
+  cards.forEach(c => obs.observe(c));
+}
+
 function updateHomeSummary() {
   const edge = document.getElementById('s-edge')?.textContent || '—';
   const count = document.getElementById('s-count')?.textContent || String(PICKS.length || 0);
@@ -4096,6 +4181,7 @@ function renderHomeModules() {
       }
     }
   }
+  setHomeCardVisible('home-card-picks', true);
 
   if (premiumEl) {
     const on = canUsePremium();
@@ -4126,6 +4212,9 @@ function renderHomeModules() {
         </div>`;
     }
   }
+  const premiumBtn = document.querySelector('#home-card-premium [data-home-cta="premium_unlocks"]');
+  if (premiumBtn) premiumBtn.textContent = HOME_AB === 'B' ? 'Unlock Premium' : 'Open Premium';
+  setHomeCardVisible('home-card-premium', true);
 
   if (vipEl) {
     const pod = getVipPickOfDay();
@@ -4139,6 +4228,9 @@ function renderHomeModules() {
       vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${podLine}<div>VIP Pick of the Day + Live Plays + execution intelligence</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP TEASE</div><div style="font-size:12px;color:var(--sub)">Unlock POD, Live Plays, and execution tools</div><button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock VIP</button></div></div></div>`;
     }
   }
+  const vipBtn = document.querySelector('#home-card-vip [data-home-cta="vip_snapshot"]');
+  if (vipBtn) vipBtn.textContent = HOME_AB === 'B' ? 'Unlock VIP' : 'Open VIP';
+  setHomeCardVisible('home-card-vip', !!homeFlags.show_vip_snapshot);
 
   if (glanceEl) {
     const gameCount = ODDSGAMES.length || SCHEDULE_GAMES.length || 0;
@@ -4148,6 +4240,7 @@ function renderHomeModules() {
     const updated = lastRefresh ? timeAgo(lastRefresh) : '—';
     glanceEl.innerHTML = `${gameCount} games tracked · ${books} books scanned · ${PICKS.length} edges · updated ${updated}`;
   }
+  setHomeCardVisible('home-card-market', !!homeFlags.show_market_status);
 
   if (trendEl) {
     const bySport = {};
@@ -4209,6 +4302,9 @@ function renderHomeModules() {
       </div>
     `).join('');
   }
+  const hasNews = !!(HOME_SPORTS_NEWS && HOME_SPORTS_NEWS.length);
+  setHomeCardVisible('home-card-news', !!homeFlags.show_news && (hasNews || HOME_SPORTS_NEWS_LOADING));
+  setHomeCardVisible('home-card-offers', !!homeFlags.show_offers);
 }
 
 function updatePaywallUi() {
@@ -5754,10 +5850,13 @@ loadVipLiveState();
 loadTrialUiState();
 loadProfile();
 loadAffiliateLocalState();
+loadHomeFlags();
 hydrateAffiliateInputs();
 applyAffiliateLinks();
+applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
+bindHomeTracking();
 updateDemoToggleUi();
 setupInstallPrompt();
 registerServiceWorker();
