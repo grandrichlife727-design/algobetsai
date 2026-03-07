@@ -641,6 +641,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
         Core Edge
       </button>
+      <button class="nav-item nav-sub" onclick="go('vip-pod')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        VIP Pick of Day
+      </button>
       <button class="nav-item nav-sub" onclick="go('vip-execution')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
         Execution
@@ -1014,7 +1018,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Open VIP Sections</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Core Edge</button><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Core Edge</button><button class="pf-btn" onclick="go('vip-pod')">VIP Pick of Day</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-portfolio')">Portfolio</button><button class="pf-btn" onclick="go('vip-alerts')">Alerts</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-discord')">VIP Discord</button><button class="pf-btn" onclick="go('vip-reports')">Reports</button></div>
         </div>
@@ -1022,18 +1027,24 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-vip-core" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Core Edge</span></div><div class="page-sub">Early-release cards plus a single VIP Pick of the Day (our top-rated play).</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Core Edge</span></div><div class="page-sub">Early-release cards and high-conviction VIP edge plays.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
-          <div class="growth-title vip-title"><span class="vip-ico">🏆</span>VIP Pick of the Day</div>
-          <div class="growth-sub" id="vip-pod-best">Loading top-rated play...</div>
-          <div class="growth-note">One highest-conviction system play for today.</div>
-        </div>
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
           <div id="vip-pod" class="growth-sub">Loading Core Edge plays...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-vip-pod" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Pick of the Day</span></div><div class="page-sub">Our single top-rated system play for the day.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title vip-title"><span class="vip-ico">🏆</span>VIP Pick of the Day</div>
+          <div class="growth-sub" id="vip-pod-best">Loading top-rated play...</div>
+          <div class="growth-note">One highest-conviction system play for today.</div>
         </div>
       </div>
     </div>
@@ -1552,6 +1563,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="mnav-vip-panel" id="mnav-vip-panel">
       <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
       <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Core Edge</button>
+      <button class="mnav-more-item" onclick="go('vip-pod')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Pick of Day</button>
       <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
       <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
       <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
@@ -5506,7 +5518,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-pod','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
