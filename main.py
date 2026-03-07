@@ -268,6 +268,10 @@ CACHE_TTL          = int(os.getenv("CACHE_TTL", "1800") or 1800)
 CACHE_TTL_PINNACLE = int(os.getenv("CACHE_TTL_PINNACLE", "1800") or 1800)
 CACHE_TTL_INJURIES = int(os.getenv("CACHE_TTL_INJURIES", "900") or 900)
 ODDS_MIN_REMAINING_TO_SCAN = int(os.getenv("ODDS_MIN_REMAINING_TO_SCAN", "10") or 10)
+MODEL_MIN_EDGE_EV = float(os.getenv("MODEL_MIN_EDGE_EV", "1.0") or 1.0)
+MODEL_MIN_BOOKS = int(os.getenv("MODEL_MIN_BOOKS", "3") or 3)
+MODEL_MIN_CONFIDENCE = int(os.getenv("MODEL_MIN_CONFIDENCE", "58") or 58)
+MODEL_MAX_PICKS_PER_SPORT = int(os.getenv("MODEL_MAX_PICKS_PER_SPORT", "40") or 40)
 
 ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
 PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
@@ -1250,6 +1254,111 @@ def _timeline_for_pick(entry: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def _market_from_bet_text(bet: str, explicit: Optional[str] = None) -> str:
+    if explicit:
+        return str(explicit).strip().lower()
+    b = str(bet or "").lower()
+    if " ml" in b or b.endswith("ml"):
+        return "moneyline"
+    if "over" in b or "under" in b:
+        return "total"
+    if "+" in b or "-" in b:
+        return "spread"
+    return "other"
+
+
+def _walk_forward_metrics_from_rows(rows: list[dict[str, Any]], weeks: int = 12) -> dict[str, Any]:
+    now = datetime.utcnow()
+    week_rows: list[dict[str, Any]] = []
+    by_sport: dict[str, dict[str, Any]] = {}
+    by_market: dict[str, dict[str, Any]] = {}
+    for w in range(max(1, weeks)):
+        start = now - timedelta(days=(w + 1) * 7)
+        end = now - timedelta(days=w * 7)
+        bucket = []
+        for r in rows:
+            ts = int(r.get("settled_ts") or r.get("ts") or 0)
+            if ts <= 0:
+                continue
+            dt = datetime.utcfromtimestamp(ts)
+            if dt >= start and dt < end:
+                bucket.append(r)
+        wins = sum(1 for r in bucket if r.get("status") == "win")
+        losses = sum(1 for r in bucket if r.get("status") == "loss")
+        graded = wins + losses + sum(1 for r in bucket if r.get("status") == "push")
+        units = round(sum(float(r.get("units", 0.0) or 0.0) for r in bucket), 2)
+        risked = max(1.0, float(wins + losses))
+        win_pct = round((wins / max(1, wins + losses)) * 100.0, 1) if (wins + losses) else 0.0
+        roi_pct = round((units / risked) * 100.0, 1) if (wins + losses) else 0.0
+        clv_samples = []
+        clv_wins = 0
+        for r in bucket:
+            try:
+                open_line = int(r.get("line_at_pick"))
+                close_line = int(r.get("closing_line"))
+            except Exception:
+                continue
+            delta = close_line - open_line
+            clv_samples.append(delta)
+            if delta > 0:
+                clv_wins += 1
+        beat_closing = round((clv_wins / max(1, len(clv_samples))) * 100.0, 1) if clv_samples else 0.0
+        week_rows.append(
+            {
+                "week_start": start.strftime("%Y-%m-%d"),
+                "week_end": end.strftime("%Y-%m-%d"),
+                "graded_picks": graded,
+                "wins": wins,
+                "losses": losses,
+                "units": units,
+                "win_pct": win_pct,
+                "roi_pct": roi_pct,
+                "beat_closing_pct": beat_closing,
+            }
+        )
+
+    def _acc(stats: dict[str, Any], row: dict[str, Any]):
+        stats["graded"] = int(stats.get("graded", 0)) + 1
+        if row.get("status") == "win":
+            stats["wins"] = int(stats.get("wins", 0)) + 1
+        elif row.get("status") == "loss":
+            stats["losses"] = int(stats.get("losses", 0)) + 1
+        stats["units"] = float(stats.get("units", 0.0)) + float(row.get("units", 0.0) or 0.0)
+        stats["ev_sum"] = float(stats.get("ev_sum", 0.0)) + float(row.get("ev", 0.0) or 0.0)
+        stats["ev_n"] = int(stats.get("ev_n", 0)) + 1
+
+    settled = [r for r in rows if r.get("status") in {"win", "loss", "push"}]
+    for r in settled:
+        sport = str(r.get("sport") or "unknown")
+        market = _market_from_bet_text(r.get("bet"), r.get("bet_type"))
+        _acc(by_sport.setdefault(sport, {}), r)
+        _acc(by_market.setdefault(market, {}), r)
+
+    def _finalize(group: dict[str, dict[str, Any]]) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        for k, v in group.items():
+            wins = int(v.get("wins", 0))
+            losses = int(v.get("losses", 0))
+            risked = max(1.0, float(wins + losses))
+            units = round(float(v.get("units", 0.0)), 2)
+            out[k] = {
+                "graded_picks": int(v.get("graded", 0)),
+                "wins": wins,
+                "losses": losses,
+                "win_pct": round((wins / max(1, wins + losses)) * 100.0, 1) if (wins + losses) else 0.0,
+                "units": units,
+                "roi_pct": round((units / risked) * 100.0, 1) if (wins + losses) else 0.0,
+                "avg_ev": round(float(v.get("ev_sum", 0.0)) / max(1, int(v.get("ev_n", 0))), 2),
+            }
+        return out
+
+    return {
+        "weeks": list(reversed(week_rows)),
+        "by_sport": _finalize(by_sport),
+        "by_market": _finalize(by_market),
+    }
+
+
 _BOOK_DEEPLINKS = {
     "draftkings": "https://sportsbook.draftkings.com",
     "fanduel": "https://sportsbook.fanduel.com",
@@ -1453,6 +1562,38 @@ def calculate_edge(home_odds: int, away_odds: int) -> dict:
     }
 
 
+def _calibrated_confidence_pct(edge_ev: float, books_count: int, disagreement_pct: float, line_gap_pct: float) -> float:
+    # Logistic-style calibration: penalize noisy markets and low-book coverage.
+    z = (
+        -1.25
+        + 0.34 * float(edge_ev or 0.0)
+        + 0.10 * max(0, int(books_count or 1) - 1)
+        - 0.07 * max(0.0, float(disagreement_pct or 0.0))
+        + 0.05 * max(0.0, float(line_gap_pct or 0.0))
+    )
+    p = 1.0 / (1.0 + math.exp(-z))
+    return max(50.0, min(95.0, p * 100.0))
+
+
+def _build_model_v2_components(edge_ev: float, books_count: int, disagreement_pct: float, line_gap_pct: float) -> dict[str, float]:
+    # Component scores are intentionally simple and bounded; they can later be replaced by learned models.
+    market_score = max(0.0, min(100.0, 52.0 + edge_ev * 4.2))
+    liquidity_score = max(0.0, min(100.0, 35.0 + books_count * 8.0))
+    stability_score = max(0.0, min(100.0, 88.0 - disagreement_pct * 2.2))
+    timing_score = max(0.0, min(100.0, 50.0 + line_gap_pct * 4.0))
+    ensemble = round(
+        market_score * 0.44 + liquidity_score * 0.22 + stability_score * 0.22 + timing_score * 0.12,
+        2,
+    )
+    return {
+        "market_model": round(market_score, 2),
+        "liquidity_model": round(liquidity_score, 2),
+        "stability_model": round(stability_score, 2),
+        "timing_model": round(timing_score, 2),
+        "ensemble_score": ensemble,
+    }
+
+
 async def generate_picks_for_sport(sport_key: str, games: list) -> list:
     """Generate picks using a consensus fair-probability and best-line EV model."""
     picks = []
@@ -1475,9 +1616,7 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         home_ev = expected_value_pct(home_ml, consensus_home)
         away_ev = expected_value_pct(away_ml, consensus_away)
 
-        # Keep threshold modest; user can filter by grade in UI.
-        min_ev_threshold = 0.25
-        if max(home_ev, away_ev) < min_ev_threshold:
+        if max(home_ev, away_ev) < MODEL_MIN_EDGE_EV:
             continue
 
         if home_ev >= away_ev:
@@ -1493,16 +1632,31 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             fair_prob = consensus_away
             best_book = game.get("best_away_book")
 
-        disagreement = diag.get("home_prob_spread", 0.0)
-        # Confidence = function(edge, #books, consensus tightness)
-        books_boost = min(12.0, (diag.get("books_count", 1) - 1) * 2.0)
-        uncertainty_penalty = min(18.0, disagreement * 100.0 * 0.8)
-        confidence_raw = max(50.0, min(95.0, 56.0 + (edge * 3.8) + books_boost - uncertainty_penalty))
+        disagreement = float(diag.get("home_prob_spread", 0.0) or 0.0)
+        books_count = int(diag.get("books_count", 1) or 1)
+        implied_prob_pct = calculate_implied_probability(bet_odds) * 100.0
+        fair_pct = fair_prob * 100.0
+        line_gap_pct = max(0.0, fair_pct - implied_prob_pct)
+        confidence_raw = _calibrated_confidence_pct(
+            edge_ev=float(edge or 0.0),
+            books_count=books_count,
+            disagreement_pct=disagreement * 100.0,
+            line_gap_pct=line_gap_pct,
+        )
         confidence = confidence_raw
+        if books_count < MODEL_MIN_BOOKS:
+            continue
+        if confidence < MODEL_MIN_CONFIDENCE:
+            continue
+        model_v2 = _build_model_v2_components(
+            edge_ev=float(edge or 0.0),
+            books_count=books_count,
+            disagreement_pct=disagreement * 100.0,
+            line_gap_pct=line_gap_pct,
+        )
 
         game_time = game.get("commence_time", "")
-        fair_pct = fair_prob * 100.0
-        implied_pct = calculate_implied_probability(bet_odds) * 100.0
+        implied_pct = implied_prob_pct
 
         pick = {
             "id": f"{sport_key}_{home_team}_{away_team}_ml_{bet_odds}_{time.time_ns()}",
@@ -1520,22 +1674,26 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "ev": round(edge, 2),
             "confidence_raw": round(confidence_raw, 1),
             "confidence": int(round(confidence)),
+            "confidence_calibrated": round(confidence_raw, 1),
             "fair_prob": round(fair_pct, 1),
             "implied_prob": round(implied_pct, 1),
             "best_book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
-            "books_compared": diag.get("books_count", 1),
+            "books_compared": books_count,
             "market_disagreement": round(disagreement * 100.0, 2),
+            "clv_expectation": round(line_gap_pct, 2),
+            "model_v2": model_v2,
             "model_breakdown": {
                 "pinnacle_clv": f"Consensus fair {fair_pct:.1f}% vs implied {implied_pct:.1f}% ({edge:+.2f}% EV).",
-                "sharp_money": f"Compared across {diag.get('books_count', 1)} books; disagreement {disagreement*100.0:.2f} pts.",
-                "confirms": "Best-line EV, de-vig consensus, book quality weighting",
+                "sharp_money": f"Compared across {books_count} books; disagreement {disagreement*100.0:.2f} pts.",
+                "confirms": "Best-line EV, de-vig consensus, book quality weighting, calibrated confidence",
             },
-            "agents_fired": ["best_line_ev", "market_consensus", "devig"],
+            "agents_fired": ["best_line_ev", "market_consensus", "devig", "confidence_calibration"],
             "data_source": "odds_api",
         }
         picks.append(pick)
-    
-    return picks
+
+    picks.sort(key=lambda x: (float(x.get("model_v2", {}).get("ensemble_score", 0.0)), float(x.get("edge", 0.0))), reverse=True)
+    return picks[: max(1, MODEL_MAX_PICKS_PER_SPORT)]
 
 
 def build_ev_rows_for_game(game: dict) -> list:
@@ -1972,6 +2130,48 @@ async def current_plan(plan: str = Depends(get_user_plan)):
         "plan": normalized,
         "tier": TIER_CONFIG.get(normalized, TIER_CONFIG[PLAN_FREE]),
     }
+
+
+@app.get("/api/model/report")
+async def model_report():
+    return {
+        "model": {
+            "name": "algobets_ensemble_v2",
+            "objective": "maximize_ev_and_clv",
+            "components": ["market_model", "liquidity_model", "stability_model", "timing_model"],
+            "selection_gates": {
+                "min_edge_ev": MODEL_MIN_EDGE_EV,
+                "min_books": MODEL_MIN_BOOKS,
+                "min_confidence": MODEL_MIN_CONFIDENCE,
+                "max_picks_per_sport": MODEL_MAX_PICKS_PER_SPORT,
+            },
+            "notes": "Calibrated confidence with liquidity and disagreement penalties.",
+        }
+    }
+
+
+@app.get("/api/model/walkforward")
+async def model_walkforward(request: Request, weeks: int = 12, scope: str = "user"):
+    window_weeks = max(2, min(int(weeks or 12), 52))
+    sc = str(scope or "user").strip().lower()
+    if sc == "global":
+        _require_admin(request)
+        rows: list[dict[str, Any]] = []
+        users = _growth_db.get("users", {})
+        if isinstance(users, dict):
+            for _, rec in users.items():
+                if not isinstance(rec, dict):
+                    continue
+                rows.extend([r for r in rec.get("tracked_picks", []) if isinstance(r, dict)])
+        metrics = _walk_forward_metrics_from_rows(rows, weeks=window_weeks)
+        return {"scope": "global", "weeks_requested": window_weeks, "total_rows": len(rows), "metrics": metrics}
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    rows = [r for r in rec.get("tracked_picks", []) if isinstance(r, dict)]
+    metrics = _walk_forward_metrics_from_rows(rows, weeks=window_weeks)
+    return {"scope": "user", "user_id": user_id, "weeks_requested": window_weeks, "total_rows": len(rows), "metrics": metrics}
 
 
 @app.get("/api/referral/status")
@@ -3016,6 +3216,7 @@ async def scan(request: Request):
             "sport": p.get("sport"),
             "game": p.get("game"),
             "bet": p.get("bet"),
+            "bet_type": p.get("bet_type") or _market_from_bet_text(p.get("bet")),
             "odds": p.get("odds"),
             "line_at_pick": p.get("odds"),
             "closing_line": None,
