@@ -639,7 +639,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="vip-submenu">
       <button class="nav-item nav-sub" onclick="go('vip-core')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-        VIP Picks
+        Core Edge
       </button>
       <button class="nav-item nav-sub" onclick="go('vip-execution')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
@@ -812,7 +812,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
     <div id="v-picks" style="display:none">
       <div class="page-hdr">
-        <div class="page-sub">5-agent AI consensus · Live multi-book odds · Real-time edge detection</div>
+        <div class="page-title">Live <span>Picks</span></div>
+        <div class="page-sub">One unified feed across Free, Premium, and VIP unlocks.</div>
       </div>
       <div class="hero-stats">
         <div class="stat s-green"><div class="stat-val" id="s-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
@@ -843,6 +844,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-strip">
           <div class="tier-tag"><strong>1) Free</strong>: 2 picks/scan</div>
           <div class="tier-tag premium"><strong>2) Premium</strong>: more picks + props + +EV + steam + fades</div>
+          <div class="tier-tag vip"><strong>3) VIP</strong>: Core Edge timing, execution layer, and automation tools</div>
         </div>
       </div>
       <div class="filters">
@@ -940,7 +942,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props, +EV, Steam, and Fades all in one place.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">Best Bet Cards</div>
+          <div class="growth-title">Premium Signals</div>
           <div class="growth-sub" id="premium-bestbets">Loading best bets...</div>
         </div>
         <div class="growth-card">
@@ -986,7 +988,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">What VIP Adds</div>
-          <div class="growth-sub"><strong>Core Edge:</strong> earlier releases + VIP picks of the day.</div>
+          <div class="growth-sub"><strong>Core Edge:</strong> earlier releases + high-conviction edge plays.</div>
           <div class="growth-sub"><strong>Execution:</strong> CLV dashboard, timing engine, and market depth.</div>
           <div class="growth-sub"><strong>Automation:</strong> webhook alerts, watchlists, and weekly reports.</div>
           <div class="growth-sub"><strong>Community:</strong> private VIP Discord with live drops and discussion.</div>
@@ -1007,12 +1009,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Quick Start</div>
           <div class="growth-sub"><strong>What VIP is for:</strong> fewer, stronger cards with better timing and deeper execution context.</div>
-          <div class="growth-sub"><strong>How to use it:</strong> VIP Picks → Execution → Portfolio → Alerts → Discord.</div>
+          <div class="growth-sub"><strong>How to use it:</strong> Core Edge → Execution → Portfolio → Alerts → VIP Discord.</div>
           <div class="growth-sub"><strong>Main gains:</strong> earlier access, better entry timing, and tighter bankroll control.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Open VIP Sections</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">VIP Picks</button><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Core Edge</button><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-portfolio')">Portfolio</button><button class="pf-btn" onclick="go('vip-alerts')">Alerts</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-discord')">VIP Discord</button><button class="pf-btn" onclick="go('vip-reports')">Reports</button></div>
         </div>
@@ -1020,12 +1022,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-vip-core" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Picks</span></div><div class="page-sub">Early-release cards and VIP picks of the day.</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Core Edge</span></div><div class="page-sub">Early-release cards and high-conviction VIP edge plays.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
-          <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
+          <div id="vip-pod" class="growth-sub">Loading Core Edge plays...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
       </div>
@@ -1537,7 +1539,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </button>
     <div class="mnav-vip-panel" id="mnav-vip-panel">
       <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
-      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Picks</button>
+      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Core Edge</button>
       <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
       <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
       <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
@@ -2877,7 +2879,7 @@ function renderVipTools() {
     if (podEl) {
       const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
-      podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No picks yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Picks</button></div></div>`;
+      podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No plays yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock Core Edge</button></div></div>`;
     }
     if (discordEl) discordEl.textContent = 'VIP Discord is locked for VIP members.';
     if (clvLabEl) clvLabEl.textContent = 'CLV Lab is locked for VIP.';
@@ -2908,7 +2910,7 @@ function renderVipTools() {
           <span><strong>${esc(p.bet)}</strong> ${esc(p.odds)}</span>
           <span style="font-family:var(--mono);color:var(--green)">+${Number(p.ev || 0).toFixed(1)}%</span>
         </div>`).join('')
-      : 'Run scan to load VIP picks of the day.';
+      : 'Run scan to load Core Edge plays.';
   }
   if (discordEl) discordEl.textContent = 'Private VIP Discord is active. Tap "Join Discord" to open invite.';
 
