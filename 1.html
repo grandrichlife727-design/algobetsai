@@ -4091,16 +4091,8 @@ function renderHomeModules() {
         topEl.innerHTML = rows;
       } else {
         topEl.innerHTML = `
-          <div style="position:relative">
-            <div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${rows}</div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-              <div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center">
-                <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">PREMIUM TEASE</div>
-                <div style="font-size:12px;color:var(--sub)">Top picks are blurred for free users</div>
-                <button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock Picks</button>
-              </div>
-            </div>
-          </div>`;
+          <div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${rows}</div>
+          <div class="growth-note">Teaser preview only on Free. Upgrade to unlock full live picks.</div>`;
       }
     }
   }
@@ -4144,7 +4136,7 @@ function renderHomeModules() {
         : `Run scan to generate your VIP Pick of the Day. Live Plays: ${liveCt} tracked`;
     } else {
       const podLine = pod ? `<div style="margin-bottom:4px"><strong>${esc(pod.bet)}</strong> ${esc(pod.odds)}</div>` : '';
-      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${podLine}<div>VIP Pick of the Day + Live Plays module</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Go VIP</button></div></div>`;
+      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${podLine}<div>VIP Pick of the Day + Live Plays + execution intelligence</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP TEASE</div><div style="font-size:12px;color:var(--sub)">Unlock POD, Live Plays, and execution tools</div><button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock VIP</button></div></div></div>`;
     }
   }
 
