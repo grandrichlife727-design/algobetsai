@@ -2379,6 +2379,21 @@ function runParlayOptimizerLite() {
   }
 }
 
+function rankPicksForVip() {
+  return PICKS.slice().sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)));
+}
+
+function getVipPodPicks() {
+  return rankPicksForVip().slice(0, 3);
+}
+
+function getPremiumBestBetCards() {
+  const vipCore = getVipPodPicks().slice(0, 2);
+  const vipIds = new Set(vipCore.map(p => p.id));
+  const extras = rankPicksForVip().filter(p => !vipIds.has(p.id)).slice(0, 3);
+  return {cards: [...vipCore, ...extras], vipCoreIds: vipIds};
+}
+
 function renderPremiumTools() {
   const bestEl = document.getElementById('premium-bestbets');
   const packsEl = document.getElementById('premium-packs');
@@ -2389,9 +2404,9 @@ function renderPremiumTools() {
   const noteEl = document.getElementById('premium-recap-note');
 
   if (bestEl) {
-    const top = PICKS.slice(0, 3);
-    bestEl.innerHTML = top.length
-      ? top.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<top.length-1?'1px solid var(--border)':'none'}"><span>${esc(p.bet)} ${esc(p.odds)}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('')
+    const {cards, vipCoreIds} = getPremiumBestBetCards();
+    bestEl.innerHTML = cards.length
+      ? cards.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<cards.length-1?'1px solid var(--border)':'none'}"><span>${vipCoreIds.has(p.id) ? '<span class="chip up" style="margin-right:6px">VIP</span>' : ''}${esc(p.bet)} ${esc(p.odds)}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('')
       : 'Run scan to load best bet cards.';
   }
   if (packsEl) {
@@ -2562,7 +2577,7 @@ function renderVipTools() {
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
     if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
     if (podEl) {
-      const tease = PICKS.slice(0, 4).map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
+      const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
       podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No picks yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Picks</button></div></div>`;
     }
@@ -2589,10 +2604,7 @@ function renderVipTools() {
     earlyEl.innerHTML = `VIP release lead: <strong>${mins} minutes</strong> before Premium window.`;
   }
   if (podEl) {
-    const vipPicks = PICKS
-      .slice()
-      .sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)))
-      .slice(0, 5);
+    const vipPicks = getVipPodPicks();
     podEl.innerHTML = vipPicks.length
       ? vipPicks.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<vipPicks.length-1?'1px solid var(--border)':'none'}">
           <span><strong>${esc(p.bet)}</strong> ${esc(p.odds)}</span>
