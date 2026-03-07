@@ -720,7 +720,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
       <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
-      <button class="bill-link" id="install-btn" onclick="installApp()">Install App</button>
+      <button class="bill-link" id="install-btn" onclick="installApp()">Add to Home Screen</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="handleAuthButton()">Sign In</button>
@@ -3897,14 +3897,14 @@ function setupInstallPrompt() {
     e.preventDefault();
     deferredInstallPrompt = e;
     const btn = document.getElementById('install-btn');
-    if (btn) btn.textContent = 'Add to Home';
+    if (btn) btn.textContent = 'Add to Home Screen';
   });
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     const btn = document.getElementById('install-btn');
     if (btn) btn.style.display = 'none';
-    showToast('Algobets installed');
+    showToast('Added to Home Screen');
   });
 
   if (isInStandaloneMode()) {
@@ -3930,7 +3930,7 @@ async function installApp() {
     showToast('On iPhone: Share -> Add to Home Screen');
     return;
   }
-  showToast('Use browser menu -> Install app');
+  showToast('Use browser menu -> Add to Home Screen');
 }
 
 function registerServiceWorker() {
