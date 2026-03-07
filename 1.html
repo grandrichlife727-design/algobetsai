@@ -4380,11 +4380,21 @@ async function startCheckout(tier, cycle = billingCycle) {
     if (res.checkout_url) {
       trackEvent('checkout_redirected', {tier: desired, billing_cycle: finalCycle});
       window.location.href = res.checkout_url;
+      return;
     }
+    if (res.upgrade_applied) {
+      await fetchPlan();
+      updateHomeSummary();
+      const msg = res.proration ? 'Upgrade applied with prorated billing' : 'Upgrade applied';
+      showToast(msg);
+      return;
+    }
+    showToast('Checkout unavailable');
   } catch (err) {
     console.error(err);
     const msg = String(err?.detail || err?.message || '');
     if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
+    else if (/subscription item/i.test(msg)) showToast('Could not upgrade subscription item');
     else showToast('Checkout unavailable');
   }
 }

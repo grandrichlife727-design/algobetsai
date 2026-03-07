@@ -2182,6 +2182,20 @@ def _find_or_create_customer(user_id: str):
     return stripe.Customer.create(email=email, metadata={"userId": user_id})
 
 
+def _get_active_subscription_for_customer(customer_id: str):
+    if not customer_id:
+        return None
+    subs = stripe.Subscription.list(customer=customer_id, status="all", limit=20)
+    active_like = [
+        s for s in (subs.data or [])
+        if str((s or {}).get("status", "")).lower() in {"active", "trialing", "past_due", "unpaid"}
+    ]
+    if not active_like:
+        return None
+    active_like.sort(key=lambda s: int((s or {}).get("created", 0) or 0), reverse=True)
+    return active_like[0]
+
+
 def _invalidate_plan_cache(user_id: str):
     if not user_id:
         return
@@ -2991,6 +3005,55 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
     billing_cycle = str(body.billing_cycle or "monthly").strip().lower()
     price_id = _resolve_price_id_for_tier_and_cycle(tier, billing_cycle)
     customer = await asyncio.to_thread(_find_or_create_customer, user_id)
+    active_sub = await asyncio.to_thread(_get_active_subscription_for_customer, customer.id)
+    current_plan = PLAN_FREE
+    if active_sub:
+        current_plan = normalize_plan_name(_active_plan_from_subscription(active_sub))
+
+    # Upgrade path: when user already has an active subscription and moves up a tier,
+    # replace the subscription price and let Stripe bill only the prorated difference.
+    if active_sub and plan_rank(tier) > plan_rank(current_plan):
+        items = (active_sub or {}).get("items", {}).get("data", [])
+        first_item = items[0] if isinstance(items, list) and items else {}
+        item_id = str((first_item or {}).get("id") or "").strip() if isinstance(first_item, dict) else ""
+        if not item_id:
+            raise HTTPException(status_code=400, detail="Could not locate active subscription item for upgrade.")
+        current_price = (first_item or {}).get("price", {}) if isinstance(first_item, dict) else {}
+        current_price_id = str((current_price or {}).get("id") or "").strip() if isinstance(current_price, dict) else ""
+        if current_price_id == price_id:
+            return {"ok": True, "upgrade_applied": True, "already_on_target_price": True}
+
+        updated_sub = await asyncio.to_thread(
+            stripe.Subscription.modify,
+            active_sub.get("id"),
+            items=[{"id": item_id, "price": price_id}],
+            cancel_at_period_end=False,
+            billing_cycle_anchor="unchanged",
+            proration_behavior="always_invoice",
+            payment_behavior="allow_incomplete",
+            expand=["latest_invoice.payment_intent"],
+        )
+        latest_invoice = updated_sub.get("latest_invoice") if isinstance(updated_sub, dict) else None
+        invoice_url = ""
+        invoice_status = ""
+        if isinstance(latest_invoice, dict):
+            invoice_url = str(latest_invoice.get("hosted_invoice_url") or "").strip()
+            invoice_status = str(latest_invoice.get("status") or "").strip().lower()
+        _set_billing_entitlement(user_id, tier, source="subscription_upgrade")
+        _invalidate_plan_cache(user_id)
+        if invoice_url and invoice_status in {"open", "draft", "uncollectible"}:
+            return {
+                "checkout_url": invoice_url,
+                "subscription_id": updated_sub.get("id"),
+                "upgrade_applied": True,
+                "proration": True,
+            }
+        return {
+            "ok": True,
+            "upgrade_applied": True,
+            "subscription_id": updated_sub.get("id"),
+            "proration": True,
+        }
 
     session = await asyncio.to_thread(
         stripe.checkout.Session.create,
