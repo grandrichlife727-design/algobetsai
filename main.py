@@ -33,7 +33,7 @@ import stripe
 import numpy as np
 import statistics
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Any
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,6 +56,7 @@ BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
 CACHE_DIR = os.path.join(DATA_DIR, "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
+GROWTH_DB_PATH = os.path.join(DATA_DIR, "growth_db.json")
 
 stripe.api_key = STRIPE_SECRET
 
@@ -154,7 +155,9 @@ async def _get_verified_plan(request: Request) -> str:
     if cached and cached["expires"] > now:
         return cached["plan"]
 
-    plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
+    stripe_plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
+    trial_plan = _referral_trial_plan(user_id)
+    plan = stripe_plan if plan_rank(stripe_plan) >= plan_rank(trial_plan) else trial_plan
     _plan_cache[user_id] = {"plan": plan, "expires": now + _PLAN_CACHE_TTL}
     return normalize_plan_name(plan)
 
@@ -287,6 +290,88 @@ def cache_age_seconds(key: str) -> int:
         except Exception:
             return -1
     return int(time.time() - entry["ts"])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GROWTH DATA (referrals, alert signups, scan history)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _load_growth_db() -> dict[str, Any]:
+    try:
+        with open(GROWTH_DB_PATH, "r") as f:
+            raw = json.load(f)
+            if isinstance(raw, dict):
+                return raw
+    except Exception:
+        pass
+    return {"users": {}}
+
+
+_growth_db: dict[str, Any] = _load_growth_db()
+
+
+def _save_growth_db():
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(GROWTH_DB_PATH, "w") as f:
+            json.dump(_growth_db, f)
+    except Exception as e:
+        print(f"[GrowthDB] Save failed: {e}")
+
+
+def _user_referral_code(user_id: str) -> str:
+    h = hashlib.sha1(user_id.encode("utf-8")).hexdigest().upper()
+    return f"ALGO{h[:8]}"
+
+
+def _ensure_growth_user(user_id: str) -> dict[str, Any]:
+    users = _growth_db.setdefault("users", {})
+    rec = users.get(user_id)
+    if not isinstance(rec, dict):
+        rec = {}
+    rec.setdefault("referral_code", _user_referral_code(user_id))
+    rec.setdefault("redeemed_code", "")
+    rec.setdefault("referrals", [])
+    rec.setdefault("trial_until", 0)
+    rec.setdefault("alerts", [])
+    rec.setdefault("history", [])
+    users[user_id] = rec
+    return rec
+
+
+def _find_user_by_ref_code(code: str) -> Optional[str]:
+    code_u = (code or "").strip().upper()
+    if not code_u:
+        return None
+    users = _growth_db.get("users", {})
+    for uid, rec in users.items():
+        if isinstance(rec, dict) and str(rec.get("referral_code", "")).upper() == code_u:
+            return uid
+    return None
+
+
+def _referral_trial_plan(user_id: str) -> str:
+    if not user_id:
+        return PLAN_FREE
+    rec = _ensure_growth_user(user_id)
+    trial_until = float(rec.get("trial_until", 0) or 0)
+    if trial_until > time.time():
+        return PLAN_PREMIUM
+    return PLAN_FREE
+
+
+def _build_referral_status(user_id: str) -> dict[str, Any]:
+    rec = _ensure_growth_user(user_id)
+    now = time.time()
+    trial_until = float(rec.get("trial_until", 0) or 0)
+    secs_left = max(0, int(trial_until - now))
+    return {
+        "referral_code": rec.get("referral_code"),
+        "redeemed_code": rec.get("redeemed_code") or None,
+        "referrals_count": len(rec.get("referrals", [])),
+        "trial_active_until": int(trial_until) if trial_until > now else None,
+        "trial_seconds_left": secs_left,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -900,6 +985,21 @@ class PortalRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class ReferralRedeemRequest(BaseModel):
+    code: str
+
+
+class AlertSubscribeRequest(BaseModel):
+    channel: str
+    target: str
+    min_ev: Optional[float] = 2.0
+    sports: Optional[list[str]] = None
+
+
+def _request_user_id(request: Request) -> str:
+    return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
+
+
 def _resolve_price_id_for_tier(tier: str) -> str:
     t = normalize_plan_name(tier)
     if t == PLAN_PREMIUM:
@@ -971,6 +1071,123 @@ async def current_plan(plan: str = Depends(get_user_plan)):
         "plan": normalized,
         "tier": TIER_CONFIG.get(normalized, TIER_CONFIG[PLAN_FREE]),
     }
+
+
+@app.get("/api/referral/status")
+async def referral_status(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    _ensure_growth_user(user_id)
+    _save_growth_db()
+    return _build_referral_status(user_id)
+
+
+@app.post("/api/referral/redeem")
+async def referral_redeem(body: ReferralRedeemRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    code = (body.code or "").strip().upper()
+    if not code:
+        raise HTTPException(status_code=400, detail="Referral code is required.")
+
+    user_rec = _ensure_growth_user(user_id)
+    if user_rec.get("redeemed_code"):
+        raise HTTPException(status_code=400, detail="You have already redeemed a referral code.")
+
+    owner_user_id = _find_user_by_ref_code(code)
+    if not owner_user_id:
+        raise HTTPException(status_code=404, detail="Referral code not found.")
+    if owner_user_id == user_id:
+        raise HTTPException(status_code=400, detail="You cannot redeem your own referral code.")
+
+    owner_rec = _ensure_growth_user(owner_user_id)
+    now = time.time()
+    grant_seconds = 72 * 3600
+    grant_until = now + grant_seconds
+
+    user_rec["redeemed_code"] = code
+    user_rec["trial_until"] = max(float(user_rec.get("trial_until", 0) or 0), grant_until)
+    owner_rec["trial_until"] = max(float(owner_rec.get("trial_until", 0) or 0), grant_until)
+    owner_rec.setdefault("referrals", []).append({"user_id": user_id, "ts": int(now)})
+
+    _save_growth_db()
+    _invalidate_plan_cache(user_id)
+    _invalidate_plan_cache(owner_user_id)
+    return {
+        "ok": True,
+        "granted_hours": 72,
+        "trial_plan": PLAN_PREMIUM,
+        "trial_until": int(user_rec["trial_until"]),
+        "referral": _build_referral_status(user_id),
+    }
+
+
+@app.get("/api/history")
+async def picks_history(request: Request, limit: int = 30):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    safe_limit = max(1, min(int(limit or 30), 100))
+    rows = list(rec.get("history", []))
+    rows.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    return {"history": rows[:safe_limit], "count": len(rows)}
+
+
+@app.get("/api/alerts/subscriptions")
+async def alerts_subscriptions(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"subscriptions": rec.get("alerts", [])}
+
+
+@app.post("/api/alerts/subscribe")
+async def alerts_subscribe(body: AlertSubscribeRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+
+    channel = (body.channel or "").strip().lower()
+    if channel not in {"email", "sms"}:
+        raise HTTPException(status_code=400, detail="channel must be 'email' or 'sms'.")
+    target = (body.target or "").strip()
+    if not target:
+        raise HTTPException(status_code=400, detail="target is required.")
+
+    min_ev = float(body.min_ev if body.min_ev is not None else 2.0)
+    min_ev = max(0.1, min(min_ev, 25.0))
+    sports = [s for s in (body.sports or []) if s in SPORTS]
+    if not sports:
+        sports = SPORTS
+
+    rec = _ensure_growth_user(user_id)
+    alerts = rec.setdefault("alerts", [])
+    key = f"{channel}:{target.lower()}"
+    now_ts = int(time.time())
+    updated = {
+        "key": key,
+        "channel": channel,
+        "target": target,
+        "min_ev": round(min_ev, 2),
+        "sports": sports,
+        "updated_at": now_ts,
+    }
+
+    replaced = False
+    for i, item in enumerate(alerts):
+        if item.get("key") == key:
+            alerts[i] = updated
+            replaced = True
+            break
+    if not replaced:
+        alerts.append(updated)
+    rec["alerts"] = alerts[-25:]
+    _save_growth_db()
+    return {"ok": True, "subscription": updated, "count": len(rec["alerts"])}
 
 
 @app.post("/api/billing/checkout")
@@ -1186,6 +1403,32 @@ async def scan(request: Request):
             "served_from_cache": False,
         },
     }
+
+    # Persist a lightweight history row for retention/proof screens.
+    history_row = {
+        "ts": int(now_ts),
+        "plan": user_plan,
+        "picks_visible": len(visible_picks),
+        "picks_total": len(all_picks),
+        "sports_covered": allowed_sports,
+        "top_picks": [
+            {
+                "bet": p.get("bet"),
+                "game": p.get("game"),
+                "odds": p.get("odds"),
+                "ev": p.get("ev"),
+                "sport": p.get("label") or p.get("sport"),
+            }
+            for p in visible_picks[:3]
+        ],
+    }
+    user_growth = _ensure_growth_user(user_id)
+    history = user_growth.setdefault("history", [])
+    history.append(history_row)
+    if len(history) > 120:
+        user_growth["history"] = history[-120:]
+    _save_growth_db()
+
     _scan_state[user_id] = {
         "last_scan_ts": now_ts,
         "last_payload": response_payload,
