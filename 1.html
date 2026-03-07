@@ -108,6 +108,25 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
+@media(max-width:900px){
+  .topbar{padding:6px 10px;min-height:auto;flex-wrap:wrap;row-gap:6px}
+  .topbar-logo{font-size:18px;line-height:1}
+  .topbar-mark{width:20px;height:20px;font-size:12px}
+  .topbar-right{width:100%;margin-left:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .topbar-right::-webkit-scrollbar{display:none}
+  .topbar-right > *{flex-shrink:0}
+  .scan-btn{font-size:11px;padding:6px 10px}
+  .bill-btn{padding:6px 9px}
+}
+@media(max-width:560px){
+  .topbar-logo{font-size:15px}
+  .plan-pill{display:none}
+  .cooldown-pill{display:none !important}
+}
+@media(max-width:420px){
+  .topbar-logo{font-size:0}
+  .topbar-logo .topbar-mark{margin-right:0}
+}
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
 @keyframes loading-sweep{0%{background-position:100%}100%{background-position:-100%}}
@@ -565,6 +584,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
     Profile
   </button>
+  <button class="nav-item" onclick="go('guide')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v4h4"/><path d="M8 12h8M8 16h6"/></svg>
+    Guide
+  </button>
   <div class="sidebar-bot">
     <span class="nav-section" style="padding-top:4px">Open an Account</span>
     <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link" data-book="draftkings">
@@ -985,6 +1008,81 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
     </div>
 
+    <div id="v-guide" style="display:none">
+      <div class="page-hdr"><div class="page-title">How It <span>Works</span></div><div class="page-sub">Feature guide, system overview, and practical workflow</div></div>
+      <div class="growth-grid">
+        <div class="growth-card">
+          <div class="growth-title">Start Here (Daily Workflow)</div>
+          <div class="growth-sub">1) Run Scan 2) Check +EV and Odds 3) Size bets with bankroll rules 4) Track outcomes.</div>
+          <div class="growth-note">Best practice: skip forced bets when the board is thin. Use Tomorrow’s Games to plan ahead.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Core Tabs</div>
+          <div class="growth-sub">Picks: ranked opportunities with edge and confidence.</div>
+          <div class="growth-sub">Odds: book-by-book moneylines (Today/Tomorrow/Week).</div>
+          <div class="growth-sub">+EV: opportunities priced above fair value.</div>
+          <div class="growth-sub">Steam/Fades: market pressure and contrarian spots.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How Live Picks Work</div>
+          <div class="growth-sub">Live mode focuses on games near start or in-play windows where lines can move quickly.</div>
+          <div class="growth-sub">Use it to monitor timing-sensitive spots, then confirm current odds before placing.</div>
+          <div class="growth-note">If a price moves against you, the edge may be gone. Re-check before entry.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How +EV Works</div>
+          <div class="growth-sub">+EV compares best available book price to estimated fair probability (after de-vig).</div>
+          <div class="growth-sub">Higher +EV means better long-run value, not guaranteed short-term wins.</div>
+          <div class="growth-note">Prioritize stronger EV with acceptable confidence and line stability.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How Steam Works</div>
+          <div class="growth-sub">Steam flags fast market movement and book divergence that can indicate sharp pressure.</div>
+          <div class="growth-sub">Best use: identify where price is likely to keep moving, then act before it closes.</div>
+          <div class="growth-note">VIP users get deeper steam access and faster refresh windows.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How Fades Work</div>
+          <div class="growth-sub">Fades surface situations where public ticket flow is heavy on one side.</div>
+          <div class="growth-sub">When pricing still favors the opposite side, contrarian value can appear.</div>
+          <div class="growth-note">Fade signals are strongest when supported by EV and line/steam context.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How Props Work</div>
+          <div class="growth-sub">Props Lite scans selected player markets and shows best available price/book.</div>
+          <div class="growth-sub">Use props as single positions or pair with straight bets only when value supports it.</div>
+          <div class="growth-note">Props are budget-guarded to keep API spend controlled and data quality stable.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">5-Agent System (Simple)</div>
+          <div class="growth-sub">Best-Line EV: compares best available line vs fair probability.</div>
+          <div class="growth-sub">De-vig Consensus: removes juice to estimate true market baseline.</div>
+          <div class="growth-sub">Sharp-Book Weighting: prioritizes stronger market-making books.</div>
+          <div class="growth-sub">Steam Signal: flags meaningful line divergence/movement.</div>
+          <div class="growth-sub">Public Fades: highlights one-sided public ticket pressure.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Free vs Premium vs VIP</div>
+          <div class="growth-sub">Free: lighter access and limited pick volume.</div>
+          <div class="growth-sub">Premium: higher pick limits, full +EV tools, props access.</div>
+          <div class="growth-sub">VIP: highest volume, faster signal access, deep market views.</div>
+          <div class="growth-note">Use monthly for flexibility; annual for lower effective monthly cost.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Bankroll + Risk</div>
+          <div class="growth-sub">Use unit sizing (typically 0.5% to 2% per bet) and daily stop-loss limits.</div>
+          <div class="growth-sub">Do not chase losses. Treat this as long-horizon expected value.</div>
+          <div class="growth-note">No pick is guaranteed. The edge comes from price discipline over sample size.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Important Notes</div>
+          <div class="growth-sub">If live data is unavailable, the app can show cached/demo states.</div>
+          <div class="growth-sub">Line movement can invalidate edge quickly. Re-check odds before placing.</div>
+          <div class="growth-sub">21+ only. Bet responsibly.</div>
+        </div>
+      </div>
+    </div>
+
 </div></main>
 </div><nav class="mobile-nav" id="mobile-nav">
   <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
@@ -1027,6 +1125,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
+      <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
     </div>
   </div>
 </nav>
@@ -3800,8 +3899,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile'];
-const MOBILE_MORE_TABS = ['parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
