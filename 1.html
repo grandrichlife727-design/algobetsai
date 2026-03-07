@@ -667,7 +667,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="bill-link" id="install-btn" onclick="installApp()">Install App</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
-      <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
+      <button class="bill-link auth-btn" id="auth-btn" onclick="handleAuthButton()">Sign In</button>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         Scan Now
@@ -1902,6 +1902,18 @@ function updateAuthUi() {
   if (!btn) return;
   const loggedIn = normalizeAuthMethod(userProfile.method) !== 'guest' && !!String(userProfile.identifier || '').trim();
   btn.textContent = loggedIn ? 'Account' : 'Sign In';
+}
+
+function isLoggedInProfile() {
+  return normalizeAuthMethod(userProfile.method) !== 'guest' && !!String(userProfile.identifier || '').trim();
+}
+
+function handleAuthButton() {
+  if (isLoggedInProfile()) {
+    go('profile');
+    return;
+  }
+  openAuthModal('email');
 }
 
 function renderProfile() {

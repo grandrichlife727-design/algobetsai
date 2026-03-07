@@ -247,8 +247,53 @@ def _set_billing_entitlement(user_id: str, plan: str, source: str = "stripe_webh
     _save_growth_db()
 
 
+def _active_plan_from_subscription(sub: dict[str, Any]) -> str:
+    items = (sub or {}).get("items", {}).get("data", [])
+    if not isinstance(items, list) or not items:
+        return PLAN_FREE
+    first = items[0] if isinstance(items[0], dict) else {}
+    price = first.get("price", {}) if isinstance(first, dict) else {}
+    price_id = str(price.get("id") or "").strip() if isinstance(price, dict) else ""
+    return _plan_from_price_id(price_id) if price_id else PLAN_PREMIUM
+
+
+def _stripe_lookup_plan_sync(user_id: str) -> str:
+    if not STRIPE_SECRET:
+        return PLAN_FREE
+    try:
+        customers = stripe.Customer.search(query=f'metadata["userId"]:"{user_id}"', limit=1)
+        if customers.data:
+            customer = customers.data[0]
+            subs = stripe.Subscription.list(customer=customer.id, status="all", limit=10)
+            active_like = [s for s in subs.data if str(s.get("status", "")).lower() in {"active", "trialing", "past_due", "unpaid"}]
+            if active_like:
+                return _active_plan_from_subscription(active_like[0])
+    except Exception:
+        pass
+    try:
+        rec = _ensure_growth_user(user_id)
+        identity = rec.get("profile_identity", {}) if isinstance(rec, dict) else {}
+        identifier = str((identity or {}).get("identifier", "")).strip().lower()
+        if re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", identifier):
+            customers = stripe.Customer.search(query=f'email:"{identifier}"', limit=5)
+            for customer in customers.data:
+                subs = stripe.Subscription.list(customer=customer.id, status="all", limit=10)
+                active_like = [s for s in subs.data if str(s.get("status", "")).lower() in {"active", "trialing", "past_due", "unpaid"}]
+                if active_like:
+                    return _active_plan_from_subscription(active_like[0])
+    except Exception:
+        pass
+    return PLAN_FREE
+
+
 def _verify_plan_stripe_sync(user_id: str) -> str:
-    return _get_billing_entitlement(user_id)
+    ent = _get_billing_entitlement(user_id)
+    if ent != PLAN_FREE:
+        return ent
+    live = _stripe_lookup_plan_sync(user_id)
+    if live != PLAN_FREE:
+        _set_billing_entitlement(user_id, live, source="stripe_lookup")
+    return live
 
 
 OWNER_EMAILS = {"grandrichlife727@gmail.com"}
