@@ -1056,7 +1056,7 @@ html, body {
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
     <div class="auth-title">Register / Sign In</div>
-    <div class="auth-sub">Choose a method: Gmail, Email, Phone, or Facebook.</div>
+    <div class="auth-sub">Choose a method: Gmail, Email, Phone, or Facebook. Profile linking only (OAuth can be added next).</div>
     <div class="auth-methods">
       <button class="auth-m on" id="am-gmail" onclick="selectAuthMethod('gmail')">Gmail</button>
       <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
@@ -1093,10 +1093,31 @@ html, body {
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const _qp = new URLSearchParams(window.location.search);
-const _backendFromQp = (_qp.get('backend') || '').trim();
-if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
-const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
-const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
+const TRUSTED_BACKENDS = ['https://algobetsai.onrender.com'];
+function normalizeBackendUrl(v) {
+  return String(v || '').trim().replace(/\/+$/,'');
+}
+function isTrustedBackendUrl(v) {
+  const url = normalizeBackendUrl(v);
+  if (!url) return false;
+  if (TRUSTED_BACKENDS.includes(url)) return true;
+  try {
+    const u = new URL(url);
+    const isLocal = ['localhost', '127.0.0.1'].includes(u.hostname);
+    return isLocal && ['http:', 'https:'].includes(u.protocol);
+  } catch (_) {
+    return false;
+  }
+}
+const _backendFromQp = normalizeBackendUrl(_qp.get('backend') || '');
+if (_backendFromQp && isTrustedBackendUrl(_backendFromQp)) localStorage.setItem('algobets-backend', _backendFromQp);
+const _backendStored = normalizeBackendUrl(localStorage.getItem('algobets-backend') || '');
+const BACKEND = isTrustedBackendUrl(_backendFromQp)
+  ? _backendFromQp
+  : (isTrustedBackendUrl(_backendStored) ? _backendStored : 'https://algobetsai.onrender.com');
+const _backendKeyFromQp = String(_qp.get('backend_key') || '').trim();
+if (_backendKeyFromQp) localStorage.setItem('algobets-backend-key', _backendKeyFromQp);
+const BACKEND_KEY = String(localStorage.getItem('algobets-backend-key') || '').trim();
 const PROFILE_KEY = 'algobets-profile-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
 const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
@@ -2284,7 +2305,8 @@ async function saveAlertSubscription() {
 // Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
 async function backendGet(path, timeout = 60000) {
   const url = `${BACKEND}${path}`;
-  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID};
+  const hdrs = {'x-user-id': USER_ID};
+  if (BACKEND_KEY) hdrs['x-api-key'] = BACKEND_KEY;
 
   // 1. Direct fetch
   try {
@@ -2312,7 +2334,8 @@ async function backendGet(path, timeout = 60000) {
 
 async function backendPost(path, body, timeout = 60000) {
   const url = `${BACKEND}${path}`;
-  const hdrs = {'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID, 'content-type': 'application/json'};
+  const hdrs = {'x-user-id': USER_ID, 'content-type': 'application/json'};
+  if (BACKEND_KEY) hdrs['x-api-key'] = BACKEND_KEY;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
@@ -2341,7 +2364,7 @@ function trackEvent(name, props = {}) {
     const body = JSON.stringify(payload);
     fetch(url, {
       method: 'POST',
-      headers: {'content-type': 'application/json', 'x-api-key': BACKEND_KEY, 'x-user-id': USER_ID},
+      headers: Object.assign({'content-type': 'application/json', 'x-user-id': USER_ID}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
       body,
       keepalive: true
     }).catch(() => {});
