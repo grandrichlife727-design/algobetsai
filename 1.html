@@ -2527,7 +2527,12 @@ function bindUiAccessibility() {
       if (up && up.classList.contains('on')) up.classList.remove('on');
       const auth = document.getElementById('auth-ov');
       if (auth && auth.classList.contains('on')) auth.classList.remove('on');
+      closeMobileMore();
     }
+  });
+  document.addEventListener('click', e => {
+    const wrap = document.querySelector('.mnav-more-wrap');
+    if (wrap && !wrap.contains(e.target)) closeMobileMore();
   });
 }
 
