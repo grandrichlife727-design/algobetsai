@@ -1847,8 +1847,8 @@ let TOMORROW_GAMES = [];
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 const TIER_PRICE_DISPLAY = {
-  premium: {monthly: '$19.99/mo', annual: '$199.99/yr'},
-  vip: {monthly: '$39.99/mo', annual: '$399.99/yr'},
+  premium: {monthly: '$19.99/mo', annual: '$179.99/yr'},
+  vip: {monthly: '$79.99/mo', annual: '$799.99/yr'},
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -3987,6 +3987,22 @@ function tierPriceLabel(tier, cycle = 'monthly') {
   return row.monthly || '';
 }
 
+function parseTierPriceNumber(label) {
+  const m = String(label || '').match(/([0-9]+(?:\.[0-9]{1,2})?)/);
+  return m ? Number(m[1]) : 0;
+}
+
+function tierAnnualSavingsText(tier) {
+  const monthly = parseTierPriceNumber(tierPriceLabel(tier, 'monthly'));
+  const annual = parseTierPriceNumber(tierPriceLabel(tier, 'annual'));
+  if (!monthly || !annual) return '';
+  const yearlyMonthly = monthly * 12;
+  const save = yearlyMonthly - annual;
+  if (save <= 0) return '';
+  const pct = Math.round((save / yearlyMonthly) * 100);
+  return `Save $${save.toFixed(2)}/yr (${pct}%)`;
+}
+
 function updatePlanUi() {
   const p = normalizePlan(currentPlan);
   const pill = document.getElementById('plan-pill');
@@ -4355,10 +4371,6 @@ async function startCheckout(tier, cycle = billingCycle) {
   if (!desired) return;
   if (!ensureBillingUser()) return;
   let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
-  if (finalCycle === 'annual' && !annualConfiguredForTier(desired)) {
-    finalCycle = 'monthly';
-    showToast('Annual price not configured yet. Using monthly checkout.');
-  }
   try {
     trackEvent('checkout_started', {tier: desired, billing_cycle: finalCycle});
     const origin = window.location.origin + window.location.pathname;
@@ -4374,7 +4386,9 @@ async function startCheckout(tier, cycle = billingCycle) {
     }
   } catch (err) {
     console.error(err);
-    showToast('Checkout unavailable');
+    const msg = String(err?.detail || err?.message || '');
+    if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
+    else showToast('Checkout unavailable');
   }
 }
 
@@ -4408,18 +4422,17 @@ function openUpgradePicker() {
     ? 'Choose Premium or VIP.'
     : 'Move from Premium to VIP for advanced execution tools.';
   if (note) note.textContent = billingCycle === 'annual'
-    ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
-    : 'Monthly selected. Switch to annual for lower effective monthly cost.';
+    ? 'Annual selected. You should always pay less than 12x monthly.'
+    : 'Monthly selected. Switch to annual to save.';
   grid.innerHTML = opts.map(o => {
     const annualOn = annualConfiguredForTier(o.tier);
     const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
     const monthlyLabel = tierPriceLabel(o.tier, 'monthly');
     const annualLabel = tierPriceLabel(o.tier, 'annual');
-    const priceLine = annualOn
-      ? `Monthly ${monthlyLabel} · Annual ${annualLabel}`
-      : `Monthly ${monthlyLabel} · Annual coming soon`;
+    const savings = tierAnnualSavingsText(o.tier);
+    const priceLine = `Monthly ${monthlyLabel} · Annual ${annualLabel}${savings ? ` · ${savings}` : ''}`;
     const cycleHint = billingCycle === 'annual'
-      ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
+      ? (annualOn ? 'Annual billing at checkout' : 'Annual selected (requires annual price ID in backend)')
       : 'Monthly billing at checkout';
     return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');

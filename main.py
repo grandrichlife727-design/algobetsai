@@ -2146,12 +2146,16 @@ def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str]
     if t == PLAN_PREMIUM:
         if is_annual and PREMIUM_ANNUAL_PRICE_IDS:
             return PREMIUM_ANNUAL_PRICE_IDS[0]
+        if is_annual and not PREMIUM_ANNUAL_PRICE_IDS:
+            raise HTTPException(status_code=400, detail="Premium annual price is not configured.")
         if not PREMIUM_PRICE_IDS:
             raise HTTPException(status_code=500, detail="Premium price is not configured.")
         return PREMIUM_PRICE_IDS[0]
     if t == PLAN_VIP:
         if is_annual and VIP_ANNUAL_PRICE_IDS:
             return VIP_ANNUAL_PRICE_IDS[0]
+        if is_annual and not VIP_ANNUAL_PRICE_IDS:
+            raise HTTPException(status_code=400, detail="VIP annual price is not configured.")
         if not VIP_PRICE_IDS:
             raise HTTPException(status_code=500, detail="VIP price is not configured.")
         return VIP_PRICE_IDS[0]
