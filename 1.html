@@ -5122,13 +5122,16 @@ function renderPicks() {
   </div>
 </div>`;
     if (!lockedTease) return card;
+    if (!isPrimaryLock) {
+      return `<div class="feature-lock" style="margin-top:0"><div class="blur-wrap">${card}</div></div>`;
+    }
     return `<div class="feature-lock" style="margin-top:0">
       <div class="blur-wrap">${card}</div>
       <div class="lock-overlay">
         <div class="lock-card">
-          <div class="lock-title">${isPrimaryLock ? 'Premium Unlock' : 'Locked Pick'}</div>
-          <div class="lock-sub">${isPrimaryLock ? `Free is teaser-only. Unlock ${hiddenCount} live picks plus Props, +EV, Steam, and Fades.` : 'Upgrade to reveal this full pick.'}</div>
-          <button class="paywall-cta" onclick="openUpgradePicker()">${isPrimaryLock ? 'Unlock More Picks' : 'Go Premium'}</button>
+          <div class="lock-title">Premium Unlock</div>
+          <div class="lock-sub">Free is teaser-only. Unlock ${hiddenCount} live picks plus Props, +EV, Steam, and Fades.</div>
+          <button class="paywall-cta" onclick="openUpgradePicker()">Unlock More Picks</button>
         </div>
       </div>
     </div>`;
