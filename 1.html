@@ -737,7 +737,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div id="v-home">
       <div class="page-hdr">
         <div class="page-title">Home <span>Dashboard</span></div>
-        <div class="page-sub">Quick access to picks, odds, premium features, and sportsbook offers.</div>
+        <div class="page-sub">Quick access to picks, premium/vip unlocks, market status, and sportsbook offers.</div>
+        <div class="page-sub" id="home-updated">Updated —</div>
       </div>
       <div class="hero-stats">
         <div class="stat s-green"><div class="stat-val" id="home-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
@@ -753,22 +754,23 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">Top 3 Picks Preview</div>
+          <div class="growth-title">Pick Preview</div>
           <div id="home-top-picks" class="growth-sub">Loading picks...</div>
           <div class="rf-row"><button class="pf-btn primary" onclick="go('picks')">View All Picks</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Premium Snapshot</div>
-          <div id="home-premium" class="growth-sub">Props · +EV · Steam · Fades</div>
+          <div class="growth-title">Premium Unlocks</div>
+          <div id="home-premium" class="growth-sub">Props Edge · +EV · Steam · Fades · Parlay</div>
           <div class="rf-row"><button class="paywall-cta" onclick="go('premium')">Open Premium</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Today at a Glance</div>
-          <div id="home-glance" class="growth-sub">Games, books, and edge count will appear after scan.</div>
+          <div class="growth-title">VIP Snapshot</div>
+          <div id="home-vip" class="growth-sub">VIP Pick of the Day + live execution modules.</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="go('vip-pod')">Open VIP</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Trending Markets</div>
-          <div id="home-trending" class="growth-sub">Scanning market activity...</div>
+          <div class="growth-title">Market Status</div>
+          <div id="home-glance" class="growth-sub">Games, books, and edge count will appear after scan.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Best Offers</div>
@@ -792,20 +794,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="offer-info"><div class="offer-name">Caesars</div><div class="offer-promo">Up to $1,000 back on first bet loss</div></div>
             <span class="offer-cta">Claim</span>
           </a>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">How It Works</div>
-          <div class="growth-sub">1) Scan lines across books</div>
-          <div class="growth-sub">2) Find value vs fair price</div>
-          <div class="growth-sub">3) Bet with disciplined sizing</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Recent Results</div>
-          <div id="home-results" class="growth-sub">Results will show after tracked history builds.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Tomorrow's Slate</div>
-          <div id="home-tomorrow" class="growth-sub">Next games will show here when available.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Home News</div>
@@ -4067,18 +4055,21 @@ function updateHomeSummary() {
   const edge = document.getElementById('s-edge')?.textContent || '—';
   const count = document.getElementById('s-count')?.textContent || String(PICKS.length || 0);
   const plan = planLabel(currentPlan);
+  const updated = document.getElementById('home-updated');
   const he = document.getElementById('home-edge');
   const hc = document.getElementById('home-count');
   const hp = document.getElementById('home-plan');
   if (he) he.textContent = edge;
   if (hc) hc.textContent = count;
   if (hp) hp.textContent = plan;
+  if (updated) updated.textContent = `Updated ${lastRefresh ? timeAgo(lastRefresh) : '—'}`;
   renderHomeModules();
 }
 
 function renderHomeModules() {
   const topEl = document.getElementById('home-top-picks');
   const premiumEl = document.getElementById('home-premium');
+  const vipEl = document.getElementById('home-vip');
   const glanceEl = document.getElementById('home-glance');
   const trendEl = document.getElementById('home-trending');
   const resultEl = document.getElementById('home-results');
@@ -4122,7 +4113,7 @@ function renderHomeModules() {
     const fadeCt = Array.isArray(FADESDATA) ? FADESDATA.length : 0;
     const snapshot = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="tier-tag premium">Props <strong>${propsCt}</strong></div>
+        <div class="tier-tag premium">Props Edge <strong>${propsCt}</strong></div>
         <div class="tier-tag premium">+EV <strong>${evCt}</strong></div>
         <div class="tier-tag premium">Steam <strong>${steamCt}</strong></div>
         <div class="tier-tag premium">Fades <strong>${fadeCt}</strong></div>
@@ -4136,11 +4127,24 @@ function renderHomeModules() {
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
             <div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center">
               <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">PREMIUM TEASE</div>
-              <div style="font-size:12px;color:var(--sub)">Unlock Props, +EV, Steam, and Fades</div>
+              <div style="font-size:12px;color:var(--sub)">Unlock Props Edge, +EV, Steam, Fades, and Parlay</div>
               <button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock Premium</button>
             </div>
           </div>
         </div>`;
+    }
+  }
+
+  if (vipEl) {
+    const pod = getVipPickOfDay();
+    const liveCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
+    if (canUseVip()) {
+      vipEl.innerHTML = pod
+        ? `<div><strong>${esc(pod.bet)}</strong> ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% EV</div><div style="margin-top:4px">Live Plays: ${liveCt} tracked</div>`
+        : `Run scan to generate your VIP Pick of the Day. Live Plays: ${liveCt} tracked`;
+    } else {
+      const podLine = pod ? `<div style="margin-bottom:4px"><strong>${esc(pod.bet)}</strong> ${esc(pod.odds)}</div>` : '';
+      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${podLine}<div>VIP Pick of the Day + Live Plays module</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Go VIP</button></div></div>`;
     }
   }
 
