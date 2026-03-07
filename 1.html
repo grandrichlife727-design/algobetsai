@@ -870,7 +870,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Plan Access</div>
           <div class="growth-sub">Premium unlocks these four sections plus more picks volume.</div>
-          <div class="growth-note">If you are on Free, tap Upgrade to unlock everything here.</div>
+          <div class="growth-note">VIP adds earlier alerts, deeper markets, and execution tools.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">VIP Over Premium</div>
+          <div class="growth-sub"><strong>Earlier access:</strong> picks and props before standard release windows.</div>
+          <div class="growth-sub"><strong>Advanced alerts:</strong> steam/line-jump notifications with faster delivery.</div>
+          <div class="growth-sub"><strong>CLV dashboard:</strong> track close-line performance and timing quality.</div>
+          <div class="growth-sub"><strong>Portfolio tools:</strong> correlation-aware sizing and exposure controls.</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Feature Matrix</div>
+          <div class="growth-sub">Free: 2 picks preview.</div>
+          <div class="growth-sub">Premium: Props, +EV, Steam, Fades, and higher pick volume.</div>
+          <div class="growth-sub">VIP: Premium + early access + advanced alerts + CLV/portfolio layer.</div>
         </div>
       </div>
     </div>
@@ -1317,7 +1331,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="up-modal">
     <div class="up-title">Choose your plan</div>
     <div class="up-sub" id="up-sub">Pick a tier and continue to secure checkout.</div>
-    <div class="up-flow">Free Preview -> Premium</div>
+    <div class="up-flow">Free Preview -> Premium -> VIP</div>
     <div class="cycle-toggle">
       <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
       <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
@@ -1539,6 +1553,7 @@ const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.r
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 const TIER_PRICE_DISPLAY = {
   premium: {monthly: '$19.99/mo', annual: '$199.99/yr'},
+  vip: {monthly: '$39.99/mo', annual: '$399.99/yr'},
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1750,7 +1765,8 @@ function profilePickLimit() {
   const p = normalizePlan(currentPlan);
   const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
   if (fromTier > 0) return fromTier;
-  if (p === 'premium') return 50;
+  if (p === 'vip') return 50;
+  if (p === 'premium') return 20;
   return 2;
 }
 
@@ -2794,23 +2810,26 @@ const Api = {get: backendGet, post: backendPost, track: trackEvent};
 
 function normalizePlan(p) {
   const plan = String(p || '').toLowerCase();
-  if (plan === 'vip' || plan === 'sharp' || plan === 'premium' || plan === 'pro') return 'premium';
+  if (plan === 'vip' || plan === 'sharp') return 'vip';
+  if (plan === 'premium' || plan === 'pro') return 'premium';
   return 'free';
 }
 
 function planLabel(plan) {
   const p = normalizePlan(plan);
-  return p === 'premium' ? 'PREMIUM' : 'FREE';
+  return p === 'vip' ? 'VIP' : p === 'premium' ? 'PREMIUM' : 'FREE';
 }
 
 function nextTier(plan) {
   const p = normalizePlan(plan);
   if (p === 'free') return 'premium';
+  if (p === 'premium') return 'vip';
   return null;
 }
 
 function planRank(plan) {
   const p = normalizePlan(plan);
+  if (p === 'vip') return 2;
   if (p === 'premium') return 1;
   return 0;
 }
@@ -2820,7 +2839,7 @@ function canUsePremium() {
 }
 
 function canUseVip() {
-  return planRank(currentPlan) >= 1;
+  return planRank(currentPlan) >= 2;
 }
 
 function annualConfiguredForTier(tier) {
@@ -3058,10 +3077,10 @@ function updatePaywallUi() {
   }
   if (PAYWALL_VARIANT === 'B') {
     copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Next step is <strong>${planLabel(nxt)}</strong> for more picks and deeper markets.`;
-    cta.textContent = 'Go Premium';
+    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
   } else {
     copy.innerHTML = `<strong>${planLabel(p)}</strong>: ${visible}/${total} picks shown. Upgrade to <strong>${planLabel(nxt)}</strong> to unlock more.`;
-    cta.textContent = 'Go Premium';
+    cta.textContent = nxt === 'vip' ? 'Go VIP' : 'Go Premium';
   }
   card.classList.add('on');
   const cmp = document.getElementById('tier-compare');
@@ -3192,14 +3211,21 @@ function openUpgradePicker() {
   const note = document.getElementById('cycle-note');
   if (!grid) return;
   setBillingCycle(billingCycle);
-  if (p === 'premium') {
-    showToast('You already have Premium');
+  if (p === 'vip') {
+    showToast('You already have VIP');
     return;
   }
-  const opts = [
-    {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
-  ];
-  sub.textContent = 'One paid plan. Everything premium is included.';
+  const opts = p === 'free'
+    ? [
+        {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
+      ]
+    : [
+        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
+      ];
+  sub.textContent = p === 'free'
+    ? 'Choose Premium or VIP.'
+    : 'Move from Premium to VIP for advanced execution tools.';
   if (note) note.textContent = billingCycle === 'annual'
     ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
     : 'Monthly selected. Switch to annual for lower effective monthly cost.';
@@ -3221,10 +3247,10 @@ function openUpgradePicker() {
 
 function maybeOpenUpgradeFromQuery() {
   if (!['premium', 'vip', 'pro', 'sharp'].includes(_upgradeFromQp)) return;
-  const normalized = 'premium';
+  const normalized = _upgradeFromQp === 'vip' || _upgradeFromQp === 'sharp' ? 'vip' : 'premium';
   setTimeout(() => {
     openUpgradePicker();
-    const hint = normalized === 'premium' ? 'Premium option is ready in checkout.' : 'Upgrade option is ready in checkout.';
+    const hint = normalized === 'vip' ? 'VIP option is ready in checkout.' : 'Premium option is ready in checkout.';
     showToast(hint);
     if (history.replaceState) {
       const cleaned = new URL(window.location.href);
