@@ -1,0 +1,5 @@
+plan,starts,paid,share_of_paid
+free,,,
+premium,,,=IF(SUM(C2:C4)>0,C3/SUM(C2:C4),"")
+vip,,,=IF(SUM(C2:C4)>0,C4/SUM(C2:C4),"")
+total,=SUM(B2:B4),=SUM(C2:C4),=IF(C5>0,C5/C5,"")

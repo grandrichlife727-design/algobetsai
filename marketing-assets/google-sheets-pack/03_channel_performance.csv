@@ -1,0 +1,6 @@
+channel,spend_usd,impressions,clicks,ctr,cpc_usd,landing_visits,app_open,scan_manual,checkout_started,checkout_success,cac_usd
+instagram,,,,=IF(C2>0,D2/C2,""),=IF(D2>0,B2/D2,""),,,,,,=IF(K2>0,B2/K2,"")
+facebook,,,,=IF(C3>0,D3/C3,""),=IF(D3>0,B3/D3,""),,,,,,=IF(K3>0,B3/K3,"")
+tiktok,,,,=IF(C4>0,D4/C4,""),=IF(D4>0,B4/D4,""),,,,,,=IF(K4>0,B4/K4,"")
+x,,,,=IF(C5>0,D5/C5,""),=IF(D5>0,B5/D5,""),,,,,,=IF(K5>0,B5/K5,"")
+totals,=SUM(B2:B5),=SUM(C2:C5),=SUM(D2:D5),=IF(C6>0,D6/C6,""),=IF(D6>0,B6/D6,""),=SUM(G2:G5),=SUM(H2:H5),=SUM(I2:I5),=SUM(J2:J5),=SUM(K2:K5),=IF(K6>0,B6/K6,"")

@@ -1,0 +1,13 @@
+metric,value,notes
+week_start,2026-03-09,
+week_end,2026-03-15,
+owner,Algobets Team,
+total_spend_usd,,
+app_open,,
+scan_manual,,
+checkout_started,,
+checkout_success,,
+blended_cac_usd,=IF(B9>0,B5/B9,""),Spend / checkout_success
+open_to_scan_rate,=IF(B6>0,B7/B6,""),scan_manual / app_open
+scan_to_checkout_start_rate,=IF(B7>0,B8/B7,""),checkout_started / scan_manual
+checkout_start_to_paid_rate,=IF(B8>0,B9/B8,""),checkout_success / checkout_started

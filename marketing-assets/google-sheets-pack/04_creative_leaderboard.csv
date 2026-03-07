@@ -1,0 +1,4 @@
+creative_id,hook,platform,spend_usd,impressions,clicks,ctr,cpc_usd,app_open,checkout_started,checkout_success,cpa_paid_usd,action
+hook_ev_v1,EV/process,instagram,,,,=IF(E2>0,F2/E2,""),=IF(F2>0,D2/F2,""),,,,=IF(K2>0,D2/K2,""),test
+hook_clv_v1,CLV education,tiktok,,,,=IF(E3>0,F3/E3,""),=IF(F3>0,D3/F3,""),,,,=IF(K3>0,D3/K3,""),test
+hook_timing_v1,Timing/speed,x,,,,=IF(E4>0,F4/E4,""),=IF(F4>0,D4/F4,""),,,,=IF(K4>0,D4/K4,""),test

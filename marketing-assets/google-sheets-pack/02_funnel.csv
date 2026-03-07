@@ -1,0 +1,5 @@
+step,event,count,conv_from_prior,conv_from_open,target
+1,app_open,,,,
+2,scan_manual,,=IF(C2>0,C3/C2,""),=IF(C2>0,C3/C2,""),0.25
+3,checkout_started,,=IF(C3>0,C4/C3,""),=IF(C2>0,C4/C2,""),0.10
+4,checkout_success,,=IF(C4>0,C5/C4,""),=IF(C2>0,C5/C2,""),0.20
