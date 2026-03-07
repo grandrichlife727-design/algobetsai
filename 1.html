@@ -367,11 +367,18 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .mnav-label{font-size:9px;font-weight:700;line-height:1;margin-top:1px}
 @media(max-width:380px){.mnav-btn svg{width:18px;height:18px}.mnav-label{font-size:8px}}
 .mnav-more-wrap{position:relative}
-.mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:150px;background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
+.mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:220px;max-width:min(92vw,320px);background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
 .mnav-more-panel.on{display:block}
 .mnav-more-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);padding:8px;border-radius:7px;cursor:pointer;text-align:left}
 .mnav-more-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
 .mnav-more-item svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.mnav-more-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 8px 4px}
+.mnav-aff-link{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;text-decoration:none;color:var(--sub);transition:background .12s}
+.mnav-aff-link:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.mnav-aff-icon{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:9px;font-weight:800;flex-shrink:0}
+.mnav-aff-info{min-width:0}
+.mnav-aff-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.2}
+.mnav-aff-promo{font-size:10px;color:var(--green);line-height:1.2}
 
 /* LOADING SKELETON */
 .skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
@@ -1126,6 +1133,23 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
       <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
+      <div class="mnav-more-sec">Promo Links</div>
+      <a class="mnav-aff-link" href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
+        <div class="mnav-aff-icon" style="background:#53D338;color:#000">DK</div>
+        <div class="mnav-aff-info"><div class="mnav-aff-name">DraftKings</div><div class="mnav-aff-promo">Bet $5, Get $150</div></div>
+      </a>
+      <a class="mnav-aff-link" href="https://sportsbook.fanduel.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
+        <div class="mnav-aff-icon" style="background:#1493FF;color:#fff">FD</div>
+        <div class="mnav-aff-info"><div class="mnav-aff-name">FanDuel</div><div class="mnav-aff-promo">$1,000 No Sweat Bet</div></div>
+      </a>
+      <a class="mnav-aff-link" href="https://sports.betmgm.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
+        <div class="mnav-aff-icon" style="background:#C9A96E;color:#000">MGM</div>
+        <div class="mnav-aff-info"><div class="mnav-aff-name">BetMGM</div><div class="mnav-aff-promo">First Bet up to $1,500</div></div>
+      </a>
+      <a class="mnav-aff-link" href="https://sportsbook.caesars.com" target="_blank" rel="noopener" onclick="closeMobileMore()">
+        <div class="mnav-aff-icon" style="background:#003087;color:#fff">CZ</div>
+        <div class="mnav-aff-info"><div class="mnav-aff-name">Caesars</div><div class="mnav-aff-promo">Get up to $1,000 back</div></div>
+      </a>
     </div>
   </div>
 </nav>
