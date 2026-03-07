@@ -663,14 +663,44 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">Core Navigation</div>
-          <div class="growth-sub">Use <strong>Picks</strong> for betting cards and <strong>Odds</strong> for line shopping.</div>
-          <div class="growth-sub">Use <strong>Premium</strong> for Props, +EV, Steam, and Fades. Use <strong>Offers</strong> for promo links.</div>
+          <div class="growth-title">Top 3 Picks Preview</div>
+          <div id="home-top-picks" class="growth-sub">Loading picks...</div>
+          <div class="rf-row"><button class="pf-btn primary" onclick="go('picks')">View All Picks</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Premium Includes</div>
-          <div class="growth-sub">More picks plus full access to Props, +EV, Steam, and Fade signals.</div>
-          <div class="growth-sub">Upgrade once to unlock every premium market view.</div>
+          <div class="growth-title">Premium Snapshot</div>
+          <div id="home-premium" class="growth-sub">Props · +EV · Steam · Fades</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="go('premium')">Open Premium</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Today at a Glance</div>
+          <div id="home-glance" class="growth-sub">Games, books, and edge count will appear after scan.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Trending Markets</div>
+          <div id="home-trending" class="growth-sub">Scanning market activity...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Best Offer Today</div>
+          <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" style="margin-top:8px" data-book="draftkings">
+            <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
+            <div class="offer-info"><div class="offer-name">DraftKings</div><div class="offer-promo">Bet $5, Get $150 in bonus bets</div></div>
+            <span class="offer-cta">Claim</span>
+          </a>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">How It Works</div>
+          <div class="growth-sub">1) Scan lines across books</div>
+          <div class="growth-sub">2) Find value vs fair price</div>
+          <div class="growth-sub">3) Bet with disciplined sizing</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Recent Results</div>
+          <div id="home-results" class="growth-sub">Results will show after tracked history builds.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Tomorrow's Slate</div>
+          <div id="home-tomorrow" class="growth-sub">Next games will show here when available.</div>
         </div>
       </div>
     </div>
@@ -2754,6 +2784,87 @@ function updateHomeSummary() {
   if (he) he.textContent = edge;
   if (hc) hc.textContent = count;
   if (hp) hp.textContent = plan;
+  renderHomeModules();
+}
+
+function renderHomeModules() {
+  const topEl = document.getElementById('home-top-picks');
+  const premiumEl = document.getElementById('home-premium');
+  const glanceEl = document.getElementById('home-glance');
+  const trendEl = document.getElementById('home-trending');
+  const resultEl = document.getElementById('home-results');
+  const tomorrowEl = document.getElementById('home-tomorrow');
+
+  if (topEl) {
+    if (!PICKS.length) {
+      topEl.innerHTML = 'No picks loaded yet. Tap <strong>Scan Now</strong> to refresh the board.';
+    } else {
+      topEl.innerHTML = PICKS.slice(0, 3).map((p, i) =>
+        `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:${i<2?'1px solid var(--border)':'none'}">
+          <div style="font-weight:700;color:var(--text)">${esc(p.bet)}</div>
+          <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
+        </div>`
+      ).join('');
+    }
+  }
+
+  if (premiumEl) {
+    const on = canUsePremium();
+    const badge = on ? 'UNLOCKED' : 'LOCKED';
+    const tone = on ? 'var(--green)' : 'var(--amber)';
+    premiumEl.innerHTML = `<div style="color:${tone};font-weight:800;font-size:11px;margin-bottom:4px">${badge}</div>
+      Props · +EV · Steam · Fades`;
+  }
+
+  if (glanceEl) {
+    const gameCount = ODDSGAMES.length || SCHEDULE_GAMES.length || 0;
+    const bookSet = new Set();
+    (ODDSGAMES || []).forEach(g => (g.books || []).forEach(b => bookSet.add(String(b.book || '').toLowerCase())));
+    const books = bookSet.size || 0;
+    const updated = lastRefresh ? timeAgo(lastRefresh) : '—';
+    glanceEl.innerHTML = `${gameCount} games tracked · ${books} books scanned · ${PICKS.length} edges · updated ${updated}`;
+  }
+
+  if (trendEl) {
+    const bySport = {};
+    PICKS.forEach(p => {
+      const k = String(p.sport || '').replace(/[^\w\s]/g, '').trim() || 'Other';
+      bySport[k] = (bySport[k] || 0) + 1;
+    });
+    const top = Object.entries(bySport).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    trendEl.innerHTML = top.length
+      ? top.map(([k, v]) => `<span class="tier-tag" style="margin-right:6px">${esc(k)} ${v}</span>`).join('')
+      : '<span class="tier-tag">NBA Sides</span> <span class="tier-tag">NHL Totals</span> <span class="tier-tag">Top Props</span>';
+  }
+
+  if (resultEl) {
+    const o = PERFDATA?.overall || {};
+    const wins = Number(o.wins || 0);
+    const losses = Number(o.losses || 0);
+    const roi = Number(o.roi_pct || 0);
+    if (wins + losses > 0) {
+      resultEl.innerHTML = `${wins}W-${losses}L · ROI ${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
+    } else if (HISTORYDATA.length) {
+      const h = HISTORYDATA[0];
+      resultEl.innerHTML = `${Number(h.picks_visible || 0)} picks in latest scan · ${fmtTs(h.ts)}`;
+    } else {
+      resultEl.innerHTML = 'No graded results yet. Results will populate as picks settle.';
+    }
+  }
+
+  if (tomorrowEl) {
+    const rows = TOMORROW_GAMES.slice(0, 4);
+    if (!rows.length) {
+      tomorrowEl.innerHTML = 'No tomorrow slate loaded yet.';
+    } else {
+      tomorrowEl.innerHTML = rows.map((g, i) =>
+        `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:${i<rows.length-1?'1px solid var(--border)':'none'}">
+          <div>${esc(g.emoji || '🎯')} ${esc(g.game || 'Game')}</div>
+          <div style="color:var(--muted);font-size:11px">${esc(formatOddsTime(g.game_time))}</div>
+        </div>`
+      ).join('');
+    }
+  }
 }
 
 function updatePaywallUi() {
@@ -3530,6 +3641,7 @@ async function doScan(silent = false) {
   renderEV();
   renderSteam();
   renderFades();
+  renderHomeModules();
   if (currentTab === 'perf') renderPerf();
   if (currentTab === 'history') loadHistory();
 
