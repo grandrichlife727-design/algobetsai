@@ -332,6 +332,13 @@ html, body {
 .mode-btn{padding:5px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
 .mode-btn.active{background:var(--card);color:var(--text)}
 .mode-hint{font-size:11px;color:var(--muted)}
+.trial-card{display:none;justify-content:space-between;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(124,58,237,.14));border:1px solid rgba(34,211,238,.24);border-radius:10px;padding:12px;margin:-6px 0 14px}
+.trial-card.on{display:flex}
+.trial-copy{font-size:12px;color:var(--sub);line-height:1.45}
+.trial-copy strong{color:var(--text)}
+.trial-actions{display:flex;gap:8px;align-items:center}
+.trial-claim{background:var(--green);border:none;border-radius:6px;padding:6px 10px;color:#002116;font-weight:800;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.trial-dismiss{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--sub);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap}
 .paywall-card{display:none;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:9px;padding:10px 12px;margin:-6px 0 14px}
 .paywall-card.on{display:flex}
 .paywall-copy{font-size:12px;color:var(--sub);line-height:1.45}
@@ -350,11 +357,16 @@ html, body {
 .up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
 .up-title{font-size:16px;font-weight:800;margin-bottom:8px}
 .up-sub{font-size:12px;color:var(--sub);margin-bottom:12px}
+.cycle-toggle{display:flex;gap:6px;margin-bottom:10px}
+.cycle-btn{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--sub);font-size:11px;font-weight:700;font-family:var(--sans)}
+.cycle-btn.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.08);color:var(--cyan)}
+.cycle-note{font-size:10px;color:var(--muted);margin-bottom:10px}
 .up-grid{display:grid;grid-template-columns:1fr;gap:8px}
 .up-btn{width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--text);font-family:var(--sans)}
 .up-btn:hover{border-color:var(--border2)}
 .up-btn b{display:block;font-size:12px}
 .up-btn span{font-size:11px;color:var(--sub)}
+.up-badge{display:inline-flex;align-items:center;border:1px solid rgba(0,229,160,.3);background:rgba(0,229,160,.1);border-radius:999px;padding:2px 7px;font-size:9px;font-family:var(--mono);color:var(--green);margin-left:6px}
 .up-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
 .pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
@@ -397,6 +409,18 @@ html, body {
 .c-mode.win{color:var(--green);border-color:rgba(0,229,160,.25)}
 .c-mode.pick{color:var(--cyan);border-color:rgba(34,211,238,.25)}
 .c-text{font-size:12px;color:var(--sub);margin-top:7px;line-height:1.45}
+.feature-lock{position:relative;overflow:hidden}
+.blur-wrap{filter:blur(4px);pointer-events:none;user-select:none;opacity:.7}
+.lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(180deg,rgba(6,6,10,.2),rgba(6,6,10,.88))}
+.lock-card{width:100%;max-width:380px;background:rgba(13,13,18,.96);border:1px solid var(--border2);border-radius:10px;padding:12px;text-align:center}
+.lock-title{font-size:13px;font-weight:800;color:var(--text)}
+.lock-sub{font-size:11px;color:var(--sub);margin:6px 0 10px;line-height:1.45}
+.fade-card{background:var(--card);border:1px solid rgba(255,183,0,.2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.fade-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.fade-game{font-size:11px;color:var(--sub)}
+.fade-bet{font-size:15px;font-weight:700;color:var(--text)}
+.fade-meta{font-size:11px;color:var(--sub);line-height:1.45}
+.fade-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,183,0,.24);background:rgba(255,183,0,.1);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700}
 .auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
 .auth-ov.on{display:flex}
 .auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -448,6 +472,10 @@ html, body {
   <button class="nav-item" onclick="go('steam')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
     Steam
+  </button>
+  <button class="nav-item" onclick="go('fades')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    Public Fades
   </button>
   <button class="nav-item" onclick="go('parlay')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
@@ -543,6 +571,13 @@ html, body {
         </div>
         <span class="mode-hint" id="mode-hint">Plain English</span>
       </div>
+      <div class="trial-card" id="trial-card">
+        <div class="trial-copy" id="trial-copy"><strong>3-day Premium trial</strong> unlocked after your first scan.</div>
+        <div class="trial-actions">
+          <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
+          <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
+        </div>
+      </div>
       <div class="paywall-card" id="paywall-card">
         <div class="paywall-copy" id="paywall-copy"></div>
         <button class="paywall-cta" id="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
@@ -602,6 +637,12 @@ html, body {
       <div class="page-hdr"><div class="page-title">Steam <span>Moves</span></div><div class="page-sub">Sharp line movement and best-line gaps by game</div></div>
       <div class="sec-hdr"><span class="sec-title" id="steam-count">Loading...</span><span class="sec-meta">Follow real market pressure</span></div>
       <div class="picks-list" id="steamlist"></div>
+    </div>
+
+    <div id="v-fades" style="display:none">
+      <div class="page-hdr"><div class="page-title">Public % <span>Fades</span></div><div class="page-sub">Contrarian spots where public money is heavy on one side</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="fades-count">Loading...</span><span class="sec-meta">Fade crowded tickets, tail sharp pricing</span></div>
+      <div class="picks-list" id="fades-list"></div>
     </div>
 
     <div id="v-parlay" style="display:none">
@@ -756,9 +797,9 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
     <span class="mnav-label">Steam</span>
   </button>
-  <button class="mnav-btn" id="mn-boost" onclick="go('boost')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    <span class="mnav-label">Boost</span>
+  <button class="mnav-btn" id="mn-fades" onclick="go('fades')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    <span class="mnav-label">Fades</span>
   </button>
   <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
@@ -789,6 +830,11 @@ html, body {
   <div class="up-modal">
     <div class="up-title">Choose your plan</div>
     <div class="up-sub" id="up-sub">Pick Premium or VIP before checkout.</div>
+    <div class="cycle-toggle">
+      <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
+      <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
+    </div>
+    <div class="cycle-note" id="cycle-note">Annual plans save ~2 months when available.</div>
     <div class="up-grid" id="up-grid"></div>
     <div class="up-actions"><button class="bill-link" onclick="closeUpgradePicker()">Cancel</button></div>
   </div>
@@ -826,6 +872,7 @@ const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || '
 const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
 const PROFILE_KEY = 'algobets-profile-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
+const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -859,6 +906,7 @@ let legs = [];
 let PICKS = [];
 let EVDATA = [];
 let STEAMDATA = [];
+let FADESDATA = [];
 let ODDSGAMES = [];
 let activeOddsSport = '';
 let lastRefresh = null;
@@ -872,6 +920,11 @@ let scanCooldownRemaining = 0;
 let scanCooldownTicker = null;
 let HISTORYDATA = [];
 let COMMUNITYDATA = [];
+let PRICING = {};
+let billingCycle = 'monthly';
+let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
+let trialUiState = {dismissed: false};
+let hasScannedAtLeastOnce = false;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -962,6 +1015,25 @@ function saveState() {
     localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab}));
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
+  }
+}
+
+function loadTrialUiState() {
+  try {
+    const raw = localStorage.getItem(TRIAL_UI_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    trialUiState.dismissed = !!st.dismissed;
+  } catch(err) {
+    console.warn('[Algobets] Could not load trial UI state:', err);
+  }
+}
+
+function saveTrialUiState() {
+  try {
+    localStorage.setItem(TRIAL_UI_KEY, JSON.stringify({dismissed: !!trialUiState.dismissed}));
+  } catch(err) {
+    console.warn('[Algobets] Could not save trial UI state:', err);
   }
 }
 
@@ -1142,6 +1214,7 @@ async function submitAuthProfile() {
   renderProfile();
   showToast(`Signed in with ${authMethodLabel(method)}`);
   await fetchPlan();
+  await loadTrialStatus();
   doScan(true);
 }
 
@@ -1152,6 +1225,7 @@ function signOutProfile() {
   renderProfile();
   showToast('Signed out');
   fetchPlan();
+  loadTrialStatus();
   doScan(true);
 }
 
@@ -1328,10 +1402,14 @@ async function loadReferralStatus() {
   try {
     const res = await backendGet('/api/referral/status');
     codeEl.textContent = res.referral_code || 'ALGO--------';
+    const untilBonus = Number(res.referrals_until_bonus || 0);
+    const bonusLine = untilBonus > 0
+      ? `Invite ${untilBonus} more to earn +7 days Premium.`
+      : 'Invite milestone reached: +7 days Premium applied.';
     if (res.trial_seconds_left > 0) {
-      noteEl.textContent = `Premium trial active for ${fmtCountdown(res.trial_seconds_left)}. Referrals: ${res.referrals_count || 0}.`;
+      noteEl.textContent = `Premium trial active for ${fmtCountdown(res.trial_seconds_left)}. Referrals: ${res.referrals_count || 0}. ${bonusLine}`;
     } else {
-      noteEl.textContent = `Referrals: ${res.referrals_count || 0}. Redeem one code to unlock 72h Premium trial.`;
+      noteEl.textContent = `Referrals: ${res.referrals_count || 0}. Redeem one code to unlock 72h Premium trial. ${bonusLine}`;
     }
   } catch (err) {
     console.error(err);
@@ -1476,6 +1554,19 @@ function planRank(plan) {
   return 0;
 }
 
+function canUsePremium() {
+  return planRank(currentPlan) >= 1;
+}
+
+function canUseVip() {
+  return planRank(currentPlan) >= 2;
+}
+
+function annualConfiguredForTier(tier) {
+  const t = normalizePlan(tier);
+  return !!PRICING?.[t]?.billing?.annual_configured;
+}
+
 function updatePlanUi() {
   const p = normalizePlan(currentPlan);
   const pill = document.getElementById('plan-pill');
@@ -1493,6 +1584,7 @@ function updatePlanUi() {
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
   renderProfile();
   updateScanCooldownUi();
+  updateTrialCard();
 }
 
 function updatePaywallUi() {
@@ -1546,14 +1638,86 @@ async function fetchPlan() {
   }
 }
 
-async function startCheckout(tier) {
+async function fetchPricing() {
+  try {
+    const res = await backendGet('/api/pricing');
+    PRICING = res?.tiers || {};
+  } catch (err) {
+    PRICING = {};
+  }
+}
+
+async function loadTrialStatus() {
+  try {
+    const res = await backendGet('/api/trial/status');
+    trialStatusState = {
+      eligible: !!res.eligible,
+      claimed: !!res.claimed,
+      trial_seconds_left: Number(res.trial_seconds_left || 0),
+    };
+  } catch (err) {
+    trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
+  }
+  updateTrialCard();
+}
+
+function dismissTrialCard() {
+  trialUiState.dismissed = true;
+  saveTrialUiState();
+  updateTrialCard();
+}
+
+async function claimFreeTrial() {
+  if (!ensureRegisteredUser()) return;
+  try {
+    await backendPost('/api/trial/start', {});
+    trialUiState.dismissed = true;
+    saveTrialUiState();
+    await fetchPlan();
+    await loadTrialStatus();
+    showToast('Premium trial started: 72 hours');
+    doScan(true);
+  } catch (err) {
+    console.error(err);
+    showToast('Trial unavailable');
+  }
+}
+
+function updateTrialCard() {
+  const card = document.getElementById('trial-card');
+  const copy = document.getElementById('trial-copy');
+  if (!card || !copy) return;
+  const show = hasScannedAtLeastOnce && normalizePlan(currentPlan) === 'free' && !!trialStatusState.eligible && !trialUiState.dismissed;
+  if (!show) {
+    card.classList.remove('on');
+    return;
+  }
+  copy.innerHTML = `<strong>3-day Premium trial</strong> is ready. Start now to unlock +EV Finder and faster scans.`;
+  card.classList.add('on');
+}
+
+function setBillingCycle(cycle) {
+  billingCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  const monthly = document.getElementById('cycle-monthly');
+  const annual = document.getElementById('cycle-annual');
+  if (monthly) monthly.classList.toggle('active', billingCycle === 'monthly');
+  if (annual) annual.classList.toggle('active', billingCycle === 'annual');
+}
+
+async function startCheckout(tier, cycle = billingCycle) {
   const desired = normalizePlan(tier || nextTier(currentPlan));
   if (!desired) return;
   if (!ensureBillingUser()) return;
+  let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  if (finalCycle === 'annual' && !annualConfiguredForTier(desired)) {
+    finalCycle = 'monthly';
+    showToast('Annual price not configured yet. Using monthly checkout.');
+  }
   try {
     const origin = window.location.origin + window.location.pathname;
     const res = await backendPost('/api/billing/checkout', {
       tier: desired,
+      billing_cycle: finalCycle,
       success_url: `${origin}?checkout=success&uid=${encodeURIComponent(USER_ID)}`,
       cancel_url: `${origin}?checkout=cancel&uid=${encodeURIComponent(USER_ID)}`
     });
@@ -1574,7 +1738,9 @@ function openUpgradePicker() {
   const p = normalizePlan(currentPlan);
   const grid = document.getElementById('up-grid');
   const sub = document.getElementById('up-sub');
+  const note = document.getElementById('cycle-note');
   if (!grid) return;
+  setBillingCycle(billingCycle);
   const opts = p === 'free'
     ? [
         {tier: 'premium', title: 'Premium', desc: 'Up to 15 picks/scan + full +EV Finder'},
@@ -1588,7 +1754,17 @@ function openUpgradePicker() {
     return;
   }
   sub.textContent = p === 'free' ? 'Pick Premium or VIP before checkout.' : 'Move to VIP for full access.';
-  grid.innerHTML = opts.map(o => `<button class="up-btn" onclick="startCheckout('${o.tier}');closeUpgradePicker()"><b>${o.title}</b><span>${o.desc}</span></button>`).join('');
+  if (note) note.textContent = billingCycle === 'annual'
+    ? 'Annual selected. If annual price is unavailable for a tier, checkout falls back to monthly.'
+    : 'Monthly selected. Switch to annual for lower effective monthly cost.';
+  grid.innerHTML = opts.map(o => {
+    const annualOn = annualConfiguredForTier(o.tier);
+    const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
+    const cycleHint = billingCycle === 'annual'
+      ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
+      : 'Monthly billing at checkout';
+    return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${o.desc} · ${cycleHint}</span></button>`;
+  }).join('');
   document.getElementById('up-ov').classList.add('on');
 }
 
@@ -1848,6 +2024,7 @@ async function doScan(silent = false) {
   PICKS = [];
   EVDATA = [];
   STEAMDATA = [];
+  FADESDATA = [];
   const eb = document.getElementById('err-banner'); if(eb) eb.classList.remove('on');
 
   if (!silent) {
@@ -1896,8 +2073,11 @@ async function doScan(silent = false) {
         .map((p, i) => normalizePick(p, i))
         // REMOVED gameTimeRaw filter to ensure API picks are always shown
         .sort((a, b) => b.ev - a.ev);
+      FADESDATA = computePublicFadesFromPicks(PICKS);
       updatePlanUi();
       updatePaywallUi();
+      hasScannedAtLeastOnce = true;
+      updateTrialCard();
     } else {
         console.error("Picks request failed:", picksRes.reason);
     }
@@ -1950,6 +2130,7 @@ async function doScan(silent = false) {
   renderOdds();
   renderEV();
   renderSteam();
+  renderFades();
   if (currentTab === 'history') loadHistory();
 
   btn.classList.remove('loading');
@@ -2043,10 +2224,34 @@ function renderEV() {
 }
 
 // ─── RENDER STEAM ─────────────────────────────────────────────────────────────
+function renderLockedFeature(el, title, subtitle, requiredTier) {
+  if (!el) return;
+  el.innerHTML = `
+    <div class="feature-lock">
+      <div class="blur-wrap">
+        <div class="steam-card"><div class="steam-row"><div><div class="steam-game">NBA · Knicks @ Celtics</div><div class="steam-signal">Celtics -145</div></div><div class="steam-chip">HIGH 7.1%</div></div><div class="steam-meta">Best book: FanDuel · Consensus ~ -166</div><div class="steam-meta">Pinnacle tighter by 2.1% — likely sharp move.</div></div>
+        <div class="steam-card"><div class="steam-row"><div><div class="steam-game">NHL · Oilers @ Kings</div><div class="steam-signal">Oilers +112</div></div><div class="steam-chip">MED 5.2%</div></div><div class="steam-meta">Best book: DraftKings · Consensus ~ +102</div><div class="steam-meta">Gap suggests stale public number at one book.</div></div>
+      </div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">${esc(title)}</div>
+          <div class="lock-sub">${esc(subtitle)}</div>
+          <button class="paywall-cta" onclick="openUpgradePicker()">${requiredTier === 'vip' ? 'Go VIP' : 'Go Premium'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderSteam() {
   const el = document.getElementById('steamlist');
   const countEl = document.getElementById('steam-count');
   if (!el || !countEl) return;
+  if (!canUseVip()) {
+    countEl.textContent = `VIP feature`;
+    renderLockedFeature(el, 'Steam Moves are VIP only', 'Preview is blurred. Upgrade to VIP for the full live feed.', 'vip');
+    return;
+  }
   countEl.textContent = `${STEAMDATA.length} steam move${STEAMDATA.length !== 1 ? 's' : ''} found`;
   if (!STEAMDATA.length) {
     el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No steam moves right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
@@ -2063,6 +2268,65 @@ function renderSteam() {
       </div>
       <div class="steam-meta">Best book: <strong style="color:var(--text)">${esc(s.book)}</strong> · Consensus ~ ${esc(s.consensus)}</div>
       <div class="steam-meta">${esc(s.note)}</div>
+    </div>
+  `).join('');
+}
+
+function computePublicFadesFromPicks(picks) {
+  return (Array.isArray(picks) ? picks : [])
+    .filter(p => Number(p.pu || 0) >= 65 && Number(p.ev || 0) >= 1.5)
+    .map(p => ({
+      sport: p.sport || '',
+      game: p.game || '',
+      bet: p.bet || '',
+      odds: p.odds || '',
+      publicPct: Number(p.pu || 0),
+      sharpPct: Number(p.sh || 0),
+      ev: Number(p.ev || 0),
+      note: Number(p.sh || 0) >= 55
+        ? 'Public heavy on opposite side while sharp money leans this way.'
+        : 'Crowded ticket split with favorable price for contrarian entry.',
+    }))
+    .sort((a, b) => (b.publicPct - a.publicPct) || (b.ev - a.ev))
+    .slice(0, 30);
+}
+
+function renderFades() {
+  const el = document.getElementById('fades-list');
+  const countEl = document.getElementById('fades-count');
+  if (!el || !countEl) return;
+  if (!canUsePremium()) {
+    countEl.textContent = 'Premium feature';
+    el.innerHTML = `
+      <div class="feature-lock">
+        <div class="blur-wrap">
+          <div class="fade-card"><div class="fade-top"><div><div class="fade-game">NBA · Suns @ Nuggets</div><div class="fade-bet">Nuggets -4.5</div></div><div class="fade-chip">Public 73%</div></div><div class="fade-meta">Sharp 59% · +4.2% EV · -110</div><div class="fade-meta">Public piled on the other side after TV narrative.</div></div>
+          <div class="fade-card"><div class="fade-top"><div><div class="fade-game">NHL · Rangers @ Devils</div><div class="fade-bet">Devils ML</div></div><div class="fade-chip">Public 69%</div></div><div class="fade-meta">Sharp 57% · +3.1% EV · +105</div><div class="fade-meta">Contrarian entry as market drifts against crowd position.</div></div>
+        </div>
+        <div class="lock-overlay">
+          <div class="lock-card">
+            <div class="lock-title">Public Fades are Premium+</div>
+            <div class="lock-sub">Unlock every fade signal, not just previews.</div>
+            <button class="paywall-cta" onclick="openUpgradePicker()">Go Premium</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  countEl.textContent = `${FADESDATA.length} fade play${FADESDATA.length !== 1 ? 's' : ''} found`;
+  if (!FADESDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🧊</div><div class="empty-title">No strong fade spots right now</div><div class="empty-sub">Run scans around major game windows.</div></div>`;
+    return;
+  }
+  el.innerHTML = FADESDATA.map((f, i) => `
+    <div class="fade-card" style="animation-delay:${i*.04}s">
+      <div class="fade-top">
+        <div><div class="fade-game">${esc(f.sport)} · ${esc(f.game)}</div><div class="fade-bet">${esc(f.bet)} ${esc(f.odds)}</div></div>
+        <div class="fade-chip">Public ${f.publicPct}%</div>
+      </div>
+      <div class="fade-meta">Sharp ${f.sharpPct}% · +${f.ev}% EV</div>
+      <div class="fade-meta">${esc(f.note)}</div>
     </div>
   `).join('');
 }
@@ -2191,7 +2455,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','ev','steam','parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','ev','steam','fades','parlay','boost','perf','history','community','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -2204,6 +2468,7 @@ function go(name) {
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') renderOdds();
   if (name === 'steam') renderSteam();
+  if (name === 'fades') renderFades();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'profile') {
@@ -2277,13 +2542,17 @@ function applySavedSelections() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+loadTrialUiState();
 loadProfile();
 bindUiAccessibility();
 applySavedSelections();
 updateScanCooldownUi();
 fetchPlan();
+fetchPricing();
+loadTrialStatus();
 renderPerf();
 loadBoostExamples();
+renderFades();
 doScan();
 startAutoRefresh();
 </script>
