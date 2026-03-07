@@ -4,32 +4,36 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content="Algobets AI surfaces +EV picks, arbitrage spots, and betting tools in one live dashboard."/>
-<meta name="theme-color" content="#070a10"/>
+<meta name="theme-color" content="#06060a"/>
 <title>Algobets AI — Smart Picks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg: #0f141d;
-  --surface: #161d28;
-  --card: #1b2431;
-  --border: rgba(255,255,255,.06);
-  --border2: rgba(255,255,255,.12);
-  --cyan: #00d4ff;
-  --cyan-dim: rgba(0,212,255,.08);
-  --cyan-glow: rgba(0,212,255,.18);
+  --bg: #06060a;
+  --surface: #0d0d12;
+  --card: #12121a;
+  --border: rgba(255,255,255,.07);
+  --border2: rgba(255,255,255,.14);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,.09);
+  --cyan-glow: rgba(34,211,238,.2);
+  --cyan2: #0891b2;
   --green: #00e5a0;
   --green-dim: rgba(0,229,160,.07);
   --red: #ff4d6a;
   --red-dim: rgba(255,77,106,.07);
   --amber: #ffb700;
   --amber-dim: rgba(255,183,0,.08);
-  --violet: #9b79ff;
-  --muted: #6f7b90;
-  --sub: #9aa4b2;
-  --text: #f2f6fb;
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'Space Grotesk', sans-serif;
+  --violet: #7c3aed;
+  --muted: #a1a1aa;
+  --sub: #b8b8c3;
+  --text: #e4e4e7;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+  --grad: linear-gradient(135deg, var(--cyan2), var(--violet));
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -62,7 +66,7 @@ html, body {
 @media(max-width:900px){.sidebar{display:none}}
 .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
 .logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;box-shadow:0 0 20px rgba(8,145,178,.35)}
-.logo-text{font-size:20px;font-weight:800;letter-spacing:.4px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
 .nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -83,8 +87,8 @@ html, body {
 .book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
 
 /* TOPBAR */
-.topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;letter-spacing:.35px;white-space:nowrap;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:24px;letter-spacing:1px;white-space:nowrap;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .topbar-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 14px rgba(8,145,178,.3);-webkit-text-fill-color:initial;color:#fff}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
@@ -832,8 +836,8 @@ function evRing(ev, sz = 50) {
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="flex-shrink:0">
     <path d="${arc(-90, 270)}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="4" stroke-linecap="round"/>
     ${ev > 0 ? `<path d="${arc(-90, end)}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` : ''}
-    <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="JetBrains Mono,monospace">+${ev}%</text>
-    <text x="${c}" y="${c+10}" text-anchor="middle" dominant-baseline="middle" fill="#3d4554" font-size="7" font-family="Space Grotesk,sans-serif">EV</text>
+    <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="middle" fill="${col}" font-size="10" font-weight="700" font-family="DM Mono,monospace">+${ev}%</text>
+    <text x="${c}" y="${c+10}" text-anchor="middle" dominant-baseline="middle" fill="#3d4554" font-size="7" font-family="DM Sans,sans-serif">EV</text>
   </svg>`;
 }
 
