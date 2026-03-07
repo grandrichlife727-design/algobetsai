@@ -81,6 +81,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
 .nav-item.vip-nav svg{opacity:.95;color:var(--amber)}
 .nav-item.vip-nav{font-weight:700}
+.nav-item.nav-sub{padding-left:24px;font-size:12px}
+.nav-item.nav-sub svg{width:12px;height:12px;opacity:.42}
+.nav-item.nav-sub.active{color:var(--amber);background:rgba(255,183,0,.09)}
 .nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
 .sidebar-bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
 .resp-notice{font-size:10px;color:var(--muted);line-height:1.55;padding:8px 8px 0}
@@ -514,11 +517,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
-.vip-subnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 6px;margin:2px 0 8px}
-.vip-subnav::-webkit-scrollbar{display:none}
-.vip-subbtn{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--sub);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:var(--sans)}
-.vip-subbtn:hover{border-color:var(--border2);color:var(--text)}
-.vip-anchor{scroll-margin-top:92px}
 .h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
 .h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .h-time{font-size:11px;color:var(--muted)}
@@ -620,6 +618,30 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="nav-item vip-nav" onclick="go('vip')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
     VIP
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-core')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    VIP Picks
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-execution')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    Execution
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-portfolio')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    Portfolio
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-alerts')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    Alerts
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-discord')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    Discord
+  </button>
+  <button class="nav-item nav-sub" onclick="go('vip-reports')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+    Reports
   </button>
   <button class="nav-item" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -961,29 +983,38 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
     <div id="v-vip" style="display:none">
       <div class="page-hdr"><div class="page-title">VIP <span>Overview</span></div><div class="page-sub">VIP is built for speed, execution quality, and direct access to high-value features.</div></div>
-      <div class="vip-subnav">
-        <button class="vip-subbtn" onclick="vipJump('vip-overview')">Overview</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-core-edge')">Core Edge</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-execution')">Execution</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-portfolio-block')">Portfolio</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-alerts')">Alerts</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-discord-block')">Discord</button>
-        <button class="vip-subbtn" onclick="vipJump('vip-weekly-report')">Reports</button>
-      </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card vip-anchor" id="vip-overview">
-          <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Overview + Quick Start</div>
+        <div class="growth-card">
+          <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Quick Start</div>
           <div class="growth-sub"><strong>What VIP is for:</strong> fewer, stronger cards with better timing and deeper execution context.</div>
-          <div class="growth-sub"><strong>How to use it:</strong> Core Edge → Execution → Alerts → Discord.</div>
+          <div class="growth-sub"><strong>How to use it:</strong> VIP Picks → Execution → Portfolio → Alerts → Discord.</div>
           <div class="growth-sub"><strong>Main gains:</strong> earlier access, better entry timing, and tighter bankroll control.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-core-edge">
+        <div class="growth-card">
+          <div class="growth-title">Open VIP Sections</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">VIP Picks</button><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-portfolio')">Portfolio</button><button class="pf-btn" onclick="go('vip-alerts')">Alerts</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-discord')">Discord</button><button class="pf-btn" onclick="go('vip-reports')">Reports</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="v-vip-core" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Picks</span></div><div class="page-sub">Early-release cards and VIP picks of the day.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
           <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-execution">
+      </div>
+    </div>
+
+    <div id="v-vip-execution" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Execution</span></div><div class="page-sub">CLV tracking, timing engine, and market-depth context.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">⚡</span>Execution Intelligence</div>
           <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
           <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
@@ -991,7 +1022,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
           <div class="growth-note">Use this block to decide bet now, wait, or pass.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-portfolio-block">
+      </div>
+    </div>
+
+    <div id="v-vip-portfolio" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Portfolio</span></div><div class="page-sub">Bankroll sizing and watchlist management.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">📊</span>Portfolio + Watchlist</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-bankroll" type="number" min="100" step="50" placeholder="Bankroll (e.g. 1000)"/>
@@ -1007,7 +1044,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn" onclick="saveVipWatchlist()">Save Watchlist</button></div>
           <div class="growth-note" id="vip-watchlist-note">No watchlist configured.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-alerts">
+      </div>
+    </div>
+
+    <div id="v-vip-alerts" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Alerts</span></div><div class="page-sub">Webhook automation and trigger controls.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔔</span>Alerts + Automation</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-webhook" type="text" placeholder="Webhook URL (Discord/Slack)"/>
@@ -1019,13 +1062,25 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button><button class="pf-btn" onclick="sendVipTestAlert()">Send Test</button></div>
           <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-discord-block">
+      </div>
+    </div>
+
+    <div id="v-vip-discord" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Discord</span></div><div class="page-sub">Private channel for drops, recaps, and live discussion.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">💬</span>VIP Discord</div>
           <div class="growth-sub" id="vip-discord-status">Checking access...</div>
           <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
           <div class="growth-note">Private VIP channel for alert drops, card recaps, and live discussion.</div>
         </div>
-        <div class="growth-card vip-anchor" id="vip-weekly-report">
+      </div>
+    </div>
+
+    <div id="v-vip-reports" style="display:none">
+      <div class="page-hdr"><div class="page-title">VIP <span>Reports</span></div><div class="page-sub">Generate weekly summaries and review trend quality.</div></div>
+      <div class="growth-grid" style="margin-top:0;max-width:100%">
+        <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🗓</span>Weekly Report</div>
           <div class="rf-row"><button class="pf-btn" onclick="generateVipReport()">Generate Report</button></div>
           <div class="growth-note" id="vip-report-note">No report generated yet.</div>
@@ -1451,6 +1506,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </button>
     <div class="mnav-more-panel" id="mnav-more-panel">
       <button class="mnav-more-item" onclick="go('more')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='5' r='1.5'/><circle cx='12' cy='12' r='1.5'/><circle cx='12' cy='19' r='1.5'/></svg>More Hub</button>
+      <div class="mnav-more-sec">VIP</div>
+      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
+      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Picks</button>
+      <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
+      <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
+      <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
+      <button class="mnav-more-item" onclick="go('vip-discord')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>Discord</button>
+      <button class="mnav-more-item" onclick="go('vip-reports')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Reports</button>
       <div class="mnav-more-sec">Premium</div>
       <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props</button>
       <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
@@ -5100,8 +5163,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','vip','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','vip','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
@@ -5155,7 +5218,7 @@ function go(name) {
   if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
-  if (name === 'vip') renderVipTools();
+  if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
   if (name === 'profile') {
     loadReferralStatus();
     loadAlertSubscriptions();
@@ -5170,16 +5233,6 @@ function go(name) {
     loadJournalStats();
   }
   saveState();
-}
-
-function vipJump(anchorId) {
-  if (currentTab !== 'vip') go('vip');
-  const jump = () => {
-    const el = document.getElementById(anchorId);
-    if (!el) return;
-    el.scrollIntoView({behavior: 'smooth', block: 'start'});
-  };
-  setTimeout(jump, 120);
 }
 
 function setMode(m) {
