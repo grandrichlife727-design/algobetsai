@@ -953,6 +953,9 @@
         ⚡ Start for Free
         <span style="font-size:12px; opacity:0.75; font-weight:500">No credit card</span>
       </a>
+      <a href="1.html?upgrade=premium&src=landing_trial_hero" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
+        Start 3-Day Premium Trial
+      </a>
       <a href="#how" class="btn-ghost">
         See how it works ↓
       </a>
@@ -1560,6 +1563,9 @@
       <a href="1.html" class="btn-primary" style="font-size:17px; padding:18px 40px;">
         ⚡ Launch Algobets Ai Free
       </a>
+      <a href="1.html?upgrade=premium&src=landing_trial_cta" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
+        Start 3-Day Premium Trial
+      </a>
     </div>
     <p style="margin-top:20px; font-size:12px; color:var(--muted);" class="reveal">
       Must be 21+ to bet. Please gamble responsibly.
@@ -1623,6 +1629,9 @@
           ⚡ Claim My Free Picks →
         </button>
       </form>
+      <div id="gate-google-wrap" style="margin-top:10px;display:none;">
+        <div id="gate-google-btn"></div>
+      </div>
 
       <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;flex-wrap:wrap;">
         <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;">🔒 No spam, ever</div>
@@ -1646,6 +1655,11 @@
   <!-- (Already mobile-responsive, enhanced below with mobile-specific CTA) -->
 
   <script>
+    const BACKEND = 'https://algobetsai.onrender.com';
+    const GOOGLE_CLIENT_ID_FALLBACK = '157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com';
+    let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
+    let googleLoaded = false;
+
     // ── FAQ toggle ──────────────────────────────────────────
     function toggleFaq(el) {
       const item = el.parentElement;
@@ -1690,6 +1704,7 @@
       const overlay = document.getElementById('email-gate-overlay');
       overlay.style.display = 'flex';
       setTimeout(() => overlay.style.opacity = '1', 10);
+      renderLandingGoogleButton();
     }
     function closeEmailGate() {
       const overlay = document.getElementById('email-gate-overlay');
@@ -1700,16 +1715,94 @@
       const email = String(document.getElementById('gate-email').value || '').trim().toLowerCase();
       if (!email) return;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-      // Store email and redirect to app with signup handoff.
-      try { localStorage.setItem('algobets_email', email); } catch(err) {}
-      const method = /@gmail\.com$/i.test(email) ? 'gmail' : 'email';
+      try {
+        localStorage.setItem('algobets_email', email);
+        localStorage.setItem('algobets-profile-v1', JSON.stringify({method: 'email', identifier: email, name: ''}));
+        localStorage.setItem('algobets-offer-intent', 'trial_premium_3d');
+      } catch(err) {}
       const next = new URL('1.html', window.location.href);
-      next.searchParams.set('signup', '1');
-      next.searchParams.set('method', method);
-      next.searchParams.set('id', email);
       const ref = new URLSearchParams(window.location.search).get('ref');
       if (ref) next.searchParams.set('ref', ref);
       window.location.href = next.toString();
+    }
+
+    function startPremiumTrialLanding(e) {
+      if (e) e.preventDefault();
+      try { localStorage.setItem('algobets-offer-intent', 'trial_premium_3d'); } catch (_) {}
+      window.location.href = '1.html?upgrade=premium&src=landing_trial';
+    }
+
+    async function loadLandingPublicConfig() {
+      try {
+        const res = await fetch(`${BACKEND}/api/config/public`);
+        if (!res.ok) return;
+        const json = await res.json();
+        GOOGLE_CLIENT_ID = String(json?.google_client_id || '').trim() || GOOGLE_CLIENT_ID_FALLBACK;
+      } catch (_) {
+        GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
+      }
+    }
+
+    function ensureGoogleScript() {
+      if (window.google?.accounts?.id) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.defer = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Google script failed'));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function renderLandingGoogleButton() {
+      const wrap = document.getElementById('gate-google-wrap');
+      const btn = document.getElementById('gate-google-btn');
+      if (!wrap || !btn || !GOOGLE_CLIENT_ID) return;
+      wrap.style.display = 'block';
+      try {
+        await ensureGoogleScript();
+        if (!window.google?.accounts?.id) return;
+        if (!googleLoaded) {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: onLandingGoogleCredential,
+            auto_select: false,
+          });
+          googleLoaded = true;
+        }
+        btn.innerHTML = '';
+        window.google.accounts.id.renderButton(btn, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: 'continue_with',
+          width: 360,
+        });
+      } catch (_) {}
+    }
+
+    async function onLandingGoogleCredential(response) {
+      const idToken = String(response?.credential || '').trim();
+      if (!idToken) return;
+      try {
+        const res = await fetch(`${BACKEND}/api/auth/google`, {
+          method: 'POST',
+          headers: {'content-type': 'application/json'},
+          body: JSON.stringify({id_token: idToken}),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const token = String(data?.token || '').trim();
+        const userId = String(data?.user_id || '').trim().toLowerCase();
+        const identifier = String(data?.profile?.identifier || '').trim();
+        if (token) localStorage.setItem('algobets-auth-token-v1', token);
+        if (userId) localStorage.setItem('algobets-user-id', userId);
+        if (identifier) localStorage.setItem('algobets-profile-v1', JSON.stringify({method: 'google', identifier, name: ''}));
+        localStorage.setItem('algobets-offer-intent', 'trial_premium_3d');
+        window.location.href = '1.html?upgrade=premium&src=landing_google';
+      } catch (_) {}
     }
     // Close on overlay click
     document.getElementById('email-gate-overlay').addEventListener('click', function(e) {
@@ -1763,6 +1856,7 @@
       requestAnimationFrame(update);
     }
     window.addEventListener('load', () => {
+      loadLandingPublicConfig();
       setTimeout(() => {
         animateCounter(document.getElementById('live-users'), 2000, 2847, 1800);
         animateCounter(document.getElementById('picks-scanned'), 10000, 14291, 2200);
