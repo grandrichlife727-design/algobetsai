@@ -2815,19 +2815,27 @@ function renderHomeModules() {
       topEl.innerHTML = 'No picks loaded yet. Tap <strong>Scan Now</strong> to refresh the board.';
     } else {
       const premiumOn = canUsePremium();
-      const visible = premiumOn ? 3 : 1;
-      const rows = PICKS.slice(0, visible).map((p, i) =>
+      const rows = PICKS.slice(0, 4).map((p, i) =>
         `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
           <div style="font-weight:700;color:var(--text)">${esc(p.bet)}</div>
           <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
         </div>`
       ).join('');
-      const locked = premiumOn ? '' : `
-        <div style="padding:8px 0 0;color:var(--muted);font-size:12px">
-          2 more top picks are Premium-only.
-          <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Unlock</button>
-        </div>`;
-      topEl.innerHTML = rows + locked;
+      if (premiumOn) {
+        topEl.innerHTML = rows;
+      } else {
+        topEl.innerHTML = `
+          <div style="position:relative">
+            <div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${rows}</div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+              <div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center">
+                <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">PREMIUM TEASE</div>
+                <div style="font-size:12px;color:var(--sub)">Top picks are blurred for free users</div>
+                <button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock Picks</button>
+              </div>
+            </div>
+          </div>`;
+      }
     }
   }
 
