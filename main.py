@@ -101,6 +101,8 @@ def verify_api_key(request: Request, x_api_key: str = Header(default="")):
 
 _plan_cache: dict = {}
 _PLAN_CACHE_TTL = 300
+_scan_state: dict = {}
+_SCAN_STATE_TTL = 3600 * 24
 
 def _verify_plan_stripe_sync(user_id: str) -> str:
     if not STRIPE_SECRET or not user_id:
@@ -864,18 +866,24 @@ def build_arb_for_game(game: dict) -> Optional[dict]:
 TIER_CONFIG = {
     PLAN_FREE: {
         "name": "Free",
-        "scan_pick_limit": 3,
-        "features": ["Limited daily picks", "Basic dashboard"],
+        "scan_pick_limit": 2,
+        "sports_allowed": ["basketball_nba", "icehockey_nhl"],
+        "min_scan_interval_seconds": 1200,
+        "features": ["2 picks per scan", "NBA + NHL only", "Refresh every 20 minutes"],
     },
     PLAN_PREMIUM: {
         "name": "Premium",
-        "scan_pick_limit": 12,
-        "features": ["More picks", "+EV finder", "Priority refresh"],
+        "scan_pick_limit": 15,
+        "sports_allowed": SPORTS,
+        "min_scan_interval_seconds": 300,
+        "features": ["15 picks per scan", "All sports", "+EV finder", "Refresh every 5 minutes"],
     },
     PLAN_VIP: {
         "name": "VIP",
-        "scan_pick_limit": 30,
-        "features": ["All picks", "+EV finder", "Arbitrage feed", "Highest limits"],
+        "scan_pick_limit": 50,
+        "sports_allowed": SPORTS,
+        "min_scan_interval_seconds": 60,
+        "features": ["50 picks per scan", "All sports", "+EV finder", "Arbitrage feed", "Refresh every minute"],
     },
 }
 
@@ -1084,6 +1092,31 @@ async def scan(request: Request):
     """Main scan endpoint - generates picks + shows all upcoming games."""
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
+    user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip() or "anon"
+    now_ts = time.time()
+    force_refresh = str(request.query_params.get("refresh", "false")).lower() == "true"
+
+    # Enforce tier-based refresh cadence. If called too soon and cached payload exists,
+    # serve cached results and include cooldown metadata instead of hard failing.
+    min_interval = int(tier.get("min_scan_interval_seconds", 0) or 0)
+    state = _scan_state.get(user_id, {})
+    last_scan_ts = float(state.get("last_scan_ts", 0) or 0)
+    elapsed = now_ts - last_scan_ts
+    cooldown_remaining = max(0, int(min_interval - elapsed))
+    if force_refresh and min_interval > 0 and elapsed < min_interval:
+        cached_payload = state.get("last_payload")
+        if isinstance(cached_payload, dict):
+            payload = dict(cached_payload)
+            payload["scan_policy"] = {
+                "min_interval_seconds": min_interval,
+                "cooldown_remaining_seconds": cooldown_remaining,
+                "served_from_cache": True,
+            }
+            return payload
+        raise HTTPException(
+            status_code=429,
+            detail=f"Please wait {cooldown_remaining}s before the next scan on the {tier.get('name', 'current')} plan.",
+        )
     
     # Check quota
     if _quota_remaining < 10 and ODDS_API_KEY:
@@ -1093,8 +1126,13 @@ async def scan(request: Request):
     all_games = []
     sport_fetch_counts = {}
     
-    # Fetch games for each sport
-    for sport in SPORTS:
+    allowed_sports = tier.get("sports_allowed") or SPORTS
+    allowed_sports = [s for s in allowed_sports if s in SPORTS]
+    if not allowed_sports:
+        allowed_sports = SPORTS
+
+    # Fetch games for each allowed sport
+    for sport in allowed_sports:
         games = await fetch_odds_api_games(sport)
         sport_fetch_counts[sport] = len(games)
         meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
@@ -1128,7 +1166,7 @@ async def scan(request: Request):
     pick_limit = int(tier.get("scan_pick_limit", 3))
     visible_picks = all_picks[:pick_limit]
 
-    return {
+    response_payload = {
         "plan": user_plan,
         "picks": visible_picks,
         "picks_total": len(all_picks),
@@ -1141,8 +1179,23 @@ async def scan(request: Request):
         "debug_fetch_counts": sport_fetch_counts,
         "debug_has_api_key": bool(ODDS_API_KEY),
         "quota_remaining": _quota_remaining,
-        "sports_covered": SPORTS,
+        "sports_covered": allowed_sports,
+        "scan_policy": {
+            "min_interval_seconds": min_interval,
+            "cooldown_remaining_seconds": 0,
+            "served_from_cache": False,
+        },
     }
+    _scan_state[user_id] = {
+        "last_scan_ts": now_ts,
+        "last_payload": response_payload,
+        "expires": now_ts + _SCAN_STATE_TTL,
+    }
+    if len(_scan_state) > 5000:
+        expired_keys = [k for k, v in _scan_state.items() if float(v.get("expires", 0)) < now_ts]
+        for k in expired_keys:
+            _scan_state.pop(k, None)
+    return response_payload
 
 
 @app.get("/api/quota")
