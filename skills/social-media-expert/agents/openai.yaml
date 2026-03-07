@@ -1,0 +1,4 @@
+interface:
+  display_name: "Social Media Expert"
+  short_description: "Plan and optimize social growth and engagement"
+  default_prompt: "Use $social-media-expert to build a channel-specific social strategy for this goal."
