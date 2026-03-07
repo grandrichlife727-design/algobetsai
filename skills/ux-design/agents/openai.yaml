@@ -1,0 +1,4 @@
+interface:
+  display_name: "UX Designer"
+  short_description: "Design user-centered product experiences and flows"
+  default_prompt: "Use $ux-design to plan and deliver a user-centered UX solution for this product task."
