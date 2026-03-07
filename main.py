@@ -622,6 +622,25 @@ def _build_referral_status(user_id: str) -> dict[str, Any]:
     }
 
 
+def _latest_cached_scan_payload(user_id: str = "") -> Optional[dict[str, Any]]:
+    # Prefer the caller's last payload, then newest global cached scan payload.
+    if user_id:
+        row = _scan_state.get(user_id)
+        if isinstance(row, dict) and isinstance(row.get("last_payload"), dict):
+            return row.get("last_payload")
+    latest_ts = -1.0
+    latest_payload: Optional[dict[str, Any]] = None
+    for row in _scan_state.values():
+        if not isinstance(row, dict):
+            continue
+        payload = row.get("last_payload")
+        ts = float(row.get("last_scan_ts", 0) or 0)
+        if isinstance(payload, dict) and ts > latest_ts:
+            latest_ts = ts
+            latest_payload = payload
+    return latest_payload
+
+
 def _is_registered_user_id(user_id: str) -> bool:
     uid = (user_id or "").strip().lower()
     if not uid or uid.startswith("guest_"):
@@ -3193,9 +3212,18 @@ async def scan(request: Request):
             detail=f"Please wait {cooldown_remaining}s before the next scan on the {tier.get('name', 'current')} plan.",
         )
     
-    # Check quota
+    # Low-quota mode: serve freshest cached scan payload instead of hard-failing.
     if _quota_remaining < ODDS_MIN_REMAINING_TO_SCAN and ODDS_API_KEY:
-        return {"error": "Low API quota", "quota": _quota_remaining}
+        cached_payload = _latest_cached_scan_payload(user_id)
+        if isinstance(cached_payload, dict):
+            payload = dict(cached_payload)
+            scan_policy = dict(payload.get("scan_policy") or {})
+            scan_policy["served_from_cache"] = True
+            scan_policy["quota_soft_limited"] = True
+            payload["scan_policy"] = scan_policy
+            payload["quota_remaining"] = _quota_remaining
+            payload["quota_soft_limited"] = True
+            return payload
     
     all_picks = []
     all_games = []
@@ -3430,6 +3458,34 @@ async def get_all_games(day_offset: int = 0, limit: int = 400):
     
     # Sort by game time
     all_games.sort(key=lambda x: x.get("game_time", ""))
+    if not all_games:
+        cached_payload = _latest_cached_scan_payload()
+        if isinstance(cached_payload, dict):
+            fallback_games = []
+            for g in (cached_payload.get("games") or []):
+                if not isinstance(g, dict):
+                    continue
+                sport = g.get("sport", "")
+                meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
+                fallback_games.append({
+                    "sport": sport,
+                    "emoji": g.get("emoji") or meta.get("emoji", "🎯"),
+                    "label": g.get("label") or meta.get("label", sport),
+                    "home_team": g.get("home_team"),
+                    "away_team": g.get("away_team"),
+                    "game": f"{g.get('away_team', 'TBD')} @ {g.get('home_team', 'TBD')}",
+                    "game_time": g.get("commence_time"),
+                    "home_ml": g.get("home_ml"),
+                    "away_ml": g.get("away_ml"),
+                    "home_spread": g.get("home_spread"),
+                    "away_spread": g.get("away_spread"),
+                    "total": g.get("total"),
+                    "home_edge": g.get("home_edge", 0),
+                    "away_edge": g.get("away_edge", 0),
+                    "books": g.get("bookmakers", []),
+                })
+            fallback_games.sort(key=lambda x: x.get("game_time", ""))
+            all_games = fallback_games
     safe_limit = max(1, min(int(limit or 400), 1000))
 
     if int(day_offset or 0) != 0:
