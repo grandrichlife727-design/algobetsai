@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content="Algobets AI surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
 <meta name="theme-color" content="#06060a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Algobets AI"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="app-icon.svg"/>
 <title>Algobets AI — Smart Picks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -124,6 +129,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
+@media(max-width:520px){#install-btn{display:inline-flex}}
 @media(max-width:520px){.auth-actions .bill-link{display:inline-flex}}
 @media(max-width:520px){#demo-btn{display:inline-flex}}
 @media(max-width:900px){
@@ -658,6 +664,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
       <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
+      <button class="bill-link" id="install-btn" onclick="installApp()">Install App</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="openAuthModal()">Sign In</button>
@@ -1656,6 +1663,7 @@ let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
+let deferredInstallPrompt = null;
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
@@ -3383,6 +3391,63 @@ function trackEvent(name, props = {}) {
 }
 
 const Api = {get: backendGet, post: backendPost, track: trackEvent};
+
+function isIosDevice() {
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function setupInstallPrompt() {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.textContent = 'Add to Home';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+    showToast('Algobets installed');
+  });
+
+  if (isInStandaloneMode()) {
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+async function installApp() {
+  if (isInStandaloneMode()) {
+    showToast('App already installed');
+    return;
+  }
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    try {
+      await deferredInstallPrompt.userChoice;
+    } catch (_) {}
+    deferredInstallPrompt = null;
+    return;
+  }
+  if (isIosDevice()) {
+    showToast('On iPhone: Share -> Add to Home Screen');
+    return;
+  }
+  showToast('Use browser menu -> Install app');
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (location.protocol !== 'https:' && !isLocal) return;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 
 function normalizePlan(p) {
   const plan = String(p || '').toLowerCase();
@@ -5114,6 +5179,8 @@ loadTrialUiState();
 loadProfile();
 bindUiAccessibility();
 updateDemoToggleUi();
+setupInstallPrompt();
+registerServiceWorker();
 if (demoMode) applyDemoDataset();
 applySavedSelections();
 updateScanCooldownUi();
