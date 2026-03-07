@@ -339,14 +339,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* MOBILE NAV */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+  padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;
-  color:var(--sub);font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
+  color:var(--sub);font-size:9px;font-weight:600;padding:4px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
 .mnav-btn.active{color:var(--cyan)}
-.mnav-btn svg{width:24px;height:24px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
-.mnav-label{font-size:10px;font-weight:700;line-height:1;margin-top:1px}
-@media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
+.mnav-btn svg{width:20px;height:20px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
+.mnav-label{font-size:9px;font-weight:700;line-height:1;margin-top:1px}
+@media(max-width:380px){.mnav-btn svg{width:18px;height:18px}.mnav-label{font-size:8px}}
 .mnav-more-wrap{position:relative}
 .mnav-more-panel{position:absolute;right:4px;bottom:62px;min-width:150px;background:rgba(13,13,18,.98);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 34px rgba(0,0,0,.45);padding:6px;display:none;z-index:260}
 .mnav-more-panel.on{display:block}
@@ -995,6 +995,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
   </button>
+  <button class="mnav-btn" id="mn-live" onclick="go('live')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
+    <span class="mnav-label">Live</span>
+  </button>
   <button class="mnav-btn" id="mn-props" onclick="go('props')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     <span class="mnav-label">Props</span>
@@ -1002,6 +1006,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="mnav-btn" id="mn-ev" onclick="go('ev')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     <span class="mnav-label">+EV</span>
+  </button>
+  <button class="mnav-btn" id="mn-steam" onclick="go('steam')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    <span class="mnav-label">Steam</span>
+  </button>
+  <button class="mnav-btn" id="mn-fades" onclick="go('fades')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    <span class="mnav-label">Fades</span>
   </button>
   <button class="mnav-btn" id="mn-parlay" onclick="go('parlay')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
@@ -1013,9 +1025,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <span class="mnav-label">More</span>
     </button>
     <div class="mnav-more-panel" id="mnav-more-panel">
-      <button class="mnav-more-item" onclick="go('live')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='2'/></svg>Live</button>
-      <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
-      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M7 12h10M10 17h4'/></svg>Fades</button>
       <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
       <button class="mnav-more-item" onclick="go('perf')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Record</button>
       <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
@@ -3795,7 +3804,7 @@ function closeModal(e) {
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['picks','odds','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile'];
-const MOBILE_MORE_TABS = ['live','steam','fades','boost','perf','history','community','profile'];
+const MOBILE_MORE_TABS = ['boost','perf','history','community','profile'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
