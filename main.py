@@ -1727,6 +1727,11 @@ class AlertPackRequest(BaseModel):
     enabled: Optional[bool] = True
 
 
+class TelemetryEventRequest(BaseModel):
+    name: str
+    props: Optional[dict[str, Any]] = None
+
+
 COMMUNITY_POST_WINDOW_SECONDS = 10 * 60
 COMMUNITY_POST_MAX_PER_WINDOW = 3
 COMMUNITY_POST_MAX_PER_DAY = 15
@@ -1845,6 +1850,53 @@ async def privacy_delete_request(request: Request):
         _save_growth_db()
     _audit_security_event(request, "privacy.delete_request", user_id=user_id)
     return {"ok": True, "status": "pending"}
+
+
+@app.post("/api/telemetry/event")
+@limiter.limit("240/minute")
+async def telemetry_event(body: TelemetryEventRequest, request: Request):
+    name = str(body.name or "").strip().lower()[:64]
+    if not re.match(r"^[a-z0-9_\\.-]{2,64}$", name):
+        raise HTTPException(status_code=400, detail="Invalid event name.")
+    props = body.props if isinstance(body.props, dict) else {}
+    user_id = _request_user_id(request) or "guest"
+    plan = await _get_verified_plan(request)
+    events = _growth_db.setdefault("telemetry_events", [])
+    events.append(
+        {
+            "ts": int(time.time()),
+            "name": name,
+            "user_id": str(user_id)[:120],
+            "plan": normalize_plan_name(plan),
+            "ip": _client_ip(request)[:80],
+            "props": {str(k)[:40]: (str(v)[:120] if not isinstance(v, (int, float, bool)) else v) for k, v in props.items()},
+        }
+    )
+    _growth_db["telemetry_events"] = events[-50000:]
+    _save_growth_db()
+    return {"ok": True}
+
+
+@app.get("/api/admin/telemetry/funnel")
+async def admin_telemetry_funnel(request: Request, days: int = 30):
+    _require_admin(request)
+    window_days = max(1, min(int(days or 30), 90))
+    cutoff = int(time.time()) - window_days * 86400
+    rows = [e for e in _growth_db.get("telemetry_events", []) if int(e.get("ts", 0) or 0) >= cutoff]
+    steps = ["app_open", "scan_manual", "auth_nudge_shown", "auth_completed", "checkout_started", "checkout_redirected", "checkout_success"]
+    totals = {s: 0 for s in steps}
+    users_by_step: dict[str, set[str]] = {s: set() for s in steps}
+    for e in rows:
+        n = str(e.get("name", ""))
+        if n in totals:
+            totals[n] += 1
+            uid = str(e.get("user_id", "")).strip()
+            if uid:
+                users_by_step[n].add(uid)
+    unique = {k: len(v) for k, v in users_by_step.items()}
+    base = max(1, unique.get("app_open", 0))
+    conversion = {k: round((unique.get(k, 0) / base) * 100.0, 1) for k in steps}
+    return {"days": window_days, "events": totals, "unique_users": unique, "conversion_pct_from_open": conversion}
 
 
 @app.get("/api/admin/security/events")
