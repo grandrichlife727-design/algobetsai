@@ -190,11 +190,17 @@ async def require_vip_plan(request: Request):
 # CACHE & CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-CACHE_TTL          = 1800   # 30 min — keeps costs low
-CACHE_TTL_PINNACLE = 1800   # 30 min — Pinnacle lines
-CACHE_TTL_INJURIES = 900    # 15 min
+CACHE_TTL          = int(os.getenv("CACHE_TTL", "1800") or 1800)
+CACHE_TTL_PINNACLE = int(os.getenv("CACHE_TTL_PINNACLE", "1800") or 1800)
+CACHE_TTL_INJURIES = int(os.getenv("CACHE_TTL_INJURIES", "900") or 900)
+ODDS_MIN_REMAINING_TO_SCAN = int(os.getenv("ODDS_MIN_REMAINING_TO_SCAN", "10") or 10)
 
 ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
+PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
+PROPS_ENABLED = os.getenv("PROPS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+PROPS_MONTHLY_CREDIT_CAP = int(os.getenv("PROPS_MONTHLY_CREDIT_CAP", "70000") or 70000)
+PROPS_MAX_EVENTS_PER_SPORT = int(os.getenv("PROPS_MAX_EVENTS_PER_SPORT", "4") or 4)
+PROPS_CACHE_TTL = int(os.getenv("PROPS_CACHE_TTL", "1800") or 1800)
 
 _quota_remaining: int = 5000
 _quota_used_last: int = 0
@@ -226,6 +232,11 @@ ODDS_API_SPORT_MAP = {
     "basketball_ncaab": "basketball_ncaab",
     "baseball_mlb": "baseball_mlb",
     "soccer_epl": "soccer_epl",
+}
+
+PROPS_MARKETS_BY_SPORT: dict[str, list[str]] = {
+    "basketball_nba": ["player_points", "player_rebounds"],
+    "americanfootball_nfl": ["player_pass_yds", "player_rush_yds"],
 }
 
 ODDS_BASE = "https://api.the-odds-api.com/v4"
@@ -341,6 +352,10 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     rec.setdefault("community_post_timestamps", [])
     rec.setdefault("alerts", [])
     rec.setdefault("history", [])
+    rec.setdefault("tracked_picks", [])
+    rec.setdefault("streak_rewards_claimed", 0)
+    rec.setdefault("digest", {"enabled": False, "channel": "email", "target": "", "hour_local": 9})
+    rec.setdefault("profile", {"state": "auto", "bankroll_mode": "standard"})
     users[user_id] = rec
     return rec
 
@@ -580,6 +595,7 @@ async def fetch_odds_api_games(sport_key: str) -> list:
             over_under = round(statistics.median(totals), 1) if totals else None
 
             game_data = {
+                "id": game.get("id"),
                 "sport_key": sport_key,
                 "home_team": home_team,
                 "away_team": away_team,
@@ -614,6 +630,357 @@ async def fetch_all_odds_games() -> dict:
         games = await fetch_odds_api_games(sport)
         all_games[sport] = games
     return all_games
+
+
+async def fetch_odds_api_scores(sport_key: str, days_from: int = 3) -> list[dict]:
+    """Fetch completed game scores for settlement."""
+    cache_key = f"scores_{sport_key}_{days_from}"
+    cached = cache_get(cache_key, ttl=900)
+    if cached is not None:
+        return cached
+    if not ODDS_API_KEY:
+        return []
+    odds_sport = ODDS_API_SPORT_MAP.get(sport_key, sport_key)
+    url = f"{ODDS_BASE}/sports/{odds_sport}/scores"
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(
+                url,
+                params={
+                    "apiKey": ODDS_API_KEY,
+                    "daysFrom": max(1, min(int(days_from), 7)),
+                    "dateFormat": "iso",
+                },
+            )
+            if r.status_code >= 400:
+                return []
+            payload = r.json()
+            rows = payload if isinstance(payload, list) else []
+            cache_set(cache_key, rows)
+            return rows
+    except Exception:
+        return []
+
+
+def _props_budget_ok() -> bool:
+    if PROPS_MONTHLY_CREDIT_CAP <= 0:
+        return True
+    used = int(_quota_used_last or 0)
+    if used <= 0:
+        return True
+    return used < PROPS_MONTHLY_CREDIT_CAP
+
+
+def _rotated_markets_for_sport(sport_key: str) -> list[str]:
+    base = list(PROPS_MARKETS_BY_SPORT.get(sport_key, []))
+    if not base:
+        return []
+    # Rotate one primary market per hour to reduce request costs.
+    hour = datetime.utcnow().hour
+    idx = hour % len(base)
+    return [base[idx]]
+
+
+def _current_line_lookup(games: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    lookup: dict[str, dict[str, Any]] = {}
+    for g in games:
+        game_key = f"{g.get('away_team','')} @ {g.get('home_team','')}"
+        lookup[game_key] = {
+            "home_team": g.get("home_team"),
+            "away_team": g.get("away_team"),
+            "home_ml": g.get("home_ml"),
+            "away_ml": g.get("away_ml"),
+            "commence_time": g.get("commence_time"),
+        }
+    return lookup
+
+
+async def fetch_props_lite_for_sport(
+    sport_key: str,
+    max_events: int = PROPS_MAX_EVENTS_PER_SPORT,
+    markets: Optional[list[str]] = None,
+) -> list[dict[str, Any]]:
+    """Budget-safe props pull: only top upcoming events + limited markets/books."""
+    global _quota_remaining, _quota_used_last
+    allowed_markets = markets or _rotated_markets_for_sport(sport_key)
+    if not allowed_markets:
+        return []
+    cache_key = f"props_lite_{sport_key}_{','.join(allowed_markets)}_{max_events}"
+    cached = cache_get(cache_key, ttl=PROPS_CACHE_TTL)
+    if cached is not None:
+        return cached
+    games = await fetch_odds_api_games(sport_key)
+    if not games:
+        return []
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    upcoming = [g for g in games if str(g.get("commence_time") or "") >= now_iso and g.get("id")]
+    upcoming.sort(key=lambda x: x.get("commence_time", ""))
+    chosen = upcoming[: max(1, min(int(max_events), 8))]
+    if not chosen:
+        return []
+    odds_sport = ODDS_API_SPORT_MAP.get(sport_key, sport_key)
+    rows: list[dict[str, Any]] = []
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            for g in chosen:
+                if not _props_budget_ok():
+                    break
+                event_id = g.get("id")
+                if not event_id:
+                    continue
+                url = f"{ODDS_BASE}/sports/{odds_sport}/events/{event_id}/odds"
+                r = await client.get(
+                    url,
+                    params={
+                        "apiKey": ODDS_API_KEY,
+                        "regions": "us",
+                        "markets": ",".join(allowed_markets),
+                        "bookmakers": PROPS_BOOKMAKERS,
+                        "oddsFormat": "american",
+                        "dateFormat": "iso",
+                    },
+                )
+                remaining = r.headers.get("X-Requests-Remaining")
+                used = r.headers.get("X-Requests-Used")
+                if remaining:
+                    _quota_remaining = int(remaining)
+                if used:
+                    _quota_used_last = int(used)
+                if r.status_code >= 400:
+                    continue
+                payload = r.json() if r.content else {}
+                for bm in payload.get("bookmakers", []):
+                    book = bm.get("title", "")
+                    for market in bm.get("markets", []):
+                        mkey = market.get("key", "")
+                        for o in market.get("outcomes", []):
+                            # For props, description typically holds player name.
+                            player = (o.get("description") or o.get("name") or "").strip()
+                            side = (o.get("name") or "").strip()
+                            line = o.get("point")
+                            odds = o.get("price")
+                            if line is None or odds is None:
+                                continue
+                            rows.append(
+                                {
+                                    "sport": SPORT_META.get(sport_key, {}).get("label", sport_key),
+                                    "market": mkey,
+                                    "player": player,
+                                    "side": side,
+                                    "line": line,
+                                    "odds": odds,
+                                    "book": book,
+                                    "game": f"{g.get('away_team','')} @ {g.get('home_team','')}",
+                                    "game_time": g.get("commence_time"),
+                                }
+                            )
+    except Exception:
+        return []
+
+    # Deduplicate by player/market/side/line/game with best price.
+    best_map: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        key = f"{r.get('game')}|{r.get('player')}|{r.get('market')}|{r.get('side')}|{r.get('line')}"
+        prev = best_map.get(key)
+        if not prev or american_to_decimal(int(r.get("odds"))) > american_to_decimal(int(prev.get("odds"))):
+            best_map[key] = r
+    out = list(best_map.values())
+    out.sort(key=lambda x: (x.get("game_time", ""), x.get("player", "")))
+    out = out[:120]
+    cache_set(cache_key, out)
+    return out
+
+
+def _pick_tracking_key(p: dict[str, Any]) -> str:
+    return hashlib.md5(
+        f"{p.get('sport')}|{p.get('game')}|{p.get('bet')}|{p.get('odds')}|{p.get('game_time')}".encode("utf-8")
+    ).hexdigest()[:20]
+
+
+def _american_profit_units(odds: Any) -> float:
+    try:
+        o = int(odds)
+    except Exception:
+        return 0.0
+    if o > 0:
+        return round(o / 100.0, 4)
+    return round(100.0 / abs(o), 4)
+
+
+def _extract_winner_from_score_row(row: dict[str, Any]) -> tuple[Optional[str], bool]:
+    completed = bool(row.get("completed"))
+    scores = row.get("scores") or []
+    if not completed or not isinstance(scores, list) or len(scores) < 2:
+        return None, completed
+    best_team = None
+    best_score = None
+    tie = False
+    for s in scores:
+        team = s.get("name")
+        val_raw = s.get("score")
+        try:
+            val = int(val_raw)
+        except Exception:
+            continue
+        if best_score is None or val > best_score:
+            best_score = val
+            best_team = team
+            tie = False
+        elif val == best_score:
+            tie = True
+    if tie:
+        return None, completed
+    return best_team, completed
+
+
+def _settle_user_tracked_picks(
+    user_rec: dict[str, Any],
+    scores_rows: list[dict[str, Any]],
+    line_lookup: Optional[dict[str, dict[str, Any]]] = None,
+) -> int:
+    tracked = user_rec.setdefault("tracked_picks", [])
+    if not tracked:
+        return 0
+    score_map = {}
+    for row in scores_rows:
+        if not isinstance(row, dict):
+            continue
+        game_key = f"{row.get('away_team','')} @ {row.get('home_team','')}"
+        winner, completed = _extract_winner_from_score_row(row)
+        score_map[game_key] = {"winner": winner, "completed": completed}
+    updated = 0
+    for tp in tracked:
+        if tp.get("status") != "open":
+            continue
+        game = tp.get("game")
+        outcome = score_map.get(game)
+        if not outcome or not outcome.get("completed"):
+            continue
+        line = (line_lookup or {}).get(game) or {}
+        side = str(tp.get("pick_side") or "")
+        if side and line:
+            closing_line = None
+            if side == str(line.get("home_team")):
+                closing_line = line.get("home_ml")
+            elif side == str(line.get("away_team")):
+                closing_line = line.get("away_ml")
+            tp["closing_line"] = closing_line
+        winner = outcome.get("winner")
+        if not winner:
+            tp["status"] = "push"
+            tp["units"] = 0.0
+            tp["settled_ts"] = int(time.time())
+            updated += 1
+            continue
+        bet = str(tp.get("bet", ""))
+        side = side or bet.replace(" ML", "").strip()
+        if side and side == winner:
+            tp["status"] = "win"
+            tp["units"] = _american_profit_units(tp.get("odds"))
+        else:
+            tp["status"] = "loss"
+            tp["units"] = -1.0
+        tp["settled_ts"] = int(time.time())
+        updated += 1
+    if len(tracked) > 700:
+        user_rec["tracked_picks"] = tracked[-700:]
+    return updated
+
+
+def _performance_summary(user_rec: dict[str, Any]) -> dict[str, Any]:
+    rows = list(user_rec.get("tracked_picks", []))
+    settled = [r for r in rows if r.get("status") in {"win", "loss", "push"}]
+    wins = sum(1 for r in settled if r.get("status") == "win")
+    losses = sum(1 for r in settled if r.get("status") == "loss")
+    pushes = sum(1 for r in settled if r.get("status") == "push")
+    graded = wins + losses + pushes
+    units = round(sum(float(r.get("units", 0.0) or 0.0) for r in settled), 2)
+    risked = max(1.0, float(sum(1.0 for r in settled if r.get("status") in {"win", "loss"})))
+    win_pct = round((wins / max(1, wins + losses)) * 100.0, 1)
+    roi_pct = round((units / risked) * 100.0, 1)
+    month_rollup: dict[str, float] = {}
+    for r in settled:
+        ts = int(r.get("settled_ts") or r.get("ts") or 0)
+        if ts <= 0:
+            continue
+        key = datetime.utcfromtimestamp(ts).strftime("%Y-%m")
+        month_rollup[key] = month_rollup.get(key, 0.0) + float(r.get("units", 0.0) or 0.0)
+    months = sorted(month_rollup.keys())[-6:]
+    monthly = [{"month": m, "units": round(month_rollup[m], 2)} for m in months]
+    avg_ev = round(
+        sum(float(r.get("ev", 0.0) or 0.0) for r in settled) / max(1, len(settled)),
+        2,
+    )
+    receipts = sorted(
+        [
+            {
+                "ts": int(r.get("settled_ts") or r.get("ts") or 0),
+                "game": r.get("game"),
+                "bet": r.get("bet"),
+                "odds": r.get("odds"),
+                "line_at_pick": r.get("line_at_pick"),
+                "closing_line": r.get("closing_line"),
+                "status": r.get("status"),
+                "units": round(float(r.get("units", 0.0) or 0.0), 2),
+                "ev": r.get("ev"),
+            }
+            for r in settled
+        ],
+        key=lambda x: x.get("ts", 0),
+        reverse=True,
+    )[:40]
+    return {
+        "graded_picks": graded,
+        "wins": wins,
+        "losses": losses,
+        "pushes": pushes,
+        "win_pct": win_pct,
+        "units": units,
+        "roi_pct": roi_pct,
+        "avg_ev": avg_ev,
+        "open_picks": sum(1 for r in rows if r.get("status") == "open"),
+        "monthly_units": monthly,
+        "receipts": receipts,
+    }
+
+
+def _scan_streak_status(user_rec: dict[str, Any]) -> dict[str, Any]:
+    history = list(user_rec.get("history", []))
+    if not history:
+        return {"current_days": 0, "best_days": 0, "next_reward_at": 5, "rewards_claimed": 0, "eligible_reward": False}
+    days = sorted(
+        set(datetime.utcfromtimestamp(int(h.get("ts", 0))).strftime("%Y-%m-%d") for h in history if int(h.get("ts", 0)) > 0),
+        reverse=True,
+    )
+    if not days:
+        return {"current_days": 0, "best_days": 0, "next_reward_at": 5, "rewards_claimed": 0, "eligible_reward": False}
+    current = 1
+    for i in range(1, len(days)):
+        d_prev = datetime.strptime(days[i - 1], "%Y-%m-%d")
+        d_cur = datetime.strptime(days[i], "%Y-%m-%d")
+        if (d_prev - d_cur).days == 1:
+            current += 1
+        else:
+            break
+    best = 1
+    run = 1
+    for i in range(1, len(days)):
+        d_prev = datetime.strptime(days[i - 1], "%Y-%m-%d")
+        d_cur = datetime.strptime(days[i], "%Y-%m-%d")
+        if (d_prev - d_cur).days == 1:
+            run += 1
+            best = max(best, run)
+        else:
+            run = 1
+    claimed = int(user_rec.get("streak_rewards_claimed", 0) or 0)
+    next_reward_at = (claimed + 1) * 5
+    return {
+        "current_days": current,
+        "best_days": best,
+        "next_reward_at": next_reward_at,
+        "rewards_claimed": claimed,
+        "eligible_reward": current >= next_reward_at,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1025,6 +1392,23 @@ class CommunityPostRequest(BaseModel):
     sport: Optional[str] = ""
 
 
+class DigestSubscribeRequest(BaseModel):
+    enabled: Optional[bool] = True
+    channel: Optional[str] = "email"
+    target: Optional[str] = ""
+    hour_local: Optional[int] = 9
+
+
+class WaitlistJoinRequest(BaseModel):
+    email: str
+    source: Optional[str] = "props_cap"
+
+
+class ProfileSettingsRequest(BaseModel):
+    state: Optional[str] = "auto"
+    bankroll_mode: Optional[str] = "standard"
+
+
 COMMUNITY_POST_WINDOW_SECONDS = 10 * 60
 COMMUNITY_POST_MAX_PER_WINDOW = 3
 COMMUNITY_POST_MAX_PER_DAY = 15
@@ -1210,6 +1594,40 @@ async def trial_status(request: Request):
     }
 
 
+@app.get("/api/profile/settings")
+async def profile_settings_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    p = rec.get("profile", {}) if isinstance(rec.get("profile"), dict) else {}
+    return {
+        "settings": {
+            "state": str(p.get("state", "auto")),
+            "bankroll_mode": str(p.get("bankroll_mode", "standard")),
+        }
+    }
+
+
+@app.post("/api/profile/settings")
+async def profile_settings_set(body: ProfileSettingsRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    state = str(body.state or "auto").strip().upper()
+    if state == "AUTO":
+        state = "auto"
+    if state != "auto" and (len(state) != 2 or not state.isalpha()):
+        raise HTTPException(status_code=400, detail="state must be 'auto' or 2-letter code.")
+    mode = str(body.bankroll_mode or "standard").strip().lower()
+    if mode not in {"conservative", "standard", "aggressive"}:
+        raise HTTPException(status_code=400, detail="bankroll_mode must be conservative/standard/aggressive.")
+    rec["profile"] = {"state": state, "bankroll_mode": mode}
+    _save_growth_db()
+    return {"ok": True, "settings": rec["profile"]}
+
+
 @app.post("/api/trial/start")
 async def trial_start(request: Request):
     user_id = _request_user_id(request)
@@ -1386,6 +1804,172 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
     return {"ok": True, "post": post}
 
 
+@app.get("/api/community/leaderboard")
+async def community_leaderboard(limit: int = 20):
+    posts = list(_growth_db.get("community_posts", []))
+    posts.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    scores: dict[str, dict[str, Any]] = {}
+    daily_caps: dict[str, int] = {}
+    seen_user_game_day: set[str] = set()
+    for p in posts:
+        if not p.get("verified"):
+            continue
+        user = str(p.get("user") or "anon")
+        mode = str(p.get("mode") or "pick")
+        game = str(p.get("game") or "")
+        day = datetime.utcfromtimestamp(int(p.get("ts", 0) or 0)).strftime("%Y-%m-%d")
+        dedupe_key = f"{user}|{game}|{day}|{mode}"
+        if dedupe_key in seen_user_game_day:
+            continue
+        seen_user_game_day.add(dedupe_key)
+        cap_key = f"{user}|{day}|{mode}"
+        daily_caps.setdefault(cap_key, 0)
+        if daily_caps[cap_key] >= 3:
+            continue
+        daily_caps[cap_key] += 1
+        row = scores.setdefault(user, {"user": user, "wins": 0, "picks": 0, "score": 0.0, "ev_sum": 0.0, "ev_count": 0})
+        if mode == "win":
+            row["wins"] += 1
+            row["score"] += 2.0
+        else:
+            row["picks"] += 1
+            row["score"] += 1.0
+        if p.get("ev") is not None:
+            try:
+                row["ev_sum"] += float(p.get("ev"))
+                row["ev_count"] += 1
+            except Exception:
+                pass
+    rows = []
+    for r in scores.values():
+        avg_ev = (r["ev_sum"] / r["ev_count"]) if r["ev_count"] > 0 else 0.0
+        weighted = r["score"] + max(0.0, avg_ev) * 0.08
+        rows.append(
+            {
+                "user": r["user"],
+                "wins": r["wins"],
+                "picks": r["picks"],
+                "avg_ev": round(avg_ev, 2),
+                "score": round(weighted, 2),
+            }
+        )
+    rows.sort(key=lambda x: (x.get("score", 0.0), x.get("wins", 0)), reverse=True)
+    safe_limit = max(1, min(int(limit or 20), 50))
+    return {"leaders": rows[:safe_limit], "count": len(rows)}
+
+
+@app.get("/api/digest/subscription")
+async def digest_subscription_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"digest": rec.get("digest", {"enabled": False, "channel": "email", "target": "", "hour_local": 9})}
+
+
+@app.post("/api/digest/subscription")
+async def digest_subscription_set(body: DigestSubscribeRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    if not _is_registered_user_id(user_id):
+        raise HTTPException(status_code=403, detail="Sign in is required.")
+    channel = (body.channel or "email").strip().lower()
+    if channel not in {"email", "sms"}:
+        raise HTTPException(status_code=400, detail="channel must be 'email' or 'sms'.")
+    target = (body.target or "").strip()
+    hour_local = max(0, min(int(body.hour_local if body.hour_local is not None else 9), 23))
+    rec = _ensure_growth_user(user_id)
+    rec["digest"] = {
+        "enabled": bool(body.enabled),
+        "channel": channel,
+        "target": target,
+        "hour_local": hour_local,
+        "updated_at": int(time.time()),
+    }
+    _save_growth_db()
+    return {"ok": True, "digest": rec["digest"]}
+
+
+@app.get("/api/digest/preview")
+async def digest_preview(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    history = list(rec.get("history", []))
+    history.sort(key=lambda x: x.get("ts", 0), reverse=True)
+    top: list[dict[str, Any]] = []
+    if history:
+        top = list(history[0].get("top_picks", []))[:3]
+    streak = _scan_streak_status(rec)
+    now = datetime.now()
+    slots = [9, 13, 18]
+    next_slot = None
+    for h in slots:
+        if now.hour < h:
+            next_slot = h
+            break
+    if next_slot is None:
+        next_slot = slots[0]
+    return {
+        "preview": {
+            "headline": "Today’s Top Edges",
+            "top_picks": top,
+            "streak": streak.get("current_days", 0),
+            "send_slots_local": slots,
+            "next_slot_local_hour": next_slot,
+        }
+    }
+
+
+@app.get("/api/streak/status")
+async def streak_status(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    return {"streak": _scan_streak_status(rec)}
+
+
+@app.post("/api/streak/claim")
+async def streak_claim(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    streak = _scan_streak_status(rec)
+    if not streak.get("eligible_reward"):
+        raise HTTPException(status_code=400, detail="No streak reward available yet.")
+    now = time.time()
+    rec["streak_rewards_claimed"] = int(rec.get("streak_rewards_claimed", 0) or 0) + 1
+    # Reward: +24h Premium trial extension.
+    rec["trial_until"] = max(float(rec.get("trial_until", 0) or 0), now) + (24 * 3600)
+    _save_growth_db()
+    _invalidate_plan_cache(user_id)
+    return {"ok": True, "granted_hours": 24, "streak": _scan_streak_status(rec)}
+
+
+@app.post("/api/waitlist/join")
+async def waitlist_join(body: WaitlistJoinRequest, request: Request):
+    email = (body.email or "").strip().lower()
+    if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+        raise HTTPException(status_code=400, detail="Valid email is required.")
+    source = (body.source or "props_cap").strip()[:48]
+    waitlist = _growth_db.setdefault("waitlist", [])
+    if not any(str(x.get("email", "")).lower() == email for x in waitlist if isinstance(x, dict)):
+        waitlist.append({"email": email, "source": source, "ts": int(time.time())})
+        _growth_db["waitlist"] = waitlist[-5000:]
+        _save_growth_db()
+    user_id = _request_user_id(request)
+    if user_id:
+        rec = _ensure_growth_user(user_id)
+        rec.setdefault("waitlist", []).append({"email": email, "source": source, "ts": int(time.time())})
+        rec["waitlist"] = rec["waitlist"][-50:]
+        _save_growth_db()
+    return {"ok": True}
+
+
 @app.post("/api/billing/checkout")
 async def billing_checkout(body: CheckoutRequest, request: Request):
     if not STRIPE_SECRET:
@@ -1533,7 +2117,7 @@ async def scan(request: Request):
         )
     
     # Check quota
-    if _quota_remaining < 10 and ODDS_API_KEY:
+    if _quota_remaining < ODDS_MIN_REMAINING_TO_SCAN and ODDS_API_KEY:
         return {"error": "Low API quota", "quota": _quota_remaining}
     
     all_picks = []
@@ -1576,6 +2160,7 @@ async def scan(request: Request):
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
+    line_lookup = _current_line_lookup(all_games)
     
     pick_limit = int(tier.get("scan_pick_limit", 3))
     visible_picks = all_picks[:pick_limit]
@@ -1624,6 +2209,47 @@ async def scan(request: Request):
     history.append(history_row)
     if len(history) > 120:
         user_growth["history"] = history[-120:]
+
+    # Track visible picks for grading/ROI.
+    tracked = user_growth.setdefault("tracked_picks", [])
+    existing_keys = {tp.get("key") for tp in tracked}
+    for p in visible_picks:
+        bet_text = str(p.get("bet") or "")
+        pick_side = bet_text.replace(" ML", "").strip()
+        tp = {
+            "key": _pick_tracking_key(p),
+            "ts": int(now_ts),
+            "sport": p.get("sport"),
+            "game": p.get("game"),
+            "bet": p.get("bet"),
+            "odds": p.get("odds"),
+            "line_at_pick": p.get("odds"),
+            "closing_line": None,
+            "pick_side": pick_side,
+            "ev": p.get("ev"),
+            "status": "open",
+            "units": 0.0,
+            "game_time": p.get("game_time"),
+        }
+        if tp["key"] not in existing_keys:
+            tracked.append(tp)
+            existing_keys.add(tp["key"])
+    if len(tracked) > 700:
+        user_growth["tracked_picks"] = tracked[-700:]
+
+    # Auto-settle completed picks using recent scores.
+    scores_rows: list[dict[str, Any]] = []
+    for sport in set(allowed_sports):
+        try:
+            scores_rows.extend(await fetch_odds_api_scores(sport, days_from=3))
+        except Exception:
+            continue
+    _settle_user_tracked_picks(user_growth, scores_rows, line_lookup=line_lookup)
+
+    # Attach live performance + streak for richer UI.
+    response_payload["performance"] = _performance_summary(user_growth)
+    response_payload["streak"] = _scan_streak_status(user_growth)
+
     _save_growth_db()
 
     _scan_state[user_id] = {
@@ -1641,11 +2267,18 @@ async def scan(request: Request):
 @app.get("/api/quota")
 async def get_quota():
     """Get API quota status."""
+    used = int(_quota_used_last or 0)
+    cap = int(PROPS_MONTHLY_CREDIT_CAP or 0)
+    pct = round((used / cap) * 100.0, 1) if cap > 0 and used > 0 else 0.0
     return {
         "quota_remaining": _quota_remaining,
         "quota_used_last": _quota_used_last,
         "data_source": "The Odds API" if ODDS_API_KEY else "Not configured",
         "cache_ttl_seconds": CACHE_TTL,
+        "props_monthly_credit_cap": cap,
+        "props_budget_used_pct": pct,
+        "props_budget_within_limit": _props_budget_ok(),
+        "props_enabled": PROPS_ENABLED,
     }
 
 
@@ -1733,6 +2366,38 @@ async def get_sport_odds(sport: str):
     }
 
 
+@app.get("/api/props")
+async def props_lite(
+    request: Request,
+    sport: str = "basketball_nba",
+):
+    user_plan = await _get_verified_plan(request)
+    if plan_rank(user_plan) < plan_rank(PLAN_PREMIUM):
+        raise HTTPException(status_code=403, detail="Upgrade to Premium to access Props.")
+    if not PROPS_ENABLED:
+        raise HTTPException(status_code=503, detail="Props are temporarily disabled.")
+    if sport not in PROPS_MARKETS_BY_SPORT:
+        raise HTTPException(status_code=400, detail="Props currently supported for NBA and NFL.")
+    if not _props_budget_ok():
+        raise HTTPException(status_code=402, detail="Props budget limit reached for this month.")
+    rows = await fetch_props_lite_for_sport(
+        sport_key=sport,
+        max_events=PROPS_MAX_EVENTS_PER_SPORT,
+        markets=PROPS_MARKETS_BY_SPORT.get(sport, []),
+    )
+    return {
+        "sport": sport,
+        "props": rows,
+        "count": len(rows),
+        "budget": {
+            "monthly_credit_cap": PROPS_MONTHLY_CREDIT_CAP,
+            "quota_used_last": _quota_used_last,
+            "quota_remaining": _quota_remaining,
+            "within_budget": _props_budget_ok(),
+        },
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # LEGACY ENDPOINTS (kept for compatibility)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1744,11 +2409,26 @@ async def injuries():
 
 
 @app.get("/api/performance")
-async def performance():
-    """Placeholder - would need DB setup."""
+async def performance(request: Request, settle: bool = True):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    if settle:
+        scores_rows: list[dict[str, Any]] = []
+        latest_line_lookup: dict[str, dict[str, Any]] = {}
+        for sport in SPORTS:
+            try:
+                scores_rows.extend(await fetch_odds_api_scores(sport, days_from=3))
+                games = await fetch_odds_api_games(sport)
+                latest_line_lookup.update(_current_line_lookup(games))
+            except Exception:
+                continue
+        _settle_user_tracked_picks(rec, scores_rows, line_lookup=latest_line_lookup)
+        _save_growth_db()
     return {
-        "note": "Performance tracking coming in v5.1",
-        "overall": {"total_picks": 0, "wins": 0, "win_pct": 0}
+        "overall": _performance_summary(rec),
+        "streak": _scan_streak_status(rec),
     }
 
 
