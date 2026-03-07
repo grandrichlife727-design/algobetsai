@@ -61,10 +61,10 @@ html, body {
 .sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
 @media(max-width:900px){.sidebar{display:none}}
 .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
-.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-mark svg{width:16px;height:16px}
-.logo-text{font-size:15px;font-weight:700;letter-spacing:-.4px}
-.logo-text b{color:var(--cyan)}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#19d4ff,#00b6d9);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px rgba(0,212,255,.25)}
+.logo-mark svg{width:20px;height:20px}
+.logo-text{font-size:14px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--text)}
+.logo-text b{color:#8deaff;font-weight:800}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
 .nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -86,8 +86,19 @@ html, body {
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(7,10,16,.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{font-size:20px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
-.topbar-logo span{color:var(--cyan)}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+.topbar-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(145deg,#19d4ff,#00b6d9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,212,255,.2)}
+.topbar-mark svg{width:14px;height:14px}
+.topbar-logo .word-a{color:var(--text)}
+.topbar-logo .word-b{color:var(--cyan)}
+body[data-logo="minimal"] .logo-mark,
+body[data-logo="minimal"] .topbar-mark{background:transparent;border:1px solid var(--border2);box-shadow:none}
+body[data-logo="minimal"] .logo-text b,
+body[data-logo="minimal"] .topbar-logo .word-b{color:var(--text)}
+body[data-logo="sportsbook"] .logo-mark,
+body[data-logo="sportsbook"] .topbar-mark{background:linear-gradient(145deg,#1de08c,#8bf45e);box-shadow:0 6px 16px rgba(29,224,140,.24)}
+body[data-logo="sportsbook"] .logo-text b,
+body[data-logo="sportsbook"] .topbar-logo .word-b{color:#9bf98a}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -398,9 +409,13 @@ html, body {
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 17l5-5 4 3 7-8"/>
+        <path d="M16 7h4v4"/>
+        <path d="M4 20h16"/>
+      </svg>
     </div>
-    <div class="logo-text">Algo<b>bets AI</b></div>
+    <div class="logo-text">Algo <b>Bets AI</b></div>
   </div>
   <span class="nav-section">Picks</span>
   <button class="nav-item active" onclick="go('picks')">
@@ -464,7 +479,16 @@ html, body {
 
 <main class="main">
   <div class="topbar">
-    <div class="topbar-logo">Algo<span>bets AI</span></div>
+    <div class="topbar-logo">
+      <span class="topbar-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00121a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17l5-5 4 3 7-8"/>
+          <path d="M16 7h4v4"/>
+          <path d="M4 20h16"/>
+        </svg>
+      </span>
+      <span class="word-a">ALGO</span><span class="word-b">BETS AI</span>
+    </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
       <div class="api-status">
