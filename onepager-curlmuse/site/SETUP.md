@@ -13,6 +13,10 @@ In `index.html`, replace:
 - `REPLACE_DOUBLE`
 - `REPLACE_TRIPLE`
 
+## Video block
+- The page now includes an embedded demo video.
+- To replace it with your own UGC, swap the iframe `src` in `index.html` under \"See CurlMuse in action\".
+
 ## Local preview
 ```bash
 cd /Users/fortunefavors/Documents/GitHub/algobetsai/onepager-curlmuse
