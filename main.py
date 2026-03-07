@@ -34,7 +34,7 @@ import stripe
 import numpy as np
 import statistics
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Any
 from contextlib import contextmanager
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
@@ -208,6 +208,11 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def _startup():
+    init_db()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISK-BACKED CACHE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -250,6 +255,152 @@ def cache_age_seconds(key: str) -> int:
         except Exception:
             return -1
     return int(time.time() - entry["ts"])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RESULT TRACKING / CALIBRATION STORE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+MODEL_VERSION = "v6_consensus_ensemble"
+LEGACY_MODEL_VERSION = "v5_legacy_edge"
+
+
+@contextmanager
+def db_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def init_db():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with db_conn() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS picks_history (
+                id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                model_version TEXT NOT NULL,
+                sport TEXT NOT NULL,
+                game TEXT NOT NULL,
+                bet TEXT NOT NULL,
+                bet_type TEXT NOT NULL,
+                odds INTEGER,
+                edge REAL,
+                confidence_raw REAL,
+                confidence_cal REAL,
+                fair_prob REAL,
+                implied_prob REAL,
+                best_book TEXT,
+                books_compared INTEGER,
+                market_disagreement REAL,
+                result TEXT,
+                settled_at TEXT
+            )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_picks_model_result ON picks_history(model_version, result)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_picks_created_at ON picks_history(created_at)")
+
+
+class SettlePickRequest(BaseModel):
+    pick_id: str
+    result: str  # "win" or "loss" or "push"
+
+
+def _clean_result(result: str) -> str:
+    v = (result or "").strip().lower()
+    if v not in {"win", "loss", "push"}:
+        raise HTTPException(status_code=400, detail="result must be win, loss, or push")
+    return v
+
+
+def save_generated_picks(picks: list[dict], model_version: str = MODEL_VERSION):
+    if not picks:
+        return
+    now_iso = datetime.utcnow().isoformat()
+    with db_conn() as conn:
+        for p in picks:
+            conn.execute("""
+                INSERT OR IGNORE INTO picks_history (
+                    id, created_at, model_version, sport, game, bet, bet_type, odds, edge,
+                    confidence_raw, confidence_cal, fair_prob, implied_prob, best_book,
+                    books_compared, market_disagreement, result, settled_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+            """, (
+                p.get("id"),
+                now_iso,
+                model_version,
+                p.get("sport", ""),
+                p.get("game", ""),
+                p.get("bet", ""),
+                p.get("bet_type", "moneyline"),
+                p.get("odds"),
+                p.get("edge"),
+                p.get("confidence_raw", p.get("confidence")),
+                p.get("confidence"),
+                p.get("fair_prob"),
+                p.get("implied_prob"),
+                p.get("best_book"),
+                p.get("books_compared"),
+                p.get("market_disagreement"),
+            ))
+
+
+def calibration_snapshot(model_version: str = MODEL_VERSION) -> dict:
+    """
+    Reliability snapshot from settled picks.
+    Bins confidence into 10-point buckets and returns empirical hit rates.
+    """
+    with db_conn() as conn:
+        rows = conn.execute("""
+            SELECT confidence_raw, result
+            FROM picks_history
+            WHERE model_version = ?
+              AND result IN ('win', 'loss')
+              AND confidence_raw IS NOT NULL
+        """, (model_version,)).fetchall()
+
+    if len(rows) < 30:
+        return {"count": len(rows), "bins": {}, "default_shrink": 0.35}
+
+    bins: dict[int, dict[str, float]] = {}
+    for r in rows:
+        conf = float(r["confidence_raw"])
+        b = int(max(50, min(99, conf)) // 10) * 10
+        bins.setdefault(b, {"n": 0, "w": 0})
+        bins[b]["n"] += 1
+        bins[b]["w"] += 1 if r["result"] == "win" else 0
+
+    # Convert to empirical probabilities.
+    for b in bins:
+        bins[b]["p_emp"] = bins[b]["w"] / bins[b]["n"] if bins[b]["n"] else 0.5
+    return {"count": len(rows), "bins": bins, "default_shrink": 0.35}
+
+
+def calibrated_confidence(raw_conf: float, model_version: str = MODEL_VERSION) -> float:
+    """
+    Blend model confidence with empirical reliability (if enough settled history).
+    """
+    snap = calibration_snapshot(model_version)
+    raw_p = max(0.50, min(0.99, raw_conf / 100.0))
+    bins = snap.get("bins", {})
+    if not bins:
+        return raw_p * 100.0
+
+    b = int(max(50, min(99, raw_conf)) // 10) * 10
+    bucket = bins.get(b)
+    if not bucket:
+        return raw_p * 100.0
+
+    p_emp = float(bucket.get("p_emp", raw_p))
+    n = float(bucket.get("n", 0))
+    # More samples -> trust empirical more.
+    w_emp = min(0.8, n / 120.0)
+    p_cal = (1 - w_emp) * raw_p + w_emp * p_emp
+    return max(50.0, min(99.0, p_cal * 100.0))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -341,7 +492,11 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                 bm_away_ml = None
                 bm_home_spread = None
                 bm_away_spread = None
+                bm_home_spread_price = None
+                bm_away_spread_price = None
                 bm_total = None
+                bm_over_price = None
+                bm_under_price = None
 
                 for market in bm.get("markets", []):
                     outcomes = market.get("outcomes", [])
@@ -357,18 +512,32 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                         elif market.get("key") == "spreads":
                             if name == home_team:
                                 bm_home_spread = outcome.get("point")
+                                bm_home_spread_price = price
                             elif name == away_team:
                                 bm_away_spread = outcome.get("point")
+                                bm_away_spread_price = price
                         elif market.get("key") == "totals":
                             if outcome.get("name") == "Over":
                                 bm_total = outcome.get("point")
+                                bm_over_price = price
+                            elif outcome.get("name") == "Under":
+                                bm_under_price = price
 
                 if bm_home_ml is not None and bm_away_ml is not None:
                     moneyline_by_book[bm_name] = {"home": bm_home_ml, "away": bm_away_ml}
-                if bm_home_spread is not None and bm_away_spread is not None:
-                    spreads_by_book[bm_name] = {"home": bm_home_spread, "away": bm_away_spread}
-                if bm_total is not None:
-                    totals_by_book[bm_name] = bm_total
+                if bm_home_spread is not None and bm_away_spread is not None and bm_home_spread_price is not None and bm_away_spread_price is not None:
+                    spreads_by_book[bm_name] = {
+                        "home_point": bm_home_spread,
+                        "away_point": bm_away_spread,
+                        "home_price": bm_home_spread_price,
+                        "away_price": bm_away_spread_price,
+                    }
+                if bm_total is not None and bm_over_price is not None and bm_under_price is not None:
+                    totals_by_book[bm_name] = {
+                        "point": bm_total,
+                        "over_price": bm_over_price,
+                        "under_price": bm_under_price,
+                    }
 
             # Default view fields used by existing consumers.
             home_lines = [v["home"] for v in moneyline_by_book.values()]
@@ -382,9 +551,9 @@ async def fetch_odds_api_games(sport_key: str) -> list:
 
             home_ml = best_home_book[1]["home"]
             away_ml = best_away_book[1]["away"]
-            home_spreads = [v["home"] for v in spreads_by_book.values()]
-            away_spreads = [v["away"] for v in spreads_by_book.values()]
-            totals = list(totals_by_book.values())
+            home_spreads = [v["home_point"] for v in spreads_by_book.values()]
+            away_spreads = [v["away_point"] for v in spreads_by_book.values()]
+            totals = [v["point"] for v in totals_by_book.values()]
             home_spread = round(statistics.median(home_spreads), 1) if home_spreads else None
             away_spread = round(statistics.median(away_spreads), 1) if away_spreads else None
             over_under = round(statistics.median(totals), 1) if totals else None
@@ -401,6 +570,8 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                 "total": over_under,
                 "bookmakers": list(moneyline_by_book.keys()),
                 "moneyline_by_book": moneyline_by_book,
+                "spreads_by_book": spreads_by_book,
+                "totals_by_book": totals_by_book,
                 "best_home_book": best_home_book[0],
                 "best_away_book": best_away_book[0],
             }
@@ -501,18 +672,9 @@ def devig_two_way_probabilities(home_odds: int, away_odds: int) -> tuple[float, 
     return p_home / denom, p_away / denom
 
 
-def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
-    """
-    Build fair probability from all available books using de-vigged two-way prices.
-    Returns (home_prob, away_prob, diagnostics).
-    """
-    by_book = game.get("moneyline_by_book") or {}
-    if not by_book:
-        # Fallback from best lines only.
-        return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
-
-    # Slightly favor sharper books when available.
-    sharp_weights = {
+def sharp_weight_for_book(book_name: str) -> float:
+    key = (book_name or "").lower()
+    weights = {
         "pinnacle": 1.30,
         "circa": 1.20,
         "betfair": 1.15,
@@ -523,6 +685,21 @@ def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
         "william hill": 0.95,
         "bovada": 0.90,
     }
+    for k, v in weights.items():
+        if k in key:
+            return v
+    return 1.0
+
+
+def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
+    """
+    Build fair probability from all available books using de-vigged two-way prices.
+    Returns (home_prob, away_prob, diagnostics).
+    """
+    by_book = game.get("moneyline_by_book") or {}
+    if not by_book:
+        # Fallback from best lines only.
+        return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
 
     weighted_home = []
     weighted_away = []
@@ -532,12 +709,7 @@ def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
         if home_o is None or away_o is None:
             continue
         h, a = devig_two_way_probabilities(home_o, away_o)
-        key = book.lower()
-        w = 1.0
-        for k, v in sharp_weights.items():
-            if k in key:
-                w = v
-                break
+        w = sharp_weight_for_book(book)
         weighted_home.extend([h] * max(1, int(round(w * 10))))
         weighted_away.extend([a] * max(1, int(round(w * 10))))
 
@@ -575,6 +747,138 @@ def best_two_way_lines(game: dict) -> dict:
         "home_book": best_home_book,
         "away_book": best_away_book,
         "books_count": len(by_book),
+    }
+
+
+def market_consensus_spread(game: dict) -> Optional[dict]:
+    """
+    Consensus fair probabilities for spread market around median point.
+    """
+    by_book = game.get("spreads_by_book") or {}
+    if len(by_book) < 2:
+        return None
+
+    points = [v["home_point"] for v in by_book.values() if v.get("home_point") is not None]
+    if not points:
+        return None
+    target_point = round(statistics.median(points), 1)
+
+    home_probs = []
+    away_probs = []
+    for book, v in by_book.items():
+        hp = v.get("home_price")
+        ap = v.get("away_price")
+        pt = v.get("home_point")
+        if hp is None or ap is None or pt is None:
+            continue
+        if abs(float(pt) - target_point) > 0.5:
+            continue
+        h, a = devig_two_way_probabilities(hp, ap)
+        w = sharp_weight_for_book(book)
+        home_probs.extend([h] * max(1, int(round(w * 10))))
+        away_probs.extend([a] * max(1, int(round(w * 10))))
+
+    if not home_probs:
+        return None
+    home_prob = statistics.median(home_probs)
+    return {
+        "point": target_point,
+        "home_prob": home_prob,
+        "away_prob": 1.0 - home_prob,
+        "books_count": len(by_book),
+        "disagreement": max(home_probs) - min(home_probs),
+    }
+
+
+def best_spread_prices(game: dict, target_point: float) -> Optional[dict]:
+    by_book = game.get("spreads_by_book") or {}
+    home_candidates = []
+    away_candidates = []
+    for book, v in by_book.items():
+        pt = v.get("home_point")
+        if pt is None or abs(float(pt) - target_point) > 0.5:
+            continue
+        hp = v.get("home_price")
+        ap = v.get("away_price")
+        if hp is not None:
+            home_candidates.append((book, hp))
+        if ap is not None:
+            away_candidates.append((book, ap))
+    if not home_candidates or not away_candidates:
+        return None
+    home_book, home_odds = max(home_candidates, key=lambda x: american_to_decimal(x[1]))
+    away_book, away_odds = max(away_candidates, key=lambda x: american_to_decimal(x[1]))
+    return {
+        "home_book": home_book,
+        "home_odds": home_odds,
+        "away_book": away_book,
+        "away_odds": away_odds,
+    }
+
+
+def market_consensus_total(game: dict) -> Optional[dict]:
+    """
+    Consensus fair probabilities for totals market around median total.
+    """
+    by_book = game.get("totals_by_book") or {}
+    if len(by_book) < 2:
+        return None
+
+    points = [v["point"] for v in by_book.values() if v.get("point") is not None]
+    if not points:
+        return None
+    target_total = round(statistics.median(points), 1)
+
+    over_probs = []
+    under_probs = []
+    for book, v in by_book.items():
+        op = v.get("over_price")
+        up = v.get("under_price")
+        pt = v.get("point")
+        if op is None or up is None or pt is None:
+            continue
+        if abs(float(pt) - target_total) > 0.5:
+            continue
+        over_p, under_p = devig_two_way_probabilities(op, up)
+        w = sharp_weight_for_book(book)
+        over_probs.extend([over_p] * max(1, int(round(w * 10))))
+        under_probs.extend([under_p] * max(1, int(round(w * 10))))
+
+    if not over_probs:
+        return None
+    over_prob = statistics.median(over_probs)
+    return {
+        "point": target_total,
+        "over_prob": over_prob,
+        "under_prob": 1.0 - over_prob,
+        "books_count": len(by_book),
+        "disagreement": max(over_probs) - min(over_probs),
+    }
+
+
+def best_total_prices(game: dict, target_total: float) -> Optional[dict]:
+    by_book = game.get("totals_by_book") or {}
+    over_candidates = []
+    under_candidates = []
+    for book, v in by_book.items():
+        pt = v.get("point")
+        if pt is None or abs(float(pt) - target_total) > 0.5:
+            continue
+        op = v.get("over_price")
+        up = v.get("under_price")
+        if op is not None:
+            over_candidates.append((book, op))
+        if up is not None:
+            under_candidates.append((book, up))
+    if not over_candidates or not under_candidates:
+        return None
+    over_book, over_odds = max(over_candidates, key=lambda x: american_to_decimal(x[1]))
+    under_book, under_odds = max(under_candidates, key=lambda x: american_to_decimal(x[1]))
+    return {
+        "over_book": over_book,
+        "over_odds": over_odds,
+        "under_book": under_book,
+        "under_odds": under_odds,
     }
 
 
@@ -647,14 +951,15 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         # Confidence = function(edge, #books, consensus tightness)
         books_boost = min(12.0, (diag.get("books_count", 1) - 1) * 2.0)
         uncertainty_penalty = min(18.0, disagreement * 100.0 * 0.8)
-        confidence = max(50.0, min(95.0, 56.0 + (edge * 3.8) + books_boost - uncertainty_penalty))
+        confidence_raw = max(50.0, min(95.0, 56.0 + (edge * 3.8) + books_boost - uncertainty_penalty))
+        confidence = calibrated_confidence(confidence_raw)
 
         game_time = game.get("commence_time", "")
         fair_pct = fair_prob * 100.0
         implied_pct = calculate_implied_probability(bet_odds) * 100.0
 
         pick = {
-            "id": f"{sport_key}_{home_team}_{away_team}_{int(time.time())}",
+            "id": f"{sport_key}_{home_team}_{away_team}_ml_{bet_odds}_{time.time_ns()}",
             "sport": sport_key,
             "emoji": meta.get("emoji", "🎯"),
             "label": meta.get("label", sport_key),
@@ -667,7 +972,8 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "odds": bet_odds,
             "edge": round(edge, 2),
             "ev": round(edge, 2),
-            "confidence": int(confidence),
+            "confidence_raw": round(confidence_raw, 1),
+            "confidence": int(round(confidence)),
             "fair_prob": round(fair_pct, 1),
             "implied_prob": round(implied_pct, 1),
             "best_book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
@@ -682,8 +988,215 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "data_source": "odds_api",
         }
         picks.append(pick)
+
+        # Spread picks.
+        spread_consensus = market_consensus_spread(game)
+        if spread_consensus:
+            spread_prices = best_spread_prices(game, spread_consensus["point"])
+            if spread_prices:
+                spread_candidates = [
+                    {
+                        "bet": f"{home_team} {spread_consensus['point']:+}",
+                        "odds": spread_prices["home_odds"],
+                        "book": spread_prices["home_book"],
+                        "fair_prob": spread_consensus["home_prob"],
+                        "side_key": "home",
+                    },
+                    {
+                        "bet": f"{away_team} {(-spread_consensus['point']):+}",
+                        "odds": spread_prices["away_odds"],
+                        "book": spread_prices["away_book"],
+                        "fair_prob": spread_consensus["away_prob"],
+                        "side_key": "away",
+                    },
+                ]
+                spread_candidates.sort(key=lambda c: expected_value_pct(c["odds"], c["fair_prob"]), reverse=True)
+                top = spread_candidates[0]
+                spread_ev = expected_value_pct(top["odds"], top["fair_prob"])
+                if spread_ev >= 1.0:
+                    disagreement_sp = float(spread_consensus.get("disagreement", 0.0))
+                    books_boost_sp = min(10.0, (spread_consensus.get("books_count", 1) - 1) * 1.8)
+                    penalty_sp = min(16.0, disagreement_sp * 100.0 * 0.8)
+                    conf_raw_sp = max(50.0, min(94.0, 55.0 + spread_ev * 3.5 + books_boost_sp - penalty_sp))
+                    conf_sp = calibrated_confidence(conf_raw_sp)
+                    implied_sp = calculate_implied_probability(top["odds"]) * 100.0
+                    fair_sp = top["fair_prob"] * 100.0
+                    picks.append({
+                        "id": f"{sport_key}_{home_team}_{away_team}_spread_{top['odds']}_{time.time_ns()}",
+                        "sport": sport_key,
+                        "emoji": meta.get("emoji", "🎯"),
+                        "label": meta.get("label", sport_key),
+                        "home_team": home_team,
+                        "away_team": away_team,
+                        "game": f"{away_team} @ {home_team}",
+                        "game_time": game_time,
+                        "bet": top["bet"],
+                        "bet_type": "spread",
+                        "odds": top["odds"],
+                        "edge": round(spread_ev, 2),
+                        "ev": round(spread_ev, 2),
+                        "confidence_raw": round(conf_raw_sp, 1),
+                        "confidence": int(round(conf_sp)),
+                        "fair_prob": round(fair_sp, 1),
+                        "implied_prob": round(implied_sp, 1),
+                        "best_book": top["book"],
+                        "books_compared": spread_consensus.get("books_count", 1),
+                        "market_disagreement": round(disagreement_sp * 100.0, 2),
+                        "model_breakdown": {
+                            "pinnacle_clv": f"Spread consensus fair {fair_sp:.1f}% vs implied {implied_sp:.1f}% ({spread_ev:+.2f}% EV).",
+                            "sharp_money": f"Point consensus {spread_consensus['point']:+}; disagreement {disagreement_sp*100.0:.2f} pts.",
+                            "confirms": "Spread de-vig consensus, best-line EV",
+                        },
+                        "agents_fired": ["spread_ev", "market_consensus", "devig"],
+                        "data_source": "odds_api",
+                    })
+
+        # Totals picks.
+        totals_consensus = market_consensus_total(game)
+        if totals_consensus:
+            total_prices = best_total_prices(game, totals_consensus["point"])
+            if total_prices:
+                total_candidates = [
+                    {
+                        "bet": f"Over {totals_consensus['point']}",
+                        "odds": total_prices["over_odds"],
+                        "book": total_prices["over_book"],
+                        "fair_prob": totals_consensus["over_prob"],
+                    },
+                    {
+                        "bet": f"Under {totals_consensus['point']}",
+                        "odds": total_prices["under_odds"],
+                        "book": total_prices["under_book"],
+                        "fair_prob": totals_consensus["under_prob"],
+                    },
+                ]
+                total_candidates.sort(key=lambda c: expected_value_pct(c["odds"], c["fair_prob"]), reverse=True)
+                top_t = total_candidates[0]
+                total_ev = expected_value_pct(top_t["odds"], top_t["fair_prob"])
+                if total_ev >= 1.0:
+                    disagreement_t = float(totals_consensus.get("disagreement", 0.0))
+                    books_boost_t = min(10.0, (totals_consensus.get("books_count", 1) - 1) * 1.8)
+                    penalty_t = min(16.0, disagreement_t * 100.0 * 0.8)
+                    conf_raw_t = max(50.0, min(94.0, 55.0 + total_ev * 3.4 + books_boost_t - penalty_t))
+                    conf_t = calibrated_confidence(conf_raw_t)
+                    implied_t = calculate_implied_probability(top_t["odds"]) * 100.0
+                    fair_t = top_t["fair_prob"] * 100.0
+                    picks.append({
+                        "id": f"{sport_key}_{home_team}_{away_team}_total_{top_t['odds']}_{time.time_ns()}",
+                        "sport": sport_key,
+                        "emoji": meta.get("emoji", "🎯"),
+                        "label": meta.get("label", sport_key),
+                        "home_team": home_team,
+                        "away_team": away_team,
+                        "game": f"{away_team} @ {home_team}",
+                        "game_time": game_time,
+                        "bet": top_t["bet"],
+                        "bet_type": "total",
+                        "odds": top_t["odds"],
+                        "edge": round(total_ev, 2),
+                        "ev": round(total_ev, 2),
+                        "confidence_raw": round(conf_raw_t, 1),
+                        "confidence": int(round(conf_t)),
+                        "fair_prob": round(fair_t, 1),
+                        "implied_prob": round(implied_t, 1),
+                        "best_book": top_t["book"],
+                        "books_compared": totals_consensus.get("books_count", 1),
+                        "market_disagreement": round(disagreement_t * 100.0, 2),
+                        "model_breakdown": {
+                            "pinnacle_clv": f"Totals consensus fair {fair_t:.1f}% vs implied {implied_t:.1f}% ({total_ev:+.2f}% EV).",
+                            "sharp_money": f"Total consensus {totals_consensus['point']}; disagreement {disagreement_t*100.0:.2f} pts.",
+                            "confirms": "Totals de-vig consensus, best-line EV",
+                        },
+                        "agents_fired": ["totals_ev", "market_consensus", "devig"],
+                        "data_source": "odds_api",
+                    })
     
     return picks
+
+
+def generate_legacy_pick_for_game(sport_key: str, game: dict) -> Optional[dict]:
+    """
+    Legacy v5-style pick scoring kept for backtest comparison.
+    """
+    home_team = game.get("home_team", "")
+    away_team = game.get("away_team", "")
+    home_ml = game.get("home_ml")
+    away_ml = game.get("away_ml")
+    if home_ml is None or away_ml is None:
+        return None
+
+    edge_data = calculate_edge(home_ml, away_ml)
+    if abs(edge_data["home_edge"]) <= 3 and abs(edge_data["away_edge"]) <= 3:
+        return None
+
+    if edge_data["home_edge"] > edge_data["away_edge"]:
+        bet_side = home_team
+        bet_odds = home_ml
+        edge = edge_data["home_edge"]
+        fair_prob = edge_data.get("home_fair_prob", 50.0)
+    else:
+        bet_side = away_team
+        bet_odds = away_ml
+        edge = edge_data["away_edge"]
+        fair_prob = edge_data.get("away_fair_prob", 50.0)
+
+    confidence_raw = max(50.0, min(95.0, 50.0 + abs(edge) * 2.0))
+    return {
+        "id": f"{sport_key}_{home_team}_{away_team}_legacy_{bet_odds}_{time.time_ns()}",
+        "sport": sport_key,
+        "game": f"{away_team} @ {home_team}",
+        "bet": f"{bet_side} ML",
+        "bet_type": "moneyline",
+        "odds": bet_odds,
+        "edge": round(edge, 2),
+        "confidence_raw": round(confidence_raw, 1),
+        "confidence": int(round(confidence_raw)),
+        "fair_prob": float(fair_prob),
+        "implied_prob": round(calculate_implied_probability(bet_odds) * 100.0, 1),
+        "best_book": game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings",
+    }
+
+
+def _model_stats_from_rows(rows: list[sqlite3.Row]) -> dict:
+    resolved = [r for r in rows if r["result"] in ("win", "loss")]
+    if not resolved:
+        return {"resolved": 0, "wins": 0, "losses": 0, "win_rate": 0.0, "avg_edge": 0.0, "avg_confidence": 0.0, "roi_units_per_bet": 0.0, "brier": None}
+
+    wins = sum(1 for r in resolved if r["result"] == "win")
+    losses = len(resolved) - wins
+    win_rate = wins / len(resolved)
+
+    units = 0.0
+    brier_vals = []
+    edge_vals = []
+    conf_vals = []
+    for r in resolved:
+        odds = r["odds"]
+        conf = float(r["confidence_cal"] if r["confidence_cal"] is not None else (r["confidence_raw"] or 50.0))
+        p = max(0.01, min(0.99, conf / 100.0))
+        y = 1.0 if r["result"] == "win" else 0.0
+        brier_vals.append((p - y) ** 2)
+        if r["edge"] is not None:
+            edge_vals.append(float(r["edge"]))
+        conf_vals.append(conf)
+        if odds is None:
+            continue
+        dec = american_to_decimal(int(odds))
+        if r["result"] == "win":
+            units += (dec - 1.0)
+        else:
+            units -= 1.0
+
+    return {
+        "resolved": len(resolved),
+        "wins": wins,
+        "losses": losses,
+        "win_rate": round(win_rate * 100.0, 2),
+        "avg_edge": round(statistics.mean(edge_vals), 3) if edge_vals else 0.0,
+        "avg_confidence": round(statistics.mean(conf_vals), 2) if conf_vals else 0.0,
+        "roi_units_per_bet": round(units / len(resolved), 4),
+        "brier": round(statistics.mean(brier_vals), 4) if brier_vals else None,
+    }
 
 
 def build_ev_rows_for_game(game: dict) -> list:
@@ -836,6 +1349,7 @@ async def scan(request: Request):
         return {"error": "Low API quota", "quota": _quota_remaining}
     
     all_picks = []
+    legacy_snapshot = []
     all_games = []
     
     # Fetch games for each sport
@@ -862,9 +1376,17 @@ async def scan(request: Request):
             # Also generate picks for positive edge games
             picks = await generate_picks_for_sport(sport, [game])
             all_picks.extend(picks)
+            legacy_pick = generate_legacy_pick_for_game(sport, game)
+            if legacy_pick:
+                legacy_snapshot.append(legacy_pick)
     
     # Sort by edge (highest first)
     all_picks.sort(key=lambda x: x.get("edge", 0), reverse=True)
+    legacy_snapshot.sort(key=lambda x: x.get("edge", 0), reverse=True)
+
+    # Persist model outputs for downstream calibration/backtest.
+    save_generated_picks(all_picks[:50], model_version=MODEL_VERSION)
+    save_generated_picks(legacy_snapshot[:50], model_version=LEGACY_MODEL_VERSION)
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
@@ -874,6 +1396,7 @@ async def scan(request: Request):
         "picks_total": len(all_picks),
         "games": all_games,  # All upcoming games
         "games_total": len(all_games),
+        "model_version": MODEL_VERSION,
         "quota_remaining": _quota_remaining,
         "sports_covered": SPORTS,
     }
@@ -960,12 +1483,108 @@ async def injuries():
     return {"injuries": [], "note": "Injury data not available in v5 (cost optimization)"}
 
 
+@app.post("/api/picks/settle")
+async def settle_pick(body: SettlePickRequest):
+    """
+    Mark a generated pick as win/loss/push for calibration + backtest.
+    """
+    result = _clean_result(body.result)
+    settled_at = datetime.utcnow().isoformat()
+    with db_conn() as conn:
+        cur = conn.execute("""
+            UPDATE picks_history
+            SET result = ?, settled_at = ?
+            WHERE id = ?
+        """, (result, settled_at, body.pick_id))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="pick_id not found")
+    return {"ok": True, "pick_id": body.pick_id, "result": result, "settled_at": settled_at}
+
+
+@app.get("/api/picks/unsettled")
+async def unsettled_picks(limit: int = 200):
+    with db_conn() as conn:
+        rows = conn.execute("""
+            SELECT id, created_at, model_version, sport, game, bet, bet_type, odds, edge, confidence_cal, best_book
+            FROM picks_history
+            WHERE result IS NULL
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (max(1, min(1000, limit)),)).fetchall()
+    return {
+        "count": len(rows),
+        "items": [dict(r) for r in rows],
+    }
+
+
+@app.get("/api/backtest")
+async def backtest(limit: int = 2000):
+    """
+    Compare current model vs legacy model using settled picks in DB.
+    """
+    with db_conn() as conn:
+        rows_new = conn.execute("""
+            SELECT *
+            FROM picks_history
+            WHERE model_version = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (MODEL_VERSION, max(50, min(10000, limit)))).fetchall()
+        rows_old = conn.execute("""
+            SELECT *
+            FROM picks_history
+            WHERE model_version = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (LEGACY_MODEL_VERSION, max(50, min(10000, limit)))).fetchall()
+
+    new_stats = _model_stats_from_rows(rows_new)
+    old_stats = _model_stats_from_rows(rows_old)
+    delta = {}
+    for key in ("win_rate", "roi_units_per_bet", "avg_edge", "avg_confidence"):
+        if isinstance(new_stats.get(key), (int, float)) and isinstance(old_stats.get(key), (int, float)):
+            delta[key] = round(float(new_stats[key]) - float(old_stats[key]), 4)
+
+    return {
+        "as_of_utc": datetime.utcnow().isoformat(),
+        "sample_limit": max(50, min(10000, limit)),
+        "models": {
+            MODEL_VERSION: new_stats,
+            LEGACY_MODEL_VERSION: old_stats,
+        },
+        "delta_new_minus_legacy": delta,
+        "note": "Only settled picks (win/loss) are scored. Use /api/picks/settle to label outcomes.",
+    }
+
+
 @app.get("/api/performance")
 async def performance():
-    """Placeholder - would need DB setup."""
+    """Performance + calibration summary from recorded pick outcomes."""
+    with db_conn() as conn:
+        rows = conn.execute("""
+            SELECT *
+            FROM picks_history
+            WHERE model_version = ?
+            ORDER BY created_at DESC
+            LIMIT 3000
+        """, (MODEL_VERSION,)).fetchall()
+    stats = _model_stats_from_rows(rows)
+    calib = calibration_snapshot(MODEL_VERSION)
+    bins = []
+    for k in sorted((calib.get("bins") or {}).keys()):
+        b = calib["bins"][k]
+        bins.append({
+            "bucket": f"{k}-{k+9}",
+            "n": int(b.get("n", 0)),
+            "empirical_win_rate": round(float(b.get("p_emp", 0.0)) * 100.0, 2),
+        })
     return {
-        "note": "Performance tracking coming in v5.1",
-        "overall": {"total_picks": 0, "wins": 0, "win_pct": 0}
+        "model_version": MODEL_VERSION,
+        "overall": stats,
+        "calibration": {
+            "settled_count": calib.get("count", 0),
+            "bins": bins,
+        },
     }
 
 
