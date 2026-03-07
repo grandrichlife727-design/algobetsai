@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Designer"
+  short_description: "Design and build intentional frontend UI systems"
+  default_prompt: "Use $frontend-designer to design and implement a distinctive, production-ready frontend experience."
