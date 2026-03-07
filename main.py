@@ -27,15 +27,13 @@ import json
 import math
 import time
 import httpx
-import sqlite3
 import asyncio
 import hashlib
 import stripe
 import numpy as np
 import statistics
 from datetime import datetime, timedelta
-from typing import Optional, Any
-from contextlib import contextmanager
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,10 +55,39 @@ BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
 CACHE_DIR = os.path.join(DATA_DIR, "cache")
-DB_PATH   = os.path.join(DATA_DIR, "picks.db")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 stripe.api_key = STRIPE_SECRET
+
+PLAN_FREE = "free"
+PLAN_PREMIUM = "premium"
+PLAN_VIP = "vip"
+
+
+def _csv_env(name: str) -> list[str]:
+    return [x.strip() for x in os.getenv(name, "").split(",") if x.strip()]
+
+
+PREMIUM_PRICE_IDS = _csv_env("STRIPE_PREMIUM_PRICE_IDS") or _csv_env("STRIPE_PRO_PRICE_IDS")
+VIP_PRICE_IDS = _csv_env("STRIPE_VIP_PRICE_IDS") or _csv_env("STRIPE_SHARP_PRICE_IDS")
+
+
+def normalize_plan_name(plan: str) -> str:
+    p = (plan or "").strip().lower()
+    if p in ("sharp", PLAN_VIP):
+        return PLAN_VIP
+    if p in ("pro", PLAN_PREMIUM):
+        return PLAN_PREMIUM
+    return PLAN_FREE
+
+
+def plan_rank(plan: str) -> int:
+    p = normalize_plan_name(plan)
+    if p == PLAN_VIP:
+        return 2
+    if p == PLAN_PREMIUM:
+        return 1
+    return 0
 
 def verify_api_key(request: Request, x_api_key: str = Header(default="")):
     # For now, accept any key or no key - simplify for deployment
@@ -77,7 +104,7 @@ _PLAN_CACHE_TTL = 300
 
 def _verify_plan_stripe_sync(user_id: str) -> str:
     if not STRIPE_SECRET or not user_id:
-        return "free"
+        return PLAN_FREE
     try:
         customers = stripe.Customer.search(query=f'email:"{user_id}"', limit=1)
         if not customers.data:
@@ -85,30 +112,29 @@ def _verify_plan_stripe_sync(user_id: str) -> str:
             matching = [c for c in customers.data if
                         c.metadata.get("userId") == user_id or c.email == user_id]
             if not matching:
-                return "free"
+                return PLAN_FREE
             customer = matching[0]
         else:
             customer = customers.data[0]
 
         subs = stripe.Subscription.list(customer=customer.id, status="active", limit=5)
         if not subs.data:
-            return "free"
+            return PLAN_FREE
 
         price_id  = subs.data[0]["items"]["data"][0]["price"]["id"]
-        PRO_IDS   = [p for p in os.getenv("STRIPE_PRO_PRICE_IDS", "").split(",") if p]
-        SHARP_IDS = [p for p in os.getenv("STRIPE_SHARP_PRICE_IDS", "").split(",") if p]
-        if price_id in SHARP_IDS:
-            return "sharp"
-        if price_id in PRO_IDS:
-            return "pro"
-        return "pro"
+        if price_id in VIP_PRICE_IDS:
+            return PLAN_VIP
+        if price_id in PREMIUM_PRICE_IDS:
+            return PLAN_PREMIUM
+        # Unknown paid subscription still gets paid access.
+        return PLAN_PREMIUM
 
     except stripe.error.StripeError as e:
         print(f"[Plan] Stripe error for {user_id}: {e}")
-        return "free"
+        return PLAN_FREE
     except Exception as e:
         print(f"[Plan] Unexpected error for {user_id}: {e}")
-        return "free"
+        return PLAN_FREE
 
 
 OWNER_EMAILS = {"grandrichlife727@gmail.com"}
@@ -116,10 +142,10 @@ OWNER_EMAILS = {"grandrichlife727@gmail.com"}
 async def _get_verified_plan(request: Request) -> str:
     user_id = (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
     if not user_id:
-        return "free"
+        return PLAN_FREE
 
     if user_id in OWNER_EMAILS:
-        return "sharp"
+        return PLAN_VIP
 
     now = time.time()
     cached = _plan_cache.get(user_id)
@@ -128,20 +154,29 @@ async def _get_verified_plan(request: Request) -> str:
 
     plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
     _plan_cache[user_id] = {"plan": plan, "expires": now + _PLAN_CACHE_TTL}
-    return plan
+    return normalize_plan_name(plan)
 
 
 async def require_paid_plan(request: Request):
     plan = await _get_verified_plan(request)
-    if plan not in ("pro", "sharp"):
+    if plan_rank(plan) < plan_rank(PLAN_PREMIUM):
         raise HTTPException(
             status_code=403,
-            detail="This feature requires a Pro or Sharp subscription."
+            detail="This feature requires a Premium or VIP subscription."
         )
 
 
 async def get_user_plan(request: Request) -> str:
     return await _get_verified_plan(request)
+
+
+async def require_vip_plan(request: Request):
+    plan = await _get_verified_plan(request)
+    if plan_rank(plan) < plan_rank(PLAN_VIP):
+        raise HTTPException(
+            status_code=403,
+            detail="This feature requires a VIP subscription."
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -208,11 +243,6 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def _startup():
-    init_db()
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISK-BACKED CACHE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -258,152 +288,6 @@ def cache_age_seconds(key: str) -> int:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# RESULT TRACKING / CALIBRATION STORE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-MODEL_VERSION = "v6_consensus_ensemble"
-LEGACY_MODEL_VERSION = "v5_legacy_edge"
-
-
-@contextmanager
-def db_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def init_db():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with db_conn() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS picks_history (
-                id TEXT PRIMARY KEY,
-                created_at TEXT NOT NULL,
-                model_version TEXT NOT NULL,
-                sport TEXT NOT NULL,
-                game TEXT NOT NULL,
-                bet TEXT NOT NULL,
-                bet_type TEXT NOT NULL,
-                odds INTEGER,
-                edge REAL,
-                confidence_raw REAL,
-                confidence_cal REAL,
-                fair_prob REAL,
-                implied_prob REAL,
-                best_book TEXT,
-                books_compared INTEGER,
-                market_disagreement REAL,
-                result TEXT,
-                settled_at TEXT
-            )
-        """)
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_picks_model_result ON picks_history(model_version, result)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_picks_created_at ON picks_history(created_at)")
-
-
-class SettlePickRequest(BaseModel):
-    pick_id: str
-    result: str  # "win" or "loss" or "push"
-
-
-def _clean_result(result: str) -> str:
-    v = (result or "").strip().lower()
-    if v not in {"win", "loss", "push"}:
-        raise HTTPException(status_code=400, detail="result must be win, loss, or push")
-    return v
-
-
-def save_generated_picks(picks: list[dict], model_version: str = MODEL_VERSION):
-    if not picks:
-        return
-    now_iso = datetime.utcnow().isoformat()
-    with db_conn() as conn:
-        for p in picks:
-            conn.execute("""
-                INSERT OR IGNORE INTO picks_history (
-                    id, created_at, model_version, sport, game, bet, bet_type, odds, edge,
-                    confidence_raw, confidence_cal, fair_prob, implied_prob, best_book,
-                    books_compared, market_disagreement, result, settled_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
-            """, (
-                p.get("id"),
-                now_iso,
-                model_version,
-                p.get("sport", ""),
-                p.get("game", ""),
-                p.get("bet", ""),
-                p.get("bet_type", "moneyline"),
-                p.get("odds"),
-                p.get("edge"),
-                p.get("confidence_raw", p.get("confidence")),
-                p.get("confidence"),
-                p.get("fair_prob"),
-                p.get("implied_prob"),
-                p.get("best_book"),
-                p.get("books_compared"),
-                p.get("market_disagreement"),
-            ))
-
-
-def calibration_snapshot(model_version: str = MODEL_VERSION) -> dict:
-    """
-    Reliability snapshot from settled picks.
-    Bins confidence into 10-point buckets and returns empirical hit rates.
-    """
-    with db_conn() as conn:
-        rows = conn.execute("""
-            SELECT confidence_raw, result
-            FROM picks_history
-            WHERE model_version = ?
-              AND result IN ('win', 'loss')
-              AND confidence_raw IS NOT NULL
-        """, (model_version,)).fetchall()
-
-    if len(rows) < 30:
-        return {"count": len(rows), "bins": {}, "default_shrink": 0.35}
-
-    bins: dict[int, dict[str, float]] = {}
-    for r in rows:
-        conf = float(r["confidence_raw"])
-        b = int(max(50, min(99, conf)) // 10) * 10
-        bins.setdefault(b, {"n": 0, "w": 0})
-        bins[b]["n"] += 1
-        bins[b]["w"] += 1 if r["result"] == "win" else 0
-
-    # Convert to empirical probabilities.
-    for b in bins:
-        bins[b]["p_emp"] = bins[b]["w"] / bins[b]["n"] if bins[b]["n"] else 0.5
-    return {"count": len(rows), "bins": bins, "default_shrink": 0.35}
-
-
-def calibrated_confidence(raw_conf: float, model_version: str = MODEL_VERSION) -> float:
-    """
-    Blend model confidence with empirical reliability (if enough settled history).
-    """
-    snap = calibration_snapshot(model_version)
-    raw_p = max(0.50, min(0.99, raw_conf / 100.0))
-    bins = snap.get("bins", {})
-    if not bins:
-        return raw_p * 100.0
-
-    b = int(max(50, min(99, raw_conf)) // 10) * 10
-    bucket = bins.get(b)
-    if not bucket:
-        return raw_p * 100.0
-
-    p_emp = float(bucket.get("p_emp", raw_p))
-    n = float(bucket.get("n", 0))
-    # More samples -> trust empirical more.
-    w_emp = min(0.8, n / 120.0)
-    p_cal = (1 - w_emp) * raw_p + w_emp * p_emp
-    return max(50.0, min(99.0, p_cal * 100.0))
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # THE ODDS API - PRIMARY DATA SOURCE (v5)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -414,15 +298,21 @@ async def fetch_odds_api_games(sport_key: str) -> list:
     """
     global _quota_remaining, _quota_used_last
     
-    if not ODDS_API_KEY:
-        print("[OddsAPI] No API key configured!")
-        return []
-
     cache_key = f"odds_{sport_key}"
     cached = cache_get(cache_key, ttl=CACHE_TTL)
     # Don't trust empty cache payloads; they can come from transient API failures.
     if cached is not None and len(cached) > 0:
         return cached
+
+    # Last-resort stale cache for API outages or missing key.
+    stale_cached = cache_get(cache_key, ttl=3600 * 24 * 14)
+
+    if not ODDS_API_KEY:
+        if stale_cached is not None and len(stale_cached) > 0:
+            print(f"[OddsAPI] No API key; using stale cache for {sport_key}")
+            return stale_cached
+        print("[OddsAPI] No API key configured!")
+        return []
 
     odds_sport = ODDS_API_SPORT_MAP.get(sport_key, sport_key)
     # Canonical Odds API endpoint: /sports/{sport}/odds
@@ -430,48 +320,68 @@ async def fetch_odds_api_games(sport_key: str) -> list:
     
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            params = {
+            base_params = {
                 "apiKey": ODDS_API_KEY,
                 "regions": "us",
                 "markets": "h2h,spreads,totals",
                 "oddsFormat": "american",
                 "dateFormat": "iso",
-                "bookmakers": ODDS_BOOKMAKERS,
             }
-            r = await client.get(url, params=params)
-            # Fallback for older endpoint shapes if provider changes.
-            if r.status_code == 404:
-                legacy_url = f"{ODDS_BASE}/odds/"
-                r = await client.get(legacy_url, params={**params, "sport": odds_sport})
-            
-            if r.status_code == 403:
-                print(f"[OddsAPI] API key invalid or quota exceeded")
-                return []
-            if r.status_code == 429:
-                print(f"[OddsAPI] Rate limited!")
-                return []
-                
-            r.raise_for_status()
-            data = r.json()
-            if not isinstance(data, list):
-                print(f"[OddsAPI] Unexpected payload for {sport_key}: {type(data).__name__}")
-                return []
-            
-            # Update quota tracking
-            if hasattr(r, 'headers'):
-                remaining = r.headers.get('X-Requests-Remaining')
-                used = r.headers.get('X-Requests-Used')
-                if remaining:
-                    _quota_remaining = int(remaining)
-                if used:
-                    _quota_used_last = int(used)
+            attempts = [
+                ("canonical+books", url, {**base_params, "bookmakers": ODDS_BOOKMAKERS}),
+                ("canonical-all-books", url, dict(base_params)),
+                ("legacy+books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport, "bookmakers": ODDS_BOOKMAKERS}),
+                ("legacy-all-books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport}),
+            ]
+
+            data = None
+            last_err = None
+            for label, attempt_url, params in attempts:
+                try:
+                    r = await client.get(attempt_url, params=params)
+
+                    # Update quota tracking if available.
+                    if hasattr(r, "headers"):
+                        remaining = r.headers.get("X-Requests-Remaining")
+                        used = r.headers.get("X-Requests-Used")
+                        if remaining:
+                            _quota_remaining = int(remaining)
+                        if used:
+                            _quota_used_last = int(used)
+
+                    if r.status_code == 403:
+                        print(f"[OddsAPI] API key invalid or quota exceeded ({label})")
+                        return stale_cached if stale_cached else []
+                    if r.status_code == 429:
+                        print(f"[OddsAPI] Rate limited ({label})")
+                        return stale_cached if stale_cached else []
+                    if r.status_code >= 400:
+                        last_err = f"{label}: HTTP {r.status_code}"
+                        continue
+
+                    payload = r.json()
+                    if isinstance(payload, list) and len(payload) > 0:
+                        data = payload
+                        break
+                    if isinstance(payload, list):
+                        # Empty list: try broader fallback.
+                        last_err = f"{label}: empty list"
+                        continue
+                    last_err = f"{label}: unexpected payload {type(payload).__name__}"
+                except Exception as inner_err:
+                    last_err = f"{label}: {inner_err}"
+                    continue
+
+            if data is None:
+                print(f"[OddsAPI] No usable data for {sport_key}. Last error: {last_err}")
+                return stale_cached if stale_cached else []
                     
     except httpx.HTTPError as e:
         print(f"[OddsAPI] HTTP error for {sport_key}: {e}")
-        return []
+        return stale_cached if stale_cached else []
     except Exception as e:
         print(f"[OddsAPI] Error fetching {sport_key}: {e}")
-        return []
+        return stale_cached if stale_cached else []
 
     # Process games
     games = []
@@ -756,138 +666,6 @@ def best_two_way_lines(game: dict) -> dict:
     }
 
 
-def market_consensus_spread(game: dict) -> Optional[dict]:
-    """
-    Consensus fair probabilities for spread market around median point.
-    """
-    by_book = game.get("spreads_by_book") or {}
-    if len(by_book) < 2:
-        return None
-
-    points = [v["home_point"] for v in by_book.values() if v.get("home_point") is not None]
-    if not points:
-        return None
-    target_point = round(statistics.median(points), 1)
-
-    home_probs = []
-    away_probs = []
-    for book, v in by_book.items():
-        hp = v.get("home_price")
-        ap = v.get("away_price")
-        pt = v.get("home_point")
-        if hp is None or ap is None or pt is None:
-            continue
-        if abs(float(pt) - target_point) > 0.5:
-            continue
-        h, a = devig_two_way_probabilities(hp, ap)
-        w = sharp_weight_for_book(book)
-        home_probs.extend([h] * max(1, int(round(w * 10))))
-        away_probs.extend([a] * max(1, int(round(w * 10))))
-
-    if not home_probs:
-        return None
-    home_prob = statistics.median(home_probs)
-    return {
-        "point": target_point,
-        "home_prob": home_prob,
-        "away_prob": 1.0 - home_prob,
-        "books_count": len(by_book),
-        "disagreement": max(home_probs) - min(home_probs),
-    }
-
-
-def best_spread_prices(game: dict, target_point: float) -> Optional[dict]:
-    by_book = game.get("spreads_by_book") or {}
-    home_candidates = []
-    away_candidates = []
-    for book, v in by_book.items():
-        pt = v.get("home_point")
-        if pt is None or abs(float(pt) - target_point) > 0.5:
-            continue
-        hp = v.get("home_price")
-        ap = v.get("away_price")
-        if hp is not None:
-            home_candidates.append((book, hp))
-        if ap is not None:
-            away_candidates.append((book, ap))
-    if not home_candidates or not away_candidates:
-        return None
-    home_book, home_odds = max(home_candidates, key=lambda x: american_to_decimal(x[1]))
-    away_book, away_odds = max(away_candidates, key=lambda x: american_to_decimal(x[1]))
-    return {
-        "home_book": home_book,
-        "home_odds": home_odds,
-        "away_book": away_book,
-        "away_odds": away_odds,
-    }
-
-
-def market_consensus_total(game: dict) -> Optional[dict]:
-    """
-    Consensus fair probabilities for totals market around median total.
-    """
-    by_book = game.get("totals_by_book") or {}
-    if len(by_book) < 2:
-        return None
-
-    points = [v["point"] for v in by_book.values() if v.get("point") is not None]
-    if not points:
-        return None
-    target_total = round(statistics.median(points), 1)
-
-    over_probs = []
-    under_probs = []
-    for book, v in by_book.items():
-        op = v.get("over_price")
-        up = v.get("under_price")
-        pt = v.get("point")
-        if op is None or up is None or pt is None:
-            continue
-        if abs(float(pt) - target_total) > 0.5:
-            continue
-        over_p, under_p = devig_two_way_probabilities(op, up)
-        w = sharp_weight_for_book(book)
-        over_probs.extend([over_p] * max(1, int(round(w * 10))))
-        under_probs.extend([under_p] * max(1, int(round(w * 10))))
-
-    if not over_probs:
-        return None
-    over_prob = statistics.median(over_probs)
-    return {
-        "point": target_total,
-        "over_prob": over_prob,
-        "under_prob": 1.0 - over_prob,
-        "books_count": len(by_book),
-        "disagreement": max(over_probs) - min(over_probs),
-    }
-
-
-def best_total_prices(game: dict, target_total: float) -> Optional[dict]:
-    by_book = game.get("totals_by_book") or {}
-    over_candidates = []
-    under_candidates = []
-    for book, v in by_book.items():
-        pt = v.get("point")
-        if pt is None or abs(float(pt) - target_total) > 0.5:
-            continue
-        op = v.get("over_price")
-        up = v.get("under_price")
-        if op is not None:
-            over_candidates.append((book, op))
-        if up is not None:
-            under_candidates.append((book, up))
-    if not over_candidates or not under_candidates:
-        return None
-    over_book, over_odds = max(over_candidates, key=lambda x: american_to_decimal(x[1]))
-    under_book, under_odds = max(under_candidates, key=lambda x: american_to_decimal(x[1]))
-    return {
-        "over_book": over_book,
-        "over_odds": over_odds,
-        "under_book": under_book,
-        "under_odds": under_odds,
-    }
-
-
 def calculate_edge(home_odds: int, away_odds: int) -> dict:
     """Calculate value edge between the two sides."""
     home_implied = calculate_implied_probability(home_odds)
@@ -958,7 +736,7 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         books_boost = min(12.0, (diag.get("books_count", 1) - 1) * 2.0)
         uncertainty_penalty = min(18.0, disagreement * 100.0 * 0.8)
         confidence_raw = max(50.0, min(95.0, 56.0 + (edge * 3.8) + books_boost - uncertainty_penalty))
-        confidence = calibrated_confidence(confidence_raw)
+        confidence = confidence_raw
 
         game_time = game.get("commence_time", "")
         fair_pct = fair_prob * 100.0
@@ -994,215 +772,8 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "data_source": "odds_api",
         }
         picks.append(pick)
-
-        # Spread picks.
-        spread_consensus = market_consensus_spread(game)
-        if spread_consensus:
-            spread_prices = best_spread_prices(game, spread_consensus["point"])
-            if spread_prices:
-                spread_candidates = [
-                    {
-                        "bet": f"{home_team} {spread_consensus['point']:+}",
-                        "odds": spread_prices["home_odds"],
-                        "book": spread_prices["home_book"],
-                        "fair_prob": spread_consensus["home_prob"],
-                        "side_key": "home",
-                    },
-                    {
-                        "bet": f"{away_team} {(-spread_consensus['point']):+}",
-                        "odds": spread_prices["away_odds"],
-                        "book": spread_prices["away_book"],
-                        "fair_prob": spread_consensus["away_prob"],
-                        "side_key": "away",
-                    },
-                ]
-                spread_candidates.sort(key=lambda c: expected_value_pct(c["odds"], c["fair_prob"]), reverse=True)
-                top = spread_candidates[0]
-                spread_ev = expected_value_pct(top["odds"], top["fair_prob"])
-                if spread_ev >= 1.0:
-                    disagreement_sp = float(spread_consensus.get("disagreement", 0.0))
-                    books_boost_sp = min(10.0, (spread_consensus.get("books_count", 1) - 1) * 1.8)
-                    penalty_sp = min(16.0, disagreement_sp * 100.0 * 0.8)
-                    conf_raw_sp = max(50.0, min(94.0, 55.0 + spread_ev * 3.5 + books_boost_sp - penalty_sp))
-                    conf_sp = calibrated_confidence(conf_raw_sp)
-                    implied_sp = calculate_implied_probability(top["odds"]) * 100.0
-                    fair_sp = top["fair_prob"] * 100.0
-                    picks.append({
-                        "id": f"{sport_key}_{home_team}_{away_team}_spread_{top['odds']}_{time.time_ns()}",
-                        "sport": sport_key,
-                        "emoji": meta.get("emoji", "🎯"),
-                        "label": meta.get("label", sport_key),
-                        "home_team": home_team,
-                        "away_team": away_team,
-                        "game": f"{away_team} @ {home_team}",
-                        "game_time": game_time,
-                        "bet": top["bet"],
-                        "bet_type": "spread",
-                        "odds": top["odds"],
-                        "edge": round(spread_ev, 2),
-                        "ev": round(spread_ev, 2),
-                        "confidence_raw": round(conf_raw_sp, 1),
-                        "confidence": int(round(conf_sp)),
-                        "fair_prob": round(fair_sp, 1),
-                        "implied_prob": round(implied_sp, 1),
-                        "best_book": top["book"],
-                        "books_compared": spread_consensus.get("books_count", 1),
-                        "market_disagreement": round(disagreement_sp * 100.0, 2),
-                        "model_breakdown": {
-                            "pinnacle_clv": f"Spread consensus fair {fair_sp:.1f}% vs implied {implied_sp:.1f}% ({spread_ev:+.2f}% EV).",
-                            "sharp_money": f"Point consensus {spread_consensus['point']:+}; disagreement {disagreement_sp*100.0:.2f} pts.",
-                            "confirms": "Spread de-vig consensus, best-line EV",
-                        },
-                        "agents_fired": ["spread_ev", "market_consensus", "devig"],
-                        "data_source": "odds_api",
-                    })
-
-        # Totals picks.
-        totals_consensus = market_consensus_total(game)
-        if totals_consensus:
-            total_prices = best_total_prices(game, totals_consensus["point"])
-            if total_prices:
-                total_candidates = [
-                    {
-                        "bet": f"Over {totals_consensus['point']}",
-                        "odds": total_prices["over_odds"],
-                        "book": total_prices["over_book"],
-                        "fair_prob": totals_consensus["over_prob"],
-                    },
-                    {
-                        "bet": f"Under {totals_consensus['point']}",
-                        "odds": total_prices["under_odds"],
-                        "book": total_prices["under_book"],
-                        "fair_prob": totals_consensus["under_prob"],
-                    },
-                ]
-                total_candidates.sort(key=lambda c: expected_value_pct(c["odds"], c["fair_prob"]), reverse=True)
-                top_t = total_candidates[0]
-                total_ev = expected_value_pct(top_t["odds"], top_t["fair_prob"])
-                if total_ev >= 1.0:
-                    disagreement_t = float(totals_consensus.get("disagreement", 0.0))
-                    books_boost_t = min(10.0, (totals_consensus.get("books_count", 1) - 1) * 1.8)
-                    penalty_t = min(16.0, disagreement_t * 100.0 * 0.8)
-                    conf_raw_t = max(50.0, min(94.0, 55.0 + total_ev * 3.4 + books_boost_t - penalty_t))
-                    conf_t = calibrated_confidence(conf_raw_t)
-                    implied_t = calculate_implied_probability(top_t["odds"]) * 100.0
-                    fair_t = top_t["fair_prob"] * 100.0
-                    picks.append({
-                        "id": f"{sport_key}_{home_team}_{away_team}_total_{top_t['odds']}_{time.time_ns()}",
-                        "sport": sport_key,
-                        "emoji": meta.get("emoji", "🎯"),
-                        "label": meta.get("label", sport_key),
-                        "home_team": home_team,
-                        "away_team": away_team,
-                        "game": f"{away_team} @ {home_team}",
-                        "game_time": game_time,
-                        "bet": top_t["bet"],
-                        "bet_type": "total",
-                        "odds": top_t["odds"],
-                        "edge": round(total_ev, 2),
-                        "ev": round(total_ev, 2),
-                        "confidence_raw": round(conf_raw_t, 1),
-                        "confidence": int(round(conf_t)),
-                        "fair_prob": round(fair_t, 1),
-                        "implied_prob": round(implied_t, 1),
-                        "best_book": top_t["book"],
-                        "books_compared": totals_consensus.get("books_count", 1),
-                        "market_disagreement": round(disagreement_t * 100.0, 2),
-                        "model_breakdown": {
-                            "pinnacle_clv": f"Totals consensus fair {fair_t:.1f}% vs implied {implied_t:.1f}% ({total_ev:+.2f}% EV).",
-                            "sharp_money": f"Total consensus {totals_consensus['point']}; disagreement {disagreement_t*100.0:.2f} pts.",
-                            "confirms": "Totals de-vig consensus, best-line EV",
-                        },
-                        "agents_fired": ["totals_ev", "market_consensus", "devig"],
-                        "data_source": "odds_api",
-                    })
     
     return picks
-
-
-def generate_legacy_pick_for_game(sport_key: str, game: dict) -> Optional[dict]:
-    """
-    Legacy v5-style pick scoring kept for backtest comparison.
-    """
-    home_team = game.get("home_team", "")
-    away_team = game.get("away_team", "")
-    home_ml = game.get("home_ml")
-    away_ml = game.get("away_ml")
-    if home_ml is None or away_ml is None:
-        return None
-
-    edge_data = calculate_edge(home_ml, away_ml)
-    if abs(edge_data["home_edge"]) <= 3 and abs(edge_data["away_edge"]) <= 3:
-        return None
-
-    if edge_data["home_edge"] > edge_data["away_edge"]:
-        bet_side = home_team
-        bet_odds = home_ml
-        edge = edge_data["home_edge"]
-        fair_prob = edge_data.get("home_fair_prob", 50.0)
-    else:
-        bet_side = away_team
-        bet_odds = away_ml
-        edge = edge_data["away_edge"]
-        fair_prob = edge_data.get("away_fair_prob", 50.0)
-
-    confidence_raw = max(50.0, min(95.0, 50.0 + abs(edge) * 2.0))
-    return {
-        "id": f"{sport_key}_{home_team}_{away_team}_legacy_{bet_odds}_{time.time_ns()}",
-        "sport": sport_key,
-        "game": f"{away_team} @ {home_team}",
-        "bet": f"{bet_side} ML",
-        "bet_type": "moneyline",
-        "odds": bet_odds,
-        "edge": round(edge, 2),
-        "confidence_raw": round(confidence_raw, 1),
-        "confidence": int(round(confidence_raw)),
-        "fair_prob": float(fair_prob),
-        "implied_prob": round(calculate_implied_probability(bet_odds) * 100.0, 1),
-        "best_book": game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings",
-    }
-
-
-def _model_stats_from_rows(rows: list[sqlite3.Row]) -> dict:
-    resolved = [r for r in rows if r["result"] in ("win", "loss")]
-    if not resolved:
-        return {"resolved": 0, "wins": 0, "losses": 0, "win_rate": 0.0, "avg_edge": 0.0, "avg_confidence": 0.0, "roi_units_per_bet": 0.0, "brier": None}
-
-    wins = sum(1 for r in resolved if r["result"] == "win")
-    losses = len(resolved) - wins
-    win_rate = wins / len(resolved)
-
-    units = 0.0
-    brier_vals = []
-    edge_vals = []
-    conf_vals = []
-    for r in resolved:
-        odds = r["odds"]
-        conf = float(r["confidence_cal"] if r["confidence_cal"] is not None else (r["confidence_raw"] or 50.0))
-        p = max(0.01, min(0.99, conf / 100.0))
-        y = 1.0 if r["result"] == "win" else 0.0
-        brier_vals.append((p - y) ** 2)
-        if r["edge"] is not None:
-            edge_vals.append(float(r["edge"]))
-        conf_vals.append(conf)
-        if odds is None:
-            continue
-        dec = american_to_decimal(int(odds))
-        if r["result"] == "win":
-            units += (dec - 1.0)
-        else:
-            units -= 1.0
-
-    return {
-        "resolved": len(resolved),
-        "wins": wins,
-        "losses": losses,
-        "win_rate": round(win_rate * 100.0, 2),
-        "avg_edge": round(statistics.mean(edge_vals), 3) if edge_vals else 0.0,
-        "avg_confidence": round(statistics.mean(conf_vals), 2) if conf_vals else 0.0,
-        "roi_units_per_bet": round(units / len(resolved), 4),
-        "brier": round(statistics.mean(brier_vals), 4) if brier_vals else None,
-    }
 
 
 def build_ev_rows_for_game(game: dict) -> list:
@@ -1287,6 +858,70 @@ def build_arb_for_game(game: dict) -> Optional[dict]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# BILLING (Stripe)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+TIER_CONFIG = {
+    PLAN_FREE: {
+        "name": "Free",
+        "scan_pick_limit": 3,
+        "features": ["Limited daily picks", "Basic dashboard"],
+    },
+    PLAN_PREMIUM: {
+        "name": "Premium",
+        "scan_pick_limit": 12,
+        "features": ["More picks", "+EV finder", "Priority refresh"],
+    },
+    PLAN_VIP: {
+        "name": "VIP",
+        "scan_pick_limit": 30,
+        "features": ["All picks", "+EV finder", "Arbitrage feed", "Highest limits"],
+    },
+}
+
+
+class CheckoutRequest(BaseModel):
+    tier: str
+    success_url: str
+    cancel_url: str
+    user_id: Optional[str] = None
+
+
+class PortalRequest(BaseModel):
+    return_url: str
+    user_id: Optional[str] = None
+
+
+def _resolve_price_id_for_tier(tier: str) -> str:
+    t = normalize_plan_name(tier)
+    if t == PLAN_PREMIUM:
+        if not PREMIUM_PRICE_IDS:
+            raise HTTPException(status_code=500, detail="Premium price is not configured.")
+        return PREMIUM_PRICE_IDS[0]
+    if t == PLAN_VIP:
+        if not VIP_PRICE_IDS:
+            raise HTTPException(status_code=500, detail="VIP price is not configured.")
+        return VIP_PRICE_IDS[0]
+    raise HTTPException(status_code=400, detail="Free tier does not require checkout.")
+
+
+def _find_or_create_customer(email: str):
+    try:
+        customers = stripe.Customer.search(query=f'email:"{email}"', limit=1)
+        if customers.data:
+            return customers.data[0]
+    except Exception:
+        pass
+    return stripe.Customer.create(email=email, metadata={"userId": email})
+
+
+def _invalidate_plan_cache(user_id: str):
+    if not user_id:
+        return
+    _plan_cache.pop(user_id, None)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1310,9 +945,106 @@ async def health_check():
     }
 
 
+@app.get("/api/pricing")
+async def pricing():
+    return {
+        "tiers": {
+            PLAN_FREE: TIER_CONFIG[PLAN_FREE],
+            PLAN_PREMIUM: {**TIER_CONFIG[PLAN_PREMIUM], "price_ids_configured": len(PREMIUM_PRICE_IDS) > 0},
+            PLAN_VIP: {**TIER_CONFIG[PLAN_VIP], "price_ids_configured": len(VIP_PRICE_IDS) > 0},
+        }
+    }
+
+
+@app.get("/api/plan")
+async def current_plan(plan: str = Depends(get_user_plan)):
+    normalized = normalize_plan_name(plan)
+    return {
+        "plan": normalized,
+        "tier": TIER_CONFIG.get(normalized, TIER_CONFIG[PLAN_FREE]),
+    }
+
+
+@app.post("/api/billing/checkout")
+async def billing_checkout(body: CheckoutRequest, request: Request):
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe is not configured.")
+    user_id = (body.user_id or request.headers.get("x-user-id", "")).strip()
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
+
+    tier = normalize_plan_name(body.tier)
+    price_id = _resolve_price_id_for_tier(tier)
+    customer = await asyncio.to_thread(_find_or_create_customer, user_id)
+
+    session = await asyncio.to_thread(
+        stripe.checkout.Session.create,
+        mode="subscription",
+        customer=customer.id,
+        line_items=[{"price": price_id, "quantity": 1}],
+        success_url=body.success_url,
+        cancel_url=body.cancel_url,
+        allow_promotion_codes=True,
+        client_reference_id=user_id,
+        metadata={"userId": user_id, "tier": tier},
+    )
+    return {"checkout_url": session.url, "session_id": session.id}
+
+
+@app.post("/api/billing/portal")
+async def billing_portal(body: PortalRequest, request: Request):
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe is not configured.")
+    user_id = (body.user_id or request.headers.get("x-user-id", "")).strip()
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id or user_id is required.")
+
+    customer = await asyncio.to_thread(_find_or_create_customer, user_id)
+    session = await asyncio.to_thread(
+        stripe.billing_portal.Session.create,
+        customer=customer.id,
+        return_url=body.return_url,
+    )
+    return {"portal_url": session.url}
+
+
+@app.post("/api/billing/webhook")
+async def billing_webhook(request: Request, stripe_signature: str = Header(default="", alias="Stripe-Signature")):
+    payload = await request.body()
+    if not STRIPE_WEBHOOK:
+        raise HTTPException(status_code=500, detail="Webhook secret is not configured.")
+
+    try:
+        event = stripe.Webhook.construct_event(payload=payload, sig_header=stripe_signature, secret=STRIPE_WEBHOOK)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid webhook payload: {e}")
+
+    event_type = event.get("type", "")
+    obj = event.get("data", {}).get("object", {})
+    user_id = ""
+
+    if event_type == "checkout.session.completed":
+        user_id = (obj.get("client_reference_id") or obj.get("metadata", {}).get("userId") or obj.get("customer_email") or "").strip()
+    elif event_type.startswith("customer.subscription."):
+        customer_id = obj.get("customer")
+        try:
+            if customer_id:
+                customer = await asyncio.to_thread(stripe.Customer.retrieve, customer_id)
+                user_id = (customer.get("email") or customer.get("metadata", {}).get("userId") or "").strip()
+        except Exception:
+            user_id = ""
+
+    if user_id:
+        _invalidate_plan_cache(user_id)
+
+    return {"received": True, "event_type": event_type}
+
+
 @app.get("/api/ev-finder")
-async def ev_finder():
+async def ev_finder(plan: str = Depends(get_user_plan)):
     """Return current +EV opportunities derived from consensus-vs-best-line model."""
+    if plan_rank(plan) < plan_rank(PLAN_PREMIUM):
+        raise HTTPException(status_code=403, detail="Upgrade to Premium to access +EV Finder.")
     rows = []
     for sport in SPORTS:
         games = await fetch_odds_api_games(sport)
@@ -1328,8 +1060,10 @@ async def ev_finder():
 
 
 @app.get("/api/arb-detect")
-async def arb_detect():
+async def arb_detect(plan: str = Depends(get_user_plan)):
     """Return simple two-way arbitrage opportunities across available books."""
+    if plan_rank(plan) < plan_rank(PLAN_VIP):
+        raise HTTPException(status_code=403, detail="Upgrade to VIP to access Arbitrage feed.")
     arbs = []
     for sport in SPORTS:
         games = await fetch_odds_api_games(sport)
@@ -1348,19 +1082,21 @@ async def arb_detect():
 @app.get("/scan")
 async def scan(request: Request):
     """Main scan endpoint - generates picks + shows all upcoming games."""
-    # API key check disabled for now
+    user_plan = await _get_verified_plan(request)
+    tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     
     # Check quota
     if _quota_remaining < 10 and ODDS_API_KEY:
         return {"error": "Low API quota", "quota": _quota_remaining}
     
     all_picks = []
-    legacy_snapshot = []
     all_games = []
+    sport_fetch_counts = {}
     
     # Fetch games for each sport
     for sport in SPORTS:
         games = await fetch_odds_api_games(sport)
+        sport_fetch_counts[sport] = len(games)
         meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
         
         for game in games:
@@ -1382,27 +1118,28 @@ async def scan(request: Request):
             # Also generate picks for positive edge games
             picks = await generate_picks_for_sport(sport, [game])
             all_picks.extend(picks)
-            legacy_pick = generate_legacy_pick_for_game(sport, game)
-            if legacy_pick:
-                legacy_snapshot.append(legacy_pick)
     
     # Sort by edge (highest first)
     all_picks.sort(key=lambda x: x.get("edge", 0), reverse=True)
-    legacy_snapshot.sort(key=lambda x: x.get("edge", 0), reverse=True)
-
-    # Persist model outputs for downstream calibration/backtest.
-    save_generated_picks(all_picks[:50], model_version=MODEL_VERSION)
-    save_generated_picks(legacy_snapshot[:50], model_version=LEGACY_MODEL_VERSION)
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
     
+    pick_limit = int(tier.get("scan_pick_limit", 3))
+    visible_picks = all_picks[:pick_limit]
+
     return {
-        "picks": all_picks[:20],  # Top 20 picks
+        "plan": user_plan,
+        "picks": visible_picks,
         "picks_total": len(all_picks),
         "games": all_games,  # All upcoming games
         "games_total": len(all_games),
-        "model_version": MODEL_VERSION,
+        "paywall": {
+            "visible_pick_limit": pick_limit,
+            "next_tier": PLAN_PREMIUM if user_plan == PLAN_FREE else (PLAN_VIP if user_plan == PLAN_PREMIUM else None),
+        },
+        "debug_fetch_counts": sport_fetch_counts,
+        "debug_has_api_key": bool(ODDS_API_KEY),
         "quota_remaining": _quota_remaining,
         "sports_covered": SPORTS,
     }
@@ -1416,6 +1153,30 @@ async def get_quota():
         "quota_used_last": _quota_used_last,
         "data_source": "The Odds API" if ODDS_API_KEY else "Not configured",
         "cache_ttl_seconds": CACHE_TTL,
+    }
+
+
+@app.get("/api/debug/ingestion")
+async def debug_ingestion():
+    """
+    Quick ingestion diagnostics per sport.
+    """
+    out = {}
+    for sport in SPORTS:
+        games = await fetch_odds_api_games(sport)
+        with_ml = sum(1 for g in games if g.get("home_ml") is not None and g.get("away_ml") is not None)
+        with_spread = sum(1 for g in games if (g.get("spreads_by_book") or {}))
+        with_total = sum(1 for g in games if (g.get("totals_by_book") or {}))
+        out[sport] = {
+            "games": len(games),
+            "with_moneyline": with_ml,
+            "with_spreads": with_spread,
+            "with_totals": with_total,
+        }
+    return {
+        "has_api_key": bool(ODDS_API_KEY),
+        "quota_remaining": _quota_remaining,
+        "sports": out,
     }
 
 
@@ -1489,108 +1250,12 @@ async def injuries():
     return {"injuries": [], "note": "Injury data not available in v5 (cost optimization)"}
 
 
-@app.post("/api/picks/settle")
-async def settle_pick(body: SettlePickRequest):
-    """
-    Mark a generated pick as win/loss/push for calibration + backtest.
-    """
-    result = _clean_result(body.result)
-    settled_at = datetime.utcnow().isoformat()
-    with db_conn() as conn:
-        cur = conn.execute("""
-            UPDATE picks_history
-            SET result = ?, settled_at = ?
-            WHERE id = ?
-        """, (result, settled_at, body.pick_id))
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="pick_id not found")
-    return {"ok": True, "pick_id": body.pick_id, "result": result, "settled_at": settled_at}
-
-
-@app.get("/api/picks/unsettled")
-async def unsettled_picks(limit: int = 200):
-    with db_conn() as conn:
-        rows = conn.execute("""
-            SELECT id, created_at, model_version, sport, game, bet, bet_type, odds, edge, confidence_cal, best_book
-            FROM picks_history
-            WHERE result IS NULL
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (max(1, min(1000, limit)),)).fetchall()
-    return {
-        "count": len(rows),
-        "items": [dict(r) for r in rows],
-    }
-
-
-@app.get("/api/backtest")
-async def backtest(limit: int = 2000):
-    """
-    Compare current model vs legacy model using settled picks in DB.
-    """
-    with db_conn() as conn:
-        rows_new = conn.execute("""
-            SELECT *
-            FROM picks_history
-            WHERE model_version = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (MODEL_VERSION, max(50, min(10000, limit)))).fetchall()
-        rows_old = conn.execute("""
-            SELECT *
-            FROM picks_history
-            WHERE model_version = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (LEGACY_MODEL_VERSION, max(50, min(10000, limit)))).fetchall()
-
-    new_stats = _model_stats_from_rows(rows_new)
-    old_stats = _model_stats_from_rows(rows_old)
-    delta = {}
-    for key in ("win_rate", "roi_units_per_bet", "avg_edge", "avg_confidence"):
-        if isinstance(new_stats.get(key), (int, float)) and isinstance(old_stats.get(key), (int, float)):
-            delta[key] = round(float(new_stats[key]) - float(old_stats[key]), 4)
-
-    return {
-        "as_of_utc": datetime.utcnow().isoformat(),
-        "sample_limit": max(50, min(10000, limit)),
-        "models": {
-            MODEL_VERSION: new_stats,
-            LEGACY_MODEL_VERSION: old_stats,
-        },
-        "delta_new_minus_legacy": delta,
-        "note": "Only settled picks (win/loss) are scored. Use /api/picks/settle to label outcomes.",
-    }
-
-
 @app.get("/api/performance")
 async def performance():
-    """Performance + calibration summary from recorded pick outcomes."""
-    with db_conn() as conn:
-        rows = conn.execute("""
-            SELECT *
-            FROM picks_history
-            WHERE model_version = ?
-            ORDER BY created_at DESC
-            LIMIT 3000
-        """, (MODEL_VERSION,)).fetchall()
-    stats = _model_stats_from_rows(rows)
-    calib = calibration_snapshot(MODEL_VERSION)
-    bins = []
-    for k in sorted((calib.get("bins") or {}).keys()):
-        b = calib["bins"][k]
-        bins.append({
-            "bucket": f"{k}-{k+9}",
-            "n": int(b.get("n", 0)),
-            "empirical_win_rate": round(float(b.get("p_emp", 0.0)) * 100.0, 2),
-        })
+    """Placeholder - would need DB setup."""
     return {
-        "model_version": MODEL_VERSION,
-        "overall": stats,
-        "calibration": {
-            "settled_count": calib.get("count", 0),
-            "bins": bins,
-        },
+        "note": "Performance tracking coming in v5.1",
+        "overall": {"total_picks": 0, "wins": 0, "win_pct": 0}
     }
 
 
