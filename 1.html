@@ -936,50 +936,47 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-note">VIP adds earlier alerts, deeper markets, and execution tools.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">VIP Over Premium</div>
-          <div class="growth-sub"><strong>Earlier access:</strong> picks and props before standard release windows.</div>
-          <div class="growth-sub"><strong>Advanced alerts:</strong> steam/line-jump notifications with faster delivery.</div>
-          <div class="growth-sub"><strong>CLV dashboard:</strong> track close-line performance and timing quality.</div>
-          <div class="growth-sub"><strong>Portfolio tools:</strong> correlation-aware sizing and exposure controls.</div>
+          <div class="growth-title">What VIP Adds</div>
+          <div class="growth-sub"><strong>Core Edge:</strong> earlier releases + VIP picks of the day.</div>
+          <div class="growth-sub"><strong>Execution:</strong> CLV dashboard, timing engine, and market depth.</div>
+          <div class="growth-sub"><strong>Automation:</strong> webhook alerts, watchlists, and weekly reports.</div>
+          <div class="growth-sub"><strong>Community:</strong> private VIP Discord with live drops and discussion.</div>
           <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><button class="pf-btn" onclick="go('vip')">Open VIP Tools</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
           <div class="growth-sub">Free: 2 picks preview.</div>
           <div class="growth-sub">Premium: Props, +EV, Steam, Fades, and higher pick volume.</div>
-          <div class="growth-sub">VIP: Premium + early access + advanced alerts + CLV/portfolio layer.</div>
+          <div class="growth-sub">VIP: Premium + execution layer + automations + VIP Discord.</div>
         </div>
       </div>
     </div>
 
     <div id="v-vip" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Tools</span></div><div class="page-sub">Execution, timing, portfolio, and alert controls.</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Tools</span></div><div class="page-sub">Organized by what to do first: edge, execution, automation, and community.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">CLV Dashboard</div>
-          <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
-          <div class="growth-note">Tracks close-line quality and long-term execution edge.</div>
+          <div class="growth-title">VIP Quick Start</div>
+          <div class="growth-sub">1) Check <strong>Core Edge</strong> for early window + picks.</div>
+          <div class="growth-sub">2) Use <strong>Execution</strong> to time entries.</div>
+          <div class="growth-sub">3) Set <strong>Alerts</strong> and join <strong>VIP Discord</strong>.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Early Release Window</div>
+          <div class="growth-title">Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">VIP Picks of the Day</div>
           <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
+          <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">VIP Discord</div>
-          <div class="growth-sub" id="vip-discord-status">Checking access...</div>
-          <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
-          <div class="growth-note">VIP-only private channel for alerts, card drops, and live discussion.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Bet Timing Engine</div>
+          <div class="growth-title">Execution Intelligence</div>
+          <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
           <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
+          <div class="growth-sub" id="vip-clv-lab">Loading CLV by book...</div>
+          <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
+          <div class="growth-note">Use this block to decide bet now, wait, or pass.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Portfolio Builder</div>
+          <div class="growth-title">Portfolio + Watchlist</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-bankroll" type="number" min="100" step="50" placeholder="Bankroll (e.g. 1000)"/>
             <select class="auth-in" id="vip-risk" style="font-family:var(--sans)">
@@ -990,9 +987,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
           <div class="rf-row"><button class="paywall-cta" onclick="runVipPortfolio()">Build Portfolio</button></div>
           <div class="growth-note" id="vip-portfolio">No portfolio generated yet.</div>
+          <div class="rf-row"><input class="auth-in" id="vip-watchlist" type="text" placeholder="Lakers, Chiefs, Tatum"/></div>
+          <div class="rf-row"><button class="pf-btn" onclick="saveVipWatchlist()">Save Watchlist</button></div>
+          <div class="growth-note" id="vip-watchlist-note">No watchlist configured.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">VIP Alerts</div>
+          <div class="growth-title">Alerts + Automation</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-webhook" type="text" placeholder="Webhook URL (Discord/Slack)"/>
           </div>
@@ -1004,21 +1004,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">CLV Lab</div>
-          <div class="growth-sub" id="vip-clv-lab">Loading CLV by book...</div>
+          <div class="growth-title">VIP Discord</div>
+          <div class="growth-sub" id="vip-discord-status">Checking access...</div>
+          <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
+          <div class="growth-note">Private VIP channel for alert drops, card recaps, and live discussion.</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Market Depth</div>
-          <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Auto Watchlists</div>
-          <div class="rf-row"><input class="auth-in" id="vip-watchlist" type="text" placeholder="Lakers, Chiefs, Tatum"/></div>
-          <div class="rf-row"><button class="pf-btn" onclick="saveVipWatchlist()">Save Watchlist</button></div>
-          <div class="growth-note" id="vip-watchlist-note">No watchlist configured.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">VIP Weekly Report</div>
+          <div class="growth-title">Weekly Report</div>
           <div class="rf-row"><button class="pf-btn" onclick="generateVipReport()">Generate Report</button></div>
           <div class="growth-note" id="vip-report-note">No report generated yet.</div>
         </div>
