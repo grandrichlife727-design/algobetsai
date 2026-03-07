@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: winkaura-order-bridge
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SHOPIFY_STORE_DOMAIN
+        sync: false
+      - key: SHOPIFY_ADMIN_TOKEN
+        sync: false
+      - key: SHOPIFY_VARIANT_ID
+        sync: false
+      - key: WINKAURA_SKU
+        value: CJJJ110044801AZ
+      - key: SHOPIFY_API_VERSION
+        value: 2024-10
+      - key: ORDER_TAGS
+        value: winkaura,stripe,cj-fulfillment

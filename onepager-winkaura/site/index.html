@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WinkAura | Magnetic Lash Kit</title>
+  <meta name="description" content="Snap-on magnetic lashes in seconds. No glue. No mess. Reusable, beginner-friendly lash kit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff7fa;
+      --ink: #2b2330;
+      --muted: #7a6b76;
+      --pink: #c25a86;
+      --pink-2: #a9446f;
+      --card: #fff;
+      --line: #f0d8e4;
+      --max: 1120px;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
+    body {
+      font-family: "DM Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 400px at -10% -10%, #ffe4f0 0%, transparent 55%),
+        radial-gradient(700px 350px at 100% 0, #ffeaf3 0%, transparent 50%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    .wrap { width: min(var(--max), 92vw); margin: 0 auto; }
+    header {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(10px);
+      background: rgba(255,247,250,.8);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { height: 72px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+    .brand img { width: 42px; height:42px; border-radius:12px; border:1px solid var(--line); background:#fff; }
+    .brand span { font-family: "Playfair Display", serif; font-size: 30px; }
+    .top-cta {
+      text-decoration:none; border:none; border-radius:999px; padding: 11px 16px;
+      background: var(--pink); color:#fff; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    }
+    .hero {
+      display:grid; grid-template-columns: 1.05fr .95fr; gap:20px; align-items:center;
+      padding: 38px 0 28px;
+    }
+    .pill {
+      display:inline-block; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+      padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--muted);
+    }
+    h1 {
+      font-family:"Playfair Display",serif;
+      font-size: clamp(40px, 7vw, 72px);
+      line-height:.95;
+      margin: 12px 0;
+    }
+    .lead { color:var(--muted); font-size: clamp(16px, 2.2vw, 20px); max-width: 60ch; }
+    .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top: 18px; }
+    .btn {
+      border:none; border-radius:999px; padding:14px 20px; font-size:12px; font-weight:800;
+      letter-spacing:.08em; text-transform:uppercase; text-decoration:none; cursor:pointer;
+    }
+    .btn.primary { background: var(--pink); color:#fff; }
+    .btn.ghost { background:#fff; color:var(--pink-2); border:1px solid var(--line); }
+
+    .hero-card {
+      background: var(--card); border:1px solid var(--line); border-radius: var(--radius); padding:16px;
+      box-shadow: 0 14px 28px rgba(171, 75, 117, .16);
+    }
+    .mock {
+      width:100%; aspect-ratio: 4/5; border-radius: 14px;
+      background: linear-gradient(145deg, #ffd7e8 0%, #ffc9df 45%, #ffbfd8 100%);
+      border:1px solid #f2c5d8; position:relative;
+    }
+    .mock::before {
+      content:"WinkAura"; position:absolute; left:14px; top:12px; font-weight:800; letter-spacing:.08em; font-size:12px; color:#8f4466;
+    }
+    .mock::after {
+      content:"Magnetic Lash Kit"; position:absolute; right:12px; bottom:10px; font-size:11px; color:#92526f;
+    }
+
+    section { padding: 18px 0; }
+    .sec-title { font-family:"Playfair Display",serif; font-size: clamp(34px,5vw,50px); line-height:1; margin: 0 0 10px; }
+    .sec-sub { color:var(--muted); margin:0 0 14px; }
+
+    .grid3 { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; }
+    .card {
+      background: #fff; border:1px solid var(--line); border-radius: 14px; padding:16px;
+    }
+    .card h3 { margin:0 0 6px; font-size:20px; }
+    .card p { margin:0; color:var(--muted); }
+
+    .price-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:14px; }
+    .price-card {
+      border:1px solid var(--line); border-radius: 16px; background:#fff; padding:16px; display:flex; flex-direction:column; gap:10px;
+    }
+    .price-card.featured { border-color:#cf739a; box-shadow: 0 12px 28px rgba(194,90,134,.18); transform: translateY(-3px); }
+    .tag { display:inline-block; align-self:flex-start; background:#ffe9f2; color:#9a4d70; border-radius:999px; padding:6px 10px; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .price { font-size:42px; font-weight:800; line-height:1; }
+    .price span { font-size:14px; font-weight:500; color:var(--muted); }
+    .list { margin:0; padding-left:18px; color:var(--muted); }
+    .list li { margin:6px 0; }
+
+    details { border:1px solid var(--line); border-radius: 12px; background:#fff; padding:12px 14px; margin-bottom:10px; }
+    summary { cursor:pointer; font-weight:700; }
+    details p { margin:8px 0 0; color:var(--muted); }
+
+    footer { padding: 42px 0 90px; color:var(--muted); font-size:14px; }
+
+    .sticky-cta {
+      position: fixed; left:12px; right:12px; bottom:12px; z-index:70;
+      border-radius: 999px; background: linear-gradient(90deg,var(--pink),var(--pink-2)); color:#fff;
+      text-align:center; text-decoration:none; padding:14px 20px; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+      box-shadow: 0 14px 30px rgba(169,68,111,.36);
+    }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid3, .price-grid { grid-template-columns: 1fr; }
+      .price-card.featured { transform:none; }
+      .brand span { font-size: 26px; }
+    }
+    @media (min-width: 981px) {
+      .sticky-cta { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#top"><img src="../branding/winkaura-mark.svg" alt="WinkAura mark"><span>WinkAura</span></a>
+      <a class="top-cta" href="#pricing">Get Yours</a>
+    </div>
+  </header>
+
+  <main id="top" class="wrap">
+    <section class="hero">
+      <div>
+        <span class="pill">TikTok-Friendly Beauty Winner</span>
+        <h1>Perfect lashes in seconds.<br>No glue. No mess.</h1>
+        <p class="lead">WinkAura Magnetic Lash Kit gives you the glam look fast with reusable lashes and magnetic eyeliner that clicks into place.</p>
+        <div class="btns">
+          <a class="btn primary" href="#pricing">Shop Bundles</a>
+          <a class="btn ghost" href="#faq">How it works</a>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <div class="mock" aria-label="WinkAura product visual placeholder"></div>
+        <p style="margin:10px 0 0;color:var(--muted);font-size:13px;">Includes magnetic liner, reusable lashes, and applicator tool.</p>
+      </aside>
+    </section>
+
+    <section>
+      <h2 class="sec-title">Why this product sells</h2>
+      <p class="sec-sub">Easy demo + instant visual upgrade + strong bundle economics.</p>
+      <div class="grid3">
+        <article class="card"><h3>10-Second Apply</h3><p>Show the full transformation in a short clip.</p></article>
+        <article class="card"><h3>Reusable Value</h3><p>Customers feel they save versus daily salon or one-time lashes.</p></article>
+        <article class="card"><h3>Giftable & Bundleable</h3><p>Perfect for 2-pack and 3-pack offers to raise AOV fast.</p></article>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <h2 class="sec-title">Choose your lash bundle</h2>
+      <p class="sec-sub">Most buyers choose the 2-pack.</p>
+      <div class="price-grid">
+        <article class="price-card">
+          <h3>1x WinkAura Kit</h3>
+          <div class="price">$29 <span>starter</span></div>
+          <ul class="list"><li>1 magnetic lash set</li><li>Magnetic eyeliner</li><li>Applicator tool</li></ul>
+          <button class="btn primary" data-checkout="single">Buy Now</button>
+        </article>
+        <article class="price-card featured">
+          <span class="tag">Most Popular</span>
+          <h3>2x WinkAura Kits</h3>
+          <div class="price">$49 <span>save $9</span></div>
+          <ul class="list"><li>2 complete kits</li><li>Gift one, keep one</li><li>Priority handling</li></ul>
+          <button class="btn primary" data-checkout="double">Buy 2-Pack</button>
+        </article>
+        <article class="price-card">
+          <h3>3x WinkAura Kits</h3>
+          <div class="price">$69 <span>best value</span></div>
+          <ul class="list"><li>3 complete kits</li><li>Best for gifting</li><li>Priority handling</li></ul>
+          <button class="btn primary" data-checkout="triple">Buy 3-Pack</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2 class="sec-title">FAQ</h2>
+      <details><summary>Will these stay on all day?</summary><p>Yes, with proper eyeliner application and dry-down time, hold is designed for all-day wear.</p></details>
+      <details><summary>How many times can I reuse them?</summary><p>With proper care and cleaning, lashes are reusable multiple times.</p></details>
+      <details><summary>How long is shipping?</summary><p>Typical shipping is 6-12 business days depending on location.</p></details>
+      <details><summary>Can beginners use this?</summary><p>Yes. This kit is designed to be beginner-friendly compared to glue-on lash workflows.</p></details>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p><strong>WinkAura Magnetic Lash Kit</strong></p>
+    <p>support@winkaura.co | Terms | Privacy | Returns</p>
+  </footer>
+
+  <a class="sticky-cta" href="#pricing">Shop WinkAura</a>
+
+  <script>
+    const STRIPE_LINKS = {
+      single: "https://buy.stripe.com/REPLACE_SINGLE",
+      double: "https://buy.stripe.com/REPLACE_DOUBLE",
+      triple: "https://buy.stripe.com/REPLACE_TRIPLE"
+    };
+
+    document.querySelectorAll("[data-checkout]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const plan = btn.getAttribute("data-checkout");
+        const url = STRIPE_LINKS[plan];
+        if (!url || url.includes("REPLACE_")) {
+          alert("Add your Stripe Payment Link for this bundle in STRIPE_LINKS first.");
+          return;
+        }
+        window.open(url, "_blank", "noopener");
+      });
+    });
+  </script>
+</body>
+</html>
