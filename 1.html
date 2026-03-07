@@ -1251,6 +1251,10 @@ let WALK_WEEKS = 12;
 let TOMORROW_GAMES = [];
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
+const TIER_PRICE_DISPLAY = {
+  premium: {monthly: '$19.99/mo', annual: '$199.99/yr'},
+  vip: {monthly: '$39.99/mo', annual: '$399.99/yr'},
+};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function americanToDecimal(odds) {
@@ -2503,6 +2507,15 @@ function annualConfiguredForTier(tier) {
   return !!PRICING?.[t]?.billing?.annual_configured;
 }
 
+function tierPriceLabel(tier, cycle = 'monthly') {
+  const t = normalizePlan(tier);
+  const c = cycle === 'annual' ? 'annual' : 'monthly';
+  const row = TIER_PRICE_DISPLAY[t];
+  if (!row) return '';
+  if (c === 'annual') return row.annual || '';
+  return row.monthly || '';
+}
+
 function updatePlanUi() {
   const p = normalizePlan(currentPlan);
   const pill = document.getElementById('plan-pill');
@@ -2707,10 +2720,15 @@ function openUpgradePicker() {
   grid.innerHTML = opts.map(o => {
     const annualOn = annualConfiguredForTier(o.tier);
     const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
+    const monthlyLabel = tierPriceLabel(o.tier, 'monthly');
+    const annualLabel = tierPriceLabel(o.tier, 'annual');
+    const priceLine = annualOn
+      ? `Monthly ${monthlyLabel} · Annual ${annualLabel}`
+      : `Monthly ${monthlyLabel} · Annual coming soon`;
     const cycleHint = billingCycle === 'annual'
       ? (annualOn ? 'Annual billing at checkout' : 'Annual not yet configured, monthly fallback')
       : 'Monthly billing at checkout';
-    return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${o.desc} · ${cycleHint}</span></button>`;
+    return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');
   document.getElementById('up-ov').classList.add('on');
 }
