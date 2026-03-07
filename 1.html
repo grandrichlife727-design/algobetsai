@@ -2799,12 +2799,20 @@ function renderHomeModules() {
     if (!PICKS.length) {
       topEl.innerHTML = 'No picks loaded yet. Tap <strong>Scan Now</strong> to refresh the board.';
     } else {
-      topEl.innerHTML = PICKS.slice(0, 3).map((p, i) =>
-        `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:${i<2?'1px solid var(--border)':'none'}">
+      const premiumOn = canUsePremium();
+      const visible = premiumOn ? 3 : 1;
+      const rows = PICKS.slice(0, visible).map((p, i) =>
+        `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
           <div style="font-weight:700;color:var(--text)">${esc(p.bet)}</div>
           <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
         </div>`
       ).join('');
+      const locked = premiumOn ? '' : `
+        <div style="padding:8px 0 0;color:var(--muted);font-size:12px">
+          2 more top picks are Premium-only.
+          <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Unlock</button>
+        </div>`;
+      topEl.innerHTML = rows + locked;
     }
   }
 
