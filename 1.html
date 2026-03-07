@@ -230,6 +230,9 @@ html, body {
 .props-player{font-size:14px;font-weight:700;color:var(--text)}
 .props-badge{font-size:10px;font-family:var(--mono);padding:2px 7px;border:1px solid rgba(34,211,238,.24);border-radius:999px;color:var(--cyan);background:rgba(34,211,238,.08)}
 .props-meta{font-size:11px;color:var(--sub)}
+.live-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.live-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.live-min{font-size:11px;color:var(--amber);font-family:var(--mono)}
 
 /* ARB */
 .steam-card{background:var(--card);border:1px solid rgba(34,211,238,.14);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:9px;animation:fadein .3s ease both}
@@ -482,6 +485,10 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Odds
   </button>
+  <button class="nav-item" onclick="go('live')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/></svg>
+    Live
+  </button>
   <button class="nav-item" onclick="go('props')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     Props
@@ -642,6 +649,11 @@ html, body {
       <div class="page-hdr"><div class="page-title">Live <span>Odds</span></div><div class="page-sub">Book-by-book moneylines from latest scan</div></div>
       <div class="odds-sports" id="odds-sports"></div>
       <div class="picks-list" id="odds-list"></div>
+    </div>
+
+    <div id="v-live" style="display:none">
+      <div class="page-hdr"><div class="page-title">In-Game <span>Mode</span></div><div class="page-sub">Near-kickoff and live windows with faster pricing shifts</div></div>
+      <div class="picks-list" id="live-list"></div>
     </div>
 
     <div id="v-props" style="display:none">
@@ -848,6 +860,67 @@ html, body {
           </div>
           <div class="growth-note" id="pf-note">Using default settings.</div>
         </div>
+        <div class="growth-card">
+          <div class="growth-title">Bankroll Planner</div>
+          <div class="growth-sub">Auto-calc units, stop-loss, and max exposure.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="br-bankroll" type="number" min="10" step="10" placeholder="1000"/>
+            <button class="paywall-cta" onclick="runBankrollPlan()">Run Plan</button>
+          </div>
+          <div class="growth-note" id="br-note">No plan generated yet.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Alert Packs</div>
+          <div class="growth-sub">Quick subscriptions: A-grade +EV, underdog steam, totals.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="ap-pack" style="font-family:var(--sans)">
+              <option value="a_grade_ev4">A-grade +EV</option>
+              <option value="underdog_steam">Underdog Steam</option>
+              <option value="totals_only">Totals Only</option>
+            </select>
+            <button class="paywall-cta" onclick="saveAlertPack()">Save Pack</button>
+          </div>
+          <div class="growth-note" id="ap-note">No pack enabled.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Agent Weights</div>
+          <div class="growth-sub">Tune model emphasis for your style.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="aw-best" type="number" step="0.1" min="0.2" max="3" placeholder="Best Line"/>
+            <input class="auth-in" id="aw-steam" type="number" step="0.1" min="0.2" max="3" placeholder="Steam"/>
+          </div>
+          <div class="rf-row">
+            <button class="paywall-cta" onclick="saveAgentWeights()">Save Weights</button>
+          </div>
+          <div class="growth-note" id="aw-note">Using default weights.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Bet Journal</div>
+          <div class="growth-sub">Track bets and export CSV for taxes/accounting.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="jr-game" type="text" placeholder="Lakers @ Suns"/>
+            <input class="auth-in" id="jr-bet" type="text" placeholder="Lakers ML"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="jr-odds" type="text" placeholder="+120"/>
+            <button class="paywall-cta" onclick="addJournalEntry()">Add</button>
+          </div>
+          <div class="rf-row">
+            <button class="pf-btn" onclick="exportJournalCsv()">Export CSV</button>
+          </div>
+          <div class="growth-note" id="jr-note">No journal entries yet.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Affiliate Dashboard</div>
+          <div class="growth-sub">Track creator link clicks and conversions.</div>
+          <div class="growth-note" id="af-note">Loading affiliate data...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">News Impact Engine</div>
+          <div class="growth-sub">Market dispersion signals likely news/lineup impact.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
+          <div class="growth-note" id="ni-note">No impact data loaded.</div>
+        </div>
       </div>
     </div>
 
@@ -860,6 +933,10 @@ html, body {
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
+  </button>
+  <button class="mnav-btn" id="mn-live" onclick="go('live')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>
+    <span class="mnav-label">Live</span>
   </button>
   <button class="mnav-btn" id="mn-props" onclick="go('props')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
@@ -1016,6 +1093,12 @@ let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
+let LIVEDATA = [];
+let CLVDATA = null;
+let AGENTWEIGHTS = null;
+let ALERTPACKS = null;
+let AFFILIATE = null;
+let NEWSIMPACT = [];
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 
@@ -1313,6 +1396,183 @@ async function loadQuotaDashboard() {
     note.textContent = `Used: ${used} · Remaining: ${rem} · Props cap: ${cap} (${pct}%)`;
   } catch (err) {
     note.textContent = 'Could not load quota dashboard.';
+  }
+}
+
+function openBetSlip(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  const q = encodeURIComponent(`${p.game} ${p.bet} ${p.odds}`);
+  const map = {
+    draftkings: 'https://sportsbook.draftkings.com',
+    fanduel: 'https://sportsbook.fanduel.com',
+    betmgm: 'https://sports.betmgm.com',
+    caesars: 'https://sportsbook.caesars.com',
+  };
+  const book = String(p.bookRaw || '').toLowerCase();
+  const base = map[book] || BOOK_URLS[book] || '#';
+  if (base === '#') return showToast('Book deep link not available');
+  window.open(`${base}?q=${q}`, '_blank', 'noopener');
+}
+
+function renderLive() {
+  const el = document.getElementById('live-list');
+  if (!el) return;
+  if (!LIVEDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⏱️</div><div class="empty-title">No live windows yet</div><div class="empty-sub">Check around tipoff/kickoff windows.</div></div>`;
+    return;
+  }
+  el.innerHTML = LIVEDATA.map(r => `
+    <div class="live-card">
+      <div class="live-top"><div><strong>${esc(r.sport)}</strong> · ${esc(r.game)}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
+      <div class="props-meta">${esc(r.home_team)} ${esc(String(r.home_ml > 0 ? '+' + r.home_ml : r.home_ml))} · ${esc(r.away_team)} ${esc(String(r.away_ml > 0 ? '+' + r.away_ml : r.away_ml))}</div>
+    </div>
+  `).join('');
+}
+
+async function loadLive() {
+  const el = document.getElementById('live-list');
+  if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading live mode...</div></div>`;
+  try {
+    const res = await backendGet('/api/live');
+    LIVEDATA = Array.isArray(res.live) ? res.live : [];
+  } catch (err) {
+    LIVEDATA = [];
+    if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Live mode unavailable</div></div>`;
+  }
+  renderLive();
+}
+
+async function loadCLV() {
+  try {
+    const res = await backendGet('/api/clv');
+    CLVDATA = res.clv || null;
+    const clvEl = document.getElementById('pf-roi');
+    const lbl = document.getElementById('pf-win-lbl');
+    if (clvEl && CLVDATA) clvEl.textContent = `${Number(CLVDATA.beat_closing_pct || 0).toFixed(1)}%`;
+    if (lbl) lbl.textContent = 'Beat closing line';
+  } catch (err) {}
+}
+
+async function runBankrollPlan() {
+  const bankroll = Number(document.getElementById('br-bankroll')?.value || 0);
+  const mode = String(document.getElementById('pf-bankroll')?.value || 'standard');
+  const note = document.getElementById('br-note');
+  if (!bankroll || bankroll < 10) return showToast('Enter bankroll amount');
+  try {
+    const res = await backendPost('/api/bankroll/plan', {bankroll, risk_mode: mode});
+    const p = res.plan || {};
+    if (note) note.textContent = `Unit $${p.unit_size} · Max exposure $${p.max_exposure_dollars} · Stop-loss $${p.stop_loss_daily_dollars}`;
+  } catch (err) {
+    if (note) note.textContent = 'Could not generate plan.';
+  }
+}
+
+async function loadAgentWeights() {
+  const note = document.getElementById('aw-note');
+  try {
+    const res = await backendGet('/api/agents/weights');
+    AGENTWEIGHTS = res.weights || {};
+    const b = document.getElementById('aw-best');
+    const s = document.getElementById('aw-steam');
+    if (b) b.value = Number(AGENTWEIGHTS.best_line_ev || 1).toFixed(1);
+    if (s) s.value = Number(AGENTWEIGHTS.steam || 1).toFixed(1);
+    if (note) note.textContent = `Best-Line ${AGENTWEIGHTS.best_line_ev || 1} · Steam ${AGENTWEIGHTS.steam || 1}`;
+  } catch (err) {
+    if (note) note.textContent = 'Using default weights.';
+  }
+}
+
+async function saveAgentWeights() {
+  const best = Number(document.getElementById('aw-best')?.value || 1);
+  const steam = Number(document.getElementById('aw-steam')?.value || 1);
+  const note = document.getElementById('aw-note');
+  try {
+    await backendPost('/api/agents/weights', {best_line_ev: best, steam: steam});
+    if (note) note.textContent = `Saved: Best-Line ${best.toFixed(1)} · Steam ${steam.toFixed(1)}`;
+    showToast('Agent weights saved');
+  } catch (err) {
+    if (note) note.textContent = 'Could not save weights.';
+  }
+}
+
+async function loadAlertPacks() {
+  const note = document.getElementById('ap-note');
+  try {
+    const res = await backendGet('/api/alerts/packs');
+    ALERTPACKS = res;
+    const enabled = Array.isArray(res.enabled) ? res.enabled : [];
+    if (note) note.textContent = enabled.length ? `Enabled: ${enabled.join(', ')}` : 'No pack enabled.';
+  } catch (err) {
+    if (note) note.textContent = 'Could not load packs.';
+  }
+}
+
+async function saveAlertPack() {
+  const pack = String(document.getElementById('ap-pack')?.value || 'a_grade_ev4');
+  const note = document.getElementById('ap-note');
+  try {
+    const res = await backendPost('/api/alerts/packs', {pack, enabled: true});
+    if (note) note.textContent = `Enabled: ${(res.enabled || []).join(', ')}`;
+    showToast('Alert pack saved');
+  } catch (err) {
+    if (note) note.textContent = 'Could not save pack.';
+  }
+}
+
+async function addJournalEntry() {
+  const game = String(document.getElementById('jr-game')?.value || '').trim();
+  const bet = String(document.getElementById('jr-bet')?.value || '').trim();
+  const odds = String(document.getElementById('jr-odds')?.value || '').trim();
+  const note = document.getElementById('jr-note');
+  if (!game || !bet || !odds) return showToast('Fill game, bet, odds');
+  try {
+    await backendPost('/api/journal/add', {game, bet, odds, result: 'open'});
+    if (note) note.textContent = `Added: ${bet} ${odds}`;
+    loadJournalStats();
+    showToast('Journal entry added');
+  } catch (err) {
+    if (note) note.textContent = 'Could not add journal entry.';
+  }
+}
+
+async function loadJournalStats() {
+  const note = document.getElementById('jr-note');
+  try {
+    const res = await backendGet('/api/journal?limit=1');
+    const count = Number(res.count || 0);
+    if (note) note.textContent = count ? `${count} entries saved.` : 'No journal entries yet.';
+  } catch (err) {
+    if (note) note.textContent = 'Journal unavailable.';
+  }
+}
+
+function exportJournalCsv() {
+  const url = `${BACKEND}/api/journal/export.csv?uid=${encodeURIComponent(USER_ID)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
+async function loadAffiliate() {
+  const note = document.getElementById('af-note');
+  try {
+    const res = await backendGet('/api/affiliate/status');
+    AFFILIATE = res.affiliate || null;
+    if (!AFFILIATE) return;
+    if (note) note.textContent = `Code ${AFFILIATE.code} · Clicks 30d ${AFFILIATE.clicks_30d} · Referrals ${AFFILIATE.referrals_total} · Conv ${AFFILIATE.estimated_conversion_pct}%`;
+  } catch (err) {
+    if (note) note.textContent = 'Affiliate data unavailable.';
+  }
+}
+
+async function loadNewsImpact() {
+  const note = document.getElementById('ni-note');
+  if (note) note.textContent = 'Loading impact...';
+  try {
+    const res = await backendGet('/api/news-impact');
+    NEWSIMPACT = Array.isArray(res.impacts) ? res.impacts : [];
+    if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
+  } catch (err) {
+    if (note) note.textContent = 'Impact feed unavailable.';
   }
 }
 
@@ -2587,6 +2847,7 @@ async function doScan(silent = false) {
 
   renderPicks();
   renderOdds();
+  renderLive();
   renderProps();
   renderEV();
   renderSteam();
@@ -2652,6 +2913,7 @@ function renderPicks() {
   <div class="pick-explain${mode === 'simple' ? ' on' : ''}" id="exp-${p.id}">${p.explain}</div>
   <div class="pick-actions">
     <button class="btn-how" onclick="showAction(${p.id})">👉 How to bet this</button>
+    <button class="btn-how" onclick="openBetSlip(${p.id})">Bet Slip</button>
     <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
     <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
     <button class="btn-win" onclick="postPickToCommunity(${p.id},'win')">Post Win</button>
@@ -2851,6 +3113,7 @@ async function loadPerformance() {
   }
   try {
     PERFDATA = await backendGet('/api/performance');
+    loadCLV();
   } catch (err) {
     PERFDATA = {overall: {monthly_units: []}, streak: {current_days: 0}};
   }
@@ -2977,7 +3240,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','props','ev','steam','fades','parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile'];
 const MOBILE_MORE_TABS = ['boost','perf','history','community','profile'];
 
 function closeMobileMore() {
@@ -3017,6 +3280,7 @@ function go(name) {
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') renderOdds();
+  if (name === 'live') loadLive();
   if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
@@ -3030,6 +3294,11 @@ function go(name) {
     loadStreakStatus();
     loadProfileSettings();
     loadQuotaDashboard();
+    loadAgentWeights();
+    loadAlertPacks();
+    loadAffiliate();
+    loadNewsImpact();
+    loadJournalStats();
   }
   saveState();
 }
