@@ -338,6 +338,7 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     rec.setdefault("trial_until", 0)
     rec.setdefault("free_trial_claimed", False)
     rec.setdefault("free_trial_claimed_at", 0)
+    rec.setdefault("community_post_timestamps", [])
     rec.setdefault("alerts", [])
     rec.setdefault("history", [])
     users[user_id] = rec
@@ -382,6 +383,13 @@ def _build_referral_status(user_id: str) -> dict[str, Any]:
         "trial_seconds_left": secs_left,
         "free_trial_claimed": bool(rec.get("free_trial_claimed")),
     }
+
+
+def _is_registered_user_id(user_id: str) -> bool:
+    uid = (user_id or "").strip().lower()
+    if not uid or uid.startswith("guest_"):
+        return False
+    return True
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1017,6 +1025,11 @@ class CommunityPostRequest(BaseModel):
     sport: Optional[str] = ""
 
 
+COMMUNITY_POST_WINDOW_SECONDS = 10 * 60
+COMMUNITY_POST_MAX_PER_WINDOW = 3
+COMMUNITY_POST_MAX_PER_DAY = 15
+
+
 def _request_user_id(request: Request) -> str:
     return (request.headers.get("x-user-id", "") or request.query_params.get("uid", "")).strip()
 
@@ -1306,6 +1319,8 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
     user_id = _request_user_id(request)
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id is required.")
+    if not _is_registered_user_id(user_id):
+        raise HTTPException(status_code=403, detail="Sign in is required to post.")
 
     mode = (body.mode or "pick").strip().lower()
     if mode not in {"pick", "win"}:
@@ -1323,8 +1338,26 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
         except Exception:
             ev = None
 
-    if not any([text, bet, game]):
-        raise HTTPException(status_code=400, detail="Post content is empty.")
+    # Verified feed only: require actual pick details to prevent spam/freeform dumping.
+    if not all([bet, game, odds]):
+        raise HTTPException(status_code=400, detail="Verified pick fields (bet, game, odds) are required.")
+    if re.search(r"https?://|www\.", text, flags=re.IGNORECASE) or re.search(r"https?://|www\.", bet, flags=re.IGNORECASE):
+        raise HTTPException(status_code=400, detail="Links are not allowed in community posts.")
+    if not re.match(r"^[+-]?\d{2,4}$", odds):
+        raise HTTPException(status_code=400, detail="Invalid odds format.")
+
+    rec = _ensure_growth_user(user_id)
+    now_ts = int(time.time())
+    post_times = [int(ts) for ts in rec.get("community_post_timestamps", []) if int(ts) > (now_ts - 86400)]
+    window_count = len([ts for ts in post_times if ts > (now_ts - COMMUNITY_POST_WINDOW_SECONDS)])
+    if window_count >= COMMUNITY_POST_MAX_PER_WINDOW:
+        raise HTTPException(status_code=429, detail="Too many posts. Please wait a few minutes.")
+    if len(post_times) >= COMMUNITY_POST_MAX_PER_DAY:
+        raise HTTPException(status_code=429, detail="Daily post limit reached. Try again tomorrow.")
+    rec["community_post_timestamps"] = post_times + [now_ts]
+
+    if not text:
+        text = "Cashed this pick." if mode == "win" else "Sharing this pick."
 
     masked_user = user_id
     if "@" in user_id:
@@ -1344,6 +1377,7 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
         "odds": odds,
         "ev": ev,
         "sport": sport,
+        "verified": True,
     }
     feed = _growth_db.setdefault("community_posts", [])
     feed.append(post)
