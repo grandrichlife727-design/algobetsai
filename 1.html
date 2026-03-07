@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Algobets AI surfaces +EV picks, arbitrage spots, and betting tools in one live dashboard."/>
+<meta name="theme-color" content="#070a10"/>
 <title>Algobets AI — Smart Picks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -65,6 +67,7 @@ html, body {
 .logo-text b{color:var(--cyan)}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
+.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
@@ -279,6 +282,9 @@ html, body {
 /* LOADING SKELETON */
 .skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400%;animation:skeleton 1.4s infinite;border-radius:6px}
 @keyframes skeleton{0%{background-position:100%}100%{background-position:-100%}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
 
 /* EMPTY / ERROR */
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
@@ -406,7 +412,7 @@ html, body {
         <div class="stat s-cyan"><div class="stat-val" id="s-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
         <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">64.2%</div><div class="stat-label">30-day win rate</div></div>
       </div>
-      <div class="error-banner" id="err-banner"></div>
+      <div class="error-banner" id="err-banner" role="status" aria-live="polite"></div>
       <div class="mode-row">
         <div class="mode-group">
           <button class="mode-btn active" id="m-simple" onclick="setMode('simple')">Simple</button>
@@ -415,13 +421,13 @@ html, body {
         <span class="mode-hint" id="mode-hint">Plain English</span>
       </div>
       <div class="filters">
-        <div class="filter active" onclick="setFilter(this,'all')">All Sports</div>
-        <div class="filter" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
-        <div class="filter" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
-        <div class="filter" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
-        <div class="filter" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
-        <div class="filter" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
-        <div class="filter" onclick="setFilter(this,'a')">A-Grade Only</div>
+        <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
       <div class="sec-hdr">
         <span class="sec-title" id="picks-count">Loading...</span>
@@ -443,7 +449,7 @@ html, body {
 
     <div id="v-ev" style="display:none">
       <div class="page-hdr"><div class="page-title">+EV <span>Finder</span></div><div class="page-sub">Bets priced better than fair value — powered by live Odds API data</div></div>
-      <div class="error-banner" id="ev-err-banner"></div>
+      <div class="error-banner" id="ev-err-banner" role="status" aria-live="polite"></div>
       <div class="sec-hdr"><span class="sec-title" id="ev-count">Loading...</span><span class="sec-meta">Pinnacle devig method</span></div>
       <div class="ev-table">
         <div class="ev-hdr"><div>Bet</div><div>EV %</div><div>Best book</div><div>Odds</div></div>
@@ -550,7 +556,7 @@ html, body {
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -564,6 +570,7 @@ const SPORTS = [
   {key:'baseball_mlb',     label:'MLB ⚾'},
   {key:'soccer_epl',       label:'EPL ⚽'},
 ];
+const STATE_KEY = 'algobets-ui-state-v1';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
@@ -633,9 +640,39 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('on'), 2200);
 }
 
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
   return map[bk] || bk;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    if (st.mode === 'simple' || st.mode === 'expert') mode = st.mode;
+    if (typeof st.filter === 'string') filter = st.filter;
+    if (typeof st.currentTab === 'string') currentTab = st.currentTab;
+    if (Array.isArray(st.legs)) {
+      legs = st.legs
+        .map(l => ({id: Number(l.id), bet: String(l.bet || ''), odds: String(l.odds || '')}))
+        .filter(l => Number.isFinite(l.id) && l.bet && l.odds);
+    }
+  } catch(err) {
+    console.warn('[Algobets] Could not read saved UI state:', err);
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab}));
+  } catch(err) {
+    console.warn('[Algobets] Could not save UI state:', err);
+  }
 }
 
 // ─── BACKEND ─────────────────────────────────────────────────────────────────
@@ -681,6 +718,10 @@ function normalizePick(p, idx) {
   const ev = Math.round(parseFloat(p.edge || p.ev || 0) * 10) / 10;
   const conf = parseFloat(p.confidence || 50);
   const grade = ev >= 7 ? 'a' : ev >= 5 ? 'b' : 'c';
+  const betText = esc(p.bet || '—');
+  const gameText = esc(p.game || `${p.awayTeam || ''} vs ${p.homeTeam || ''}`);
+  const oddsText = esc(p.odds || '—');
+  const bookText = esc(bookLabel(p.best_book || ''));
 
   const chips = [];
   if (p.edge_source === 'pinnacle_clv' || p.clv_edge) chips.push({t:'clv', l:`CLV +${ev}%`});
@@ -692,8 +733,8 @@ function normalizePick(p, idx) {
 
   const mb = p.model_breakdown || {};
   const explain = mb.pinnacle_clv
-    ? `<strong>${p.bet}</strong> in <strong>${p.game}</strong>. ${mb.pinnacle_clv}. ${mb.sharp_money || ''}. ${mb.confirms ? 'Signals: ' + mb.confirms : ''}`
-    : `<strong>${p.bet}</strong> at ${p.odds||'—'} on <strong>${bookLabel(p.best_book||'')}</strong> has +${ev}% edge over true probability.`;
+    ? `<strong>${betText}</strong> in <strong>${gameText}</strong>. ${esc(mb.pinnacle_clv)}. ${esc(mb.sharp_money || '')}. ${mb.confirms ? 'Signals: ' + esc(mb.confirms) : ''}`
+    : `<strong>${betText}</strong> at ${oddsText} on <strong>${bookText}</strong> has +${ev}% edge over true probability.`;
 
   let timeStr = p.game_time || '';
   if (timeStr) {
@@ -703,16 +744,17 @@ function normalizePick(p, idx) {
   return {
     id:   idx + 1,
     grade,
-    sport: `${p.emoji||''} ${p.sport||''}`.trim(),
+    sport: esc(`${p.emoji||''} ${p.sport||''}`.trim()),
     sk:   p.sport ? p.sport.toLowerCase().replace(/\s+/g,'_') : '',
-    game: p.game || `${p.awayTeam||''} vs ${p.homeTeam||''}`,
-    time: timeStr,
+    game: gameText,
+    time: esc(timeStr),
     gameTimeRaw: p.game_time || null,
-    bet:  p.bet  || '—',
-    odds: p.odds || '—',
+    bet:  betText,
+    odds: oddsText,
     ev,
     conf: Math.round(conf * 100),
-    book: bookLabel(p.best_book || ''),
+    book: bookText,
+    bookRaw: bookLabel(p.best_book || ''),
     sh:   Math.round(p.sharpPct  || 0),
     pu:   Math.round(p.publicPct || 0),
     lm:   p.lineMove   || 0,
@@ -724,22 +766,22 @@ function normalizePick(p, idx) {
 
 function normalizeEV(e) {
   return {
-    bet:  e.bet  || '—',
-    game: e.game || '—',
+    bet:  esc(e.bet  || '—'),
+    game: esc(e.game || '—'),
     ev:   Math.round(parseFloat(e.ev || 0) * 10) / 10,
-    best: e.books_compared ? `${e.books_compared} books` : '—',
-    bo:   e.bookOdds || '—',
+    best: esc(e.books_compared ? `${e.books_compared} books` : '—'),
+    bo:   esc(e.bookOdds || '—'),
   };
 }
 
 function normalizeArb(a) {
   const sides = a.sides || [];
   return {
-    sport: `${a.emoji||''} ${a.sport||''}`.trim(),
-    game:  a.game || '—',
+    sport: esc(`${a.emoji||''} ${a.sport||''}`.trim()),
+    game:  esc(a.game || '—'),
     p:     Math.round(parseFloat(a.profit_pct || 0) * 100) / 100,
-    lA: {bk:sides[0]?.book||'—', bt:sides[0]?.bet||'—', od:sides[0]?.odds||'—', stake:sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—'},
-    lB: {bk:sides[1]?.book||'—', bt:sides[1]?.bet||'—', od:sides[1]?.odds||'—', stake:sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—'},
+    lA: {bk:esc(sides[0]?.book||'—'), bt:esc(sides[0]?.bet||'—'), od:esc(sides[0]?.odds||'—'), stake:esc(sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—')},
+    lB: {bk:esc(sides[1]?.book||'—'), bt:esc(sides[1]?.bet||'—'), od:esc(sides[1]?.odds||'—'), stake:esc(sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—')},
   };
 }
 
@@ -896,7 +938,7 @@ function renderPicks() {
       <div class="pick-bet">${p.bet}</div>
       <div class="pick-odds-row">
         <span class="pick-odds">${p.odds}</span>
-        ${bookLink(p.book)}
+        ${bookLink(p.bookRaw)}
       </div>
       <div class="chips">${chips}</div>
       ${bars}
@@ -975,17 +1017,18 @@ function addParlay(id) {
   if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
   legs.push({id: p.id, bet: p.bet, odds: p.odds});
   updateParlay();
+  saveState();
   showToast(`+ ${p.bet}`);
 }
 
-function clearParlay() { legs = []; updateParlay(); }
+function clearParlay() { legs = []; updateParlay(); saveState(); }
 
 function updateParlay() {
   const n = legs.length;
   const nb = document.getElementById('nb-parlay');
   nb.textContent = n;
   nb.style.display = n > 0 ? '' : 'none';
-  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay()">×</button></div>`).join('');
+  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay();saveState()">×</button></div>`).join('');
   const emptyEl = document.getElementById('parlay-empty');
   const legsEl = document.getElementById('parlay-legs');
   if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
@@ -993,7 +1036,7 @@ function updateParlay() {
   const resEl = document.getElementById('parlay-result');
   if (n >= 2) {
     let tot = 1;
-    legs.forEach(l => { const o = parseInt(l.odds.replace('+','')); const d = o > 0 ? (o/100)+1 : 1-(100/Math.abs(o)); tot *= d; });
+    legs.forEach(l => { const o = parseInt(String(l.odds).replace('+',''), 10); const d = o > 0 ? (o/100)+1 : 1+(100/Math.abs(o)); tot *= d; });
     const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
     document.getElementById('parlay-odds').textContent = ao;
     document.getElementById('parlay-win').textContent = `$${Math.round((tot-1)*100)}`;
@@ -1052,7 +1095,7 @@ const BOOK_URLS = {DraftKings:'https://sportsbook.draftkings.com',FanDuel:'https
 
 function bookLink(name) {
   const url = BOOK_URLS[name];
-  if (!url) return `<span class="pick-book">@ ${name}</span>`;
+  if (!url) return `<span class="pick-book">@ ${esc(name)}</span>`;
   return `<a class="pick-book-link" href="${url}" target="_blank" rel="noopener">@ ${name} ↗</a>`;
 }
 
@@ -1060,10 +1103,12 @@ function showAction(id) {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
   const size = p.grade === 'a' ? 'a full unit (1–2% of bankroll)' : p.grade === 'b' ? 'half a unit (~1%)' : 'a quarter unit (~0.5%)';
+  const bookName = esc(p.bookRaw || p.book);
+  const bookUrl = BOOK_URLS[p.bookRaw] || '#';
   document.getElementById('act-content').innerHTML = `
     <div class="modal-title">How to bet this</div>
     <div class="modal-sub">${p.bet} · ${p.odds} · ${p.sport}</div>
-    <div class="act-step"><div class="act-num">1</div><div class="act-text">Open <strong>${p.book}</strong> — <a href="${BOOK_URLS[p.book]||'#'}" target="_blank">Go to ${p.book} ↗</a></div></div>
+    <div class="act-step"><div class="act-num">1</div><div class="act-text">Open <strong>${bookName}</strong> — <a href="${bookUrl}" target="_blank" rel="noopener">Go to ${bookName} ↗</a></div></div>
     <div class="act-step"><div class="act-num">2</div><div class="act-text">Find <strong>${p.game}</strong> and place: <strong>${p.bet}</strong></div></div>
     <div class="act-step"><div class="act-num">3</div><div class="act-text">Confirm odds show <strong>${p.odds}</strong> or better. If they've moved against you, the edge may be gone.</div></div>
     <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
@@ -1085,6 +1130,7 @@ function closeModal(e) {
 const ALL_TABS = ['picks','ev','arb','parlay','boost','perf'];
 
 function go(name) {
+  if (!ALL_TABS.includes(name)) return;
   currentTab = name;
   ALL_TABS.forEach(t => {
     const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
@@ -1092,6 +1138,7 @@ function go(name) {
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
   window.scrollTo({top:0,behavior:'smooth'});
+  saveState();
 }
 
 function setMode(m) {
@@ -1099,6 +1146,7 @@ function setMode(m) {
   document.getElementById('m-simple').classList.toggle('active', m === 'simple');
   document.getElementById('m-expert').classList.toggle('active', m === 'expert');
   document.getElementById('mode-hint').textContent = m === 'simple' ? 'Plain English' : 'Full signal data';
+  saveState();
   renderPicks();
 }
 
@@ -1106,6 +1154,7 @@ function setFilter(el, k) {
   document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
   filter = k;
+  saveState();
   renderPicks();
 }
 
@@ -1120,8 +1169,40 @@ function startAutoRefresh() {
   }, 30000);
 }
 
+function bindUiAccessibility() {
+  document.querySelectorAll('.filter').forEach(f => {
+    f.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        f.click();
+      }
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const ov = document.getElementById('act-overlay');
+      if (ov && ov.classList.contains('on')) {
+        ov.classList.remove('on');
+        document.getElementById('act-modal').classList.remove('on');
+      }
+    }
+  });
+}
+
+function applySavedSelections() {
+  if (mode === 'expert') setMode('expert');
+  const savedFilterEl = document.querySelector(`.filter[onclick="setFilter(this,'${filter}')"]`);
+  const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
+  const activeFilter = savedFilterEl ? filter : 'all';
+  if (filterEl) setFilter(filterEl, activeFilter);
+  go(currentTab);
+  updateParlay();
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-go('picks');
+loadState();
+bindUiAccessibility();
+applySavedSelections();
 renderPerf();
 loadBoostExamples();
 doScan();
