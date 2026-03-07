@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg: #070a10;
-  --surface: #0d1117;
-  --card: #111720;
+  --bg: #0f141d;
+  --surface: #161d28;
+  --card: #1b2431;
   --border: rgba(255,255,255,.06);
   --border2: rgba(255,255,255,.12);
   --cyan: #00d4ff;
@@ -25,9 +25,9 @@
   --amber: #ffb700;
   --amber-dim: rgba(255,183,0,.08);
   --violet: #9b79ff;
-  --muted: #3d4554;
-  --sub: #6b7280;
-  --text: #e2e8f0;
+  --muted: #6f7b90;
+  --sub: #9aa4b2;
+  --text: #f2f6fb;
   --mono: 'JetBrains Mono', monospace;
   --sans: 'Space Grotesk', sans-serif;
 }
@@ -89,9 +89,7 @@ html, body {
 .topbar-logo{font-size:20px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
 .topbar-logo span{color:var(--cyan)}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
-@media(max-width:380px){.api-status{display:none}.live-pill{display:none}}
-.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);padding:3px 8px;border-radius:99px;white-space:nowrap}
-.pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
+@media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
 .scan-btn:hover{opacity:.85}.scan-btn.loading{opacity:.5;pointer-events:none}
@@ -388,7 +386,6 @@ html, body {
         <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
       </div>
-      <div class="live-pill"><div class="pulse"></div>LIVE</div>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         Scan Now
