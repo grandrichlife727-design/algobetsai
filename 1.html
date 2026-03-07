@@ -5074,17 +5074,24 @@ function renderPicks() {
     el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No picks match this filter</div><div class="empty-sub">Check back during game hours.</div>${renderTomorrowGamesBlock()}</div>`;
     return;
   }
+  const isFreePlan = normalizePlan(currentPlan) === 'free';
+  const freeVisibleLimit = 1;
+  const teaserLimit = 3;
+  const useFreeTease = isFreePlan && pts.length > freeVisibleLimit;
+  const hiddenCount = useFreeTease ? Math.max(0, pts.length - freeVisibleLimit) : 0;
+  const renderList = useFreeTease ? pts.slice(0, Math.min(pts.length, freeVisibleLimit + teaserLimit)) : pts;
 
-  el.innerHTML = pts.map((p, i) => {
+  el.innerHTML = renderList.map((p, i) => {
+    const lockedTease = useFreeTease && i >= freeVisibleLimit;
+    const isPrimaryLock = lockedTease && i === freeVisibleLimit;
     const chips = p.chips.map(c => `<span class="chip ${c.t}">${c.l}</span>`).join('');
-    const bars = mode === 'expert' ? `<div class="sig-bars">
+    const bars = mode === 'expert' && !lockedTease ? `<div class="sig-bars">
       <div class="sig-row"><span class="sig-lbl">Sharp</span><div class="sig-track"><div class="sig-fill" style="width:${p.sh}%;background:${p.sh>=60?'var(--cyan)':'var(--muted)'}"></div></div><span class="sig-num" style="color:${p.sh>=60?'var(--cyan)':'var(--sub)'}">${p.sh}%</span></div>
       <div class="sig-row"><span class="sig-lbl">Public</span><div class="sig-track"><div class="sig-fill" style="width:${p.pu}%;background:var(--muted)"></div></div><span class="sig-num">${p.pu}%</span></div>
       <div class="sig-row"><span class="sig-lbl">Line mv</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,Math.abs(p.lm)*20)}%;background:${p.lm>0?'var(--green)':'var(--red)'}"></div></div><span class="sig-num" style="color:${p.lm>0?'var(--green)':'var(--red)'}">${p.lm>0?'+':''}${p.lm}</span></div>
       <div class="sig-row"><span class="sig-lbl">Elo</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,p.elo*12)}%;background:var(--amber)"></div></div><span class="sig-num" style="color:var(--amber)">+${p.elo}%</span></div>
     </div>` : '';
-
-    return `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
+    const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   <div class="pick-inner">
     <div class="pick-left">
       <div class="pick-sport-row">
@@ -5114,6 +5121,17 @@ function renderPicks() {
     <button class="explain-toggle" onclick="toggleExplain(${p.id})" id="etgl-${p.id}">${mode === 'simple' ? '▲ Less' : '▼ Why?'}</button>
   </div>
 </div>`;
+    if (!lockedTease) return card;
+    return `<div class="feature-lock" style="margin-top:0">
+      <div class="blur-wrap">${card}</div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">${isPrimaryLock ? 'Premium Unlock' : 'Locked Pick'}</div>
+          <div class="lock-sub">${isPrimaryLock ? `Free includes 1 full pick. Unlock ${hiddenCount} more picks plus Props, +EV, Steam, and Fades.` : 'Upgrade to reveal this full pick.'}</div>
+          <button class="paywall-cta" onclick="openUpgradePicker()">${isPrimaryLock ? 'Unlock More Picks' : 'Go Premium'}</button>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
