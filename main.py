@@ -91,6 +91,7 @@ ALLOWED_ORIGINS = [o for o in (_csv_env("ALLOWED_ORIGINS") or [FRONTEND_URL]) if
 ENFORCE_ORIGIN_CHECKS = _bool_env("ENFORCE_ORIGIN_CHECKS", "true")
 REQUIRE_BACKEND_API_KEY = _bool_env("REQUIRE_BACKEND_API_KEY", "false")
 SECURITY_HEADERS_ENABLED = _bool_env("SECURITY_HEADERS_ENABLED", "true")
+DEBUG_ENDPOINTS_PUBLIC = _bool_env("DEBUG_ENDPOINTS_PUBLIC", "false")
 WEBHOOK_EVENT_TTL_SECONDS = int(os.getenv("WEBHOOK_EVENT_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 REQUIRE_AUTH_TOKEN = _bool_env("REQUIRE_AUTH_TOKEN", "false")
 COMMUNITY_ENABLED = _bool_env("COMMUNITY_ENABLED", "true")
@@ -1985,6 +1986,12 @@ def _require_admin(request: Request):
         raise HTTPException(status_code=401, detail="Admin token required.")
 
 
+def _require_debug_access(request: Request):
+    if DEBUG_ENDPOINTS_PUBLIC:
+        return
+    _require_admin(request)
+
+
 def _resolve_price_id_for_tier_and_cycle(tier: str, billing_cycle: Optional[str] = "monthly") -> str:
     t = normalize_plan_name(tier)
     cycle = str(billing_cycle or "monthly").strip().lower()
@@ -2025,8 +2032,9 @@ def _invalidate_plan_cache(user_id: str):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/api/debug")
-async def debug():
+async def debug(request: Request):
     """Debug endpoint to check configuration."""
+    _require_debug_access(request)
     return {
         "odds_api_key_set": bool(ODDS_API_KEY),
         "odds_api_key_prefix": ODDS_API_KEY[:10] + "..." if ODDS_API_KEY else "NOT SET",
@@ -3360,10 +3368,11 @@ async def get_quota():
 
 
 @app.get("/api/debug/ingestion")
-async def debug_ingestion():
+async def debug_ingestion(request: Request):
     """
     Quick ingestion diagnostics per sport.
     """
+    _require_debug_access(request)
     out = {}
     for sport in SPORTS:
         games = await fetch_odds_api_games(sport)
