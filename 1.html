@@ -81,7 +81,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
 .nav-item.vip-nav svg{opacity:.95;color:var(--amber)}
 .nav-item.vip-nav{font-weight:700}
-.nav-item.nav-sub{padding-left:24px;font-size:12px}
+.vip-nav-group{position:relative}
+.vip-submenu{display:flex;flex-direction:column;gap:2px;max-height:0;opacity:0;overflow:hidden;padding-left:10px;transition:max-height .18s ease,opacity .12s ease}
+.vip-nav-group:hover .vip-submenu,.vip-nav-group:focus-within .vip-submenu,.vip-nav-group.open .vip-submenu{max-height:260px;opacity:1;margin:2px 0 4px}
+.nav-item.nav-sub{padding-left:12px;font-size:12px;margin-left:6px;width:calc(100% - 6px);border-left:1px solid var(--border);border-radius:0 8px 8px 0}
 .nav-item.nav-sub svg{width:12px;height:12px;opacity:.42}
 .nav-item.nav-sub.active{color:var(--amber);background:rgba(255,183,0,.09)}
 .nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
@@ -615,34 +618,38 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
     Premium
   </button>
-  <button class="nav-item vip-nav" onclick="go('vip')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
-    VIP
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-core')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    VIP Picks
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-execution')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    Execution
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-portfolio')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    Portfolio
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-alerts')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    Alerts
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-discord')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    Discord
-  </button>
-  <button class="nav-item nav-sub" onclick="go('vip-reports')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
-    Reports
-  </button>
+  <div class="vip-nav-group" id="vip-nav-group">
+    <button class="nav-item vip-nav" onclick="go('vip')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
+      VIP
+    </button>
+    <div class="vip-submenu">
+      <button class="nav-item nav-sub" onclick="go('vip-core')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        VIP Picks
+      </button>
+      <button class="nav-item nav-sub" onclick="go('vip-execution')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        Execution
+      </button>
+      <button class="nav-item nav-sub" onclick="go('vip-portfolio')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        Portfolio
+      </button>
+      <button class="nav-item nav-sub" onclick="go('vip-alerts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        Alerts
+      </button>
+      <button class="nav-item nav-sub" onclick="go('vip-discord')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        Discord
+      </button>
+      <button class="nav-item nav-sub" onclick="go('vip-reports')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>
+        Reports
+      </button>
+    </div>
+  </div>
   <button class="nav-item" onclick="go('odds')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Odds
@@ -5201,6 +5208,8 @@ function go(name) {
   });
   const moreBtn = document.getElementById('mn-more');
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
+  const vipGroup = document.getElementById('vip-nav-group');
+  if (vipGroup) vipGroup.classList.toggle('open', name === 'vip' || name.startsWith('vip-'));
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') {
     if (oddsRange === 'today' || SCHEDULE_GAMES.length) {
