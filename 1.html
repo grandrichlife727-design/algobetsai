@@ -514,6 +514,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.vip-subnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 6px;margin:2px 0 8px}
+.vip-subnav::-webkit-scrollbar{display:none}
+.vip-subbtn{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--sub);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:var(--sans)}
+.vip-subbtn:hover{border-color:var(--border2);color:var(--text)}
+.vip-anchor{scroll-margin-top:92px}
 .h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
 .h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .h-time{font-size:11px;color:var(--muted)}
@@ -955,21 +960,30 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-vip" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Tools</span></div><div class="page-sub">Organized by what to do first: edge, execution, automation, and community.</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Overview</span></div><div class="page-sub">VIP is built for speed, execution quality, and direct access to high-value features.</div></div>
+      <div class="vip-subnav">
+        <button class="vip-subbtn" onclick="vipJump('vip-overview')">Overview</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-core-edge')">Core Edge</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-execution')">Execution</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-portfolio-block')">Portfolio</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-alerts')">Alerts</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-discord-block')">Discord</button>
+        <button class="vip-subbtn" onclick="vipJump('vip-weekly-report')">Reports</button>
+      </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
-          <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Quick Start</div>
-          <div class="growth-sub">1) Check <strong>Core Edge</strong> for early window + picks.</div>
-          <div class="growth-sub">2) Use <strong>Execution</strong> to time entries.</div>
-          <div class="growth-sub">3) Set <strong>Alerts</strong> and join <strong>VIP Discord</strong>.</div>
+        <div class="growth-card vip-anchor" id="vip-overview">
+          <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Overview + Quick Start</div>
+          <div class="growth-sub"><strong>What VIP is for:</strong> fewer, stronger cards with better timing and deeper execution context.</div>
+          <div class="growth-sub"><strong>How to use it:</strong> Core Edge → Execution → Alerts → Discord.</div>
+          <div class="growth-sub"><strong>Main gains:</strong> earlier access, better entry timing, and tighter bankroll control.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-core-edge">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
           <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-execution">
           <div class="growth-title vip-title"><span class="vip-ico">⚡</span>Execution Intelligence</div>
           <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
           <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
@@ -977,7 +991,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
           <div class="growth-note">Use this block to decide bet now, wait, or pass.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-portfolio-block">
           <div class="growth-title vip-title"><span class="vip-ico">📊</span>Portfolio + Watchlist</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-bankroll" type="number" min="100" step="50" placeholder="Bankroll (e.g. 1000)"/>
@@ -993,7 +1007,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn" onclick="saveVipWatchlist()">Save Watchlist</button></div>
           <div class="growth-note" id="vip-watchlist-note">No watchlist configured.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-alerts">
           <div class="growth-title vip-title"><span class="vip-ico">🔔</span>Alerts + Automation</div>
           <div class="rf-row">
             <input class="auth-in" id="vip-webhook" type="text" placeholder="Webhook URL (Discord/Slack)"/>
@@ -1005,13 +1019,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button><button class="pf-btn" onclick="sendVipTestAlert()">Send Test</button></div>
           <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-discord-block">
           <div class="growth-title vip-title"><span class="vip-ico">💬</span>VIP Discord</div>
           <div class="growth-sub" id="vip-discord-status">Checking access...</div>
           <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
           <div class="growth-note">Private VIP channel for alert drops, card recaps, and live discussion.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card vip-anchor" id="vip-weekly-report">
           <div class="growth-title vip-title"><span class="vip-ico">🗓</span>Weekly Report</div>
           <div class="rf-row"><button class="pf-btn" onclick="generateVipReport()">Generate Report</button></div>
           <div class="growth-note" id="vip-report-note">No report generated yet.</div>
@@ -5156,6 +5170,16 @@ function go(name) {
     loadJournalStats();
   }
   saveState();
+}
+
+function vipJump(anchorId) {
+  if (currentTab !== 'vip') go('vip');
+  const jump = () => {
+    const el = document.getElementById(anchorId);
+    if (!el) return;
+    el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  };
+  setTimeout(jump, 120);
 }
 
 function setMode(m) {
