@@ -1234,6 +1234,7 @@ let STREAKDATA = null;
 let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
+let quotaExhausted = false;
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
 let CLVDATA = null;
@@ -3125,6 +3126,9 @@ async function doScan(silent = false) {
         }
         if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
         setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
+        const noGamesReturned = !Array.isArray(raw.games) || raw.games.length === 0;
+        const lowQuotaError = String(raw?.error || '').toLowerCase().includes('low api quota');
+        quotaExhausted = (Number(raw?.quota_remaining) === 0 && noGamesReturned) || lowQuotaError || !!raw?.quota_soft_limited;
         if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
           showToast(`Using cached scan. Fresh data in ${fmtCountdown(scanCooldownRemaining)}`);
         }
@@ -3133,6 +3137,7 @@ async function doScan(silent = false) {
         ODDSGAMES = [];
         STEAMDATA = [];
         setScanCooldown(0);
+        quotaExhausted = false;
       }
       PICKS = arr
         .map((p, i) => normalizePick(p, i))
@@ -3177,9 +3182,11 @@ async function doScan(silent = false) {
       const errBanner = document.getElementById('err-banner');
       if (errBanner) {
         const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
-        errBanner.textContent = allFailed
-          ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
-          : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.';
+        errBanner.textContent = quotaExhausted
+          ? '⚠ Odds data quota is currently exhausted. New live picks/odds will return after quota reset or upgrade. Cached data may still appear when available.'
+          : (allFailed
+            ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
+            : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.');
         errBanner.classList.add('on');
       }
     } else {
