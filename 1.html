@@ -222,10 +222,12 @@ html, body {
 .odds-line{color:var(--green)}
 
 /* ARB */
-.arb-card{background:var(--card);border:1px solid rgba(0,229,160,.1);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:fadein .3s ease both}
-.arb-profit{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)}
-.arb-legs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:400px){.arb-legs{grid-template-columns:1fr}}
+.steam-card{background:var(--card);border:1px solid rgba(34,211,238,.14);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:9px;animation:fadein .3s ease both}
+.steam-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.steam-game{font-size:11px;color:var(--sub)}
+.steam-signal{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)}
+.steam-meta{font-size:11px;color:var(--sub);line-height:1.45}
+.steam-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid rgba(34,211,238,.2);background:rgba(34,211,238,.08);color:var(--cyan);font-size:10px;font-weight:700;font-family:var(--mono)}
 .leg{background:rgba(0,0,0,.15);border-radius:8px;padding:10px;border:1px solid var(--border)}
 .leg-book{font-size:9px;color:var(--muted);font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .leg-bet{font-size:13px;font-weight:700;margin-bottom:3px}
@@ -443,9 +445,9 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     +EV Finder
   </button>
-  <button class="nav-item" onclick="go('arb')">
+  <button class="nav-item" onclick="go('steam')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-    Arbitrage
+    Steam
   </button>
   <button class="nav-item" onclick="go('parlay')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
@@ -550,7 +552,7 @@ html, body {
         <div class="tier-strip">
           <div class="tier-tag">Free: <strong>2 picks</strong> · NBA/NHL · 20m refresh</div>
           <div class="tier-tag premium">Premium: <strong>15 picks</strong> + full +EV</div>
-          <div class="tier-tag vip">VIP: <strong>50 picks</strong> + Arbitrage + 1m refresh</div>
+          <div class="tier-tag vip">VIP: <strong>50 picks</strong> + Steam feed + 1m refresh</div>
         </div>
       </div>
       <div class="filters">
@@ -596,10 +598,10 @@ html, body {
       </div>
     </div>
 
-    <div id="v-arb" style="display:none">
-      <div class="page-hdr"><div class="page-title">Arbitrage</div><div class="page-sub">Guaranteed profit no matter the outcome</div></div>
-      <div class="sec-hdr"><span class="sec-title" id="arb-count">Loading...</span><span class="sec-meta">100% guaranteed edge only</span></div>
-      <div class="picks-list" id="arblist"></div>
+    <div id="v-steam" style="display:none">
+      <div class="page-hdr"><div class="page-title">Steam <span>Moves</span></div><div class="page-sub">Sharp line movement and best-line gaps by game</div></div>
+      <div class="sec-hdr"><span class="sec-title" id="steam-count">Loading...</span><span class="sec-meta">Follow real market pressure</span></div>
+      <div class="picks-list" id="steamlist"></div>
     </div>
 
     <div id="v-parlay" style="display:none">
@@ -750,9 +752,9 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     <span class="mnav-label">+EV</span>
   </button>
-  <button class="mnav-btn" id="mn-arb" onclick="go('arb')">
+  <button class="mnav-btn" id="mn-steam" onclick="go('steam')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-    <span class="mnav-label">Arb</span>
+    <span class="mnav-label">Steam</span>
   </button>
   <button class="mnav-btn" id="mn-boost" onclick="go('boost')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -856,7 +858,7 @@ let filter = 'all';
 let legs = [];
 let PICKS = [];
 let EVDATA = [];
-let ARBDATA = [];
+let STEAMDATA = [];
 let ODDSGAMES = [];
 let activeOddsSport = '';
 let lastRefresh = null;
@@ -1576,10 +1578,10 @@ function openUpgradePicker() {
   const opts = p === 'free'
     ? [
         {tier: 'premium', title: 'Premium', desc: 'Up to 15 picks/scan + full +EV Finder'},
-        {tier: 'vip', title: 'VIP', desc: 'Up to 50 picks/scan + Arbitrage feed'},
+        {tier: 'vip', title: 'VIP', desc: 'Up to 50 picks/scan + Steam feed'},
       ]
     : p === 'premium'
-      ? [{tier: 'vip', title: 'VIP', desc: 'Jump from 15 to 50 picks + unlock arbitrage'}]
+      ? [{tier: 'vip', title: 'VIP', desc: 'Jump from 15 to 50 picks + unlock steam feed'}]
       : [];
   if (!opts.length) {
     showToast('You already have highest tier');
@@ -1707,17 +1709,6 @@ function normalizeEV(e) {
   };
 }
 
-function normalizeArb(a) {
-  const sides = a.sides || [];
-  return {
-    sport: esc(`${a.emoji||''} ${a.sport||''}`.trim()),
-    game:  esc(a.game || '—'),
-    p:     Math.round(parseFloat(a.profit_pct || 0) * 100) / 100,
-    lA: {bk:esc(sides[0]?.book||'—'), bt:esc(sides[0]?.bet||'—'), od:esc(sides[0]?.odds||'—'), stake:esc(sides[0]?.stake_pct ? `${sides[0].stake_pct}%` : '—')},
-    lB: {bk:esc(sides[1]?.book||'—'), bt:esc(sides[1]?.bet||'—'), od:esc(sides[1]?.odds||'—'), stake:esc(sides[1]?.stake_pct ? `${sides[1].stake_pct}%` : '—')},
-  };
-}
-
 function formatOddsTime(iso) {
   if (!iso) return '—';
   try {
@@ -1745,6 +1736,53 @@ function normalizeOddsGames(games) {
       books,
     };
   });
+}
+
+function americanFromDecimal(dec) {
+  const d = Number(dec);
+  if (!Number.isFinite(d) || d <= 1) return '—';
+  if (d >= 2) return `+${Math.round((d - 1) * 100)}`;
+  return `${Math.round(-100 / (d - 1))}`;
+}
+
+function computeSteamSignals(games) {
+  const signals = [];
+  for (const g of (Array.isArray(games) ? games : [])) {
+    const byBook = g.moneyline_by_book || {};
+    const entries = Object.entries(byBook);
+    if (entries.length < 3) continue;
+    const sides = [
+      {key: 'home', team: g.home_team || 'Home'},
+      {key: 'away', team: g.away_team || 'Away'},
+    ];
+    for (const s of sides) {
+      const prices = entries
+        .map(([book, lines]) => ({book, price: Number(lines?.[s.key])}))
+        .filter(x => Number.isFinite(x.price));
+      if (prices.length < 3) continue;
+      const decimals = prices.map(x => americanToDecimal(x.price)).sort((a, b) => a - b);
+      const medianDec = decimals[Math.floor(decimals.length / 2)];
+      const best = prices.reduce((a, b) => americanToDecimal(a.price) >= americanToDecimal(b.price) ? a : b);
+      const gapPct = ((americanToDecimal(best.price) / medianDec) - 1) * 100;
+      if (gapPct < 3) continue;
+      const pinnacle = prices.find(x => x.book === 'pinnacle');
+      const pinnDiff = pinnacle ? ((americanToDecimal(best.price) / americanToDecimal(pinnacle.price)) - 1) * 100 : 0;
+      signals.push({
+        sport: g.label || g.sport || '',
+        game: `${g.away_team || 'Away'} @ ${g.home_team || 'Home'}`,
+        side: s.team,
+        book: bookLabel(best.book),
+        odds: best.price > 0 ? `+${best.price}` : String(best.price),
+        consensus: americanFromDecimal(medianDec),
+        gap: Math.round(gapPct * 10) / 10,
+        confidence: gapPct >= 7 ? 'HIGH' : gapPct >= 5 ? 'MED' : 'LOW',
+        note: pinnacle && pinnDiff >= 1.2
+          ? `Pinnacle is tighter by ${Math.round(pinnDiff * 10) / 10}% — likely sharp move.`
+          : 'Best-book gap vs market median suggests stale pricing.',
+      });
+    }
+  }
+  return signals.sort((a, b) => b.gap - a.gap).slice(0, 30);
 }
 
 function renderOdds() {
@@ -1809,7 +1847,7 @@ async function doScan(silent = false) {
   // Always clear stale data before fetching
   PICKS = [];
   EVDATA = [];
-  ARBDATA = [];
+  STEAMDATA = [];
   const eb = document.getElementById('err-banner'); if(eb) eb.classList.remove('on');
 
   if (!silent) {
@@ -1830,11 +1868,9 @@ async function doScan(silent = false) {
     // Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
     const bust = Date.now();
     const canSeeEV = planRank(currentPlan) >= 1;
-    const canSeeArb = planRank(currentPlan) >= 2;
-    const [picksRes, evRes, arbRes] = await Promise.allSettled([
+    const [picksRes, evRes] = await Promise.allSettled([
       backendGet(`/scan?refresh=true&_=${bust}`),
       canSeeEV ? backendGet(`/api/ev-finder?_=${bust}`) : Promise.resolve({results: []}),
-      canSeeArb ? backendGet(`/api/arb-detect?_=${bust}`) : Promise.resolve({results: []}),
     ]);
 
     if (picksRes.status === 'fulfilled') {
@@ -1844,6 +1880,7 @@ async function doScan(silent = false) {
         currentPlan = normalizePlan(raw.plan || currentPlan);
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
         ODDSGAMES = normalizeOddsGames(raw.games || []);
+        STEAMDATA = computeSteamSignals(raw.games || []);
         if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
         setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
         if (raw?.scan_policy?.served_from_cache && !silent && scanCooldownRemaining > 0) {
@@ -1852,6 +1889,7 @@ async function doScan(silent = false) {
       } else {
         paywallMeta = null;
         ODDSGAMES = [];
+        STEAMDATA = [];
         setScanCooldown(0);
       }
       PICKS = arr
@@ -1870,12 +1908,6 @@ async function doScan(silent = false) {
       EVDATA = arr.map(normalizeEV).sort((a, b) => b.ev - a.ev);
     }
 
-    if (arbRes.status === 'fulfilled') {
-      const raw = arbRes.value;
-      const arr = Array.isArray(raw) ? raw : (raw.results || raw.arbs || raw.data || []);
-      ARBDATA = arr.map(normalizeArb).sort((a, b) => b.p - a.p);
-    }
-
     lastRefresh = Date.now();
 
     if (PICKS.length) {
@@ -1892,7 +1924,7 @@ async function doScan(silent = false) {
     if (PICKS.length === 0 && EVDATA.length === 0) {
       const errBanner = document.getElementById('err-banner');
       if (errBanner) {
-        const allFailed = [picksRes, evRes, arbRes].every(r => r.status === 'rejected');
+        const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
         errBanner.textContent = allFailed
           ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
           : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.';
@@ -1917,7 +1949,7 @@ async function doScan(silent = false) {
   renderPicks();
   renderOdds();
   renderEV();
-  renderArb();
+  renderSteam();
   if (currentTab === 'history') loadHistory();
 
   btn.classList.remove('loading');
@@ -2010,28 +2042,29 @@ function renderEV() {
     </div>`).join('');
 }
 
-// ─── RENDER ARB ───────────────────────────────────────────────────────────────
-function renderArb() {
-  const el = document.getElementById('arblist');
-  document.getElementById('arb-count').textContent = `${ARBDATA.length} arb${ARBDATA.length !== 1 ? 's' : ''} found`;
-  if (!ARBDATA.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">⚖️</div><div class="empty-title">No arbitrage right now</div><div class="empty-sub">Arbs are rare — check back after line moves.</div></div>`;
+// ─── RENDER STEAM ─────────────────────────────────────────────────────────────
+function renderSteam() {
+  const el = document.getElementById('steamlist');
+  const countEl = document.getElementById('steam-count');
+  if (!el || !countEl) return;
+  countEl.textContent = `${STEAMDATA.length} steam move${STEAMDATA.length !== 1 ? 's' : ''} found`;
+  if (!STEAMDATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No steam moves right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
     return;
   }
-  el.innerHTML = ARBDATA.map((a, i) => `
-    <div class="arb-card" style="animation-delay:${i*.06}s">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+  el.innerHTML = STEAMDATA.map((s, i) => `
+    <div class="steam-card" style="animation-delay:${i*.05}s">
+      <div class="steam-row">
         <div>
-          <div style="font-size:11px;color:var(--sub);margin-bottom:3px">${a.sport} · ${a.game}</div>
-          <div class="arb-profit">+${a.p}% guaranteed profit</div>
+          <div class="steam-game">${esc(s.sport)} · ${esc(s.game)}</div>
+          <div class="steam-signal">${esc(s.side)} ${esc(s.odds)}</div>
         </div>
-        <div style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:4px 10px;font-family:var(--mono);white-space:nowrap">LOCK</div>
+        <div class="steam-chip">${esc(s.confidence)} ${s.gap}%</div>
       </div>
-      <div class="arb-legs">
-        <div class="leg"><div class="leg-book">${a.lA.bk}</div><div class="leg-bet">${a.lA.bt}</div><div class="leg-odds">${a.lA.od}</div><div class="leg-stake">Stake: ${a.lA.stake}</div></div>
-        <div class="leg"><div class="leg-book">${a.lB.bk}</div><div class="leg-bet">${a.lB.bt}</div><div class="leg-odds">${a.lB.od}</div><div class="leg-stake">Stake: ${a.lB.stake}</div></div>
-      </div>
-    </div>`).join('');
+      <div class="steam-meta">Best book: <strong style="color:var(--text)">${esc(s.book)}</strong> · Consensus ~ ${esc(s.consensus)}</div>
+      <div class="steam-meta">${esc(s.note)}</div>
+    </div>
+  `).join('');
 }
 
 // ─── PERF CHART ───────────────────────────────────────────────────────────────
@@ -2158,7 +2191,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['picks','odds','ev','arb','parlay','boost','perf','history','community','profile'];
+const ALL_TABS = ['picks','odds','ev','steam','parlay','boost','perf','history','community','profile'];
 
 function go(name) {
   if (!ALL_TABS.includes(name)) return;
@@ -2170,6 +2203,7 @@ function go(name) {
   });
   window.scrollTo({top:0,behavior:'smooth'});
   if (name === 'odds') renderOdds();
+  if (name === 'steam') renderSteam();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
   if (name === 'profile') {
