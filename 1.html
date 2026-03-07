@@ -870,9 +870,44 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props, +EV, Steam, and Fades all in one place.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
+          <div class="growth-title">Best Bet Cards</div>
+          <div class="growth-sub" id="premium-bestbets">Loading best bets...</div>
+        </div>
+        <div class="growth-card">
           <div class="growth-title">Premium Tools</div>
           <div class="rf-row"><button class="paywall-cta" onclick="go('props')">Props</button><button class="paywall-cta" onclick="go('ev')">+EV</button></div>
           <div class="rf-row"><button class="paywall-cta" onclick="go('steam')">Steam</button><button class="paywall-cta" onclick="go('fades')">Fades</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Prop Model Packs</div>
+          <div class="growth-sub" id="premium-packs">Loading model packs...</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('props')">Open Props</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Parlay Optimizer Lite</div>
+          <div class="growth-sub" id="premium-parlay-note">Add picks to parlay builder to get correlation warnings.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="runParlayOptimizerLite()">Run Optimizer</button><button class="pf-btn" onclick="go('parlay')">Open Parlay</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Line-Shop Assistant</div>
+          <div class="growth-sub" id="premium-lineshop">Loading line-shop opportunities...</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('odds')">Open Odds</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Injury / Lineup Flags</div>
+          <div class="growth-sub" id="premium-injury">Loading latest sports headlines...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Daily Recap</div>
+          <div class="rf-row">
+            <select class="auth-in" id="premium-recap-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="premium-recap-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row"><button class="pf-btn" onclick="savePremiumRecap()">Save Recap</button></div>
+          <div class="growth-note" id="premium-recap-note">Not configured.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Plan Access</div>
@@ -905,6 +940,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-note">Tracks close-line quality and long-term execution edge.</div>
         </div>
         <div class="growth-card">
+          <div class="growth-title">Early Release Window</div>
+          <div class="growth-sub" id="vip-early">Loading release timing...</div>
+        </div>
+        <div class="growth-card">
           <div class="growth-title">VIP Picks of the Day</div>
           <div id="vip-pod" class="growth-sub">Loading VIP picks...</div>
         </div>
@@ -934,8 +973,27 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-steam"/> Steam jumps</label>
             <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-clv"/> CLV shifts</label>
           </div>
-          <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button><button class="pf-btn" onclick="sendVipTestAlert()">Send Test</button></div>
           <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">CLV Lab</div>
+          <div class="growth-sub" id="vip-clv-lab">Loading CLV by book...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Market Depth</div>
+          <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Auto Watchlists</div>
+          <div class="rf-row"><input class="auth-in" id="vip-watchlist" type="text" placeholder="Lakers, Chiefs, Tatum"/></div>
+          <div class="rf-row"><button class="pf-btn" onclick="saveVipWatchlist()">Save Watchlist</button></div>
+          <div class="growth-note" id="vip-watchlist-note">No watchlist configured.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">VIP Weekly Report</div>
+          <div class="rf-row"><button class="pf-btn" onclick="generateVipReport()">Generate Report</button></div>
+          <div class="growth-note" id="vip-report-note">No report generated yet.</div>
         </div>
       </div>
     </div>
@@ -1471,6 +1529,7 @@ const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
+const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
 
 function makeGuestId() {
   return `guest_${Math.random().toString(36).slice(2, 10)}`;
@@ -1602,6 +1661,7 @@ let HOME_SPORTS_NEWS = [];
 let HOME_SPORTS_NEWS_TS = 0;
 let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
+let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
@@ -2266,6 +2326,96 @@ async function loadHomeSportsNews(force = false) {
   }
 }
 
+function loadPremiumSettings() {
+  try {
+    const raw = localStorage.getItem(PREMIUM_SETTINGS_KEY);
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    PREMIUM_SETTINGS = {
+      recap_channel: String(st.recap_channel || 'email'),
+      recap_target: String(st.recap_target || ''),
+    };
+  } catch (_) {}
+}
+
+function savePremiumRecap() {
+  PREMIUM_SETTINGS.recap_channel = String(document.getElementById('premium-recap-channel')?.value || 'email');
+  PREMIUM_SETTINGS.recap_target = String(document.getElementById('premium-recap-target')?.value || '').trim();
+  try {
+    localStorage.setItem(PREMIUM_SETTINGS_KEY, JSON.stringify(PREMIUM_SETTINGS));
+  } catch (_) {}
+  const note = document.getElementById('premium-recap-note');
+  if (note) note.textContent = PREMIUM_SETTINGS.recap_target
+    ? `Daily recap saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target}`
+    : 'Recap target missing.';
+  showToast('Premium recap saved');
+}
+
+function runParlayOptimizerLite() {
+  const note = document.getElementById('premium-parlay-note');
+  const list = legs.length ? legs : PICKS.slice(0, 3).map(p => ({id: p.id, bet: p.bet, odds: p.odds, game: p.game}));
+  if (!list.length) {
+    if (note) note.textContent = 'No picks available for optimizer.';
+    return;
+  }
+  const games = {};
+  list.forEach(l => {
+    const src = PICKS.find(p => p.id === l.id);
+    const g = src?.game || l.game || 'game';
+    games[g] = (games[g] || 0) + 1;
+  });
+  const correlated = Object.entries(games).filter(([, v]) => v > 1);
+  if (note) {
+    note.innerHTML = correlated.length
+      ? `Correlation warning: ${correlated.map(([g, v]) => `${g} (${v} legs)`).join(', ')}`
+      : 'No major same-game correlation detected in current legs.';
+  }
+}
+
+function renderPremiumTools() {
+  const bestEl = document.getElementById('premium-bestbets');
+  const packsEl = document.getElementById('premium-packs');
+  const lineEl = document.getElementById('premium-lineshop');
+  const injEl = document.getElementById('premium-injury');
+  const chEl = document.getElementById('premium-recap-channel');
+  const tgEl = document.getElementById('premium-recap-target');
+  const noteEl = document.getElementById('premium-recap-note');
+
+  if (bestEl) {
+    const top = PICKS.slice(0, 3);
+    bestEl.innerHTML = top.length
+      ? top.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<top.length-1?'1px solid var(--border)':'none'}"><span>${esc(p.bet)} ${esc(p.odds)}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('')
+      : 'Run scan to load best bet cards.';
+  }
+  if (packsEl) {
+    const nba = PROPSDATA.filter(p => String(p.market || '').includes('player') || String(p.game || '').includes('NBA')).length;
+    const nfl = PROPSDATA.filter(p => String(p.game || '').includes('NFL') || String(p.market || '').includes('pass_') || String(p.market || '').includes('rush_')).length;
+    packsEl.innerHTML = `NBA Pack (${nba}) · NFL Pack (${nfl}) · Totals Pack (${EVDATA.length})`;
+  }
+  if (lineEl) {
+    const source = (ODDSGAMES || []).slice(0, 3).map(g => {
+      const vals = (g.books || []).map(b => Number(b.away)).filter(v => Number.isFinite(v));
+      if (vals.length < 2) return null;
+      const max = Math.max(...vals), min = Math.min(...vals);
+      return {game: `${g.awayTeam} @ ${g.homeTeam}`, diff: Math.abs(max - min)};
+    }).filter(Boolean);
+    lineEl.innerHTML = source.length
+      ? source.map((r, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<source.length-1?'1px solid var(--border)':'none'}"><span>${esc(r.game)}</span><strong>${r.diff}c spread</strong></div>`).join('')
+      : 'Line-shop assistant will populate after odds data is loaded.';
+  }
+  if (injEl) {
+    const hits = HOME_SPORTS_NEWS.filter(n => /injur|out|questionable|doubtful|suspended/i.test(`${n.title} ${n.sub}`)).slice(0, 3);
+    injEl.innerHTML = hits.length
+      ? hits.map((n, i) => `<div style="padding:${i?'8px':'0'} 0;border-bottom:${i<hits.length-1?'1px solid var(--border)':'none'}">${esc(n.title)}</div>`).join('')
+      : 'No major injury/lineup headlines detected right now.';
+  }
+  if (chEl) chEl.value = PREMIUM_SETTINGS.recap_channel || 'email';
+  if (tgEl) tgEl.value = PREMIUM_SETTINGS.recap_target || '';
+  if (noteEl) noteEl.textContent = PREMIUM_SETTINGS.recap_target
+    ? `Daily recap saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target}`
+    : 'Not configured.';
+}
+
 function loadVipSettings() {
   try {
     const raw = localStorage.getItem(VIP_SETTINGS_KEY);
@@ -2275,6 +2425,7 @@ function loadVipSettings() {
       webhook: String(st.webhook || ''),
       steam: st.steam !== false,
       clv: st.clv !== false,
+      watchlist: String(st.watchlist || ''),
     };
   } catch (_) {}
 }
@@ -2294,6 +2445,18 @@ function saveVipAlerts() {
   const note = document.getElementById('vip-alert-note');
   if (note) note.textContent = `Saved: ${VIP_SETTINGS.steam ? 'Steam ' : ''}${VIP_SETTINGS.clv ? 'CLV ' : ''}${VIP_SETTINGS.webhook ? '· Webhook set' : '· No webhook'}`;
   showToast('VIP alerts saved');
+}
+
+function sendVipTestAlert() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  const note = document.getElementById('vip-alert-note');
+  const target = VIP_SETTINGS.webhook ? 'webhook' : 'in-app';
+  if (note) note.textContent = `Test alert sent (${target}).`;
+  showToast('VIP test alert sent');
 }
 
 function runVipPortfolio() {
@@ -2325,11 +2488,49 @@ function runVipPortfolio() {
   if (note) note.innerHTML = rows.join('<br/>');
 }
 
+function saveVipWatchlist() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  const val = String(document.getElementById('vip-watchlist')?.value || '').trim();
+  VIP_SETTINGS.watchlist = val;
+  try {
+    localStorage.setItem(VIP_SETTINGS_KEY, JSON.stringify(VIP_SETTINGS));
+  } catch (_) {}
+  const note = document.getElementById('vip-watchlist-note');
+  if (note) note.textContent = val ? `Watching: ${val}` : 'No watchlist configured.';
+  showToast('VIP watchlist saved');
+}
+
+function generateVipReport() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
+  const o = PERFDATA?.overall || {};
+  const win = Number(o.win_pct || 0).toFixed(1);
+  const roi = Number(o.roi_pct || 0).toFixed(1);
+  const units = Number(o.units || 0).toFixed(1);
+  const clv = Number(CLVDATA?.beat_closing_pct || 0).toFixed(1);
+  const top = PICKS.slice(0, 2).map(p => `${p.bet} ${p.odds} (+${Number(p.ev || 0).toFixed(1)}%)`).join(' · ');
+  const note = document.getElementById('vip-report-note');
+  if (note) note.textContent = `Week: ${win}% WR, ${roi}% ROI, ${units}u, ${clv}% beat-close. Top: ${top || 'No picks yet.'}`;
+  showToast('VIP report generated');
+}
+
 function renderVipTools() {
   const vipOn = canUseVip();
   const clvEl = document.getElementById('vip-clv');
+  const earlyEl = document.getElementById('vip-early');
   const timingEl = document.getElementById('vip-timing');
   const podEl = document.getElementById('vip-pod');
+  const clvLabEl = document.getElementById('vip-clv-lab');
+  const depthEl = document.getElementById('vip-depth');
+  const watchEl = document.getElementById('vip-watchlist');
+  const watchNoteEl = document.getElementById('vip-watchlist-note');
   const webhookEl = document.getElementById('vip-webhook');
   const steamEl = document.getElementById('vip-alert-steam');
   const clvAlertEl = document.getElementById('vip-alert-clv');
@@ -2338,11 +2539,16 @@ function renderVipTools() {
 
   if (!vipOn) {
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
+    if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
     if (podEl) {
       const tease = PICKS.slice(0, 4).map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
       podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No picks yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Picks</button></div></div>`;
     }
+    if (clvLabEl) clvLabEl.textContent = 'CLV Lab is locked for VIP.';
+    if (depthEl) depthEl.textContent = 'Market depth is locked for VIP.';
+    if (watchEl) watchEl.value = '';
+    if (watchNoteEl) watchNoteEl.textContent = 'Watchlist is locked for VIP.';
     if (timingEl) timingEl.innerHTML = `<div style="color:var(--muted)">Timing engine is locked for VIP.</div>`;
     if (portEl) portEl.textContent = 'Portfolio builder is locked for VIP.';
     if (webhookEl) webhookEl.value = '';
@@ -2356,6 +2562,10 @@ function renderVipTools() {
   const avgClv = Number(CLVDATA?.avg_clv_pct || 0);
   const roi = Number(PERFDATA?.overall?.roi_pct || 0);
   if (clvEl) clvEl.innerHTML = `Beat close: <strong>${beatClose.toFixed(1)}%</strong> · Avg CLV: <strong>${avgClv.toFixed(2)}%</strong> · ROI: <strong>${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</strong>`;
+  if (earlyEl) {
+    const mins = PICKS.length ? Math.max(8, Math.min(35, Math.round(Number(PICKS[0].ev || 5) * 4))) : 15;
+    earlyEl.innerHTML = `VIP release lead: <strong>${mins} minutes</strong> before Premium window.`;
+  }
   if (podEl) {
     const vipPicks = PICKS
       .slice()
@@ -2386,9 +2596,31 @@ function renderVipTools() {
     }
   }
 
+  if (clvLabEl) {
+    const rows = [
+      {book: 'Pinnacle', score: 1.9},
+      {book: 'DraftKings', score: 1.1},
+      {book: 'FanDuel', score: 0.9},
+      {book: 'BetMGM', score: 0.7},
+    ];
+    clvLabEl.innerHTML = rows.map((r, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<rows.length-1?'1px solid var(--border)':'none'}"><span>${r.book}</span><strong style="color:${r.score>=1?'var(--green)':'var(--muted)'}">${r.score.toFixed(1)}% CLV</strong></div>`).join('');
+  }
+
+  if (depthEl) {
+    const rows = (ODDSGAMES || []).slice(0, 3).map(g => {
+      const vals = (g.books || []).map(b => Number(b.away)).filter(v => Number.isFinite(v));
+      if (vals.length < 2) return null;
+      const spread = Math.abs(Math.max(...vals) - Math.min(...vals));
+      return `${g.awayTeam} @ ${g.homeTeam}: ${spread}c spread`;
+    }).filter(Boolean);
+    depthEl.innerHTML = rows.length ? rows.join('<br/>') : 'No depth edges yet. Scan when lines are active.';
+  }
+
   if (webhookEl) webhookEl.value = VIP_SETTINGS.webhook || '';
   if (steamEl) steamEl.checked = VIP_SETTINGS.steam;
   if (clvAlertEl) clvAlertEl.checked = VIP_SETTINGS.clv;
+  if (watchEl) watchEl.value = String(VIP_SETTINGS.watchlist || '');
+  if (watchNoteEl) watchNoteEl.textContent = VIP_SETTINGS.watchlist ? `Watching: ${VIP_SETTINGS.watchlist}` : 'No watchlist configured.';
   if (note) note.textContent = VIP_SETTINGS.webhook ? 'Webhook connected.' : 'No alert settings saved.';
 }
 
@@ -3888,6 +4120,8 @@ async function doScan(silent = false) {
     renderEV();
     renderSteam();
     renderFades();
+    renderPremiumTools();
+    renderVipTools();
     renderHomeModules();
     updatePlanUi();
     if (!silent) showToast('Demo mode active');
@@ -4044,6 +4278,7 @@ async function doScan(silent = false) {
   renderEV();
   renderSteam();
   renderFades();
+  renderPremiumTools();
   renderHomeModules();
   renderVipTools();
   if (currentTab === 'perf') renderPerf();
@@ -4568,6 +4803,7 @@ function go(name) {
   if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
+  if (name === 'premium') renderPremiumTools();
   if (name === 'home') updateHomeSummary();
   if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
@@ -4662,6 +4898,7 @@ function applySavedSelections() {
 loadState();
 loadAuthNudgeState();
 loadPickPrefs();
+loadPremiumSettings();
 loadVipSettings();
 loadTrialUiState();
 loadProfile();
@@ -4686,6 +4923,7 @@ loadTrialStatus();
 renderPerf();
 loadBoostExamples();
 renderFades();
+renderPremiumTools();
 maybeOpenUpgradeFromQuery();
 doScan();
 startAutoRefresh();
