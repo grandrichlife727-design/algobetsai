@@ -1178,6 +1178,7 @@ window.setAlgobetsUserId = function(uid) {
 
 const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
 const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
+const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 if (_checkoutStatus === 'success') {
   setTimeout(() => showToast('Checkout successful. Syncing plan...'), 80);
   setTimeout(() => trackEvent('checkout_success', {uid: USER_ID}), 120);
@@ -1235,6 +1236,7 @@ let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let quotaExhausted = false;
+let demoMode = FORCE_DEMO_MODE;
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
 let CLVDATA = null;
@@ -1599,6 +1601,10 @@ function renderLive() {
 }
 
 async function loadLive() {
+  if (demoMode && LIVEDATA.length) {
+    renderLive();
+    return;
+  }
   const el = document.getElementById('live-list');
   if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading live mode...</div></div>`;
   try {
@@ -1743,6 +1749,90 @@ async function loadJournalStats() {
 function exportJournalCsv() {
   const url = `${BACKEND}/api/journal/export.csv?uid=${encodeURIComponent(USER_ID)}`;
   window.open(url, '_blank', 'noopener');
+}
+
+function applyDemoDataset() {
+  const demoGamesRaw = [
+    {
+      sport: 'basketball_nba',
+      label: 'NBA',
+      emoji: '🏀',
+      away_team: 'Lakers',
+      home_team: 'Celtics',
+      commence_time: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {
+        draftkings: {away: 128, home: -146},
+        fanduel: {away: 132, home: -150},
+        betmgm: {away: 130, home: -148},
+        pinnacle: {away: 124, home: -141},
+      },
+      home_ml: -146,
+      away_ml: 128,
+    },
+    {
+      sport: 'icehockey_nhl',
+      label: 'NHL',
+      emoji: '🏒',
+      away_team: 'Rangers',
+      home_team: 'Bruins',
+      commence_time: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {
+        draftkings: {away: 118, home: -134},
+        fanduel: {away: 121, home: -138},
+        betmgm: {away: 120, home: -136},
+        pinnacle: {away: 114, home: -129},
+      },
+      home_ml: -134,
+      away_ml: 118,
+    },
+    {
+      sport: 'basketball_ncaab',
+      label: 'NCAAB',
+      emoji: '🎓',
+      away_team: 'Duke',
+      home_team: 'UNC',
+      commence_time: new Date(Date.now() + 22 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {
+        draftkings: {away: -112, home: -108},
+        fanduel: {away: -110, home: -110},
+        betmgm: {away: -115, home: -105},
+        pinnacle: {away: -108, home: -102},
+      },
+      home_ml: -108,
+      away_ml: -112,
+    },
+  ];
+
+  const demoPicksRaw = [
+    {sport: 'basketball_nba', emoji: '🏀', game: 'Lakers @ Celtics', bet: 'Lakers ML', odds: '+132', edge: 6.4, confidence_calibrated: 67, best_book: 'fanduel', game_time: demoGamesRaw[0].commence_time, model_breakdown: {pinnacle_clv: 'Best-book gap vs sharp reference remains favorable.', sharp_money: 'Early market pressure supports Lakers side.', confirms: 'Best-line EV, de-vig consensus, calibrated confidence'}},
+    {sport: 'icehockey_nhl', emoji: '🏒', game: 'Rangers @ Bruins', bet: 'Rangers ML', odds: '+121', edge: 5.8, confidence_calibrated: 64, best_book: 'fanduel', game_time: demoGamesRaw[1].commence_time, model_breakdown: {pinnacle_clv: 'Soft-book price still ahead of market median.', sharp_money: 'Line movement indicates buyback on underdog.', confirms: 'Consensus edge + line efficiency delta'}},
+    {sport: 'basketball_ncaab', emoji: '🎓', game: 'Duke @ UNC', bet: 'Duke ML', odds: '-108', edge: 4.9, confidence_calibrated: 62, best_book: 'pinnacle', game_time: demoGamesRaw[2].commence_time, model_breakdown: {pinnacle_clv: 'Fair-line model shows slight price advantage.', sharp_money: 'Public split near even; price still playable.', confirms: 'EV threshold + confidence floor passed'}},
+  ];
+
+  const demoEvRaw = [
+    {bet: 'Lakers ML +132', game: 'Lakers @ Celtics', ev: 6.4, books_compared: 4, bookOdds: '+132'},
+    {bet: 'Rangers ML +121', game: 'Rangers @ Bruins', ev: 5.8, books_compared: 4, bookOdds: '+121'},
+    {bet: 'Duke ML -108', game: 'Duke @ UNC', ev: 4.9, books_compared: 4, bookOdds: '-108'},
+  ];
+
+  demoMode = true;
+  ODDSGAMES = normalizeOddsGames(demoGamesRaw);
+  if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
+  PICKS = demoPicksRaw.map((p, i) => normalizePick(p, i)).sort((a, b) => b.ev - a.ev);
+  EVDATA = demoEvRaw.map(normalizeEV).sort((a, b) => b.ev - a.ev);
+  STEAMDATA = computeSteamSignals(demoGamesRaw);
+  FADESDATA = computePublicFadesFromPicks(PICKS);
+  LIVEDATA = [
+    {sport: 'NBA', game: 'Lakers @ Celtics', minutes_since_start: 6, home_team: 'Celtics', away_team: 'Lakers', home_ml: -138, away_ml: 122},
+    {sport: 'NHL', game: 'Rangers @ Bruins', minutes_since_start: -18, home_team: 'Bruins', away_team: 'Rangers', home_ml: -132, away_ml: 116},
+  ];
+  PROPSDATA = [
+    {player: 'Jayson Tatum', market: 'player_points', side: 'Over', line: 28.5, odds: -108, book: 'FanDuel', game: 'Lakers @ Celtics', game_time: demoGamesRaw[0].commence_time},
+    {player: 'Artemi Panarin', market: 'player_points', side: 'Over', line: 1.5, odds: +105, book: 'DraftKings', game: 'Rangers @ Bruins', game_time: demoGamesRaw[1].commence_time},
+  ];
+  TOMORROW_GAMES = [
+    {emoji: '🎓', game: 'Duke @ UNC', game_time: demoGamesRaw[2].commence_time},
+  ];
 }
 
 async function loadAffiliate() {
@@ -3012,6 +3102,11 @@ function renderProps() {
 }
 
 async function loadProps(force = false) {
+  if (demoMode && PROPSDATA.length && !force) {
+    propsError = null;
+    renderProps();
+    return;
+  }
   if (!canUsePremium()) {
     renderProps();
     return;
@@ -3178,12 +3273,16 @@ async function doScan(silent = false) {
     }
 
     if (PICKS.length === 0 && EVDATA.length === 0) {
+      if ((quotaExhausted || FORCE_DEMO_MODE) && ODDSGAMES.length === 0) {
+        applyDemoDataset();
+        showToast('Demo mode active while live odds are unavailable');
+      }
       await loadTomorrowGames();
       const errBanner = document.getElementById('err-banner');
       if (errBanner) {
         const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
         errBanner.textContent = quotaExhausted
-          ? '⚠ Odds data quota is currently exhausted. New live picks/odds will return after quota reset or upgrade. Cached data may still appear when available.'
+          ? '⚠ Live odds quota is exhausted. Showing demo data until usage resets.'
           : (allFailed
             ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
             : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.');
