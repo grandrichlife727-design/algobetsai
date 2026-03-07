@@ -1,0 +1,4 @@
+interface:
+  display_name: "Graphic Designer"
+  short_description: "Create polished visual design assets and systems"
+  default_prompt: "Use $graphic-designer to create a high-quality visual design solution for this request."
