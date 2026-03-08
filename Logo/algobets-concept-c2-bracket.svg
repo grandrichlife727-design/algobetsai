@@ -1,0 +1,8 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept 2 Odds Bracket">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#6366F1"/></linearGradient></defs>
+  <rect x="2" y="2" width="216" height="216" rx="24" fill="#090E1A" stroke="#2A3D63" stroke-width="4"/>
+  <path d="M52 56 H36 V164 H52" stroke="#A5B4FC" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M168 56 H184 V164 H168" stroke="#A5B4FC" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M64 150 L108 106 L144 126" stroke="url(#g)" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="108" cy="106" r="8" fill="#22D3EE"/>
+</svg>

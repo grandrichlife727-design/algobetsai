@@ -1,0 +1,6 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept 3 Pulse A">
+  <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#A855F7"/></linearGradient></defs>
+  <rect x="2" y="2" width="216" height="216" rx="28" fill="#0B1020" stroke="#253355" stroke-width="4"/>
+  <path d="M58 170 L96 92 L110 62 L124 92 L162 170" stroke="url(#g)" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M80 132 H92 L102 118 L112 142 L122 112 H140" stroke="#BFDBFE" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
