@@ -1802,7 +1802,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="auth-methods">
       <button class="auth-m auth-m-google on" id="am-google" onclick="selectAuthMethod('google')"><span class="auth-m-head"><span class="auth-g-icon">G</span><span class="auth-m-title">Continue with Google</span></span><span class="auth-m-sub">Fastest sign in with verified identity</span></button>
       <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')"><span class="auth-m-head"><span class="auth-m-title">Email</span></span><span class="auth-m-sub">Use any email address</span></button>
-      <button class="auth-m secondary" id="am-apple" onclick="selectAuthMethod('apple')"><span class="auth-m-head"><span class="auth-apple-icon"></span><span class="auth-m-title">Apple</span></span><span class="auth-m-sub">Sign in with Apple</span></button>
     </div>
     <button class="auth-more-link" id="auth-more-link" onclick="toggleAuthMore()">More options</button>
     <div class="auth-divider" id="auth-divider"><span>or continue with</span></div>
@@ -1818,10 +1817,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="google-auth-wrap" id="google-auth-wrap">
       <div id="google-signin-btn"></div>
       <div class="google-auth-note"><span class="auth-g-icon">G</span>Google sign-in uses secure OAuth and verified email identity.</div>
-    </div>
-    <div class="apple-auth-wrap" id="apple-auth-wrap">
-      <button class="apple-auth-btn" onclick="handleAppleSignInClick()"><span class="auth-apple-icon"></span>Continue with Apple</button>
-      <div class="apple-auth-note">Apple sign-in is ready for activation once Apple Developer credentials are connected.</div>
     </div>
     <div class="auth-actions">
       <button class="auth-skip" id="auth-skip-btn" onclick="closeAuthModal()">Skip for now</button>
@@ -2090,7 +2085,6 @@ let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
-let phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
 let emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
@@ -2438,7 +2432,6 @@ function saveTrialUiState() {
 function normalizeAuthMethod(method) {
   const m = String(method || '').toLowerCase();
   if (m === 'google' || m === 'gmail' || m === 'facebook') return 'google';
-  if (m === 'apple') return 'apple';
   if (m === 'email') return m;
   return 'guest';
 }
@@ -2446,7 +2439,6 @@ function normalizeAuthMethod(method) {
 function authMethodLabel(method) {
   const m = normalizeAuthMethod(method);
   if (m === 'google') return 'Google';
-  if (m === 'apple') return 'Apple';
   if (m === 'email') return 'Email';
   return 'Guest';
 }
@@ -3973,7 +3965,6 @@ function selectAuthMethod(method) {
   const fieldWrap = input ? input.closest('.auth-field') : null;
   const divider = document.getElementById('auth-divider');
   const googleWrap = document.getElementById('google-auth-wrap');
-  const appleWrap = document.getElementById('apple-auth-wrap');
   const continueBtn = document.getElementById('auth-continue');
   const codeWrap = document.getElementById('auth-code-wrap');
   const codeInput = document.getElementById('auth-code');
@@ -3982,7 +3973,6 @@ function selectAuthMethod(method) {
   if (!lbl || !input) return;
 
   if (m === 'email') {
-    phoneAuthState.pending = false;
     lbl.textContent = 'Email Address';
     input.placeholder = 'you@example.com';
     input.type = 'email';
@@ -3996,30 +3986,17 @@ function selectAuthMethod(method) {
       : 'We will email you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
-    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
     if (continueBtn) continueBtn.textContent = emailAuthState.pending ? 'Verify Code' : 'Send Code';
   } else if (m === 'google') {
-    phoneAuthState.pending = false;
     emailAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
     if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
     if (googleWrap) googleWrap.classList.add('on');
-    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = 'none';
     renderGoogleAuthButton();
-  } else if (m === 'apple') {
-    phoneAuthState.pending = false;
-    emailAuthState.pending = false;
-    if (fieldWrap) fieldWrap.style.display = 'none';
-    if (codeWrap) codeWrap.style.display = 'none';
-    if (divider) divider.style.display = 'none';
-    if (googleWrap) googleWrap.classList.remove('on');
-    if (appleWrap) appleWrap.classList.add('on');
-    if (continueBtn) continueBtn.style.display = 'none';
   } else {
-    phoneAuthState.pending = false;
     emailAuthState.pending = false;
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
@@ -4028,7 +4005,6 @@ function selectAuthMethod(method) {
     if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
-    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
     if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
   }
@@ -4069,46 +4045,10 @@ async function verifyEmailCode(email, code) {
   }
 }
 
-async function sendPhoneCode(phone) {
-  const normalized = String(phone || '').trim();
-  const payload = {phone: normalized};
-  try {
-    const res = await fetch(`${BACKEND}/api/auth/phone/send`, {
-      method: 'POST',
-      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    phoneAuthState = {pending: true, phone: normalized, localCode: '', sentAt: Date.now(), demo: false};
-    return true;
-  } catch (_) {
-    const demoCode = String(Math.floor(100000 + Math.random() * 900000));
-    phoneAuthState = {pending: true, phone: normalized, localCode: demoCode, sentAt: Date.now(), demo: true};
-    return false;
-  }
-}
-
-async function verifyPhoneCode(phone, code) {
-  const normalized = String(phone || '').trim();
-  const otp = String(code || '').trim();
-  try {
-    const res = await fetch(`${BACKEND}/api/auth/phone/verify`, {
-      method: 'POST',
-      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
-      body: JSON.stringify({phone: normalized, code: otp}),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return true;
-  } catch (_) {
-    return !!(phoneAuthState.localCode && phoneAuthState.phone === normalized && phoneAuthState.localCode === otp);
-  }
-}
-
 function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
   emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   const titleEl = document.getElementById('auth-title');
@@ -4126,8 +4066,6 @@ function openAuthModal(preferredMethod = null) {
   const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
   if (m === 'email') {
     input.value = userProfile.identifier || landingEmail || '';
-  } else if (m === 'phone') {
-    input.value = userProfile.identifier || '';
   } else {
     input.value = '';
   }
@@ -4135,26 +4073,14 @@ function openAuthModal(preferredMethod = null) {
   requestAnimationFrame(() => {
     if (m !== 'google') input.focus();
   });
-  const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
-  const hasExpandedOptionSelected = m === 'apple';
-  if (appleBtn) {
-    if (hasExpandedOptionSelected) appleBtn.classList.remove('secondary');
-    else appleBtn.classList.add('secondary');
-  }
-  if (moreBtn) moreBtn.style.display = hasExpandedOptionSelected ? 'none' : 'block';
+  if (moreBtn) moreBtn.style.display = 'none';
   renderGoogleAuthButton();
 }
 
 function toggleAuthMore() {
-  const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
-  if (appleBtn) appleBtn.classList.remove('secondary');
   if (moreBtn) moreBtn.style.display = 'none';
-}
-
-function handleAppleSignInClick() {
-  showToast('Apple sign-in needs Apple Developer credentials. Use Google or Email for now.');
 }
 
 function closeAuthModal(e) {
@@ -4162,7 +4088,6 @@ function closeAuthModal(e) {
   if (!ov) return;
   if (!e || e.target === ov) {
     ov.classList.remove('on');
-    phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
     emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   }
 }
@@ -4203,10 +4128,6 @@ async function submitAuthProfile() {
   const method = normalizeAuthMethod(active ? active.id.replace('am-', '') : 'email');
   if (method === 'google') {
     showToast('Use the Google button to continue');
-    return;
-  }
-  if (method === 'apple') {
-    showToast('Use the Apple button to continue');
     return;
   }
   const input = document.getElementById('auth-input');
