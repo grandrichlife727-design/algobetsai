@@ -934,7 +934,18 @@
       width: 100%;
     }
     footer > * { width: 100%; }
-    .footer-logo-img { width: 110px; height: auto; display: block; }
+    .footer-wordmark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      line-height: 1;
+      margin: 0 auto;
+    }
     .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
     .footer-links a { text-decoration: none; font-size: 13px; color: var(--muted); transition: color 0.2s; }
     .footer-links a:hover { color: var(--text); }
@@ -1531,13 +1542,14 @@
 
   <!-- ─── FOOTER ────────────────────────────────────────── -->
   <footer>
-    <img class="footer-logo-img" src="Logo/algobets-wordmark-core.svg" alt="AlgoBets Ai logo">
+    <div class="footer-wordmark" aria-label="AlgoBets Ai">
+      <span class="brand-main">AlgoBets</span><span class="brand-ai"> Ai</span>
+    </div>
 
     <div class="footer-links">
       <a href="https://algobetsai.onrender.com/api/legal/privacy" target="_blank" rel="noopener">Privacy Policy</a>
       <a href="https://algobetsai.onrender.com/api/legal/terms" target="_blank" rel="noopener">Terms of Service</a>
       <a href="mailto:grandrichlife727@gmail.com">Contact</a>
-      <a href="app.html#vip-discord">VIP Discord</a>
       <a href="ev-picks/">+EV Picks Guide</a>
       <a href="steam-moves/">Steam Moves Guide</a>
       <a href="player-props/">Player Props Guide</a>
