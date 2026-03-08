@@ -164,7 +164,28 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
-@media(max-width:520px){#install-btn{display:inline-flex}}
+@media(max-width:520px){
+  #install-btn{
+    display:inline-flex;
+    position:fixed;
+    top:10px;
+    right:10px;
+    z-index:210;
+    width:38px;
+    height:38px;
+    padding:0;
+    border-radius:999px;
+    justify-content:center;
+    align-items:center;
+    background:rgba(10,16,36,.86);
+    border:1px solid rgba(124,58,237,.45);
+    color:#dbe7ff;
+    box-shadow:0 8px 22px rgba(0,0,0,.42);
+    backdrop-filter:blur(8px);
+    font-size:0;
+  }
+  #install-btn .btn-ico{width:18px;height:18px;margin:0;vertical-align:0}
+}
 @media(max-width:520px){.auth-actions .bill-link{display:inline-flex}}
 @media(max-width:520px){#demo-btn{display:inline-flex}}
 @media(max-width:900px){
