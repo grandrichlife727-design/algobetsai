@@ -852,6 +852,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card" id="home-card-market" data-home-card="market_status">
           <div class="growth-title">Market Status</div>
           <div id="home-glance" class="growth-sub">Games, books, and edge count will appear after scan.</div>
+          <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
         </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
@@ -2027,7 +2028,7 @@ function evRing(ev, sz = 50) {
 }
 
 function timeAgo(date) {
-  if (!date) return '—';
+  if (!date) return '';
   const s = Math.round((Date.now() - date) / 1000);
   if (s < 60) return `${s}s ago`;
   if (s < 3600) return `${Math.round(s/60)}m ago`;
@@ -3760,7 +3761,7 @@ function renderHistory() {
   if (!el || !ct) return;
   ct.textContent = `${HISTORYDATA.length} recent scan${HISTORYDATA.length !== 1 ? 's' : ''}`;
   if (!HISTORYDATA.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div><div style="margin-top:10px"><button class="paywall-cta" onclick="go('picks')">Add Bet</button></div></div>`;
     return;
   }
   el.innerHTML = HISTORYDATA.map(h => {
@@ -4521,7 +4522,8 @@ function renderHomeModules() {
       }
     }
   }
-  setHomeCardVisible('home-card-picks', true);
+  // Home already has multiple snapshot cards; hide duplicate picks preview block.
+  setHomeCardVisible('home-card-picks', false);
 
   if (premiumEl) {
     const on = canUsePremium();
@@ -4573,12 +4575,17 @@ function renderHomeModules() {
   setHomeCardVisible('home-card-vip', !!homeFlags.show_vip_snapshot);
 
   if (glanceEl) {
-    const gameCount = ODDSGAMES.length || SCHEDULE_GAMES.length || 0;
+    const gameCount = ODDSGAMES.length || SCHEDULE_GAMES.length || (liveOddsPaused ? 3 : 0);
     const bookSet = new Set();
     (ODDSGAMES || []).forEach(g => (g.books || []).forEach(b => bookSet.add(String(b.book || '').toLowerCase())));
-    const books = bookSet.size || 0;
-    const updated = lastRefresh ? timeAgo(lastRefresh) : '—';
-    glanceEl.innerHTML = `${gameCount} games tracked · ${books} books scanned · ${PICKS.length} edges · updated ${updated}`;
+    const books = bookSet.size || (liveOddsPaused ? 2 : 0);
+    if (liveOddsPaused) {
+      glanceEl.innerHTML = `3 games tracked · 2 books scanned · 3 edges found · demo mode`;
+    } else {
+      const updated = lastRefresh ? timeAgo(lastRefresh) : '';
+      const suffix = updated ? ` · updated ${updated}` : '';
+      glanceEl.innerHTML = `${gameCount} games tracked · ${books} books scanned · ${PICKS.length} edges${suffix}`;
+    }
   }
   setHomeCardVisible('home-card-market', !!homeFlags.show_market_status);
 
@@ -6201,6 +6208,19 @@ function bindUiAccessibility() {
   });
 }
 
+function disableBrokenSettingsButtons() {
+  const candidates = document.querySelectorAll('#settings-btn,.settings-btn,[data-action="settings"]');
+  candidates.forEach(btn => {
+    const hasClick = typeof btn.onclick === 'function' || btn.hasAttribute('onclick');
+    if (!hasClick) {
+      btn.setAttribute('disabled', 'disabled');
+      btn.style.opacity = '.5';
+      btn.style.cursor = 'not-allowed';
+      btn.title = 'Settings unavailable';
+    }
+  });
+}
+
 function applySavedSelections() {
   if (mode === 'expert') setMode('expert');
   const savedFilterEl = document.querySelector(`.filter[onclick="setFilter(this,'${filter}')"]`);
@@ -6228,6 +6248,7 @@ applyAffiliateLinks();
 applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
+disableBrokenSettingsButtons();
 bindHomeTracking();
 updateDemoToggleUi();
 setupInstallPrompt();
