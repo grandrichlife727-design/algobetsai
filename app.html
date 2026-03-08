@@ -238,21 +238,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
-.pick-controls{display:grid;gap:8px;margin:-6px 0 12px}
-.pick-controls input,.pick-controls select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--sans)}
-.pick-search-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)}
-.pick-search-toggle:hover{color:var(--text);border-color:var(--border2)}
-.pick-search-input{display:none}
-@media(min-width:901px){
-  .pick-controls{grid-template-columns:auto repeat(4,minmax(0,1fr))}
-  .pick-controls.search-on{grid-template-columns:auto minmax(180px,1.15fr) repeat(4,minmax(0,1fr))}
-  .pick-controls.search-on .pick-search-input{display:block}
-}
-@media(max-width:900px){
-  .pick-controls{grid-template-columns:1fr 1fr}
-  .pick-search-toggle{grid-column:1 / 2}
-  .pick-controls.search-on .pick-search-input{display:block;grid-column:1 / -1}
-}
+.pick-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:-6px 0 12px}
+.pick-controls select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--sans)}
+@media(max-width:900px){.pick-controls{grid-template-columns:1fr 1fr}}
 .tool-lock{opacity:.72;border-style:dashed}
 .tool-lock:hover{opacity:1}
 
@@ -956,9 +944,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
-      <div class="pick-controls" id="pick-controls">
-        <button class="pick-search-toggle" id="picks-search-toggle" type="button" aria-expanded="false" onclick="togglePicksSearch()">🔎 Search</button>
-        <input id="picks-search" class="pick-search-input" type="search" placeholder="Search team, player, market..." oninput="setPickQuery(this.value)"/>
+      <div class="pick-controls">
         <select id="picks-market" onchange="setPickMarket(this.value)">
           <option value="all">All markets</option>
           <option value="spread">Spread</option>
@@ -1902,7 +1888,6 @@ const SPORTS = [
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
 let filter = 'all';
-let pickQuery = '';
 let pickMarket = 'all';
 let pickMinEdge = 0;
 let pickMinConf = 0;
@@ -5952,10 +5937,6 @@ function renderPicks() {
     if (pickMarket !== 'all' && String(p.market || '') !== pickMarket) return false;
     if (Number(p.ev || 0) < pickMinEdge) return false;
     if (Number(p.conf || 0) < pickMinConf) return false;
-    if (pickQuery) {
-      const hay = `${p.bet} ${p.game} ${p.sport} ${p.market}`.toLowerCase();
-      if (!hay.includes(pickQuery)) return false;
-    }
     return true;
   }).sort((a, b) => {
     if (pickSort === 'edge_asc') return Number(a.ev || 0) - Number(b.ev || 0);
@@ -6041,7 +6022,7 @@ function renderPicks() {
   const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
   const renderList = isFreePlan ? freeRenderSource.slice(0, freeVisibleLimit) : freeRenderSource;
   let displayList = renderList;
-  const canBackfillTeasers = !pickQuery && filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
+  const canBackfillTeasers = filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
   if (isFreePlan && canBackfillTeasers && renderList.length < freeVisibleLimit) {
     const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, 0);
     const seen = new Set(renderList.map(p => `${String(p.game || '')}|${String(p.bet || '')}`));
@@ -6712,29 +6693,6 @@ function setFilter(el, k) {
   filter = k;
   saveState();
   renderPicks();
-}
-
-function setPickQuery(v) {
-  pickQuery = String(v || '').trim().toLowerCase();
-  renderPicks();
-}
-
-function togglePicksSearch(forceOpen = null) {
-  const controls = document.getElementById('pick-controls');
-  const input = document.getElementById('picks-search');
-  const btn = document.getElementById('picks-search-toggle');
-  if (!controls || !input || !btn) return;
-  const isOpen = controls.classList.contains('search-on');
-  const nextOpen = forceOpen === null ? !isOpen : !!forceOpen;
-  controls.classList.toggle('search-on', nextOpen);
-  btn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
-  btn.textContent = nextOpen ? '✕ Close' : '🔎 Search';
-  if (nextOpen) {
-    setTimeout(() => input.focus(), 0);
-    return;
-  }
-  input.value = '';
-  setPickQuery('');
 }
 
 function setPickMarket(v) {
