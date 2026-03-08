@@ -92,10 +92,16 @@
     .nav-logo {
       display: flex;
       align-items: center;
-      gap: 0;
+      gap: 8px;
       text-decoration: none;
     }
-    .nav-logo-img { display: none; }
+    .nav-logo-img {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: block;
+      object-fit: cover;
+    }
     .nav-logo-text {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 22px;
@@ -151,9 +157,9 @@
 
     @media (max-width: 640px) {
       .nav-links { display: none; }
-      .nav-logo-img { display: none; }
+      .nav-logo-img { width: 20px; height: 20px; border-radius: 5px; }
       .nav-logo-text { font-size: 23px; }
-      .nav-logo { gap: 0; }
+      .nav-logo { gap: 6px; }
     }
 
     /* ─── HERO ──────────────────────────────────────── */
@@ -229,28 +235,6 @@
       color: #fff;
       margin-bottom: 8px;
       animation: fadeUp 0.7s 0.1s ease both;
-    }
-    .hero-brand-lockup {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 auto 18px;
-      animation: fadeUp 0.7s 0.08s ease both;
-    }
-    .hero-brand-mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.35);
-    }
-    .hero-brand-text {
-      font-family: 'DM Sans', sans-serif;
-      font-size: clamp(22px, 3.4vw, 36px);
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      color: #fff;
-      line-height: 1;
     }
 
     .hero-h1-accent {
@@ -927,7 +911,8 @@
   <!-- ─── NAV ─────────────────────────────────────────── -->
   <nav>
     <a class="nav-logo" href="#">
-      <span class="nav-logo-text"><span class="brand-main">AlgoBets</span><span class="brand-ai">Ai</span></span>
+      <img class="nav-logo-img" src="app-icon.svg" alt="AlgoBets AI logo" />
+      <span class="nav-logo-text"><span class="brand-main">AlgoBets</span><span class="brand-ai"> AI</span></span>
     </a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
@@ -960,10 +945,6 @@
     <div class="hero-eyebrow">
       <div class="live-dot"></div>
       Live Now · 5-Agent AI Edge System
-    </div>
-    <div class="hero-brand-lockup">
-      <img class="hero-brand-mark" src="app-icon.svg" alt="AlgoBets Ai mark" />
-      <div class="hero-brand-text"><span class="brand-main">AlgoBets</span><span class="brand-ai"> Ai</span></div>
     </div>
 
     <h1 class="hero-h1">
@@ -1311,15 +1292,15 @@
       <div class="pricing-card reveal">
         <div class="price-plan-name">Free</div>
         <div class="price-amount"><span>$</span>0</div>
-        <div class="price-period">Forever free · 1 daily top edge + locked board preview</div>
+        <div class="price-period">Forever free · preview mode with one unlocked daily edge</div>
         <ul class="price-features">
-          <li class="price-feature"><span class="price-check">✓</span> 1 daily top edge reveal</li>
-          <li class="price-feature"><span class="price-check">✓</span> 3-4 locked teaser cards</li>
-          <li class="price-feature"><span class="price-check">✓</span> 20-minute delayed free board</li>
+          <li class="price-feature"><span class="price-check">✓</span> 1 fully revealed top edge per day</li>
+          <li class="price-feature"><span class="price-check">✓</span> 3-4 teaser cards (matchup preview only)</li>
+          <li class="price-feature"><span class="price-check">✓</span> 20-minute delayed board updates</li>
           <li class="price-feature"><span class="price-check">✓</span> Parlay builder</li>
           <li class="price-feature"><span class="price-check">✓</span> Shareable pick cards</li>
-          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">Props Edge, +EV, Steam, Fades</span></li>
-          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">VIP Pick of the Day + VIP Discord</span></li>
+          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">No full side/line/odds on locked teasers</span></li>
+          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">No Props Edge, +EV, Steam, Fades, or VIP tools</span></li>
         </ul>
         <a href="#email-gate" onclick="openEmailGate(event)" class="price-btn price-btn-ghost">Create Free Account</a>
       </div>
@@ -1379,10 +1360,18 @@
     <div class="faq-list reveal">
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          Is this a tout service? Are picks guaranteed?
+          How does the 5-Agent Edge Engine decide a pick?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">No picks are ever guaranteed — anyone who says otherwise is lying to you. AlgoBets Ai is a data and analytics tool that surfaces statistical edges. You make your own decisions. The goal is positive expected value over a large sample, not a win on every bet.</div>
+        <div class="faq-a">Each pick is scored by five components: (1) best-line EV, (2) de-vig consensus fair price, (3) sharp-book weighting, (4) steam move pressure when present, and (5) public fade pressure when skew is meaningful. We publish picks only when the combined score clears our edge threshold.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What exactly do Free users get each day?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-a">Free includes one fully revealed top edge daily, plus teaser cards that show matchup context while full bet details stay locked. The free board runs on delayed refresh. Premium and VIP unlock full real-time details and expanded tools.</div>
       </div>
 
       <div class="faq-item">
@@ -1390,23 +1379,23 @@
           Where does the odds data come from?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">We pull live odds from The Odds API, which aggregates data from 40+ bookmakers including DraftKings, FanDuel, BetMGM, Caesars, and more. Data is fetched in real-time on every scan. No stale or simulated odds.</div>
+        <div class="faq-a">Live odds come from The Odds API across major sportsbooks. We compare book prices, de-vig consensus probability, and line movement on every scan so stale prices fall out quickly.</div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          What sports do you cover?
+          What sports and markets are covered right now?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">NBA, NFL, NHL, NCAAB, and MLB. We prioritize markets with the most liquidity and sharpest lines — these are where edges are real but also where they can be found if you have the right tools.</div>
+        <div class="faq-a">Current focus is NBA, NFL, NHL, NCAAB, MLB, and EPL across sides, totals, moneylines, and selected props. We do not currently run MMA markets in the app.</div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          Does it work on mobile?
+          What is the difference between Premium and VIP?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">AlgoBets Ai is a web app that works perfectly on any device — phone, tablet, or desktop. On iPhone, tap Share → "Add to Home Screen" and it will look and behave like a native app. No App Store download required.</div>
+        <div class="faq-a">Premium unlocks full picks plus Props Edge, +EV board, Steam, and Fades. VIP includes everything in Premium plus VIP Pick of the Day, live-play tools, line-rush/CLV execution tools, and VIP Discord.</div>
       </div>
 
       <div class="faq-item">
@@ -1414,23 +1403,15 @@
           How does the 3-day trial work?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">Premium trial is 3 days with card required at checkout. If you cancel before trial ends, you are not charged. If not canceled, it automatically converts to a paid subscription after day 3.</div>
+        <div class="faq-a">Premium trial is 3 days with card required at checkout. Cancel before the trial ends to avoid charges. If not canceled, the subscription automatically converts to paid after day 3.</div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          Can I cancel my subscription anytime?
+          Can I cancel anytime, and are picks guaranteed?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">Yes. Cancel at any time from your Stripe billing portal — no questions asked, no cancellation fees. Your access continues through the end of your billing period.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">
-          What's the backtested win rate?
-          <span class="faq-chevron">⌄</span>
-        </div>
-        <div class="faq-a">Our model has been backtested at 63% ATS on plays rated A- or higher confidence across the 2023-24 NBA season. Past performance doesn't guarantee future results, but beating 52.4% long-term is what creates profit against standard -110 juice.</div>
+        <div class="faq-a">Yes, you can cancel from billing anytime. Access continues through your paid period. Picks are not guaranteed; AlgoBets Ai is a decision-support product built around pricing edge and long-run discipline, not guaranteed outcomes.</div>
       </div>
     </div>
   </section>
