@@ -2088,6 +2088,7 @@ let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
+let emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
@@ -3958,13 +3959,18 @@ function selectAuthMethod(method) {
     input.placeholder = 'you@example.com';
     input.type = 'email';
     if (fieldWrap) fieldWrap.style.display = '';
-    if (codeWrap) codeWrap.style.display = 'none';
+    if (codeWrap) codeWrap.style.display = '';
+    if (codeInput && !emailAuthState.pending) codeInput.value = '';
+    if (codeNote) codeNote.textContent = emailAuthState.pending
+      ? `Code sent to ${emailAuthState.email || 'your email'}. Enter it to continue.`
+      : 'We will email you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Sign In with Email' : 'Create Account';
+    if (continueBtn) continueBtn.textContent = emailAuthState.pending ? 'Verify Code' : 'Send Code';
   } else if (m === 'phone') {
+    emailAuthState.pending = false;
     lbl.textContent = 'Phone Number';
     input.placeholder = '+1 (555) 123-4567';
     input.type = 'tel';
@@ -3981,6 +3987,7 @@ function selectAuthMethod(method) {
     if (continueBtn) continueBtn.textContent = phoneAuthState.pending ? 'Verify Code' : 'Send Code';
   } else if (m === 'google') {
     phoneAuthState.pending = false;
+    emailAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
     if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
@@ -3990,6 +3997,7 @@ function selectAuthMethod(method) {
     renderGoogleAuthButton();
   } else if (m === 'apple') {
     phoneAuthState.pending = false;
+    emailAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
     if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
@@ -3998,6 +4006,7 @@ function selectAuthMethod(method) {
     if (continueBtn) continueBtn.style.display = 'none';
   } else {
     phoneAuthState.pending = false;
+    emailAuthState.pending = false;
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
     input.type = 'text';
@@ -4008,6 +4017,41 @@ function selectAuthMethod(method) {
     if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
     if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
+  }
+}
+
+async function sendEmailCode(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  const payload = {email: normalized};
+  try {
+    const res = await fetch(`${BACKEND}/api/auth/email/send`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    emailAuthState = {pending: true, email: normalized, localCode: '', sentAt: Date.now()};
+    return true;
+  } catch (_) {
+    const demoCode = String(Math.floor(100000 + Math.random() * 900000));
+    emailAuthState = {pending: true, email: normalized, localCode: demoCode, sentAt: Date.now()};
+    return false;
+  }
+}
+
+async function verifyEmailCode(email, code) {
+  const normalized = String(email || '').trim().toLowerCase();
+  const otp = String(code || '').trim();
+  try {
+    const res = await fetch(`${BACKEND}/api/auth/email/verify`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify({email: normalized, code: otp}),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return true;
+  } catch (_) {
+    return !!(emailAuthState.localCode && emailAuthState.email === normalized && emailAuthState.localCode === otp);
   }
 }
 
@@ -4051,6 +4095,7 @@ function openAuthModal(preferredMethod = null) {
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
   phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
+  emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   const titleEl = document.getElementById('auth-title');
   const subEl = document.getElementById('auth-sub');
@@ -4109,6 +4154,7 @@ function closeAuthModal(e) {
   if (!e || e.target === ov) {
     ov.classList.remove('on');
     phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
+    emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
   }
 }
 
@@ -4164,6 +4210,32 @@ async function submitAuthProfile() {
   if (method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     showToast('Enter a valid email');
     return;
+  }
+  if (method === 'email') {
+    const normalizedEmail = value.toLowerCase();
+    const codeInput = document.getElementById('auth-code');
+    const codeNote = document.getElementById('auth-code-note');
+    if (!emailAuthState.pending || emailAuthState.email !== normalizedEmail) {
+      const liveEmail = await sendEmailCode(normalizedEmail);
+      if (codeNote) {
+        codeNote.textContent = liveEmail
+          ? `Code sent to ${normalizedEmail}. Enter it to continue.`
+          : `Code sent to ${normalizedEmail}. Demo code: ${emailAuthState.localCode}`;
+      }
+      selectAuthMethod('email');
+      showToast('Verification code sent');
+      return;
+    }
+    const code = String(codeInput?.value || '').trim();
+    if (!/^\d{6}$/.test(code)) {
+      showToast('Enter the 6-digit code');
+      return;
+    }
+    const ok = await verifyEmailCode(normalizedEmail, code);
+    if (!ok) {
+      showToast('Invalid verification code');
+      return;
+    }
   }
   if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
     showToast('Enter a valid phone number');
