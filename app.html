@@ -1605,8 +1605,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
           <div class="growth-note" id="ap-note">No pack enabled.</div>
           </div>
-          <div class="growth-note" id="settings-notifications-locked" style="display:none">Premium feature. Upgrade to enable alert destinations, digest delivery, and alert packs.</div>
-          <div class="rf-row" id="settings-notifications-upgrade" style="display:none;margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to Premium</button></div>
+          <div class="growth-note" id="settings-notifications-locked" style="display:none">VIP feature. Upgrade to enable alert destinations, digest delivery, and alert packs.</div>
+          <div class="rf-row" id="settings-notifications-upgrade" style="display:none;margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Theme</div>
@@ -2898,8 +2898,8 @@ async function saveAgentWeights() {
 
 async function loadAlertPacks() {
   const note = document.getElementById('ap-note');
-  if (!canUsePremium()) {
-    if (note) note.textContent = 'Premium feature. Upgrade to enable packs.';
+  if (!canUseVip()) {
+    if (note) note.textContent = 'VIP feature. Upgrade to enable packs.';
     return;
   }
   try {
@@ -2913,8 +2913,8 @@ async function loadAlertPacks() {
 }
 
 async function saveAlertPack() {
-  if (!canUsePremium()) {
-    showToast('Premium feature');
+  if (!canUseVip()) {
+    showToast('VIP feature');
     openUpgradePicker();
     return;
   }
@@ -4471,8 +4471,8 @@ async function redeemReferral() {
 async function loadAlertSubscriptions() {
   const noteEl = document.getElementById('al-note');
   if (!noteEl) return;
-  if (!canUsePremium()) {
-    noteEl.textContent = 'Premium feature. Upgrade to enable alert destinations.';
+  if (!canUseVip()) {
+    noteEl.textContent = 'VIP feature. Upgrade to enable alert destinations.';
     return;
   }
   if (!ensureRegisteredUser(false)) {
@@ -4496,8 +4496,8 @@ async function loadAlertSubscriptions() {
 async function loadDigestSubscription() {
   const note = document.getElementById('dg-note');
   if (!note) return;
-  if (!canUsePremium()) {
-    note.textContent = 'Premium feature. Upgrade to enable digest.';
+  if (!canUseVip()) {
+    note.textContent = 'VIP feature. Upgrade to enable digest.';
     return;
   }
   if (!ensureRegisteredUser(false)) {
@@ -4521,8 +4521,8 @@ async function loadDigestSubscription() {
 }
 
 async function saveDigestSubscription() {
-  if (!canUsePremium()) {
-    showToast('Premium feature');
+  if (!canUseVip()) {
+    showToast('VIP feature');
     openUpgradePicker();
     return;
   }
@@ -4573,8 +4573,8 @@ async function claimStreakReward() {
 }
 
 async function saveAlertSubscription() {
-  if (!canUsePremium()) {
-    showToast('Premium feature');
+  if (!canUseVip()) {
+    showToast('VIP feature');
     openUpgradePicker();
     return;
   }
@@ -4939,19 +4939,19 @@ function renderToolLocks() {
 }
 
 function renderSettingsExtras() {
-  const premiumOn = canUsePremium();
+  const vipOn = canUseVip();
   const notifCard = document.getElementById('settings-notifications-card');
   const notifSub = document.getElementById('settings-notifications-sub');
   const notifContent = document.getElementById('settings-notifications-content');
   const notifLocked = document.getElementById('settings-notifications-locked');
   const notifUpgrade = document.getElementById('settings-notifications-upgrade');
-  if (notifCard) notifCard.classList.toggle('tool-lock', !premiumOn);
-  if (notifSub) notifSub.textContent = premiumOn
+  if (notifCard) notifCard.classList.toggle('tool-lock', !vipOn);
+  if (notifSub) notifSub.textContent = vipOn
     ? 'Configure alerts, digest delivery, and quick alert packs.'
-    : 'Premium/VIP only.';
-  if (notifContent) notifContent.style.display = premiumOn ? '' : 'none';
-  if (notifLocked) notifLocked.style.display = premiumOn ? 'none' : '';
-  if (notifUpgrade) notifUpgrade.style.display = premiumOn ? 'none' : '';
+    : 'VIP only.';
+  if (notifContent) notifContent.style.display = vipOn ? '' : 'none';
+  if (notifLocked) notifLocked.style.display = vipOn ? 'none' : '';
+  if (notifUpgrade) notifUpgrade.style.display = vipOn ? 'none' : '';
   const note = document.getElementById('theme-note');
   if (note) note.textContent = `Current theme: ${themeMode === 'light' ? 'Light' : 'Dark'}.`;
 }
