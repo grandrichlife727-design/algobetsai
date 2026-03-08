@@ -1,0 +1,6 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Algobets A3 sharp">
+  <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#A855F7"/></linearGradient></defs>
+  <rect x="2" y="2" width="216" height="216" rx="24" fill="#080D18" stroke="#24365A" stroke-width="4"/>
+  <path d="M58 170 L98 72 L112 48 L126 72 L166 170" fill="none" stroke="url(#g)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M80 128 L98 128 L108 114 L118 138 L129 112 L144 112" fill="none" stroke="#C7D2FE" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
