@@ -348,10 +348,13 @@ async def require_vip_plan(request: Request):
 # CACHE & CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-CACHE_TTL          = int(os.getenv("CACHE_TTL", "1800") or 1800)
+CACHE_TTL          = int(os.getenv("CACHE_TTL", "3600") or 3600)
 CACHE_TTL_PINNACLE = int(os.getenv("CACHE_TTL_PINNACLE", "1800") or 1800)
 CACHE_TTL_INJURIES = int(os.getenv("CACHE_TTL_INJURIES", "900") or 900)
-ODDS_MIN_REMAINING_TO_SCAN = int(os.getenv("ODDS_MIN_REMAINING_TO_SCAN", "10") or 10)
+ODDS_MIN_REMAINING_TO_SCAN = int(os.getenv("ODDS_MIN_REMAINING_TO_SCAN", "150") or 150)
+ODDS_MONTHLY_CREDIT_CAP = int(os.getenv("ODDS_MONTHLY_CREDIT_CAP", "12000") or 12000)
+ODDS_ENABLE_LEGACY_FALLBACK = _bool_env("ODDS_ENABLE_LEGACY_FALLBACK", "false")
+ODDS_ENABLE_ALL_BOOKS_FALLBACK = _bool_env("ODDS_ENABLE_ALL_BOOKS_FALLBACK", "false")
 MODEL_MIN_EDGE_EV = float(os.getenv("MODEL_MIN_EDGE_EV", "1.0") or 1.0)
 MODEL_MIN_BOOKS = int(os.getenv("MODEL_MIN_BOOKS", "3") or 3)
 MODEL_MIN_CONFIDENCE = int(os.getenv("MODEL_MIN_CONFIDENCE", "58") or 58)
@@ -761,6 +764,11 @@ async def fetch_odds_api_games(sport_key: str) -> list:
 
     # Last-resort stale cache for API outages or missing key.
     stale_cached = cache_get(cache_key, ttl=3600 * 24 * 14)
+    if not _odds_budget_ok():
+        if stale_cached is not None:
+            print(f"[OddsAPI] Monthly budget soft cap reached; serving stale cache for {sport_key}")
+            return stale_cached
+        return []
 
     if not ODDS_API_KEY:
         if stale_cached is not None and len(stale_cached) > 0:
@@ -782,12 +790,13 @@ async def fetch_odds_api_games(sport_key: str) -> list:
                 "oddsFormat": "american",
                 "dateFormat": "iso",
             }
-            attempts = [
-                ("canonical+books", url, {**base_params, "bookmakers": ODDS_BOOKMAKERS}),
-                ("canonical-all-books", url, dict(base_params)),
-                ("legacy+books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport, "bookmakers": ODDS_BOOKMAKERS}),
-                ("legacy-all-books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport}),
-            ]
+            attempts = [("canonical+books", url, {**base_params, "bookmakers": ODDS_BOOKMAKERS})]
+            if ODDS_ENABLE_ALL_BOOKS_FALLBACK:
+                attempts.append(("canonical-all-books", url, dict(base_params)))
+            if ODDS_ENABLE_LEGACY_FALLBACK:
+                attempts.append(("legacy+books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport, "bookmakers": ODDS_BOOKMAKERS}))
+                if ODDS_ENABLE_ALL_BOOKS_FALLBACK:
+                    attempts.append(("legacy-all-books", f"{ODDS_BASE}/odds/", {**base_params, "sport": odds_sport}))
 
             data = None
             last_err = None
@@ -969,10 +978,13 @@ async def fetch_all_odds_games() -> dict:
 
 async def fetch_odds_api_scores(sport_key: str, days_from: int = 3) -> list[dict]:
     """Fetch completed game scores for settlement."""
+    global _quota_remaining, _quota_used_last
     cache_key = f"scores_{sport_key}_{days_from}"
     cached = cache_get(cache_key, ttl=900)
     if cached is not None:
         return cached
+    if not _odds_budget_ok():
+        return []
     if not ODDS_API_KEY:
         return []
     odds_sport = ODDS_API_SPORT_MAP.get(sport_key, sport_key)
@@ -987,6 +999,12 @@ async def fetch_odds_api_scores(sport_key: str, days_from: int = 3) -> list[dict
                     "dateFormat": "iso",
                 },
             )
+            remaining = r.headers.get("X-Requests-Remaining")
+            used = r.headers.get("X-Requests-Used")
+            if remaining:
+                _quota_remaining = int(remaining)
+            if used:
+                _quota_used_last = int(used)
             if r.status_code >= 400:
                 return []
             payload = r.json()
@@ -1004,6 +1022,15 @@ def _props_budget_ok() -> bool:
     if used <= 0:
         return True
     return used < PROPS_MONTHLY_CREDIT_CAP
+
+
+def _odds_budget_ok() -> bool:
+    if ODDS_MONTHLY_CREDIT_CAP <= 0:
+        return True
+    used = int(_quota_used_last or 0)
+    if used <= 0:
+        return True
+    return used < ODDS_MONTHLY_CREDIT_CAP
 
 
 def _rotated_markets_for_sport(sport_key: str) -> list[str]:
@@ -3606,7 +3633,7 @@ async def scan(request: Request):
     last_scan_ts = float(state.get("last_scan_ts", 0) or 0)
     elapsed = now_ts - last_scan_ts
     cooldown_remaining = max(0, int(min_interval - elapsed))
-    if force_refresh and min_interval > 0 and elapsed < min_interval:
+    if min_interval > 0 and last_scan_ts > 0 and elapsed < min_interval:
         cached_payload = state.get("last_payload")
         if isinstance(cached_payload, dict):
             payload = dict(cached_payload)
@@ -3616,6 +3643,16 @@ async def scan(request: Request):
                 "served_from_cache": True,
             }
             return payload
+        if not force_refresh:
+            fallback_payload = _latest_cached_scan_payload(user_id)
+            if isinstance(fallback_payload, dict):
+                payload = dict(fallback_payload)
+                payload["scan_policy"] = {
+                    "min_interval_seconds": min_interval,
+                    "cooldown_remaining_seconds": cooldown_remaining,
+                    "served_from_cache": True,
+                }
+                return payload
         raise HTTPException(
             status_code=429,
             detail=f"Please wait {cooldown_remaining}s before the next scan on the {tier.get('name', 'current')} plan.",
@@ -3792,11 +3829,16 @@ async def get_quota():
     used = int(_quota_used_last or 0)
     cap = int(PROPS_MONTHLY_CREDIT_CAP or 0)
     pct = round((used / cap) * 100.0, 1) if cap > 0 and used > 0 else 0.0
+    odds_cap = int(ODDS_MONTHLY_CREDIT_CAP or 0)
+    odds_pct = round((used / odds_cap) * 100.0, 1) if odds_cap > 0 and used > 0 else 0.0
     return {
         "quota_remaining": _quota_remaining,
         "quota_used_last": _quota_used_last,
         "data_source": "The Odds API" if ODDS_API_KEY else "Not configured",
         "cache_ttl_seconds": CACHE_TTL,
+        "odds_monthly_credit_cap": odds_cap,
+        "odds_budget_used_pct": odds_pct,
+        "odds_budget_within_limit": _odds_budget_ok(),
         "props_monthly_credit_cap": cap,
         "props_budget_used_pct": pct,
         "props_budget_within_limit": _props_budget_ok(),
