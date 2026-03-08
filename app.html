@@ -93,6 +93,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nav-item.nav-sub svg{width:12px;height:12px;opacity:.42}
 .nav-item.nav-sub.active{color:var(--amber);background:rgba(255,183,0,.09)}
 .nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+.vip-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--amber);border:1px solid rgba(255,183,0,.35);background:rgba(255,183,0,.1);padding:2px 7px;border-radius:999px;font-family:var(--mono)}
 .sidebar-bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
 .resp-notice{font-size:10px;color:var(--muted);line-height:1.55;padding:8px 8px 0}
 
@@ -678,7 +679,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">⚡</div>
-    <div class="logo-text">Algobets Ai</div>
+    <div class="logo-text">Algobets AI</div>
   </div>
   <span class="nav-section">Navigation</span>
   <button class="nav-item active" onclick="go('home')">
@@ -735,7 +736,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="topbar">
     <div class="topbar-logo">
       <span class="topbar-mark">⚡</span>
-      Algobets Ai
+      Algobets AI
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -805,13 +806,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-k">VIP</div>
             <div class="hps-price">$39.99/mo</div>
             <div class="hps-list">
+              <div>VIP Discord access</div>
               <div>50 picks</div>
               <div>1-minute refresh</div>
               <div>Execution layer</div>
-              <div>Discord access</div>
               <div>Line rush alerts</div>
             </div>
-            <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button></div>
+            <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button> <span class="vip-chip">VIP Discord</span></div>
           </div>
         </div>
       </div>
@@ -834,9 +835,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="paywall-cta" data-home-cta="premium_unlocks" onclick="go('premium')">Open Premium</button></div>
         </div>
         <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
-          <div class="growth-title">VIP Build</div>
-          <div id="home-vip" class="growth-sub">VIP Build: 3-Leg Parlay (+641%)</div>
-          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button></div>
+          <div class="growth-title">VIP Pick of the Day</div>
+          <div id="home-vip" class="growth-sub">Loading VIP pick preview...</div>
+          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button> <span class="vip-chip">VIP Discord</span></div>
         </div>
         <div class="growth-card" id="home-card-market" data-home-card="market_status">
           <div class="growth-title">Market Status</div>
@@ -983,7 +984,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-offers" style="display:none">
-      <div class="page-hdr"><div class="page-title">Sportsbook <span>Offers</span></div><div class="page-sub">Promo and affiliate links. We can add more books over time.</div></div>
+      <div class="page-hdr"><div class="page-title">Sportsbook <span>Offers</span></div><div class="page-sub">Bonus offers and affiliate links by sportsbook.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" data-book="draftkings">
@@ -1054,7 +1055,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-premium" style="display:none">
-      <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props Edge, +EV, Steam, Fades, and Parlay tools in one place.</div></div>
+      <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props, +EV, steam, fades, and parlay tools in one workspace.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Premium Signals</div>
@@ -1108,7 +1109,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub"><strong>Execution:</strong> CLV dashboard, timing engine, and market depth.</div>
           <div class="growth-sub"><strong>Automation:</strong> webhook alerts, watchlists, and weekly reports.</div>
           <div class="growth-sub"><strong>Community:</strong> private VIP Discord with live drops and discussion.</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><button class="pf-btn" onclick="go('vip')">Open VIP Tools</button></div>
+          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><span class="vip-chip">VIP Discord</span><button class="pf-btn" onclick="go('vip')">Open VIP Tools</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
@@ -1127,6 +1128,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub"><strong>What VIP is for:</strong> fewer, stronger cards with better timing and deeper execution context.</div>
           <div class="growth-sub"><strong>How to use it:</strong> Core Edge → Execution → Portfolio → Alerts → VIP Discord.</div>
           <div class="growth-sub"><strong>Main gains:</strong> earlier access, better entry timing, and tighter bankroll control.</div>
+        </div>
+        <div class="growth-card" id="vip-discord-tease">
+          <div class="growth-title vip-title"><span class="vip-ico">💬</span>VIP Discord Access</div>
+          <div class="growth-sub">Private channel with live drops, short voice notes, and member Q&A.</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock with VIP</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Open VIP Sections</div>
@@ -1147,6 +1153,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-note" id="vip-release-window">Next VIP drop window: calculating...</div>
           <div id="vip-core-list" class="growth-sub">Loading Core Edge plays...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title vip-title"><span class="vip-ico">🎯</span>VIP Pick of the Day</div>
+          <div class="growth-sub" id="vip-pod">Loading VIP pick...</div>
+          <div class="growth-note">Exclusive daily pick for VIP members with execution timing guidance.</div>
         </div>
       </div>
     </div>
@@ -1408,7 +1419,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-community" style="display:none">
-      <div class="page-hdr"><div class="page-title">Community <span>Feed</span></div><div class="page-sub">Share your picks, post wins, and see what others are betting</div></div>
+      <div class="page-hdr"><div class="page-title">Community <span>Feed</span></div><div class="page-sub">Verified posts from members sharing picks and results.</div></div>
       <div class="community-wrap">
         <div class="community-composer">
           <div class="community-title">Verified feed only</div>
@@ -1427,12 +1438,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-profile" style="display:none">
-      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage sign-in identity and billing access</div></div>
+      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage account, billing, and notification preferences.</div></div>
       <div class="profile-card">
         <div class="pf-row"><div class="pf-k">Account</div><div class="pf-v" id="pf-account">Guest</div></div>
         <div class="pf-row"><div class="pf-k">Method</div><div class="pf-v" id="pf-method">Guest</div></div>
         <div class="pf-row"><div class="pf-k">Plan</div><div class="pf-v" id="pf-plan">Free</div></div>
         <div class="pf-row"><div class="pf-k">Pick Limit</div><div class="pf-v" id="pf-limit">2</div></div>
+        <div class="pf-row"><div class="pf-k">Discord Access</div><div class="pf-v" id="pf-discord">Locked</div></div>
         <div class="pf-actions">
           <button class="pf-btn primary" onclick="openAuthModal()">Register / Sign In</button>
           <button class="pf-btn" onclick="openUpgradePicker()">Upgrade</button>
@@ -1777,6 +1789,7 @@ const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const THEME_KEY = 'algobets-theme-v1';
+const VIP_DISCORD_UNLOCK_TOAST_KEY = 'algobets-vip-discord-unlock-toast-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
 const DEFAULT_AFFILIATE_LINKS = {
   draftkings: 'https://sportsbook.draftkings.com',
@@ -2313,10 +2326,12 @@ function renderProfile() {
   const method = document.getElementById('pf-method');
   const plan = document.getElementById('pf-plan');
   const limit = document.getElementById('pf-limit');
+  const discord = document.getElementById('pf-discord');
   if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
   if (method) method.textContent = authMethodLabel(userProfile.method);
   if (plan) plan.textContent = planLabel(currentPlan);
   if (limit) limit.textContent = String(profilePickLimit());
+  if (discord) discord.textContent = canUseVip() ? 'Active' : 'Locked';
   updateAuthUi();
 }
 
@@ -3330,9 +3345,11 @@ function renderVipTools() {
   const clvScoreEl = document.getElementById('vip-clv-score');
   const earlyEl = document.getElementById('vip-early');
   const releaseWindowEl = document.getElementById('vip-release-window');
+  const podEl = document.getElementById('vip-pod');
   const timingEl = document.getElementById('vip-timing');
   const coreListEl = document.getElementById('vip-core-list');
   const discordEl = document.getElementById('vip-discord-status');
+  const discordTeaseEl = document.getElementById('vip-discord-tease');
   const discordInputEl = document.getElementById('vip-discord-id');
   const discordNoteEl = document.getElementById('vip-discord-link-note');
   const clvLabEl = document.getElementById('vip-clv-lab');
@@ -3346,10 +3363,16 @@ function renderVipTools() {
   const portEl = document.getElementById('vip-portfolio');
 
   if (!vipOn) {
+    if (discordTeaseEl) discordTeaseEl.style.display = '';
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
     if (clvScoreEl) clvScoreEl.textContent = 'CLV scorecard is locked for VIP.';
     if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
     if (releaseWindowEl) releaseWindowEl.textContent = 'Next VIP drop window is locked for VIP.';
+    if (podEl) {
+      const p = getVipPickOfDay();
+      const blur = p ? `${esc(p.bet)} ${esc(p.odds)} · +${Number(p.ev || 0).toFixed(1)}% edge` : 'VIP pick preview';
+      podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${blur}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Pick</button></div></div>`;
+    }
     if (coreListEl) {
       const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
@@ -3371,6 +3394,7 @@ function renderVipTools() {
     renderVipLivePlays();
     return;
   }
+  if (discordTeaseEl) discordTeaseEl.style.display = 'none';
 
   const beatClose = Number(CLVDATA?.beat_closing_pct || 0);
   const avgClv = Number(CLVDATA?.avg_clv_pct || 0);
@@ -3405,6 +3429,18 @@ function renderVipTools() {
           <span style="font-family:var(--mono);color:var(--green)">+${Number(p.ev || 0).toFixed(1)}%</span>
         </div>`).join('')
       : 'Run scan to load Core Edge plays.';
+  }
+  if (podEl) {
+    const p = getVipPickOfDay();
+    if (!p) {
+      podEl.textContent = 'Run scan to generate today\'s VIP pick.';
+    } else {
+      const ev = Number(p.ev || 0);
+      const conf = Number(p.conf || 0);
+      const timing = ev >= 6.5 || conf >= 70 ? 'Bet now' : ev >= 4 ? 'Watch line' : 'Wait';
+      const line = `${esc(p.bet)} ${esc(p.odds)} · +${ev.toFixed(1)}% edge · ${conf.toFixed(0)}% confidence`;
+      podEl.innerHTML = `<strong>${line}</strong><div style="margin-top:4px;color:var(--sub)">Execution: ${timing}${p.book ? ` · Best book: ${esc(p.book)}` : ''}</div>`;
+    }
   }
   if (discordEl) {
     if (!DISCORD_ROLE_SYNC_ENABLED) {
@@ -3897,11 +3933,11 @@ async function shareHistoryPick(ts, idx) {
   const row = HISTORYDATA.find(h => Number(h.ts) === Number(ts));
   const p = row?.top_picks?.[Number(idx)];
   if (!p) return;
-  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets Ai`;
+  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets AI`;
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets Ai Pick', text, url});
+      await navigator.share({title: 'Algobets AI Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');
@@ -3928,7 +3964,7 @@ async function loadHistory() {
 
 function buildShareTextFromPick(p, mode = 'pick') {
   const tag = mode === 'win' ? 'WIN ✅' : 'Pick 🎯';
-  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets Ai`;
+  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets AI`;
 }
 
 async function sharePick(id, mode = 'pick') {
@@ -3939,7 +3975,7 @@ async function sharePick(id, mode = 'pick') {
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets Ai Pick', text, url});
+      await navigator.share({title: 'Algobets AI Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');
@@ -4754,9 +4790,14 @@ function renderHomeModules() {
     const pod = getVipPickOfDay();
     const liveCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
     if (canUseVip()) {
-      vipEl.innerHTML = `VIP Build: <strong>3-Leg Parlay (+641%)</strong><div style="margin-top:4px">Live Plays: ${liveCt} tracked</div>`;
+      if (pod) {
+        vipEl.innerHTML = `<strong>${esc(pod.bet)} ${esc(pod.odds)}</strong> · +${Number(pod.ev || 0).toFixed(1)}% edge<div style="margin-top:4px">VIP live plays tracked: ${liveCt}</div>`;
+      } else {
+        vipEl.innerHTML = `Run scan to load your VIP Pick of the Day.<div style="margin-top:4px">VIP live plays tracked: ${liveCt}</div>`;
+      }
     } else {
-      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none"><div>VIP Build: 3-Leg Parlay (+641%)</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP TEASE</div><div style="font-size:12px;color:var(--sub)">Unlock real-time build suggestions and execution tools</div><button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock VIP</button></div></div></div>`;
+      const teaser = pod ? `${esc(pod.bet)} ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% edge` : 'VIP Pick of the Day';
+      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none"><div>${teaser}</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP PICK LOCKED</div><div style="font-size:12px;color:var(--sub)">Unlock the VIP Pick of the Day and Discord access</div><button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock VIP</button></div></div></div>`;
     }
   }
   const vipBtn = document.querySelector('#home-card-vip [data-home-cta="vip_snapshot"]');
@@ -4873,11 +4914,19 @@ function ensureBillingUser() {
 }
 
 async function fetchPlan() {
+  const prevPlan = normalizePlan(currentPlan);
   try {
     const res = await backendGet('/api/plan');
     currentPlan = normalizePlan(res.plan);
     planConfig = res.tier || {};
     updatePlanUi();
+    if (prevPlan !== 'vip' && currentPlan === 'vip') {
+      const shouldToast = _checkoutStatus === 'success' || sessionStorage.getItem(VIP_DISCORD_UNLOCK_TOAST_KEY) !== '1';
+      if (shouldToast) {
+        showToast('VIP active. Discord access unlocked.');
+        sessionStorage.setItem(VIP_DISCORD_UNLOCK_TOAST_KEY, '1');
+      }
+    }
   } catch (err) {
     currentPlan = 'free';
     updatePlanUi();
@@ -5050,10 +5099,10 @@ function openUpgradePicker() {
   const opts = p === 'free'
     ? [
         {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
-        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + early alerts + CLV + execution tools'},
       ]
     : [
-        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + early alerts + CLV + execution tools'},
       ];
   sub.textContent = p === 'free'
     ? 'Choose Premium or VIP.'
