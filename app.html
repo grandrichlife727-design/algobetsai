@@ -2365,7 +2365,7 @@ function resilientDemoPicksRaw() {
       display_time: '7:30 PM ET',
       fair_line: '+2.5 (-110)',
       demo_data: true,
-      agents: ['Best-Line EV', 'De-vig Consensus', 'Sharp-Book Weighting'],
+      agents: ['Best-Line EV', 'De-vig Consensus', 'Steam Moves', 'Public Fades', 'Timing/CLV'],
     },
     {
       sport: 'basketball_nba',
@@ -6141,12 +6141,14 @@ function parseActiveAgents(pick) {
     if (out.length) return out;
   }
   const fired = Array.isArray(pick?.agents_fired) ? pick.agents_fired.map(v => String(v || '').toLowerCase()) : [];
+  const labels = Array.isArray(pick?.agents) ? pick.agents.map(v => String(v || '').toLowerCase()) : [];
+  const signals = fired.concat(labels);
   const out = [];
-  if (fired.some(s => s.includes('best_line') || s.includes('fallback'))) out.push(1);
-  if (fired.some(s => s.includes('consensus') || s.includes('devig') || s.includes('bayesian'))) out.push(2);
-  if (fired.some(s => s.includes('steam'))) out.push(3);
-  if (fired.some(s => s.includes('fade') || s.includes('public'))) out.push(4);
-  if (fired.some(s => s.includes('timing') || s.includes('kelly') || s.includes('clv') || s.includes('confidence'))) out.push(5);
+  if (signals.some(s => s.includes('best_line') || s.includes('best-line') || s.includes('fallback') || s.includes('sharp-book'))) out.push(1);
+  if (signals.some(s => s.includes('consensus') || s.includes('de-vig') || s.includes('devig') || s.includes('bayesian'))) out.push(2);
+  if (signals.some(s => s.includes('steam'))) out.push(3);
+  if (signals.some(s => s.includes('fade') || s.includes('public'))) out.push(4);
+  if (signals.some(s => s.includes('timing') || s.includes('kelly') || s.includes('clv') || s.includes('confidence'))) out.push(5);
   return [...new Set(out)].sort((a, b) => a - b);
 }
 
