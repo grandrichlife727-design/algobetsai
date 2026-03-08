@@ -4916,7 +4916,6 @@ async function installApp() {
     showToast('App already installed');
     return;
   }
-  hideInstallButton(true);
   if (deferredInstallPrompt) {
     deferredInstallPrompt.prompt();
     try {
