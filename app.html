@@ -5110,7 +5110,13 @@ function renderHomeModules() {
           .slice(0, 3)
           .map((p, i) => {
             const locked = i > 0;
-            const matchup = esc(String(p.game || p.matchup || p.event || 'Top Edge'));
+            const matchup = esc(
+              String(p.game || p.matchup || p.event || 'Top Edge')
+                .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, '')
+                .replace(/\s[+-]\d+(\.\d+)?/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim()
+            );
             const label = locked ? `#${i + 1} Premium/VIP Locked` : `#${i + 1} ${matchup}`;
             const evLabel = locked ? 'LOCKED' : `+${Number(p.ev || 0).toFixed(1)}%`;
             const why = locked
