@@ -850,11 +850,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
           <div class="growth-note scan-feedback" id="home-scan-feedback">Last scan: never</div>
         </div>
-        <div class="growth-card" id="home-card-guide" data-home-card="how_to">
-          <div class="growth-title">Guide / How To</div>
-          <div class="growth-sub">Learn the workflow: scan, filter edges, size bets, and track CLV.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('guide')">Open Guide</button></div>
-        </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" style="margin-top:8px" data-book="draftkings">
@@ -1272,39 +1267,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Sharp Money Tracker</span></span> <span class="nav-badge">VIP</span></button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Bankroll Planner</div>
-          <div class="growth-sub">Auto-calc units, stop-loss, and max exposure.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="br-bankroll" type="number" min="10" step="10" placeholder="1000"/>
-            <button class="paywall-cta" onclick="runBankrollPlan()">Run Plan</button>
-          </div>
-          <div class="growth-note" id="br-note">No plan generated yet.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Agent Weights</div>
-          <div class="growth-sub">Tune model emphasis for your style.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="aw-best" type="number" step="0.1" min="0.2" max="3" placeholder="Best Line"/>
-            <input class="auth-in" id="aw-steam" type="number" step="0.1" min="0.2" max="3" placeholder="Steam"/>
-          </div>
-          <div class="rf-row">
-            <button class="paywall-cta" onclick="saveAgentWeights()">Save Weights</button>
-          </div>
-          <div class="growth-note" id="aw-note">Using default weights.</div>
-        </div>
-        <div class="growth-card">
           <div class="growth-title">News Impact Engine</div>
           <div class="growth-sub">Market dispersion signals likely news/lineup impact.</div>
           <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
           <div class="growth-note" id="ni-note">No impact data loaded.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Offers + Revenue</div>
-          <div class="growth-sub">Open full sportsbook offers and monitor affiliate click performance.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('offers')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg><span>Open Offers</span></span></button></div>
-          <div class="growth-note" id="tools-af-note">Loading affiliate performance...</div>
-          <div class="growth-note" id="tools-af-detail">No click data yet.</div>
-          <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
         </div>
       </div>
     </div>
@@ -6344,9 +6310,7 @@ function go(name) {
   }
   if (name === 'community') loadCommunityFeed();
   if (name === 'tools') {
-    loadAgentWeights();
     loadNewsImpact();
-    loadAffiliate();
   }
   if (name === 'offers') loadAffiliate();
   if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
