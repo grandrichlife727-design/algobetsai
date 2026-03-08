@@ -1,9 +1,12 @@
-const CACHE_NAME = 'algobets-pwa-v1';
+const CACHE_NAME = 'algobets-pwa-v2';
 const CORE_ASSETS = [
   './',
   '1.html',
   'manifest.webmanifest',
-  'app-icon.svg'
+  'app-icon.svg',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/apple-touch-icon-180.png'
 ];
 
 self.addEventListener('install', (event) => {
