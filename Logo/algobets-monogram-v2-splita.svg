@@ -1,0 +1,8 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Algobets Split A mark">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#6366F1"/></linearGradient></defs>
+  <rect x="2" y="2" width="216" height="216" rx="26" fill="#0A0F1D" stroke="#213152" stroke-width="4"/>
+  <path d="M64 170 L102 52" stroke="url(#g)" stroke-width="15" stroke-linecap="round"/>
+  <path d="M156 170 L118 52" stroke="#A5B4FC" stroke-width="15" stroke-linecap="round"/>
+  <path d="M76 132 H144" stroke="#E9D5FF" stroke-width="11" stroke-linecap="round"/>
+  <path d="M106 52 H114" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
+</svg>

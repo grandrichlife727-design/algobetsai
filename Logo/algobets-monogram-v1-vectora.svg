@@ -1,0 +1,7 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Algobets Vector A mark">
+  <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient></defs>
+  <rect x="2" y="2" width="216" height="216" rx="28" fill="#090D18" stroke="#1F2A44" stroke-width="4"/>
+  <path d="M56 170 L110 48 L164 170" fill="none" stroke="url(#g)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M83 123 H137" stroke="#C4B5FD" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="110" cy="48" r="7" fill="#22D3EE"/>
+</svg>
