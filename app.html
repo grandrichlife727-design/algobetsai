@@ -813,6 +813,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
         </div>
       </div>
+      <div class="growth-card" style="margin:0 0 14px">
+        <div class="growth-title">5-Agent Edge Engine</div>
+        <div class="growth-sub">Every pick is scored by five independent agents and merged into one edge rating.</div>
+        <div class="growth-sub">Agents: Best-Line EV · De-vig Consensus · Steam Moves · Public Fades · Timing/CLV.</div>
+      </div>
       <div class="trial-card" id="trial-card-home">
         <div class="trial-copy" id="trial-copy-home"><strong>Try Premium free for 3 days.</strong> Unlock +EV plays, props, steam moves, and 5-minute refresh.</div>
         <div class="trial-actions">
@@ -1686,7 +1691,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
   <div class="up-modal">
     <div class="up-title">Choose your plan</div>
-    <div class="up-sub" id="up-sub">Pick a tier and continue to secure checkout.</div>
+    <div class="up-sub" id="up-sub">Unlock the 5-Agent Edge Engine: Best-Line EV · De-vig · Steam · Fades · Timing/CLV.</div>
     <div class="up-flow">Free Preview -> Premium -> VIP</div>
     <div class="cycle-toggle">
       <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
@@ -5193,15 +5198,15 @@ function openUpgradePicker() {
   }
   const opts = p === 'free'
     ? [
-        {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + CLV + execution tools'},
+        {tier: 'premium', title: 'Premium', desc: 'Full 5-agent board + props + steam/fades + 5-minute refresh'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + bet timing + CLV tools'},
       ]
     : [
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + CLV + execution tools'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + bet timing + CLV tools'},
       ];
   sub.textContent = p === 'free'
-    ? 'Choose Premium or VIP.'
-    : 'Move from Premium to VIP for advanced execution tools.';
+    ? 'Choose Premium or VIP to unlock the full 5-agent board.'
+    : 'Move from Premium to VIP for speed, timing, and CLV execution.';
   if (note) note.textContent = billingCycle === 'annual'
     ? 'Annual selected. You should always pay less than 12x monthly.'
     : 'Monthly selected. Switch to annual to save.';
