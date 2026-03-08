@@ -1827,6 +1827,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="auth-skip" id="auth-skip-btn" onclick="closeAuthModal()">Skip for now</button>
       <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Create Account</button>
     </div>
+    <label class="growth-sub" style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:11px">
+      <input type="checkbox" id="auth-marketing-optin" style="margin-top:2px"/>
+      <span>Send me offers and product updates by email. You can unsubscribe anytime.</span>
+    </label>
     <div class="auth-footnote">By continuing, you agree to the Terms and Privacy Policy.</div>
   </div>
 </div>
@@ -1909,6 +1913,7 @@ const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
 const PREF_KEY = 'algobets-pref-v1';
 const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
+const MARKETING_OPT_IN_KEY = 'algobets-marketing-optin-v1';
 const PICKS_CACHE_KEY = 'algobets-picks-cache-v1';
 const FREE_DELAY_STATE_KEY = 'algobets-free-delay-v1';
 const SAVED_PICKS_KEY = 'algobets-saved-picks-v1';
@@ -3914,6 +3919,7 @@ async function handleGoogleCredential(response) {
     const identifier = String(data?.profile?.identifier || '').trim();
     userProfile = {method: 'google', identifier, name: ''};
     saveProfile();
+    await syncMarketingConsent(identifier, 'google');
     authNudgeState.completed = true;
     saveAuthNudgeState();
     trackEvent('auth_completed', {method: 'google'});
@@ -3928,6 +3934,31 @@ async function handleGoogleCredential(response) {
   } catch (err) {
     console.error(err);
     showToast('Google sign-in failed');
+  }
+}
+
+function authMarketingOptInValue() {
+  const el = document.getElementById('auth-marketing-optin');
+  if (el && typeof el.checked === 'boolean') return !!el.checked;
+  return String(localStorage.getItem(MARKETING_OPT_IN_KEY) || '0') === '1';
+}
+
+async function syncMarketingConsent(email, method) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return;
+  const optIn = authMarketingOptInValue();
+  try { localStorage.setItem(MARKETING_OPT_IN_KEY, optIn ? '1' : '0'); } catch (_) {}
+  const payload = {
+    email: normalizedEmail,
+    method: String(method || '').toLowerCase(),
+    marketing_opt_in: !!optIn,
+    source: 'auth_modal',
+    ts: new Date().toISOString(),
+  };
+  try {
+    await backendPost('/api/marketing/consent', payload);
+  } catch (_) {
+    try { await backendPost('/api/marketing/subscribe', payload); } catch (_) {}
   }
 }
 
@@ -4088,6 +4119,8 @@ function openAuthModal(preferredMethod = null) {
   if (subEl) subEl.textContent = hasIdentity
     ? 'Sign in to access saved picks, alerts, and billing settings.'
     : 'Save your picks, alerts, billing, and profile sync across devices.';
+  const optInEl = document.getElementById('auth-marketing-optin');
+  if (optInEl) optInEl.checked = String(localStorage.getItem(MARKETING_OPT_IN_KEY) || '0') === '1';
   if (skipBtn) skipBtn.style.display = hasIdentity ? 'none' : '';
   selectAuthMethod(m);
   const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
@@ -4215,6 +4248,7 @@ async function submitAuthProfile() {
   }
   userProfile = {method, identifier: value, name: ''};
   saveProfile();
+  await syncMarketingConsent(value, method);
   await ensureAuthSession(true);
   authNudgeState.completed = true;
   saveAuthNudgeState();
