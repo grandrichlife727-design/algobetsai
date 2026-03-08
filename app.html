@@ -4920,16 +4920,24 @@ async function installApp() {
     deferredInstallPrompt.prompt();
     try {
       const choice = await deferredInstallPrompt.userChoice;
-      if (choice && choice.outcome === 'accepted') hideInstallButton(true);
+      if (choice && choice.outcome === 'accepted') {
+        hideInstallButton(true);
+      } else {
+        // Keep CTA visible when user dismisses/cancels the browser prompt.
+        showInstallButton();
+      }
     } catch (_) {}
     deferredInstallPrompt = null;
+    if (!isInStandaloneMode()) showInstallButton();
     return;
   }
   if (isIosDevice()) {
     openInstallHelp();
+    if (!isInStandaloneMode()) showInstallButton();
     return;
   }
   showToast('Use browser menu -> Add to Home Screen');
+  if (!isInStandaloneMode()) showInstallButton();
 }
 
 function registerServiceWorker() {
