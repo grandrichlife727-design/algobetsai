@@ -5453,6 +5453,7 @@ async function startCheckout(tier, cycle = billingCycle) {
     if (/billing is temporarily disabled/i.test(msg)) showToast('Billing is temporarily disabled');
     else if (/stripe is not configured/i.test(msg)) showToast('Stripe is not configured on backend');
     else if (/invalid api key/i.test(msg)) showToast('Billing auth key missing on backend proxy');
+    else if (/invalid checkout redirect url/i.test(msg)) showToast('Checkout blocked: add this site to BILLING_RETURN_ORIGINS on backend');
     else if (/authentication required/i.test(msg)) showToast('Please sign in again before checkout');
     else if (/authenticated user required/i.test(msg)) showToast('Please create a free account first');
     else if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
