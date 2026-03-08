@@ -691,7 +691,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     Picks <span class="nav-badge" id="nb-picks">0</span>
   </button>
   <button class="nav-item" onclick="go('tools')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 7-7 11-7-11 7-7z"/><path d="M7 10h10"/><path d="M10 14h4"/></svg>
     Tools
   </button>
   <button class="nav-item" onclick="go('offers')">
@@ -792,7 +792,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-badge">Most Popular</div>
             <div class="hps-price">$19.99/mo</div>
             <div class="hps-list">
-              <div>Unlimited picks</div>
+              <div>High-volume board</div>
               <div>All sports + props + steam + fades</div>
               <div>5-minute refresh</div>
               <div>Parlay builder</div>
@@ -804,9 +804,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-price">$39.99/mo</div>
             <div class="hps-list">
               <div>VIP Discord access</div>
-              <div>50 picks</div>
+              <div>Priority pick release</div>
               <div>1-minute refresh</div>
-              <div>Execution layer</div>
+              <div>Execution tools</div>
               <div>Line rush alerts</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button> <span class="vip-chip">VIP Discord</span></div>
@@ -910,8 +910,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-title">How Plans Work</div>
       <div class="tier-strip">
         <div class="tier-tag"><strong>Free</strong>: 2 delayed picks with 20-minute refresh.</div>
-        <div class="tier-tag premium"><strong>Premium</strong>: Unlimited picks, all sports/props, 5-minute refresh.</div>
-        <div class="tier-tag vip"><strong>VIP</strong>: 50 picks, execution tools, 1-minute refresh + Discord.</div>
+        <div class="tier-tag premium"><strong>Premium</strong>: High-volume board, all sports/props, 5-minute refresh.</div>
+        <div class="tier-tag vip"><strong>VIP</strong>: Priority release, execution tools, 1-minute refresh + Discord.</div>
       </div>
       </div>
       <div class="filters">
@@ -1268,7 +1268,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Market Tools</div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Steam Moves</span></span> <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>Public Fades</span></span> <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M5 17c.8-2 2.2-3 3-3s2.2 1 3 3"/><path d="M13 17c.8-2 2.2-3 3-3s2.2 1 3 3"/><path d="M3 6h18"/></svg><span>Public Fades</span></span> <span class="nav-badge">Premium</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/><path d="M10 20a2 2 0 004 0"/></svg><span>Line Rush Alerts</span></span> <span class="nav-badge">VIP</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Sharp Money Tracker</span></span> <span class="nav-badge">VIP</span></button></div>
         </div>
@@ -1622,8 +1622,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <span class="mnav-label">Picks</span>
   </button>
   <div class="mnav-premium-wrap">
-    <button class="mnav-btn" id="mn-tools" onclick="currentTab==='tools'?toggleMobilePremium(event):go('tools')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+  <button class="mnav-btn" id="mn-tools" onclick="currentTab==='tools'?toggleMobilePremium(event):go('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 7-7 11-7-11 7-7z"/><path d="M7 10h10"/><path d="M10 14h4"/></svg>
       <span class="mnav-label">Tools</span>
     </button>
     <div class="mnav-premium-panel" id="mnav-premium-panel" style="display:none">
@@ -1631,7 +1631,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props Edge</button>
       <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
       <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
-      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M7 12h10M10 17h4'/></svg>Fades</button>
+      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='8' cy='10' r='2'/><circle cx='16' cy='10' r='2'/><path d='M5 17c.8-2 2.2-3 3-3s2.2 1 3 3'/><path d='M13 17c.8-2 2.2-3 3-3s2.2 1 3 3'/><path d='M3 6h18'/></svg>Fades</button>
       <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
     </div>
   </div>
