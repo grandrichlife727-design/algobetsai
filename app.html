@@ -177,6 +177,20 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .topbar-logo{display:flex;align-items:center;gap:0;white-space:nowrap;cursor:pointer}
 .topbar-logo-img{display:none}
 .topbar-logo-name{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1.12;display:inline-flex;align-items:center;gap:3px}
+.agent-work-indicator{display:inline-flex;align-items:center;gap:4px;margin-left:9px}
+.agent-work-dot{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;font-size:8px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#7f8aa0;transition:all .16s ease}
+.agent-work-dot.core{border-color:rgba(34,211,238,.35)}
+.agent-work-dot.cond{border-color:rgba(255,183,0,.35)}
+.agent-work-dot.on.core{background:rgba(34,211,238,.2);color:#b8f7ff;box-shadow:0 0 8px rgba(34,211,238,.3)}
+.agent-work-dot.on.cond{background:rgba(255,183,0,.2);color:#ffe4ab;box-shadow:0 0 8px rgba(255,183,0,.28)}
+.agent-work-dot.hot{box-shadow:0 0 0 1px rgba(0,229,160,.3),0 0 12px rgba(0,229,160,.34)}
+.agent-work-indicator.scanning .agent-work-dot{animation:agentPulseFlicker .75s ease-in-out infinite}
+.agent-work-indicator.scanning .agent-work-dot:nth-child(1){animation-delay:0ms}
+.agent-work-indicator.scanning .agent-work-dot:nth-child(2){animation-delay:70ms}
+.agent-work-indicator.scanning .agent-work-dot:nth-child(3){animation-delay:140ms}
+.agent-work-indicator.scanning .agent-work-dot:nth-child(4){animation-delay:210ms}
+.agent-work-indicator.scanning .agent-work-dot:nth-child(5){animation-delay:280ms}
+@keyframes agentPulseFlicker{0%,100%{transform:scale(.95);opacity:.58}40%{transform:scale(1.12);opacity:1}}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -264,12 +278,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:560px){
   .topbar-logo{gap:0}
   .topbar-logo-name{font-size:22px}
+  .agent-work-indicator{margin-left:7px}
+  .agent-work-dot{width:13px;height:13px;font-size:7px}
   .plan-pill{display:none}
   .cooldown-pill{display:none !important}
 }
 @media(max-width:420px){
   .topbar-logo{gap:0}
   .topbar-logo-name{font-size:20px}
+  .agent-work-dot{width:12px;height:12px;font-size:7px}
 }
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
@@ -908,6 +925,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="topbar">
     <div class="topbar-logo" role="button" tabindex="0" aria-label="Go to Home" onclick="go('home')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('home')}">
       <span class="topbar-logo-name"><span class="brand-main">AlgoBets</span><span class="brand-ai">Ai</span></span>
+      <span class="agent-work-indicator" id="agent-work-indicator" aria-label="5-Agent engine indicator" title="5-Agent engine status">
+        <span class="agent-work-dot core" id="agent-work-dot-1">1</span>
+        <span class="agent-work-dot core" id="agent-work-dot-2">2</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-3">3</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-4">4</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-5">5</span>
+      </span>
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -2187,6 +2211,7 @@ let vipLiveTicker = null;
 let CLVDATA = null;
 let AGENTWEIGHTS = null;
 let AGENT_HEALTH = null;
+let LAST_ACTIVE_AGENT_SET = [1, 2];
 let ALERTPACKS = null;
 if (FORCE_DEMO_MODE && MOCK_PLAN_QP) currentPlan = MOCK_PLAN_QP;
 let AFFILIATE = null;
@@ -6120,6 +6145,7 @@ function setApiStatus(state) {
   dot.className = 'api-dot ' + state;
   lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Paused' : 'Syncing';
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
+  setAgentPulseWorking(state === 'loading');
   updateAgentHealthUi();
 }
 
@@ -6163,6 +6189,41 @@ function renderActiveAgentPills(activeAgents = []) {
   }).join('')}</div>`;
 }
 
+function hotAgentSet() {
+  const cond = AGENT_HEALTH?.conditional || {};
+  return new Set(Object.values(cond)
+    .filter(v => v && v.hot)
+    .map(v => Number(v.agent_id || 0))
+    .filter(v => Number.isInteger(v) && v >= 1 && v <= 5));
+}
+
+function setAgentPulseWorking(isWorking) {
+  const wrap = document.getElementById('agent-work-indicator');
+  if (!wrap) return;
+  wrap.classList.toggle('scanning', Boolean(isWorking));
+}
+
+function updateAgentPulseIndicator(activeAgents = LAST_ACTIVE_AGENT_SET) {
+  const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
+  if (active.size) LAST_ACTIVE_AGENT_SET = [...active].sort((a, b) => a - b);
+  const hot = hotAgentSet();
+  const onSet = active.size ? active : new Set(LAST_ACTIVE_AGENT_SET);
+  for (let id = 1; id <= 5; id += 1) {
+    const el = document.getElementById(`agent-work-dot-${id}`);
+    if (!el) continue;
+    el.classList.toggle('on', onSet.has(id));
+    el.classList.toggle('hot', hot.has(id));
+  }
+  const wrap = document.getElementById('agent-work-indicator');
+  if (wrap) {
+    const onLabel = [...onSet].sort((a, b) => a - b).map(v => `A${v}`).join(' ');
+    const hotLabel = [...hot].sort((a, b) => a - b).map(v => `A${v}`).join(' ');
+    wrap.title = hotLabel
+      ? `Active: ${onLabel || 'A1 A2'} · HOT: ${hotLabel}`
+      : `Active: ${onLabel || 'A1 A2'}`;
+  }
+}
+
 function updateAgentHealthUi() {
   const el = document.getElementById('api-hot');
   if (!el) return;
@@ -6172,12 +6233,14 @@ function updateAgentHealthUi() {
     el.classList.remove('on');
     el.textContent = '';
     el.removeAttribute('title');
+    updateAgentPulseIndicator();
     return;
   }
   const labels = hot.map(v => `A${Number(v.agent_id || 0)}`).join(' ');
   el.textContent = `${labels} HOT`;
   el.title = hot.map(v => `${v.label}: ${Number(v.accuracy_pct || 0).toFixed(1)}% (${Number(v.sample_size || 0)} picks, 48h)`).join(' | ');
   el.classList.add('on');
+  updateAgentPulseIndicator();
 }
 
 function fmtCountdown(totalSec) {
@@ -6903,6 +6966,9 @@ function renderPicks() {
     if (sb !== sa) return sb - sa;
     return (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0));
   });
+  const pulsePick = pts[0] || sourcePicks[0] || null;
+  const pulseAgents = pulsePick ? parseActiveAgents(pulsePick) : [];
+  updateAgentPulseIndicator(pulseAgents.length ? pulseAgents : [1, 2]);
 
   function freeTeaserBetLabel(p) {
     const matchup = String(p.game || p.bet || 'Matchup')
@@ -6980,6 +7046,7 @@ function renderPicks() {
   }
 
   if (!pts.length) {
+    updateAgentPulseIndicator([1, 2]);
     const lastScan = applyFreeDelay && freeRelease.remainingMs > 0
       ? `Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}`
       : (lastRefresh ? `Last scan: ${timeAgo(lastRefresh)}` : 'No scan yet');
