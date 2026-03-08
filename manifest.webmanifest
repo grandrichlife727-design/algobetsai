@@ -2,7 +2,7 @@
   "name": "AlgoBets Ai",
   "short_name": "AlgoBets Ai",
   "description": "Live betting edges, picks, and premium tools.",
-  "start_url": "app.html",
+  "start_url": "app/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#06060a",

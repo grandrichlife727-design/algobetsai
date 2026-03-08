@@ -6,11 +6,11 @@
 <title>AlgoBets Ai App | Sports Betting Picks & Predictions Dashboard</title>
 <meta name="description" content="Sports betting picks and predictions dashboard with +EV picks, props, steam moves, fades, and VIP tools across major leagues."/>
 <meta name="keywords" content="sports betting picks app, sports betting predictions app, +EV picks, player props picks, steam moves, fades"/>
-<link rel="canonical" href="https://grandrichlife727-design.github.io/algobetsai/app.html"/>
+<link rel="canonical" href="https://grandrichlife727-design.github.io/algobetsai/app/"/>
 <meta name="robots" content="index,follow,max-image-preview:large"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="AlgoBets Ai"/>
-<meta property="og:url" content="https://grandrichlife727-design.github.io/algobetsai/app.html"/>
+<meta property="og:url" content="https://grandrichlife727-design.github.io/algobetsai/app/"/>
 <meta property="og:title" content="AlgoBets Ai App | Sports Betting Picks & Predictions Dashboard"/>
 <meta property="og:description" content="Pick previews, full picks, +EV, props, steam, fades, and Premium/VIP workflows in one betting dashboard."/>
 <meta property="og:image" content="https://grandrichlife727-design.github.io/algobetsai/icons/icon-512.png"/>
@@ -35,7 +35,7 @@
   "name": "AlgoBets Ai",
   "applicationCategory": "SportsApplication",
   "operatingSystem": "Web",
-  "url": "https://grandrichlife727-design.github.io/algobetsai/app.html",
+  "url": "https://grandrichlife727-design.github.io/algobetsai/app/",
   "offers": [
     {"@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free"},
     {"@type": "Offer", "price": "19.99", "priceCurrency": "USD", "name": "Premium"},
@@ -4928,7 +4928,7 @@ function setupInstallPrompt() {
 function preferredBillingReturnBase() {
   const origin = String(window.location.origin || '').toLowerCase();
   if (origin.includes('algobetsai.pages.dev') || origin.includes('algobetsai.onrender.com')) {
-    return 'https://grandrichlife727-design.github.io/algobetsai/app.html';
+    return 'https://grandrichlife727-design.github.io/algobetsai/app/';
   }
   return `${window.location.origin}${window.location.pathname}`;
 }
@@ -5773,7 +5773,7 @@ async function startCheckout(tier, cycle = billingCycle, options = {}) {
     if (/invalid checkout redirect url/i.test(msg)) {
       const fallbackReturns = [
         `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
-        'https://grandrichlife727-design.github.io/algobetsai/app.html'
+        'https://grandrichlife727-design.github.io/algobetsai/app/'
       ];
       for (const ret of fallbackReturns) {
         try {
@@ -5929,7 +5929,7 @@ async function openBillingPortal() {
     if (/invalid portal return url/i.test(msg)) {
       const fallbackReturns = [
         `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
-        'https://grandrichlife727-design.github.io/algobetsai/app.html'
+        'https://grandrichlife727-design.github.io/algobetsai/app/'
       ];
       for (const ret of fallbackReturns) {
         try {
