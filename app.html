@@ -944,7 +944,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="home-secondary-title">More</div>
         <div class="growth-grid" id="home-grid-secondary" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-news" data-home-card="home_news">
-          <div class="growth-title">Market Impact News</div>
+          <div class="growth-title">Game Day Intel</div>
           <div id="home-news" class="news-feed"></div>
         </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
@@ -5227,7 +5227,7 @@ function renderHomeModules() {
       loadHomeSportsNews(false);
     }
     if (HOME_SPORTS_NEWS_LOADING && !HOME_SPORTS_NEWS.length) {
-      newsEl.innerHTML = `<div class="news-item"><div class="news-title">Loading sports headlines...</div><div class="news-sub">Fetching latest NBA, NFL, MLB, and NHL stories.</div></div>`;
+      newsEl.innerHTML = `<div class="news-item"><div class="news-title">Loading game-day intel...</div><div class="news-sub">Filtering to high-impact updates tied to your active board.</div></div>`;
       return;
     }
     const LEAGUE_MAP = {
@@ -5247,12 +5247,21 @@ function renderHomeModules() {
       if (s.includes('MLB')) activeLeagues.add('MLB');
       if (s.includes('EPL') || s.includes('SOCCER')) activeLeagues.add('EPL');
     });
+    const boardTokens = new Set();
+    homeSource.forEach(p => {
+      const g = String(p.game || '').replace(/[@|·]/g, ' ');
+      g.split(/\s+/).map(t => t.trim()).forEach(tok => {
+        const clean = tok.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        if (clean.length >= 4) boardTokens.add(clean);
+      });
+    });
     const scoreNews = (n) => {
       const txt = `${String(n.title || '')} ${String(n.sub || '')}`.toLowerCase();
       let score = 1;
       if (/out|questionable|doubtful|injur|inactive|scratch|suspend|ruled out/.test(txt)) score += 6;
       if (/lineup|starting|minutes limit|rest|trade|coaching|weather/.test(txt)) score += 3;
       if (/preview|recap|highlights/.test(txt)) score -= 2;
+      if (Array.from(boardTokens).some(t => txt.includes(t))) score += 3;
       return score;
     };
     const newsImpact = (n) => {
@@ -5279,16 +5288,22 @@ function renderHomeModules() {
       seen.add(key);
       return true;
     });
-    const items = deduped.length ? deduped.slice(0, 4) : [
-      {league: 'Sports', ts: Date.now(), title: 'Live sports news is temporarily unavailable', sub: 'News feed will auto-refresh. You can still use picks and odds in the meantime.', link: ''},
-    ];
+    const items = deduped.filter(n => scoreNews(n) >= 5).slice(0, 3);
+    if (!items.length) {
+      newsEl.innerHTML = `<div class="news-item">
+        <div class="news-top"><div style="display:flex;gap:6px;align-items:center"><div class="news-tag">Intel</div><div class="news-impact low">Low</div></div><div class="news-time">now</div></div>
+        <div class="news-title">No major market-moving alerts right now.</div>
+        <div class="news-sub">When injury, lineup, or weather signals spike, they will appear here.</div>
+      </div>`;
+    } else {
     newsEl.innerHTML = items.map(n => `
       <div class="news-item">
         <div class="news-top"><div style="display:flex;gap:6px;align-items:center"><div class="news-tag">${esc(n.league || 'Sports')}</div><div class="news-impact ${newsImpact(n).cls}">${newsImpact(n).label}</div></div><div class="news-time">${n.ts ? timeAgo(new Date(n.ts).getTime()) : 'now'}</div></div>
         <div class="news-title">${n.link ? `<a href="${esc(n.link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${esc(n.title)}</a>` : esc(n.title)}</div>
-        <div class="news-sub">${esc(n.sub)}</div>
+        <div class="news-sub">${esc(n.sub || 'Potential impact on today’s board.')}</div>
       </div>
     `).join('');
+    }
   }
   const hasNews = !!(HOME_SPORTS_NEWS && HOME_SPORTS_NEWS.length);
   setHomeCardVisible('home-card-news', !!homeFlags.show_news && (hasNews || HOME_SPORTS_NEWS_LOADING));
