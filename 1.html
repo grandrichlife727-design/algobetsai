@@ -341,17 +341,33 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .leg-stake{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
 
 /* PARLAY BUILDER */
-.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:480px;width:100%}
+.parlay-wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:10px}
+@media(max-width:980px){.parlay-wrap{grid-template-columns:1fr}}
+.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;width:100%}
+.parlay-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+@media(max-width:520px){.parlay-controls{grid-template-columns:1fr}}
+.parlay-ctl{display:flex;flex-direction:column;gap:4px}
+.parlay-ctl label{font-size:10px;font-family:var(--mono);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.parlay-ctl input,.parlay-ctl select{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 9px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none}
+.parlay-ctl input:focus,.parlay-ctl select:focus{border-color:rgba(0,212,255,.32)}
+.parlay-advice{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.45}
 .parlay-leg{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
 .parlay-leg:last-child{border-bottom:none}
-.pl-bet{font-size:13px;font-weight:600}
+.pl-bet{font-size:13px;font-weight:600;line-height:1.3}
 .pl-odds{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-top:1px}
+.pl-meta{font-size:10px;color:var(--muted);margin-top:2px}
 .pl-rm{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
 .parlay-result{background:var(--green-dim);border:1px solid rgba(0,229,160,.12);border-radius:8px;padding:12px;margin-top:12px}
 .pl-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.pl-row:last-of-type{margin-bottom:0}
 .pl-val{font-family:var(--mono);font-weight:700;color:var(--green)}
 .parlay-clear{width:100%;margin-top:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:12px;font-weight:600;padding:6px;cursor:pointer;font-family:var(--sans)}
 .parlay-empty{font-size:13px;color:var(--sub)}
+.parlay-side{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.parlay-side-title{font-size:12px;font-weight:800;letter-spacing:.2px}
+.parlay-side-sub{font-size:11px;color:var(--sub);line-height:1.45;margin-top:3px}
+.parlay-custom{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.parlay-lock{margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,183,0,.08);font-size:11px;color:var(--amber)}
+.parlay-action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
 /* BOOST */
 .boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:460px;width:100%}
@@ -1338,14 +1354,53 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-parlay" style="display:none">
-      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Add picks with the + button on any pick card</div></div>
-      <div class="parlay-section">
-        <div class="parlay-empty" id="parlay-empty">No picks yet — hit <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
-        <div id="parlay-legs"></div>
-        <div id="parlay-result" style="display:none" class="parlay-result">
-          <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
-          <div class="pl-row"><span>$100 wins</span><span class="pl-val" id="parlay-win"></span></div>
-          <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
+      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Advanced engine with EV, bankroll sizing, and custom prop legs.</div></div>
+      <div class="parlay-wrap">
+        <div class="parlay-section">
+          <div class="parlay-controls">
+            <div class="parlay-ctl"><label for="parlay-stake">Stake ($)</label><input id="parlay-stake" type="number" min="5" step="5" value="100" oninput="updateParlay()"/></div>
+            <div class="parlay-ctl"><label for="parlay-bankroll">Bankroll ($)</label><input id="parlay-bankroll" type="number" min="100" step="50" value="1000" oninput="updateParlay()"/></div>
+            <div class="parlay-ctl">
+              <label for="parlay-risk">Risk Profile</label>
+              <select id="parlay-risk" onchange="updateParlay()">
+                <option value="conservative">Conservative</option>
+                <option value="standard" selected>Standard</option>
+                <option value="aggressive">Aggressive</option>
+              </select>
+            </div>
+            <div class="parlay-ctl"><label for="parlay-corr">Correlation Penalty %</label><input id="parlay-corr" type="number" min="0" max="30" step="1" value="7" oninput="updateParlay()"/></div>
+          </div>
+          <div class="parlay-advice" id="parlay-advice">Add at least 2 legs to calculate advanced outputs.</div>
+          <div class="parlay-empty" id="parlay-empty">No picks yet. Use <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
+          <div id="parlay-legs"></div>
+          <div id="parlay-result" style="display:none" class="parlay-result">
+            <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
+            <div class="pl-row"><span>Win Payout</span><span class="pl-val" id="parlay-win"></span></div>
+            <div class="pl-row"><span>Model Hit Rate</span><span class="pl-val" id="parlay-prob"></span></div>
+            <div class="pl-row"><span>Expected Value</span><span class="pl-val" id="parlay-ev"></span></div>
+            <div class="pl-row"><span>Kelly Stake</span><span class="pl-val" id="parlay-kelly"></span></div>
+            <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
+          </div>
+        </div>
+        <div class="parlay-side">
+          <div class="parlay-side-title">Advanced Builder</div>
+          <div class="parlay-side-sub">Auto-build balanced slips from live picks or add a custom leg manually (VIP).</div>
+          <div class="parlay-action-row">
+            <button class="pf-btn" onclick="autofillParlay(3)">Build 3-leg</button>
+            <button class="pf-btn" onclick="autofillParlay(4)">Build 4-leg</button>
+            <button class="pf-btn" onclick="autofillParlay(5)">Build 5-leg</button>
+          </div>
+          <div class="parlay-custom">
+            <div class="parlay-ctl"><label for="parlay-custom-bet">Custom Leg</label><input id="parlay-custom-bet" placeholder="Player Over 21.5 Points"/></div>
+            <div class="parlay-controls" style="margin-bottom:0">
+              <div class="parlay-ctl"><label for="parlay-custom-odds">Odds</label><input id="parlay-custom-odds" placeholder="+110"/></div>
+              <div class="parlay-ctl"><label for="parlay-custom-conf">Confidence %</label><input id="parlay-custom-conf" type="number" min="45" max="90" step="1" value="58"/></div>
+              <div class="parlay-ctl"><label for="parlay-custom-game">Game tag</label><input id="parlay-custom-game" placeholder="LAL @ BOS"/></div>
+              <div class="parlay-ctl"><label for="parlay-custom-ev">Edge %</label><input id="parlay-custom-ev" type="number" min="-20" max="40" step="0.5" value="2.5"/></div>
+            </div>
+            <div class="parlay-action-row"><button class="paywall-cta" onclick="addCustomParlayLeg()">Add Custom Leg</button></div>
+            <div class="parlay-lock" id="parlay-vip-lock" style="display:none">Custom prop builder is VIP only. Upgrade to unlock manual legs.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1957,6 +2012,10 @@ const SPORTS = [
 let mode = 'simple';
 let filter = 'all';
 let legs = [];
+let parlayStake = 100;
+let parlayBankroll = 1000;
+let parlayRisk = 'standard';
+let parlayCorrelationPenalty = 7;
 let PICKS = [];
 let EVDATA = [];
 let STEAMDATA = [];
@@ -2078,6 +2137,17 @@ function calcEV(odds, fairProb) {
   return ((dec - 1) * fairProb - (1 - fairProb)) * 100;
 }
 
+function clamp(v, mn, mx) {
+  return Math.max(mn, Math.min(mx, Number(v)));
+}
+
+function decimalToAmerican(dec) {
+  const d = Number(dec || 1);
+  if (!Number.isFinite(d) || d <= 1) return '-10000';
+  if (d >= 2) return `+${Math.round((d - 1) * 100)}`;
+  return `${Math.round(-100 / (d - 1))}`;
+}
+
 function evColor(ev) {
   return ev >= 6 ? 'var(--cyan)' : ev >= 3 ? 'var(--violet)' : 'var(--amber)';
 }
@@ -2137,9 +2207,21 @@ function loadState() {
     if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
     if (Array.isArray(st.legs)) {
       legs = st.legs
-        .map(l => ({id: Number(l.id), bet: String(l.bet || ''), odds: String(l.odds || '')}))
+        .map(l => ({
+          id: Number(l.id),
+          bet: String(l.bet || ''),
+          odds: String(l.odds || ''),
+          conf: Number(l.conf || 0),
+          ev: Number(l.ev || 0),
+          game: String(l.game || ''),
+          source: String(l.source || 'pick'),
+        }))
         .filter(l => Number.isFinite(l.id) && l.bet && l.odds);
     }
+    if (Number.isFinite(Number(st.parlayStake))) parlayStake = Math.max(5, Number(st.parlayStake));
+    if (Number.isFinite(Number(st.parlayBankroll))) parlayBankroll = Math.max(100, Number(st.parlayBankroll));
+    if (['conservative', 'standard', 'aggressive'].includes(String(st.parlayRisk || ''))) parlayRisk = String(st.parlayRisk);
+    if (Number.isFinite(Number(st.parlayCorrelationPenalty))) parlayCorrelationPenalty = Math.min(30, Math.max(0, Number(st.parlayCorrelationPenalty)));
   } catch(err) {
     console.warn('[Algobets] Could not read saved UI state:', err);
   }
@@ -2147,7 +2229,10 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab, oddsRange}));
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      mode, filter, legs, currentTab, oddsRange,
+      parlayStake, parlayBankroll, parlayRisk, parlayCorrelationPenalty,
+    }));
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
   }
@@ -3229,9 +3314,10 @@ function runParlayOptimizerLite() {
   });
   const correlated = Object.entries(games).filter(([, v]) => v > 1);
   if (note) {
-    note.innerHTML = correlated.length
+    const tail = correlated.length
       ? `Correlation warning: ${correlated.map(([g, v]) => `${g} (${v} legs)`).join(', ')}`
       : 'No major same-game correlation detected in current legs.';
+    note.innerHTML = `Advanced optimizer ready in Parlay Builder. ${tail}`;
   }
 }
 
@@ -6014,12 +6100,87 @@ async function loadPerformance() {
 }
 
 // ─── PARLAY ───────────────────────────────────────────────────────────────────
+function normalizeAmericanOdds(raw) {
+  const txt = String(raw || '').trim();
+  const n = parseInt(txt, 10);
+  if (!Number.isFinite(n) || n === 0 || Math.abs(n) < 100 || Math.abs(n) > 5000) return null;
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
+function setParlayControlValues() {
+  const stakeEl = document.getElementById('parlay-stake');
+  const bkEl = document.getElementById('parlay-bankroll');
+  const riskEl = document.getElementById('parlay-risk');
+  const corrEl = document.getElementById('parlay-corr');
+  if (stakeEl) stakeEl.value = String(parlayStake);
+  if (bkEl) bkEl.value = String(parlayBankroll);
+  if (riskEl) riskEl.value = parlayRisk;
+  if (corrEl) corrEl.value = String(parlayCorrelationPenalty);
+}
+
+function pullParlayControlValues() {
+  const stakeEl = document.getElementById('parlay-stake');
+  const bkEl = document.getElementById('parlay-bankroll');
+  const riskEl = document.getElementById('parlay-risk');
+  const corrEl = document.getElementById('parlay-corr');
+  if (stakeEl) parlayStake = Math.max(5, Number(stakeEl.value || parlayStake || 100));
+  if (bkEl) parlayBankroll = Math.max(100, Number(bkEl.value || parlayBankroll || 1000));
+  if (riskEl && ['conservative', 'standard', 'aggressive'].includes(riskEl.value)) parlayRisk = riskEl.value;
+  if (corrEl) parlayCorrelationPenalty = clamp(Number(corrEl.value || parlayCorrelationPenalty || 7), 0, 30);
+}
+
+function removeParlayLeg(id) {
+  legs = legs.filter(x => x.id !== id);
+  updateParlay();
+  saveState();
+}
+
+function legWinProb(l) {
+  const implied = clamp(impliedProb(l.odds), 0.05, 0.95);
+  const confBoost = Number.isFinite(Number(l.conf)) && Number(l.conf) > 0 ? clamp(Number(l.conf) / 100, 0.05, 0.95) : implied;
+  const evAdj = clamp(Number(l.ev || 0) / 100, -0.08, 0.1);
+  return clamp((confBoost * 0.7) + (implied * 0.3) + evAdj, 0.04, 0.93);
+}
+
+function parlayMetricsFromLegs(list) {
+  if (!Array.isArray(list) || list.length < 2) return null;
+  const legDecimals = list.map(l => americanToDecimal(l.odds)).filter(d => Number.isFinite(d) && d > 1);
+  if (legDecimals.length !== list.length) return null;
+  const totalDecimal = legDecimals.reduce((acc, d) => acc * d, 1);
+  const byGame = {};
+  list.forEach(l => {
+    const g = String(l.game || '').trim().toLowerCase();
+    if (!g) return;
+    byGame[g] = (byGame[g] || 0) + 1;
+  });
+  const sameGamePairs = Object.values(byGame).reduce((acc, ct) => acc + (ct > 1 ? (ct * (ct - 1)) / 2 : 0), 0);
+  const corrFactor = clamp(1 - (sameGamePairs * (parlayCorrelationPenalty / 100) * 0.45), 0.55, 1);
+  const rawProb = list.reduce((acc, l) => acc * legWinProb(l), 1);
+  const winProb = clamp(rawProb * corrFactor, 0.005, 0.95);
+  const evPct = ((totalDecimal - 1) * winProb - (1 - winProb)) * 100;
+  const b = totalDecimal - 1;
+  const q = 1 - winProb;
+  const kelly = b > 0 ? Math.max(0, ((b * winProb) - q) / b) : 0;
+  const riskMult = parlayRisk === 'aggressive' ? 0.85 : parlayRisk === 'conservative' ? 0.35 : 0.55;
+  const capPct = parlayRisk === 'aggressive' ? 0.04 : parlayRisk === 'conservative' ? 0.015 : 0.025;
+  const recommendedStake = Math.max(0, Math.min(parlayBankroll * capPct, parlayBankroll * kelly * riskMult));
+  return {totalDecimal, winProb, evPct, kelly, recommendedStake, sameGamePairs};
+}
+
 function addParlay(id) {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
   learnFromPick(p, 'parlay');
   if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
-  legs.push({id: p.id, bet: p.bet, odds: p.odds});
+  legs.push({
+    id: Number(p.id),
+    bet: String(p.bet || 'Pick'),
+    odds: String(p.odds || ''),
+    conf: Number(p.conf || 0),
+    ev: Number(p.ev || 0),
+    game: String(p.game || ''),
+    source: 'pick',
+  });
   updateParlay();
   saveState();
   showToast(`+ ${p.bet}`);
@@ -6027,25 +6188,124 @@ function addParlay(id) {
 
 function clearParlay() { legs = []; updateParlay(); saveState(); }
 
+function addCustomParlayLeg() {
+  if (!canUseVip()) {
+    const lock = document.getElementById('parlay-vip-lock');
+    if (lock) lock.style.display = '';
+    openUpgradePicker();
+    return;
+  }
+  const betEl = document.getElementById('parlay-custom-bet');
+  const oddsEl = document.getElementById('parlay-custom-odds');
+  const confEl = document.getElementById('parlay-custom-conf');
+  const gameEl = document.getElementById('parlay-custom-game');
+  const evEl = document.getElementById('parlay-custom-ev');
+  const bet = String(betEl?.value || '').trim();
+  const odds = normalizeAmericanOdds(oddsEl?.value || '');
+  const conf = clamp(Number(confEl?.value || 58), 45, 90);
+  const ev = clamp(Number(evEl?.value || 2.5), -20, 40);
+  const game = String(gameEl?.value || '').trim();
+  if (!bet || !odds) {
+    showToast('Enter custom leg + valid odds');
+    return;
+  }
+  const id = Date.now() + Math.floor(Math.random() * 1000);
+  legs.push({id, bet, odds, conf, ev, game, source: 'custom'});
+  if (betEl) betEl.value = '';
+  if (oddsEl) oddsEl.value = '';
+  if (gameEl) gameEl.value = '';
+  updateParlay();
+  saveState();
+  showToast('Custom leg added');
+}
+
+function autofillParlay(targetLegs = 3) {
+  const n = clamp(Number(targetLegs || 3), 2, 6);
+  if (!Array.isArray(PICKS) || !PICKS.length) {
+    showToast('Run scan first to build parlay');
+    return;
+  }
+  const ranked = PICKS.slice()
+    .sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)))
+    .slice(0, 18);
+  const next = [];
+  const usedGames = new Set();
+  for (const p of ranked) {
+    const game = String(p.game || '').trim().toLowerCase();
+    if (usedGames.has(game)) continue;
+    next.push({
+      id: Number(p.id),
+      bet: String(p.bet || 'Pick'),
+      odds: String(p.odds || ''),
+      conf: Number(p.conf || 0),
+      ev: Number(p.ev || 0),
+      game: String(p.game || ''),
+      source: 'pick',
+    });
+    if (game) usedGames.add(game);
+    if (next.length >= n) break;
+  }
+  if (next.length < 2) {
+    showToast('Not enough clean legs for auto-build');
+    return;
+  }
+  legs = next;
+  updateParlay();
+  saveState();
+  showToast(`Built ${next.length}-leg parlay`);
+}
+
 function updateParlay() {
+  pullParlayControlValues();
+  const lock = document.getElementById('parlay-vip-lock');
+  if (lock) lock.style.display = canUseVip() ? 'none' : '';
   const n = legs.length;
   const nb = document.getElementById('nb-parlay');
   nb.textContent = n;
   nb.style.display = n > 0 ? '' : 'none';
-  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay();saveState()">×</button></div>`).join('');
+  const html = legs.map(l => {
+    const conf = Number(l.conf || 0);
+    const ev = Number(l.ev || 0);
+    const meta = [];
+    if (Number.isFinite(conf) && conf > 0) meta.push(`${conf.toFixed(0)}% conf`);
+    if (Number.isFinite(ev)) meta.push(`${ev >= 0 ? '+' : ''}${ev.toFixed(1)}% EV`);
+    if (l.source === 'custom') meta.push('custom');
+    if (l.game) meta.push(String(l.game));
+    return `<div class="parlay-leg"><div><div class="pl-bet">${esc(l.bet)}</div><div class="pl-odds">${esc(l.odds)}</div><div class="pl-meta">${esc(meta.join(' · '))}</div></div><button class="pl-rm" onclick="removeParlayLeg(${Number(l.id)})">×</button></div>`;
+  }).join('');
   const emptyEl = document.getElementById('parlay-empty');
   const legsEl = document.getElementById('parlay-legs');
+  const adviceEl = document.getElementById('parlay-advice');
   if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
   if (legsEl) legsEl.innerHTML = html;
   const resEl = document.getElementById('parlay-result');
-  if (n >= 2) {
-    let tot = 1;
-    legs.forEach(l => { const o = parseInt(String(l.odds).replace('+',''), 10); const d = o > 0 ? (o/100)+1 : 1+(100/Math.abs(o)); tot *= d; });
-    const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
+  const m = parlayMetricsFromLegs(legs);
+  if (m && n >= 2) {
+    const stake = Math.max(5, Number(parlayStake || 100));
+    const ao = decimalToAmerican(m.totalDecimal);
     document.getElementById('parlay-odds').textContent = ao;
-    document.getElementById('parlay-win').textContent = `$${Math.round((tot-1)*100)}`;
+    document.getElementById('parlay-win').textContent = `$${Math.round((m.totalDecimal - 1) * stake)}`;
+    document.getElementById('parlay-prob').textContent = `${(m.winProb * 100).toFixed(1)}%`;
+    const evEl = document.getElementById('parlay-ev');
+    if (evEl) {
+      evEl.textContent = `${m.evPct >= 0 ? '+' : ''}${m.evPct.toFixed(1)}%`;
+      evEl.style.color = m.evPct >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    document.getElementById('parlay-kelly').textContent = `$${Math.round(m.recommendedStake)} (${(m.kelly * 100).toFixed(1)}%)`;
+    if (adviceEl) {
+      if (m.sameGamePairs > 0) {
+        adviceEl.textContent = `Same-game correlation detected (${m.sameGamePairs} pair${m.sameGamePairs === 1 ? '' : 's'}). Keep stake conservative unless you have a true same-game model.`;
+      } else if (m.evPct >= 3) {
+        adviceEl.textContent = `Positive slip profile (+${m.evPct.toFixed(1)}% EV). Recommended stake is Kelly-capped for variance control.`;
+      } else if (m.evPct >= 0) {
+        adviceEl.textContent = 'Borderline +EV slip. Prefer fewer legs or better prices.';
+      } else {
+        adviceEl.textContent = 'Model flags this as -EV. Trim low-confidence legs before placing.';
+      }
+    }
     if (resEl) resEl.style.display = '';
   } else {
+    if (adviceEl) adviceEl.textContent = 'Add at least 2 legs to calculate advanced outputs.';
     if (resEl) resEl.style.display = 'none';
   }
 }
@@ -6316,6 +6576,7 @@ function applySavedSelections() {
   const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
   const activeFilter = savedFilterEl ? filter : 'all';
   if (filterEl) setFilter(filterEl, activeFilter);
+  setParlayControlValues();
   go(currentTab);
   updateParlay();
 }
