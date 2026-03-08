@@ -341,33 +341,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .leg-stake{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
 
 /* PARLAY BUILDER */
-.parlay-wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:10px}
-@media(max-width:980px){.parlay-wrap{grid-template-columns:1fr}}
-.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;width:100%}
-.parlay-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
-@media(max-width:520px){.parlay-controls{grid-template-columns:1fr}}
-.parlay-ctl{display:flex;flex-direction:column;gap:4px}
-.parlay-ctl label{font-size:10px;font-family:var(--mono);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.parlay-ctl input,.parlay-ctl select{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 9px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none}
-.parlay-ctl input:focus,.parlay-ctl select:focus{border-color:rgba(0,212,255,.32)}
-.parlay-advice{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.45}
+.parlay-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:480px;width:100%}
 .parlay-leg{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
 .parlay-leg:last-child{border-bottom:none}
-.pl-bet{font-size:13px;font-weight:600;line-height:1.3}
+.pl-bet{font-size:13px;font-weight:600}
 .pl-odds{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-top:1px}
-.pl-meta{font-size:10px;color:var(--muted);margin-top:2px}
 .pl-rm{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
 .parlay-result{background:var(--green-dim);border:1px solid rgba(0,229,160,.12);border-radius:8px;padding:12px;margin-top:12px}
 .pl-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.pl-row:last-of-type{margin-bottom:0}
 .pl-val{font-family:var(--mono);font-weight:700;color:var(--green)}
 .parlay-clear{width:100%;margin-top:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:12px;font-weight:600;padding:6px;cursor:pointer;font-family:var(--sans)}
 .parlay-empty{font-size:13px;color:var(--sub)}
-.parlay-side{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
-.parlay-side-title{font-size:12px;font-weight:800;letter-spacing:.2px}
-.parlay-side-sub{font-size:11px;color:var(--sub);line-height:1.45;margin-top:3px}
-.parlay-custom{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
-.parlay-lock{margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,183,0,.08);font-size:11px;color:var(--amber)}
-.parlay-action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
 /* BOOST */
 .boost-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:460px;width:100%}
@@ -516,24 +500,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
   rgba(255,255,255,.02);
   padding:12px}
 .hps-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
-.hps-title{font-size:14px;font-weight:900;letter-spacing:.2px}
-.hps-sub{font-size:11px;color:var(--sub);margin-top:3px;max-width:760px;line-height:1.45}
+.hps-title{font-size:13px;font-weight:800;letter-spacing:.2px}
+.hps-sub{font-size:11px;color:var(--sub);margin-top:3px;max-width:540px;line-height:1.45}
 .hps-pill{font-size:10px;font-family:var(--mono);font-weight:700;color:var(--cyan);border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.08);border-radius:999px;padding:4px 8px}
-.hps-table-wrap{border:1px solid var(--border);border-radius:10px;overflow:auto;background:rgba(6,6,10,.5)}
-.hps-table{min-width:760px;display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr}
-.hps-cell{padding:8px 9px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;line-height:1.35}
-.hps-cell:nth-child(4n){border-right:none}
-.hps-head{font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
-.hps-head.label{background:rgba(255,255,255,.04)}
-.hps-head.free{background:rgba(255,183,0,.12);color:var(--amber)}
-.hps-head.premium{background:rgba(0,212,255,.12);color:var(--cyan)}
-.hps-head.vip{background:rgba(0,229,160,.12);color:var(--green)}
-.hps-label{color:var(--text);background:rgba(255,255,255,.015);font-weight:600}
-.hps-val{color:var(--sub)}
-.hps-val.yes{color:var(--green);font-weight:700}
-.hps-val.partial{color:var(--amber);font-weight:700}
-.hps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}
-.hps-col{border:1px solid var(--border);border-radius:10px;background:rgba(6,6,10,.58);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:174px}
+.hps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.hps-col{border:1px solid var(--border);border-radius:10px;background:rgba(6,6,10,.58);padding:10px;display:flex;flex-direction:column;gap:8px}
 .hps-col.free{border-color:rgba(255,183,0,.25)}
 .hps-col.premium{border-color:rgba(0,212,255,.25)}
 .hps-col.vip{border-color:rgba(0,229,160,.25)}
@@ -543,10 +514,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .hps-col.vip .hps-k{color:var(--green)}
 .hps-v{font-size:12px;font-weight:700;line-height:1.35}
 .hps-list{font-size:11px;color:var(--sub);line-height:1.45;display:flex;flex-direction:column;gap:4px}
-.hps-price{font-family:var(--mono);font-size:11px;font-weight:700}
 .hps-cta{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
 .hps-cta .pf-btn,.hps-cta .paywall-cta{font-size:11px;padding:6px 9px}
-.hps-note{margin-top:8px;font-size:10px;color:var(--muted)}
 @media(max-width:900px){.hps-grid{grid-template-columns:1fr}}
 .up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
 .up-ov.on{display:flex}
@@ -650,14 +619,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nudge-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:left}
 .nudge-btn:hover{border-color:rgba(0,212,255,.3)}
 .nudge-btn.primary{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.25);color:var(--cyan)}
-.lead-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:740;padding:16px}
-.lead-ov.on{display:flex}
-.lead-modal{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
-.lead-k{font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.8px;color:var(--amber);text-transform:uppercase}
-.lead-title{font-size:18px;font-weight:900;margin-top:4px}
-.lead-sub{font-size:12px;color:var(--sub);line-height:1.5;margin-top:5px}
-.lead-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
-.lead-note{margin-top:8px;font-size:11px;color:var(--muted)}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -810,95 +771,43 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="home-plan-showcase">
         <div class="hps-top">
           <div>
-            <div class="hps-title">Free / Premium / VIP: Clear Value Ladder</div>
-            <div class="hps-sub">Free hooks users, Premium drives core revenue, VIP captures high-value members. Keep this 3-tier structure and make upgrades obvious at first scan.</div>
+            <div class="hps-title">Plan Levels: Free, Premium, VIP</div>
+            <div class="hps-sub">Keep Free for validation, use Premium for daily scale, and move to VIP when execution speed matters.</div>
           </div>
-          <div class="hps-pill">March 2026 pricing</div>
-        </div>
-        <div class="hps-table-wrap">
-          <div class="hps-table">
-            <div class="hps-cell hps-head label">Feature</div>
-            <div class="hps-cell hps-head free">Free</div>
-            <div class="hps-cell hps-head premium">Premium $29.99/mo</div>
-            <div class="hps-cell hps-head vip">VIP $79.99/mo</div>
-
-            <div class="hps-cell hps-label">Daily teaser picks</div>
-            <div class="hps-cell hps-val">1–2</div>
-            <div class="hps-cell hps-val yes">Unlimited</div>
-            <div class="hps-cell hps-val yes">Unlimited</div>
-
-            <div class="hps-cell hps-label">Props Edge +EV</div>
-            <div class="hps-cell hps-val partial">Teaser only</div>
-            <div class="hps-cell hps-val yes">Full</div>
-            <div class="hps-cell hps-val yes">Full + early</div>
-
-            <div class="hps-cell hps-label">Steam moves & fades</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val yes">Yes</div>
-            <div class="hps-cell hps-val yes">Yes + priority alerts</div>
-
-            <div class="hps-cell hps-label">Parlay builder</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val yes">Basic</div>
-            <div class="hps-cell hps-val yes">Advanced + custom props</div>
-
-            <div class="hps-cell hps-label">VIP Pick of the Day</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val yes">Yes</div>
-
-            <div class="hps-cell hps-label">Private community</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val yes">Discord/Telegram</div>
-
-            <div class="hps-cell hps-label">Personal strategy calls</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val">No</div>
-            <div class="hps-cell hps-val yes">1/month</div>
-
-            <div class="hps-cell hps-label">Performance dashboard</div>
-            <div class="hps-cell hps-val">Basic teaser</div>
-            <div class="hps-cell hps-val yes">Full + 30-day chart</div>
-            <div class="hps-cell hps-val yes">Full + personal ROI tracker</div>
-          </div>
+          <div class="hps-pill">Upgrade anytime</div>
         </div>
         <div class="hps-grid">
           <div class="hps-col free">
             <div class="hps-k">FREE</div>
-            <div class="hps-v">Hook and convert</div>
-            <div class="hps-price">$0</div>
+            <div class="hps-v">Validate signal before you commit</div>
             <div class="hps-list">
-              <div>Keep: teaser picks + previews</div>
-              <div>Add: email capture + limited one-sport scan</div>
-              <div>Delete: full live access feeling</div>
+              <div>2 picks per scan</div>
+              <div>NBA + NHL access</div>
+              <div>Refresh every 20 minutes</div>
             </div>
             <div class="hps-cta"><button class="pf-btn" onclick="go('picks')">View Picks</button></div>
           </div>
           <div class="hps-col premium">
             <div class="hps-k">PREMIUM</div>
-            <div class="hps-v">Core revenue tier</div>
-            <div class="hps-price">$29.99/mo or $249/yr (save 30%)</div>
+            <div class="hps-v">Scale daily volume and market depth</div>
             <div class="hps-list">
-              <div>Keep: Props, +EV, Steam, Fades, Parlay</div>
-              <div>Add: full sports + record dashboard + alerts</div>
-              <div>Position as best value upgrade</div>
+              <div>15 picks per scan</div>
+              <div>All sports + +EV + props + steam + fades</div>
+              <div>Refresh every 5 minutes</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="go('premium')">Open Premium</button></div>
           </div>
           <div class="hps-col vip">
             <div class="hps-k">VIP</div>
-            <div class="hps-v">High-LTV exclusivity tier</div>
-            <div class="hps-price">$79.99/mo or $599/yr (save 37%)</div>
+            <div class="hps-v">Max speed, execution, and automation</div>
             <div class="hps-list">
-              <div>Keep: VIP POD + execution layer</div>
-              <div>Add: community, calls, early alerts, custom props</div>
-              <div>Make this feel private and elite</div>
+              <div>50 picks per scan</div>
+              <div>Execution layer + VIP tools + Discord</div>
+              <div>Refresh every 1 minute</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="go('vip')">Open VIP</button></div>
           </div>
         </div>
-        <div class="hps-note">Annual plans increase retention and LTV. Use trial offers to reduce checkout friction.</div>
       </div>
       <div class="trial-card" id="trial-card-home">
         <div class="trial-copy" id="trial-copy-home"><strong>Start your 3-day Premium trial</strong> to unlock +EV, Props, Steam, and faster refresh.</div>
@@ -1118,7 +1027,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub" id="premium-injury">Loading latest sports headlines...</div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Premium Alerts (Email/SMS)</div>
+          <div class="growth-title">Daily Recap</div>
           <div class="rf-row">
             <select class="auth-in" id="premium-recap-channel" style="font-family:var(--sans)">
               <option value="email">Email</option>
@@ -1126,10 +1035,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             </select>
             <input class="auth-in" id="premium-recap-target" type="text" placeholder="you@example.com or +15551234567"/>
           </div>
-          <div class="rf-row">
-            <input class="auth-in" id="premium-alert-min-ev" type="number" min="0.5" max="25" step="0.5" value="2" placeholder="Min EV % (e.g. 2.0)"/>
-          </div>
-          <div class="rf-row"><button class="pf-btn" onclick="savePremiumAlertsSettings()">Save Alerts</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="savePremiumRecap()">Save Recap</button></div>
           <div class="growth-note" id="premium-recap-note">Not configured.</div>
         </div>
         <div class="growth-card">
@@ -1299,23 +1205,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Account + Help</div>
           <div class="rf-row"><button class="pf-btn" onclick="go('profile')">Profile</button><button class="pf-btn" onclick="go('guide')">Guide</button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('vip')">VIP Tools</button><button class="pf-btn" onclick="go('support')">Support</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip')">VIP Tools</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('community')">Community</button></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="v-support" style="display:none">
-      <div class="page-hdr"><div class="page-title">Customer <span>Support</span></div><div class="page-sub">Need help with account, billing, picks, or technical issues? Email our support team.</div></div>
-      <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
-          <div class="growth-title">Email Support</div>
-          <div class="growth-sub">Reach us at <strong>support@algobetsai.com</strong>. Include your account email and a short description of the issue for faster help.</div>
-          <div class="rf-row">
-            <a class="paywall-cta" href="mailto:support@algobetsai.com?subject=Algobets%20AI%20Support%20Request" style="text-decoration:none">Email support@algobetsai.com</a>
-            <button class="pf-btn" onclick="go('more')">Back to More</button>
-          </div>
-          <div class="growth-note">Typical support topics: plan upgrades, trial questions, billing receipts, and feature access.</div>
         </div>
       </div>
     </div>
@@ -1354,53 +1245,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-parlay" style="display:none">
-      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Advanced engine with EV, bankroll sizing, and custom prop legs.</div></div>
-      <div class="parlay-wrap">
-        <div class="parlay-section">
-          <div class="parlay-controls">
-            <div class="parlay-ctl"><label for="parlay-stake">Stake ($)</label><input id="parlay-stake" type="number" min="5" step="5" value="100" oninput="updateParlay()"/></div>
-            <div class="parlay-ctl"><label for="parlay-bankroll">Bankroll ($)</label><input id="parlay-bankroll" type="number" min="100" step="50" value="1000" oninput="updateParlay()"/></div>
-            <div class="parlay-ctl">
-              <label for="parlay-risk">Risk Profile</label>
-              <select id="parlay-risk" onchange="updateParlay()">
-                <option value="conservative">Conservative</option>
-                <option value="standard" selected>Standard</option>
-                <option value="aggressive">Aggressive</option>
-              </select>
-            </div>
-            <div class="parlay-ctl"><label for="parlay-corr">Correlation Penalty %</label><input id="parlay-corr" type="number" min="0" max="30" step="1" value="7" oninput="updateParlay()"/></div>
-          </div>
-          <div class="parlay-advice" id="parlay-advice">Add at least 2 legs to calculate advanced outputs.</div>
-          <div class="parlay-empty" id="parlay-empty">No picks yet. Use <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
-          <div id="parlay-legs"></div>
-          <div id="parlay-result" style="display:none" class="parlay-result">
-            <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
-            <div class="pl-row"><span>Win Payout</span><span class="pl-val" id="parlay-win"></span></div>
-            <div class="pl-row"><span>Model Hit Rate</span><span class="pl-val" id="parlay-prob"></span></div>
-            <div class="pl-row"><span>Expected Value</span><span class="pl-val" id="parlay-ev"></span></div>
-            <div class="pl-row"><span>Kelly Stake</span><span class="pl-val" id="parlay-kelly"></span></div>
-            <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
-          </div>
-        </div>
-        <div class="parlay-side">
-          <div class="parlay-side-title">Advanced Builder</div>
-          <div class="parlay-side-sub">Auto-build balanced slips from live picks or add a custom leg manually (VIP).</div>
-          <div class="parlay-action-row">
-            <button class="pf-btn" onclick="autofillParlay(3)">Build 3-leg</button>
-            <button class="pf-btn" onclick="autofillParlay(4)">Build 4-leg</button>
-            <button class="pf-btn" onclick="autofillParlay(5)">Build 5-leg</button>
-          </div>
-          <div class="parlay-custom">
-            <div class="parlay-ctl"><label for="parlay-custom-bet">Custom Leg</label><input id="parlay-custom-bet" placeholder="Player Over 21.5 Points"/></div>
-            <div class="parlay-controls" style="margin-bottom:0">
-              <div class="parlay-ctl"><label for="parlay-custom-odds">Odds</label><input id="parlay-custom-odds" placeholder="+110"/></div>
-              <div class="parlay-ctl"><label for="parlay-custom-conf">Confidence %</label><input id="parlay-custom-conf" type="number" min="45" max="90" step="1" value="58"/></div>
-              <div class="parlay-ctl"><label for="parlay-custom-game">Game tag</label><input id="parlay-custom-game" placeholder="LAL @ BOS"/></div>
-              <div class="parlay-ctl"><label for="parlay-custom-ev">Edge %</label><input id="parlay-custom-ev" type="number" min="-20" max="40" step="0.5" value="2.5"/></div>
-            </div>
-            <div class="parlay-action-row"><button class="paywall-cta" onclick="addCustomParlayLeg()">Add Custom Leg</button></div>
-            <div class="parlay-lock" id="parlay-vip-lock" style="display:none">Custom prop builder is VIP only. Upgrade to unlock manual legs.</div>
-          </div>
+      <div class="page-hdr"><div class="page-title">Parlay <span>Builder</span></div><div class="page-sub">Add picks with the + button on any pick card</div></div>
+      <div class="parlay-section">
+        <div class="parlay-empty" id="parlay-empty">No picks yet — hit <strong style="color:var(--cyan)">+ Parlay</strong> on any pick card.</div>
+        <div id="parlay-legs"></div>
+        <div id="parlay-result" style="display:none" class="parlay-result">
+          <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
+          <div class="pl-row"><span>$100 wins</span><span class="pl-val" id="parlay-win"></span></div>
+          <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
         </div>
       </div>
     </div>
@@ -1804,7 +1656,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
       <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
-      <button class="mnav-more-item" onclick="go('support')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>Support</button>
       <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
     </div>
   </div>
@@ -1826,7 +1677,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="cycle-btn active" id="cycle-monthly" onclick="setBillingCycle('monthly');openUpgradePicker()">Monthly</button>
       <button class="cycle-btn" id="cycle-annual" onclick="setBillingCycle('annual');openUpgradePicker()">Annual</button>
     </div>
-    <div class="cycle-note" id="cycle-note">Annual plans target 30%+ savings when available.</div>
+    <div class="cycle-note" id="cycle-note">Annual plans save ~2 months when available.</div>
     <div class="up-grid" id="up-grid"></div>
     <div class="up-actions"><button class="bill-link" onclick="closeUpgradePicker()">Cancel</button></div>
   </div>
@@ -1870,23 +1721,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   </div>
 </div>
 
-<div class="lead-ov" id="lead-ov" onclick="closeLeadCapture(event)">
-  <div class="lead-modal">
-    <div class="lead-k">Free Pick Access</div>
-    <div class="lead-title">Get Today’s Free AI Pick By Email</div>
-    <div class="lead-sub">Free members can receive a daily teaser pick in email. Enter your best email and we’ll send today’s free edge.</div>
-    <div class="auth-field">
-      <div class="auth-lbl">Email Address</div>
-      <input class="auth-in" id="lead-email" type="email" placeholder="you@example.com"/>
-    </div>
-    <div class="lead-actions">
-      <button class="bill-link" onclick="closeLeadCapture()">Not now</button>
-      <button class="paywall-cta" id="lead-submit" onclick="submitLeadCapture()">Email me today’s pick</button>
-    </div>
-    <div class="lead-note" id="lead-note">You can unsubscribe anytime.</div>
-  </div>
-</div>
-
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1927,7 +1761,6 @@ const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
-const FREE_PICK_CAPTURE_KEY = 'algobets-free-pick-capture-v1';
 const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
@@ -2012,10 +1845,6 @@ const SPORTS = [
 let mode = 'simple';
 let filter = 'all';
 let legs = [];
-let parlayStake = 100;
-let parlayBankroll = 1000;
-let parlayRisk = 'standard';
-let parlayCorrelationPenalty = 7;
 let PICKS = [];
 let EVDATA = [];
 let STEAMDATA = [];
@@ -2074,12 +1903,10 @@ let HOME_SPORTS_NEWS = [];
 let HOME_SPORTS_NEWS_TS = 0;
 let HOME_SPORTS_NEWS_LOADING = false;
 let VIP_SETTINGS = {webhook: '', steam: true, clv: true};
-let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: '', min_ev: 2.0, enabled: false, sms_status: 'not_configured'};
+let PREMIUM_SETTINGS = {recap_channel: 'email', recap_target: ''};
 let VIP_DISCORD_URL = '';
 let DISCORD_LINK = {discord_user_id: ''};
 let DISCORD_ROLE_SYNC_ENABLED = false;
-let freePickCaptureState = {dismissed: false, captured_email: '', last_prompt_ts: 0};
-let freePickCaptureTimer = null;
 const GOOGLE_CLIENT_ID_FALLBACK = '157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com';
 let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
@@ -2115,8 +1942,8 @@ const HOME_FLAGS_DEFAULT = {
 let homeFlags = {...HOME_FLAGS_DEFAULT};
 const homeSeenCards = new Set();
 const TIER_PRICE_DISPLAY = {
-  premium: {monthly: '$29.99/mo', annual: '$249.00/yr'},
-  vip: {monthly: '$79.99/mo', annual: '$599.00/yr'},
+  premium: {monthly: '$19.99/mo', annual: '$179.99/yr'},
+  vip: {monthly: '$79.99/mo', annual: '$799.99/yr'},
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -2135,17 +1962,6 @@ function impliedProb(odds) {
 function calcEV(odds, fairProb) {
   const dec = americanToDecimal(odds);
   return ((dec - 1) * fairProb - (1 - fairProb)) * 100;
-}
-
-function clamp(v, mn, mx) {
-  return Math.max(mn, Math.min(mx, Number(v)));
-}
-
-function decimalToAmerican(dec) {
-  const d = Number(dec || 1);
-  if (!Number.isFinite(d) || d <= 1) return '-10000';
-  if (d >= 2) return `+${Math.round((d - 1) * 100)}`;
-  return `${Math.round(-100 / (d - 1))}`;
 }
 
 function evColor(ev) {
@@ -2207,21 +2023,9 @@ function loadState() {
     if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
     if (Array.isArray(st.legs)) {
       legs = st.legs
-        .map(l => ({
-          id: Number(l.id),
-          bet: String(l.bet || ''),
-          odds: String(l.odds || ''),
-          conf: Number(l.conf || 0),
-          ev: Number(l.ev || 0),
-          game: String(l.game || ''),
-          source: String(l.source || 'pick'),
-        }))
+        .map(l => ({id: Number(l.id), bet: String(l.bet || ''), odds: String(l.odds || '')}))
         .filter(l => Number.isFinite(l.id) && l.bet && l.odds);
     }
-    if (Number.isFinite(Number(st.parlayStake))) parlayStake = Math.max(5, Number(st.parlayStake));
-    if (Number.isFinite(Number(st.parlayBankroll))) parlayBankroll = Math.max(100, Number(st.parlayBankroll));
-    if (['conservative', 'standard', 'aggressive'].includes(String(st.parlayRisk || ''))) parlayRisk = String(st.parlayRisk);
-    if (Number.isFinite(Number(st.parlayCorrelationPenalty))) parlayCorrelationPenalty = Math.min(30, Math.max(0, Number(st.parlayCorrelationPenalty)));
   } catch(err) {
     console.warn('[Algobets] Could not read saved UI state:', err);
   }
@@ -2229,10 +2033,7 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STATE_KEY, JSON.stringify({
-      mode, filter, legs, currentTab, oddsRange,
-      parlayStake, parlayBankroll, parlayRisk, parlayCorrelationPenalty,
-    }));
+    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab, oddsRange}));
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
   }
@@ -2314,72 +2115,6 @@ function saveTrialUiState() {
     localStorage.setItem(TRIAL_UI_KEY, JSON.stringify({dismissed: !!trialUiState.dismissed}));
   } catch(err) {
     console.warn('[Algobets] Could not save trial UI state:', err);
-  }
-}
-
-function loadFreePickCaptureState() {
-  try {
-    const raw = localStorage.getItem(FREE_PICK_CAPTURE_KEY);
-    if (!raw) return;
-    const st = JSON.parse(raw);
-    freePickCaptureState = {
-      dismissed: !!st.dismissed,
-      captured_email: String(st.captured_email || ''),
-      last_prompt_ts: Number(st.last_prompt_ts || 0),
-    };
-  } catch (_) {}
-}
-
-function saveFreePickCaptureState() {
-  try {
-    localStorage.setItem(FREE_PICK_CAPTURE_KEY, JSON.stringify(freePickCaptureState));
-  } catch (_) {}
-}
-
-function closeLeadCapture(e) {
-  const ov = document.getElementById('lead-ov');
-  if (!ov) return;
-  if (e && e.target !== ov) return;
-  ov.classList.remove('on');
-  freePickCaptureState.dismissed = true;
-  freePickCaptureState.last_prompt_ts = Date.now();
-  saveFreePickCaptureState();
-}
-
-function maybeShowFreePickCapture() {
-  if (normalizePlan(currentPlan) !== 'free') return;
-  if (currentTab !== 'home') return;
-  if (freePickCaptureState.captured_email) return;
-  const last = Number(freePickCaptureState.last_prompt_ts || 0);
-  if (freePickCaptureState.dismissed && (Date.now() - last) < (12 * 3600 * 1000)) return;
-  if (freePickCaptureTimer) clearTimeout(freePickCaptureTimer);
-  freePickCaptureTimer = setTimeout(() => {
-    const ov = document.getElementById('lead-ov');
-    if (!ov || normalizePlan(currentPlan) !== 'free' || currentTab !== 'home') return;
-    ov.classList.add('on');
-  }, 1400);
-}
-
-async function submitLeadCapture() {
-  const input = document.getElementById('lead-email');
-  const note = document.getElementById('lead-note');
-  const btn = document.getElementById('lead-submit');
-  const email = String(input?.value || '').trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    if (note) note.textContent = 'Enter a valid email address.';
-    return;
-  }
-  if (btn) btn.disabled = true;
-  try {
-    await backendPost('/api/waitlist/join', {email, source: 'free_pick_popup'});
-    freePickCaptureState = {dismissed: true, captured_email: email, last_prompt_ts: Date.now()};
-    saveFreePickCaptureState();
-    closeLeadCapture();
-    showToast('Free pick email registered');
-  } catch (_) {
-    if (note) note.textContent = 'Could not save email right now. Try again.';
-  } finally {
-    if (btn) btn.disabled = false;
   }
 }
 
@@ -3218,86 +2953,22 @@ function loadPremiumSettings() {
     PREMIUM_SETTINGS = {
       recap_channel: String(st.recap_channel || 'email'),
       recap_target: String(st.recap_target || ''),
-      min_ev: Number(st.min_ev || 2),
-      enabled: !!st.enabled,
-      sms_status: String(st.sms_status || 'not_configured'),
     };
   } catch (_) {}
 }
 
-async function loadPremiumAlertsSettings() {
-  if (!ensureRegisteredUser(false)) return;
-  try {
-    const res = await backendGet('/api/premium/alerts/settings');
-    const row = res?.settings || {};
-    PREMIUM_SETTINGS = {
-      recap_channel: String(row.channel || 'email'),
-      recap_target: String(row.target || ''),
-      min_ev: Number(row.min_ev || 2),
-      enabled: !!row.enabled,
-      sms_status: String(row.sms_status || 'not_configured'),
-    };
-    try { localStorage.setItem(PREMIUM_SETTINGS_KEY, JSON.stringify(PREMIUM_SETTINGS)); } catch (_) {}
-    const chEl = document.getElementById('premium-recap-channel');
-    const tgEl = document.getElementById('premium-recap-target');
-    const evEl = document.getElementById('premium-alert-min-ev');
-    const note = document.getElementById('premium-recap-note');
-    if (chEl) chEl.value = PREMIUM_SETTINGS.recap_channel;
-    if (tgEl) tgEl.value = PREMIUM_SETTINGS.recap_target;
-    if (evEl) evEl.value = Number(PREMIUM_SETTINGS.min_ev || 2);
-    if (note) {
-      const smsTail = PREMIUM_SETTINGS.recap_channel === 'sms'
-        ? (PREMIUM_SETTINGS.sms_status === 'live' ? ' SMS live.' : PREMIUM_SETTINGS.sms_status === 'pending_provider' ? ' SMS pending provider setup.' : '')
-        : '';
-      note.textContent = PREMIUM_SETTINGS.recap_target
-        ? `Alerts ${PREMIUM_SETTINGS.enabled ? 'enabled' : 'saved'} via ${String(PREMIUM_SETTINGS.recap_channel || 'email').toUpperCase()} (EV ≥ ${Number(PREMIUM_SETTINGS.min_ev || 2).toFixed(1)}%).`
-        : 'No destination configured.';
-      if (PREMIUM_SETTINGS.recap_channel === 'sms' && PREMIUM_SETTINGS.sms_status === 'provider_error') note.textContent += ' SMS provider returned an error.';
-      if (PREMIUM_SETTINGS.recap_channel === 'sms' && PREMIUM_SETTINGS.sms_status === 'invalid_target') note.textContent += ' SMS target format is invalid.';
-      if (PREMIUM_SETTINGS.recap_target && smsTail) note.textContent += smsTail;
-    }
-  } catch (_) {}
-}
-
-async function savePremiumAlertsSettings() {
-  if (!ensureRegisteredUser()) return;
+function savePremiumRecap() {
   PREMIUM_SETTINGS.recap_channel = String(document.getElementById('premium-recap-channel')?.value || 'email');
   PREMIUM_SETTINGS.recap_target = String(document.getElementById('premium-recap-target')?.value || '').trim();
-  PREMIUM_SETTINGS.min_ev = Number(document.getElementById('premium-alert-min-ev')?.value || 2);
-  PREMIUM_SETTINGS.enabled = !!PREMIUM_SETTINGS.recap_target;
-  if (Number.isNaN(PREMIUM_SETTINGS.min_ev)) PREMIUM_SETTINGS.min_ev = 2;
-  PREMIUM_SETTINGS.min_ev = Math.max(0.5, Math.min(25, Number(PREMIUM_SETTINGS.min_ev || 2)));
   try {
     localStorage.setItem(PREMIUM_SETTINGS_KEY, JSON.stringify(PREMIUM_SETTINGS));
   } catch (_) {}
-  try {
-    const res = await backendPost('/api/premium/alerts/settings', {
-      enabled: PREMIUM_SETTINGS.enabled,
-      channel: PREMIUM_SETTINGS.recap_channel,
-      target: PREMIUM_SETTINGS.recap_target,
-      min_ev: PREMIUM_SETTINGS.min_ev,
-      sports: ['basketball_nba', 'americanfootball_nfl', 'baseball_mlb', 'icehockey_nhl'],
-    });
-    PREMIUM_SETTINGS.sms_status = String(res?.settings?.sms_status || PREMIUM_SETTINGS.sms_status || 'not_configured');
-  } catch (err) {
-    const note = document.getElementById('premium-recap-note');
-    const msg = String(err?.detail || err?.message || '');
-    if (note && msg) note.textContent = msg;
-    showToast(msg || 'Could not save premium alerts');
-  }
   const note = document.getElementById('premium-recap-note');
-  if (note) {
-    const smsNote = PREMIUM_SETTINGS.recap_channel === 'sms'
-      ? (PREMIUM_SETTINGS.sms_status === 'pending_provider' ? ' SMS sending pending provider setup.' : ' SMS not configured yet.')
-      : '';
-    note.textContent = PREMIUM_SETTINGS.recap_target
-      ? `Alerts saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target} (EV ≥ ${Number(PREMIUM_SETTINGS.min_ev).toFixed(1)}%).${smsNote}`
-      : 'Alert destination missing.';
-  }
-  showToast('Premium alerts saved');
+  if (note) note.textContent = PREMIUM_SETTINGS.recap_target
+    ? `Daily recap saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target}`
+    : 'Recap target missing.';
+  showToast('Premium recap saved');
 }
-
-async function savePremiumRecap() { return savePremiumAlertsSettings(); }
 
 function runParlayOptimizerLite() {
   const note = document.getElementById('premium-parlay-note');
@@ -3314,10 +2985,9 @@ function runParlayOptimizerLite() {
   });
   const correlated = Object.entries(games).filter(([, v]) => v > 1);
   if (note) {
-    const tail = correlated.length
+    note.innerHTML = correlated.length
       ? `Correlation warning: ${correlated.map(([g, v]) => `${g} (${v} legs)`).join(', ')}`
       : 'No major same-game correlation detected in current legs.';
-    note.innerHTML = `Advanced optimizer ready in Parlay Builder. ${tail}`;
   }
 }
 
@@ -3347,7 +3017,6 @@ function renderPremiumTools() {
   const injEl = document.getElementById('premium-injury');
   const chEl = document.getElementById('premium-recap-channel');
   const tgEl = document.getElementById('premium-recap-target');
-  const evEl = document.getElementById('premium-alert-min-ev');
   const noteEl = document.getElementById('premium-recap-note');
 
   if (bestEl) {
@@ -3380,11 +3049,9 @@ function renderPremiumTools() {
   }
   if (chEl) chEl.value = PREMIUM_SETTINGS.recap_channel || 'email';
   if (tgEl) tgEl.value = PREMIUM_SETTINGS.recap_target || '';
-  if (evEl) evEl.value = Number(PREMIUM_SETTINGS.min_ev || 2);
   if (noteEl) noteEl.textContent = PREMIUM_SETTINGS.recap_target
-    ? `Alerts ready: ${PREMIUM_SETTINGS.recap_channel.toUpperCase()} · EV ≥ ${Number(PREMIUM_SETTINGS.min_ev || 2).toFixed(1)}%${PREMIUM_SETTINGS.recap_channel === 'sms' && PREMIUM_SETTINGS.sms_status === 'live' ? ' · SMS live' : ''}`
+    ? `Daily recap saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target}`
     : 'Not configured.';
-  if (ensureRegisteredUser(false)) loadPremiumAlertsSettings();
 }
 
 function loadVipSettings() {
@@ -4573,12 +4240,6 @@ function updatePlanUi() {
   }
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
   if (trialBtn) trialBtn.style.display = p === 'free' ? 'inline-flex' : 'none';
-  if (p !== 'free') {
-    const ov = document.getElementById('lead-ov');
-    if (ov) ov.classList.remove('on');
-  } else {
-    maybeShowFreePickCapture();
-  }
   renderProfile();
   updateHomeSummary();
   updateScanCooldownUi();
@@ -5073,11 +4734,11 @@ function openUpgradePicker() {
   }
   const opts = p === 'free'
     ? [
-        {tier: 'premium', title: 'Premium', desc: 'All sports + Props + +EV + Steam/Fades + alerts'},
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP POD + execution + priority signals'},
+        {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
       ]
     : [
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP POD + execution + priority signals'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + early alerts + CLV + portfolio tools'},
       ];
   sub.textContent = p === 'free'
     ? 'Choose Premium or VIP.'
@@ -6100,87 +5761,12 @@ async function loadPerformance() {
 }
 
 // ─── PARLAY ───────────────────────────────────────────────────────────────────
-function normalizeAmericanOdds(raw) {
-  const txt = String(raw || '').trim();
-  const n = parseInt(txt, 10);
-  if (!Number.isFinite(n) || n === 0 || Math.abs(n) < 100 || Math.abs(n) > 5000) return null;
-  return n > 0 ? `+${n}` : `${n}`;
-}
-
-function setParlayControlValues() {
-  const stakeEl = document.getElementById('parlay-stake');
-  const bkEl = document.getElementById('parlay-bankroll');
-  const riskEl = document.getElementById('parlay-risk');
-  const corrEl = document.getElementById('parlay-corr');
-  if (stakeEl) stakeEl.value = String(parlayStake);
-  if (bkEl) bkEl.value = String(parlayBankroll);
-  if (riskEl) riskEl.value = parlayRisk;
-  if (corrEl) corrEl.value = String(parlayCorrelationPenalty);
-}
-
-function pullParlayControlValues() {
-  const stakeEl = document.getElementById('parlay-stake');
-  const bkEl = document.getElementById('parlay-bankroll');
-  const riskEl = document.getElementById('parlay-risk');
-  const corrEl = document.getElementById('parlay-corr');
-  if (stakeEl) parlayStake = Math.max(5, Number(stakeEl.value || parlayStake || 100));
-  if (bkEl) parlayBankroll = Math.max(100, Number(bkEl.value || parlayBankroll || 1000));
-  if (riskEl && ['conservative', 'standard', 'aggressive'].includes(riskEl.value)) parlayRisk = riskEl.value;
-  if (corrEl) parlayCorrelationPenalty = clamp(Number(corrEl.value || parlayCorrelationPenalty || 7), 0, 30);
-}
-
-function removeParlayLeg(id) {
-  legs = legs.filter(x => x.id !== id);
-  updateParlay();
-  saveState();
-}
-
-function legWinProb(l) {
-  const implied = clamp(impliedProb(l.odds), 0.05, 0.95);
-  const confBoost = Number.isFinite(Number(l.conf)) && Number(l.conf) > 0 ? clamp(Number(l.conf) / 100, 0.05, 0.95) : implied;
-  const evAdj = clamp(Number(l.ev || 0) / 100, -0.08, 0.1);
-  return clamp((confBoost * 0.7) + (implied * 0.3) + evAdj, 0.04, 0.93);
-}
-
-function parlayMetricsFromLegs(list) {
-  if (!Array.isArray(list) || list.length < 2) return null;
-  const legDecimals = list.map(l => americanToDecimal(l.odds)).filter(d => Number.isFinite(d) && d > 1);
-  if (legDecimals.length !== list.length) return null;
-  const totalDecimal = legDecimals.reduce((acc, d) => acc * d, 1);
-  const byGame = {};
-  list.forEach(l => {
-    const g = String(l.game || '').trim().toLowerCase();
-    if (!g) return;
-    byGame[g] = (byGame[g] || 0) + 1;
-  });
-  const sameGamePairs = Object.values(byGame).reduce((acc, ct) => acc + (ct > 1 ? (ct * (ct - 1)) / 2 : 0), 0);
-  const corrFactor = clamp(1 - (sameGamePairs * (parlayCorrelationPenalty / 100) * 0.45), 0.55, 1);
-  const rawProb = list.reduce((acc, l) => acc * legWinProb(l), 1);
-  const winProb = clamp(rawProb * corrFactor, 0.005, 0.95);
-  const evPct = ((totalDecimal - 1) * winProb - (1 - winProb)) * 100;
-  const b = totalDecimal - 1;
-  const q = 1 - winProb;
-  const kelly = b > 0 ? Math.max(0, ((b * winProb) - q) / b) : 0;
-  const riskMult = parlayRisk === 'aggressive' ? 0.85 : parlayRisk === 'conservative' ? 0.35 : 0.55;
-  const capPct = parlayRisk === 'aggressive' ? 0.04 : parlayRisk === 'conservative' ? 0.015 : 0.025;
-  const recommendedStake = Math.max(0, Math.min(parlayBankroll * capPct, parlayBankroll * kelly * riskMult));
-  return {totalDecimal, winProb, evPct, kelly, recommendedStake, sameGamePairs};
-}
-
 function addParlay(id) {
   const p = PICKS.find(x => x.id === id);
   if (!p) return;
   learnFromPick(p, 'parlay');
   if (legs.find(l => l.id === id)) { showToast('Already in parlay'); return; }
-  legs.push({
-    id: Number(p.id),
-    bet: String(p.bet || 'Pick'),
-    odds: String(p.odds || ''),
-    conf: Number(p.conf || 0),
-    ev: Number(p.ev || 0),
-    game: String(p.game || ''),
-    source: 'pick',
-  });
+  legs.push({id: p.id, bet: p.bet, odds: p.odds});
   updateParlay();
   saveState();
   showToast(`+ ${p.bet}`);
@@ -6188,124 +5774,25 @@ function addParlay(id) {
 
 function clearParlay() { legs = []; updateParlay(); saveState(); }
 
-function addCustomParlayLeg() {
-  if (!canUseVip()) {
-    const lock = document.getElementById('parlay-vip-lock');
-    if (lock) lock.style.display = '';
-    openUpgradePicker();
-    return;
-  }
-  const betEl = document.getElementById('parlay-custom-bet');
-  const oddsEl = document.getElementById('parlay-custom-odds');
-  const confEl = document.getElementById('parlay-custom-conf');
-  const gameEl = document.getElementById('parlay-custom-game');
-  const evEl = document.getElementById('parlay-custom-ev');
-  const bet = String(betEl?.value || '').trim();
-  const odds = normalizeAmericanOdds(oddsEl?.value || '');
-  const conf = clamp(Number(confEl?.value || 58), 45, 90);
-  const ev = clamp(Number(evEl?.value || 2.5), -20, 40);
-  const game = String(gameEl?.value || '').trim();
-  if (!bet || !odds) {
-    showToast('Enter custom leg + valid odds');
-    return;
-  }
-  const id = Date.now() + Math.floor(Math.random() * 1000);
-  legs.push({id, bet, odds, conf, ev, game, source: 'custom'});
-  if (betEl) betEl.value = '';
-  if (oddsEl) oddsEl.value = '';
-  if (gameEl) gameEl.value = '';
-  updateParlay();
-  saveState();
-  showToast('Custom leg added');
-}
-
-function autofillParlay(targetLegs = 3) {
-  const n = clamp(Number(targetLegs || 3), 2, 6);
-  if (!Array.isArray(PICKS) || !PICKS.length) {
-    showToast('Run scan first to build parlay');
-    return;
-  }
-  const ranked = PICKS.slice()
-    .sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)))
-    .slice(0, 18);
-  const next = [];
-  const usedGames = new Set();
-  for (const p of ranked) {
-    const game = String(p.game || '').trim().toLowerCase();
-    if (usedGames.has(game)) continue;
-    next.push({
-      id: Number(p.id),
-      bet: String(p.bet || 'Pick'),
-      odds: String(p.odds || ''),
-      conf: Number(p.conf || 0),
-      ev: Number(p.ev || 0),
-      game: String(p.game || ''),
-      source: 'pick',
-    });
-    if (game) usedGames.add(game);
-    if (next.length >= n) break;
-  }
-  if (next.length < 2) {
-    showToast('Not enough clean legs for auto-build');
-    return;
-  }
-  legs = next;
-  updateParlay();
-  saveState();
-  showToast(`Built ${next.length}-leg parlay`);
-}
-
 function updateParlay() {
-  pullParlayControlValues();
-  const lock = document.getElementById('parlay-vip-lock');
-  if (lock) lock.style.display = canUseVip() ? 'none' : '';
   const n = legs.length;
   const nb = document.getElementById('nb-parlay');
   nb.textContent = n;
   nb.style.display = n > 0 ? '' : 'none';
-  const html = legs.map(l => {
-    const conf = Number(l.conf || 0);
-    const ev = Number(l.ev || 0);
-    const meta = [];
-    if (Number.isFinite(conf) && conf > 0) meta.push(`${conf.toFixed(0)}% conf`);
-    if (Number.isFinite(ev)) meta.push(`${ev >= 0 ? '+' : ''}${ev.toFixed(1)}% EV`);
-    if (l.source === 'custom') meta.push('custom');
-    if (l.game) meta.push(String(l.game));
-    return `<div class="parlay-leg"><div><div class="pl-bet">${esc(l.bet)}</div><div class="pl-odds">${esc(l.odds)}</div><div class="pl-meta">${esc(meta.join(' · '))}</div></div><button class="pl-rm" onclick="removeParlayLeg(${Number(l.id)})">×</button></div>`;
-  }).join('');
+  const html = legs.map(l => `<div class="parlay-leg"><div><div class="pl-bet">${l.bet}</div><div class="pl-odds">${l.odds}</div></div><button class="pl-rm" onclick="legs=legs.filter(x=>x.id!==${l.id});updateParlay();saveState()">×</button></div>`).join('');
   const emptyEl = document.getElementById('parlay-empty');
   const legsEl = document.getElementById('parlay-legs');
-  const adviceEl = document.getElementById('parlay-advice');
   if (emptyEl) emptyEl.style.display = n === 0 ? '' : 'none';
   if (legsEl) legsEl.innerHTML = html;
   const resEl = document.getElementById('parlay-result');
-  const m = parlayMetricsFromLegs(legs);
-  if (m && n >= 2) {
-    const stake = Math.max(5, Number(parlayStake || 100));
-    const ao = decimalToAmerican(m.totalDecimal);
+  if (n >= 2) {
+    let tot = 1;
+    legs.forEach(l => { const o = parseInt(String(l.odds).replace('+',''), 10); const d = o > 0 ? (o/100)+1 : 1+(100/Math.abs(o)); tot *= d; });
+    const ao = tot >= 2 ? `+${Math.round((tot-1)*100)}` : `${Math.round(-100/(tot-1))}`;
     document.getElementById('parlay-odds').textContent = ao;
-    document.getElementById('parlay-win').textContent = `$${Math.round((m.totalDecimal - 1) * stake)}`;
-    document.getElementById('parlay-prob').textContent = `${(m.winProb * 100).toFixed(1)}%`;
-    const evEl = document.getElementById('parlay-ev');
-    if (evEl) {
-      evEl.textContent = `${m.evPct >= 0 ? '+' : ''}${m.evPct.toFixed(1)}%`;
-      evEl.style.color = m.evPct >= 0 ? 'var(--green)' : 'var(--red)';
-    }
-    document.getElementById('parlay-kelly').textContent = `$${Math.round(m.recommendedStake)} (${(m.kelly * 100).toFixed(1)}%)`;
-    if (adviceEl) {
-      if (m.sameGamePairs > 0) {
-        adviceEl.textContent = `Same-game correlation detected (${m.sameGamePairs} pair${m.sameGamePairs === 1 ? '' : 's'}). Keep stake conservative unless you have a true same-game model.`;
-      } else if (m.evPct >= 3) {
-        adviceEl.textContent = `Positive slip profile (+${m.evPct.toFixed(1)}% EV). Recommended stake is Kelly-capped for variance control.`;
-      } else if (m.evPct >= 0) {
-        adviceEl.textContent = 'Borderline +EV slip. Prefer fewer legs or better prices.';
-      } else {
-        adviceEl.textContent = 'Model flags this as -EV. Trim low-confidence legs before placing.';
-      }
-    }
+    document.getElementById('parlay-win').textContent = `$${Math.round((tot-1)*100)}`;
     if (resEl) resEl.style.display = '';
   } else {
-    if (adviceEl) adviceEl.textContent = 'Add at least 2 legs to calculate advanced outputs.';
     if (resEl) resEl.style.display = 'none';
   }
 }
@@ -6393,8 +5880,8 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-pod','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','support','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','support','live','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-pod','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
@@ -6480,10 +5967,7 @@ function go(name) {
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
   if (name === 'premium') renderPremiumTools();
-  if (name === 'home') {
-    updateHomeSummary();
-    maybeShowFreePickCapture();
-  }
+  if (name === 'home') updateHomeSummary();
   if (name === 'perf') loadPerformance();
   if (name === 'history') loadHistory();
   if (name === 'community') loadCommunityFeed();
@@ -6576,7 +6060,6 @@ function applySavedSelections() {
   const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
   const activeFilter = savedFilterEl ? filter : 'all';
   if (filterEl) setFilter(filterEl, activeFilter);
-  setParlayControlValues();
   go(currentTab);
   updateParlay();
 }
@@ -6589,7 +6072,6 @@ loadPremiumSettings();
 loadVipSettings();
 loadVipLiveState();
 loadTrialUiState();
-loadFreePickCaptureState();
 loadProfile();
 updateLowDataUi();
 loadAffiliateLocalState();
