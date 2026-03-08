@@ -2064,12 +2064,16 @@ const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
 const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
 const _authFromQp = String(_qp.get('auth') || '').trim().toLowerCase();
 const _tabFromQp = String(_qp.get('tab') || '').trim().toLowerCase();
+const _mockPlanFromQp = String(_qp.get('mock_plan') || '').trim().toLowerCase();
+const _shotScrollRaw = Number(_qp.get('shot_scroll') || 0);
 const START_TAB_ALLOW = new Set([
   'home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports',
   'odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide','more'
 ]);
 const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
+const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
+const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
@@ -2152,6 +2156,7 @@ let vipLiveTicker = null;
 let CLVDATA = null;
 let AGENTWEIGHTS = null;
 let ALERTPACKS = null;
+if (FORCE_DEMO_MODE && MOCK_PLAN_QP) currentPlan = MOCK_PLAN_QP;
 let AFFILIATE = null;
 let affiliateLinks = {...DEFAULT_AFFILIATE_LINKS};
 let affiliateStats = {total_clicks: 0, by_book: {}, last_click_ts: 0};
@@ -5572,6 +5577,11 @@ function ensureBillingUser() {
 }
 
 async function fetchPlan() {
+  if (FORCE_DEMO_MODE && MOCK_PLAN_QP) {
+    currentPlan = MOCK_PLAN_QP;
+    updatePlanUi();
+    return;
+  }
   const prevPlan = normalizePlan(currentPlan);
   try {
     const res = await backendGet('/api/plan');
@@ -5589,6 +5599,14 @@ async function fetchPlan() {
     currentPlan = 'free';
     updatePlanUi();
   }
+}
+
+function applyMarketingShotOverrides() {
+  if (!SHOT_SCROLL_Y) return;
+  const apply = () => window.scrollTo({top: SHOT_SCROLL_Y, behavior: 'auto'});
+  setTimeout(apply, 500);
+  setTimeout(apply, 1500);
+  setTimeout(apply, 2800);
 }
 
 async function fetchPricing() {
@@ -7562,6 +7580,7 @@ loadTrialStatus();
 doScan(true);
 startAutoRefresh();
 startVipLiveTicker();
+applyMarketingShotOverrides();
 </script>
 </body>
 </html>
