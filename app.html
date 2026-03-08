@@ -89,11 +89,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
-.nav-item.vip-nav svg{opacity:.95;color:var(--amber)}
-.nav-item.vip-nav{font-weight:700}
-.vip-nav-group{position:relative}
-.vip-submenu{display:flex;flex-direction:column;gap:2px;max-height:0;opacity:0;overflow:hidden;padding-left:10px;transition:max-height .18s ease,opacity .12s ease}
-.vip-nav-group:hover .vip-submenu{max-height:260px;opacity:1;margin:2px 0 4px}
 .nav-item.nav-sub{padding-left:12px;font-size:12px;margin-left:6px;width:calc(100% - 6px);border-left:1px solid var(--border);border-radius:0 8px 8px 0}
 .nav-item.nav-sub svg{width:12px;height:12px;opacity:.42}
 .nav-item.nav-sub.active{color:var(--amber);background:rgba(255,183,0,.09)}
@@ -461,7 +456,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
 .mnav-btn.active{color:var(--cyan)}
 .mnav-btn svg{width:23px;height:23px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
-.mnav-btn.vip-nav svg{opacity:.95;color:var(--amber)}
 .mnav-label{font-size:10px;font-weight:800;line-height:1;margin-top:1px}
 @media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
 .mnav-premium-wrap,.mnav-vip-wrap,.mnav-more-wrap{position:relative;min-width:0;display:flex}
@@ -708,7 +702,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     History
   </button>
   <button class="nav-item" id="settings-btn" onclick="go('profile')" title="Settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7c0-2-1-4-3-4S6 5 8 7"/><path d="M12 7c0-2 1-4 3-4s3 2 1 4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
     Settings
   </button>
   <div class="sidebar-bot">
@@ -1150,6 +1144,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
+          <div class="growth-note" id="vip-release-window">Next VIP drop window: calculating...</div>
           <div id="vip-core-list" class="growth-sub">Loading Core Edge plays...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
@@ -1162,6 +1157,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">⚡</span>Execution Intelligence</div>
           <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
+          <div class="growth-note" id="vip-clv-explain">CLV = Closing Line Value. It measures whether your price was better than the market close.</div>
+          <div class="growth-sub" id="vip-clv-score">Loading CLV scorecard...</div>
           <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
           <div class="growth-sub" id="vip-clv-lab">Loading CLV by book...</div>
           <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
@@ -1211,10 +1208,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-steam"/> Steam jumps</label>
             <label class="growth-sub" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="vip-alert-clv"/> CLV shifts</label>
           </div>
-          <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button><button class="pf-btn" onclick="sendVipTestAlert()">Send Test</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="saveVipAlerts()">Save Alerts</button><button class="pf-btn" onclick="sendVipTestAlert('line_rush')">Send Line Rush Test</button></div>
           <div class="growth-note" id="vip-alert-note">No alert settings saved.</div>
-          <div class="growth-note">LINE RUSH ALERTS (VIP): trigger when a steam move is &gt;2 points inside 10 minutes. 30-second head start messaging before broader release.</div>
+          <div class="growth-note">LINE RUSH ALERTS (VIP): trigger when a steam move is &gt;2 points inside 10 minutes. VIP gets a 30-second head start before broader release.</div>
           <div class="growth-sub">Example: 🚨 LINE RUSH: Chiefs -3.5 → -5.5. Bet now before it closes.</div>
+          <div class="growth-note" id="vip-line-rush-preview">Last preview: none.</div>
         </div>
       </div>
     </div>
@@ -1265,12 +1263,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>Public Fades</span></span> <span class="nav-badge">Premium</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/><path d="M10 20a2 2 0 004 0"/></svg><span>Line Rush Alerts</span></span> <span class="nav-badge">VIP</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Sharp Money Tracker</span></span> <span class="nav-badge">VIP</span></button></div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">News Impact Engine</div>
-          <div class="growth-sub">Market dispersion signals likely news/lineup impact.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
-          <div class="growth-note" id="ni-note">No impact data loaded.</div>
         </div>
       </div>
     </div>
@@ -1603,6 +1595,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub">Line movement can invalidate edge quickly. Re-check odds before placing.</div>
           <div class="growth-sub">21+ only. Bet responsibly.</div>
         </div>
+        <div class="growth-card">
+          <div class="growth-title">News Impact (Insight)</div>
+          <div class="growth-sub">Optional context only. Use this to spot possible lineup/news-driven market dispersion.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
+          <div class="growth-note" id="ni-note">No impact data loaded.</div>
+        </div>
       </div>
     </div>
 
@@ -1635,8 +1633,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <span class="mnav-label">Offers</span>
   </button>
   <div class="mnav-vip-wrap">
-    <button class="mnav-btn vip-nav" id="mn-settings" onclick="go('profile')" title="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
+    <button class="mnav-btn" id="mn-settings" onclick="go('profile')" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
       <span class="mnav-label">Settings</span>
     </button>
     <div class="mnav-vip-panel" id="mnav-vip-panel" style="display:none">
@@ -2976,6 +2974,11 @@ async function loadPublicConfig() {
 }
 
 async function loadDiscordLink(force = false) {
+  if (!canUseVip()) {
+    const note = document.getElementById('vip-discord-link-note');
+    if (note) note.textContent = 'VIP only. Upgrade to enable Discord role sync.';
+    return;
+  }
   if (!force && DISCORD_LINK?.discord_user_id) return;
   if (!AUTH_TOKEN) {
     try { await ensureAuthSession(); } catch (_) {}
@@ -2997,6 +3000,11 @@ async function loadDiscordLink(force = false) {
 }
 
 async function linkDiscordAccount() {
+  if (!canUseVip()) {
+    showToast('VIP only');
+    openUpgradePicker();
+    return;
+  }
   const input = document.getElementById('vip-discord-id');
   const note = document.getElementById('vip-discord-link-note');
   const raw = String(input?.value || '').trim();
@@ -3221,14 +3229,22 @@ function saveVipAlerts() {
   showToast('VIP alerts saved');
 }
 
-function sendVipTestAlert() {
+function sendVipTestAlert(kind = 'generic') {
   if (!canUseVip()) {
     showToast('VIP only');
     openUpgradePicker();
     return;
   }
   const note = document.getElementById('vip-alert-note');
+  const preview = document.getElementById('vip-line-rush-preview');
   const target = VIP_SETTINGS.webhook ? 'webhook' : 'in-app';
+  if (kind === 'line_rush') {
+    const sample = 'LINE RUSH: Chiefs -3.5 -> -5.5 in 8m. Bet now before close.';
+    if (note) note.textContent = `Line Rush test sent (${target}).`;
+    if (preview) preview.textContent = `Last preview: ${sample}`;
+    showToast('Line Rush test alert sent');
+    return;
+  }
   if (note) note.textContent = `Test alert sent (${target}).`;
   showToast('VIP test alert sent');
 }
@@ -3311,7 +3327,9 @@ function joinVipDiscord() {
 function renderVipTools() {
   const vipOn = canUseVip();
   const clvEl = document.getElementById('vip-clv');
+  const clvScoreEl = document.getElementById('vip-clv-score');
   const earlyEl = document.getElementById('vip-early');
+  const releaseWindowEl = document.getElementById('vip-release-window');
   const timingEl = document.getElementById('vip-timing');
   const coreListEl = document.getElementById('vip-core-list');
   const discordEl = document.getElementById('vip-discord-status');
@@ -3329,7 +3347,9 @@ function renderVipTools() {
 
   if (!vipOn) {
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
+    if (clvScoreEl) clvScoreEl.textContent = 'CLV scorecard is locked for VIP.';
     if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
+    if (releaseWindowEl) releaseWindowEl.textContent = 'Next VIP drop window is locked for VIP.';
     if (coreListEl) {
       const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
@@ -3356,9 +3376,26 @@ function renderVipTools() {
   const avgClv = Number(CLVDATA?.avg_clv_pct || 0);
   const roi = Number(PERFDATA?.overall?.roi_pct || 0);
   if (clvEl) clvEl.innerHTML = `Beat close: <strong>${beatClose.toFixed(1)}%</strong> · Avg CLV: <strong>${avgClv.toFixed(2)}%</strong> · ROI: <strong>${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</strong>`;
+  if (clvScoreEl) {
+    let tracked = [];
+    try {
+      const raw = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+      tracked = Array.isArray(raw) ? raw : [];
+    } catch (_) {
+      tracked = [];
+    }
+    const totalTracked = tracked.length;
+    const grade = beatClose >= 57 ? 'A' : beatClose >= 52 ? 'B' : beatClose >= 48 ? 'C' : 'D';
+    clvScoreEl.innerHTML = `CLV scorecard: <strong>${grade}</strong> · <strong>${beatClose.toFixed(1)}%</strong> beat close · <strong>${totalTracked}</strong> tracked picks`;
+  }
   if (earlyEl) {
     const mins = PICKS.length ? Math.max(8, Math.min(35, Math.round(Number(PICKS[0].ev || 5) * 4))) : 15;
     earlyEl.innerHTML = `VIP release lead: <strong>${mins} minutes</strong> before Premium window.`;
+    if (releaseWindowEl) {
+      const next = new Date(Date.now() + mins * 60000);
+      const t = next.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+      releaseWindowEl.textContent = `Next VIP drop window: ~${t} local time.`;
+    }
   }
   if (coreListEl) {
     const vipPicks = getVipPodPicks();
@@ -6259,6 +6296,11 @@ function openTierFeature(tab, tier = 'free') {
 function go(name) {
   if (name === 'more') name = 'tools';
   if (!ALL_TABS.includes(name)) return;
+  if (name === 'vip-discord' && !canUseVip()) {
+    showToast('VIP Discord is VIP-only');
+    openUpgradePicker();
+    return;
+  }
   if (name === 'steam' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
     growthNudges.steamLocks += 1;
@@ -6309,9 +6351,7 @@ function go(name) {
     loadJournalStats();
   }
   if (name === 'community') loadCommunityFeed();
-  if (name === 'tools') {
-    loadNewsImpact();
-  }
+  if (name === 'guide') loadNewsImpact();
   if (name === 'offers') loadAffiliate();
   if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
   if (name === 'vip-discord') loadDiscordLink(true);
