@@ -5978,6 +5978,28 @@ function renderPicks() {
     return (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0));
   });
 
+  function freeTeaserBetLabel(p) {
+    const raw = String(p.game || p.bet || 'Matchup').trim();
+    return raw
+      .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, 'Total')
+      .replace(/\s[+-]\d+(\.\d+)?/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  function getFreeTeaserList(rows, visibleLimit, lockedLimit) {
+    if (!Array.isArray(rows) || !rows.length) return [];
+    const ranked = rows.slice().sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)));
+    const skipTop = Math.min(3, Math.max(1, ranked.length - 1));
+    const pool = ranked.slice(skipTop);
+    const source = pool.length ? pool : ranked.slice(1);
+    if (!source.length) return ranked.slice(0, Math.min(rows.length, visibleLimit + lockedLimit));
+    const daySeed = Math.floor(Date.now() / 86400000);
+    const start = daySeed % source.length;
+    const rotated = source.slice(start).concat(source.slice(0, start));
+    return rotated.slice(0, Math.min(rotated.length, visibleLimit + lockedLimit));
+  }
+
   document.getElementById('picks-count').textContent = usingDemoData
     ? `Today's Edges`
     : `Today's Edges (Live)`;
@@ -6003,9 +6025,10 @@ function renderPicks() {
   }
   const freeVisibleLimit = 2;
   const teaserLimit = 1;
-  const useFreeTease = isFreePlan && pts.length > freeVisibleLimit;
-  const hiddenCount = useFreeTease ? Math.max(0, pts.length - freeVisibleLimit) : 0;
-  const renderList = useFreeTease ? pts.slice(0, Math.min(pts.length, freeVisibleLimit + teaserLimit)) : pts;
+  const freeRenderSource = isFreePlan ? getFreeTeaserList(pts, freeVisibleLimit, teaserLimit) : pts;
+  const useFreeTease = isFreePlan && freeRenderSource.length > freeVisibleLimit;
+  const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
+  const renderList = useFreeTease ? freeRenderSource.slice(0, Math.min(freeRenderSource.length, freeVisibleLimit + teaserLimit)) : freeRenderSource;
 
   el.innerHTML = renderList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
@@ -6021,7 +6044,10 @@ function renderPicks() {
     const consensusVotes = Math.max(1, Math.min(5, agentCount || Math.round((Number(p.conf || 60) / 100) * 5)));
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
-    const rankBadge = `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`;
+    const rankBadge = showDetailed
+      ? `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`
+      : `<span class="tier-tag">Free Teaser</span>`;
+    const betLabel = showDetailed ? p.bet : freeTeaserBetLabel(p);
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   ${sampleTag}
   <div class="pick-inner">
@@ -6030,7 +6056,7 @@ function renderPicks() {
         ${rankBadge}
         <span class="sport-tag">${p.sport} · ${p.time}</span>
       </div>
-      <div class="pick-bet">${p.bet}</div>
+      <div class="pick-bet">${betLabel}</div>
       <div class="pick-meta-row">
         <span class="edge-badge ${edgeClass}" title="Advantage over fair market price">+${edgeVal.toFixed(1)}%</span>
       </div>
@@ -6044,17 +6070,19 @@ function renderPicks() {
       <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
-        : `<div class="pick-line">Best line and fair value are available in Premium.</div>
-      <div class="pick-line">5-Agent details unlock with Premium.</div>`}
+        : `<div class="pick-line">Actionable sides, lines, and fair value are locked on Free.</div>
+      <div class="pick-line">Upgrade to Premium to unlock full pick details.</div>`}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
   <div class="pick-actions">
-    <button class="btn-parlay" onclick="addParlay(${p.id})">Add to Parlay</button>
+    ${showDetailed
+      ? `<button class="btn-parlay" onclick="addParlay(${p.id})">Add to Parlay</button>
     <button class="btn-share" onclick="savePickToTracker(${p.id})">Save</button>
     <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
     <button class="btn-share" onclick="sharePickToX(${p.id})">Share to X</button>
-    <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>
+    <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>`
+      : `<button class="paywall-cta" onclick="openUpgradePicker()">Unlock Premium Picks</button>`}
   </div>
 </div>`;
     if (!lockedTease) return card;
