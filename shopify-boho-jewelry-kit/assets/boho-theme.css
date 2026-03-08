@@ -1,0 +1,49 @@
+:root {
+  --boho-bg: #f8f2e9;
+  --boho-sand: #f0e5d7;
+  --boho-clay: #9a6a3a;
+  --boho-ink: #2f261f;
+  --boho-muted: #7b6753;
+}
+
+body {
+  background: var(--boho-bg);
+  color: var(--boho-ink);
+}
+
+.boho-card {
+  background: #fffaf4;
+  border: 1px solid #e7dac9;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(47, 38, 31, 0.08);
+}
+
+.boho-btn {
+  background: var(--boho-clay);
+  color: #fff;
+  border-radius: 999px;
+  padding: 12px 22px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.boho-chip {
+  background: var(--boho-sand);
+  color: var(--boho-muted);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.boho-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 980px) {
+  .boho-grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

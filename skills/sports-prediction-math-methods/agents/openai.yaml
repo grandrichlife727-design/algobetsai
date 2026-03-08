@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sports Prediction Math Methods"
+  short_description: "Design and validate sports models with statistical rigor"
+  default_prompt: "Use $sports-prediction-math-methods to build and evaluate a mathematically sound sports prediction model."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO Expert"
+  short_description: "Audit and grow organic search performance"
+  default_prompt: "Use $seo-expert to build and execute an SEO plan for this site."

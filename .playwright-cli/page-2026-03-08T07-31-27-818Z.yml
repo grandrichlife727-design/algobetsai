@@ -1,0 +1,137 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ⚡
+        - generic [ref=e6]: Algobets AI
+      - generic [ref=e7]: Navigation
+      - button "Dashboard" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - text: Dashboard
+      - button "Picks 0" [ref=e12] [cursor=pointer]:
+        - img [ref=e13]
+        - text: Picks
+        - generic [ref=e15]: "0"
+      - button "Tools" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - text: Tools
+      - button "Offers" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - text: Offers
+      - button "History" [ref=e24] [cursor=pointer]:
+        - img [ref=e25]
+        - text: History
+      - button "Settings" [ref=e30] [cursor=pointer]:
+        - img [ref=e31]
+        - text: Settings
+      - generic [ref=e34]:
+        - text: Open an Account
+        - generic [ref=e35]:
+          - text: 🛡️ Gamble responsibly ·
+          - strong [ref=e36]: 1-800-522-4700
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e37] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=draftkings_offer&utm_content=sidebar&alg_uid=usr_uyzzzbo9xy8
+          - generic [ref=e38]: DK
+          - generic [ref=e39]:
+            - generic [ref=e40]: DraftKings
+            - generic [ref=e41]: Bet $5, Get $150
+          - generic [ref=e42]: →
+        - link "FD FanDuel $1,000 No Sweat Bet →" [ref=e43] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=fanduel_offer&utm_content=sidebar&alg_uid=usr_uyzzzbo9xy8
+          - generic [ref=e44]: FD
+          - generic [ref=e45]:
+            - generic [ref=e46]: FanDuel
+            - generic [ref=e47]: $1,000 No Sweat Bet
+          - generic [ref=e48]: →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e49] [cursor=pointer]:
+          - /url: https://sports.betmgm.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=betmgm_offer&utm_content=sidebar&alg_uid=usr_uyzzzbo9xy8
+          - generic [ref=e50]: MGM
+          - generic [ref=e51]:
+            - generic [ref=e52]: BetMGM
+            - generic [ref=e53]: First Bet up to $1,500
+          - generic [ref=e54]: →
+        - link "CZ Caesars Get up to $1,000 back →" [ref=e55] [cursor=pointer]:
+          - /url: https://sportsbook.caesars.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=caesars_offer&utm_content=sidebar&alg_uid=usr_uyzzzbo9xy8
+          - generic [ref=e56]: CZ
+          - generic [ref=e57]:
+            - generic [ref=e58]: Caesars
+            - generic [ref=e59]: Get up to $1,000 back
+          - generic [ref=e60]: →
+    - main [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: ⚡
+          - text: Algobets AI
+        - generic [ref=e65]:
+          - generic [ref=e66]: FREE
+          - generic [ref=e69]: Syncing
+          - generic [ref=e306]: Next scan in 18:40
+          - button "3-Day Trial" [ref=e194] [cursor=pointer]
+          - 'button "Preview: Off" [ref=e70] [cursor=pointer]'
+          - button "Upgrade" [ref=e71] [cursor=pointer]
+          - button "Sign In" [ref=e410] [cursor=pointer]
+          - button "Scan Now" [disabled]:
+            - img
+            - text: Scan Now
+      - generic [ref=e74]:
+        - text: Most Popular
+        - generic [ref=e354]:
+          - generic [ref=e355]:
+            - generic [ref=e356]: Your Profile
+            - generic [ref=e357]: Manage account, billing, and app preferences.
+          - generic [ref=e358]:
+            - generic [ref=e359]:
+              - generic [ref=e360]: Account
+              - generic [ref=e361]: Guest
+            - generic [ref=e362]:
+              - generic [ref=e363]: Method
+              - generic [ref=e364]: Guest
+            - generic [ref=e365]:
+              - generic [ref=e366]: Plan
+              - generic [ref=e367]: FREE
+            - generic [ref=e368]:
+              - generic [ref=e369]: Pick Limit
+              - generic [ref=e370]: "2"
+            - generic [ref=e371]:
+              - generic [ref=e372]: Discord Access
+              - generic [ref=e373]: Locked
+            - generic [ref=e374]:
+              - button "Register / Sign In" [ref=e375] [cursor=pointer]
+              - button "Upgrade" [ref=e376] [cursor=pointer]
+              - button "Manage Billing" [ref=e377] [cursor=pointer]
+              - button "Sign Out" [active] [ref=e378] [cursor=pointer]
+          - generic [ref=e379]:
+            - generic [ref=e380]:
+              - generic [ref=e381]: Personal Settings
+              - generic [ref=e382]: Set bankroll mode and state to personalize stakes and book links.
+              - generic [ref=e383]:
+                - combobox [ref=e384]:
+                  - option "Conservative"
+                  - option "Standard" [selected]
+                  - option "Aggressive"
+                - textbox "auto or NY" [ref=e385]: auto
+              - button "Save Settings" [ref=e387] [cursor=pointer]
+              - generic [ref=e388]: "State: AUTO · Bankroll: standard"
+            - generic [ref=e389]:
+              - generic [ref=e390]: Notifications
+              - generic [ref=e391]: Premium/VIP only.
+              - generic [ref=e392]: Premium feature. Upgrade to enable alert destinations, digest delivery, and alert packs.
+              - button "Upgrade to Premium" [ref=e394] [cursor=pointer]
+            - generic [ref=e395]:
+              - generic [ref=e396]: Theme
+              - generic [ref=e397]: Switch between dark and light interface styles.
+              - button "Toggle Theme" [ref=e399] [cursor=pointer]
+              - generic [ref=e400]: "Current theme: Dark."
+            - generic [ref=e401]:
+              - generic [ref=e402]: Support
+              - generic [ref=e403]: Need help with account, billing, picks, or technical issues?
+              - link "support@algobetsai.com Contact Support Email" [ref=e405] [cursor=pointer]:
+                - /url: mailto:support@algobetsai.com?subject=Algobets%20Support%20Request
+                - generic [ref=e406]:
+                  - generic [ref=e407]: support@algobetsai.com
+                  - generic [ref=e408]: Contact Support
+                - generic [ref=e409]: Email
+  - generic:
+    - generic:
+      - button "Close"
+  - status: Signed out

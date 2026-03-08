@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05070f"/>
+      <stop offset="100%" stop-color="#0d1230"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <circle cx="920" cy="120" r="260" fill="#22d3ee" opacity="0.12"/>
+  <circle cx="160" cy="930" r="300" fill="#7c3aed" opacity="0.12"/>
+
+  <text x="80" y="120" fill="#dbe9ff" font-size="42" font-family="Helvetica, Arial, sans-serif" font-weight="700">AlgoBets Ai</text>
+  <text x="80" y="190" fill="#22d3ee" font-size="28" font-family="Helvetica, Arial, sans-serif" font-weight="700">FREE PREVIEW MODE</text>
+
+  <text x="80" y="330" fill="#ffffff" font-size="106" font-family="Helvetica, Arial, sans-serif" font-weight="900">START FREE.</text>
+  <text x="80" y="430" fill="#ffffff" font-size="84" font-family="Helvetica, Arial, sans-serif" font-weight="700">SEE TOP MATCHUPS.</text>
+
+  <rect x="80" y="520" width="920" height="260" rx="24" fill="#0f162c" stroke="#1f2d4d"/>
+  <text x="120" y="585" fill="#9bb0d8" font-size="26" font-family="Helvetica, Arial, sans-serif">What you get free:</text>
+  <text x="120" y="635" fill="#dbe9ff" font-size="36" font-family="Helvetica, Arial, sans-serif" font-weight="700">• 3 daily preview cards</text>
+  <text x="120" y="685" fill="#dbe9ff" font-size="36" font-family="Helvetica, Arial, sans-serif" font-weight="700">• Matchup + confidence context</text>
+  <text x="120" y="735" fill="#dbe9ff" font-size="36" font-family="Helvetica, Arial, sans-serif" font-weight="700">• Upgrade when you're ready</text>
+
+  <rect x="80" y="840" width="560" height="110" rx="18" fill="url(#accent)"/>
+  <text x="120" y="910" fill="#00131b" font-size="44" font-family="Helvetica, Arial, sans-serif" font-weight="900">Claim Free Preview</text>
+
+  <text x="80" y="1010" fill="#7f8fb2" font-size="22" font-family="Helvetica, Arial, sans-serif">21+ only • Bet responsibly</text>
+</svg>

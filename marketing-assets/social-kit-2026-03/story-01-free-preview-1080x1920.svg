@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06070c"/>
+      <stop offset="100%" stop-color="#111832"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <text x="80" y="150" fill="#dbe9ff" font-size="56" font-family="Helvetica, Arial, sans-serif" font-weight="700">AlgoBets Ai</text>
+  <text x="80" y="260" fill="#22d3ee" font-size="40" font-family="Helvetica, Arial, sans-serif" font-weight="700">FREE PREVIEW</text>
+
+  <text x="80" y="430" fill="#ffffff" font-size="120" font-family="Helvetica, Arial, sans-serif" font-weight="900">3 DAILY</text>
+  <text x="80" y="545" fill="#ffffff" font-size="120" font-family="Helvetica, Arial, sans-serif" font-weight="900">MATCHUP</text>
+  <text x="80" y="660" fill="#ffffff" font-size="120" font-family="Helvetica, Arial, sans-serif" font-weight="900">PREVIEWS</text>
+
+  <text x="80" y="790" fill="#a8b8d9" font-size="44" font-family="Helvetica, Arial, sans-serif">See where the model sees value.</text>
+
+  <rect x="80" y="1540" width="920" height="130" rx="22" fill="url(#cta)"/>
+  <text x="140" y="1622" fill="#02131b" font-size="58" font-family="Helvetica, Arial, sans-serif" font-weight="900">Start for Free</text>
+
+  <text x="80" y="1840" fill="#7e8fb5" font-size="26" font-family="Helvetica, Arial, sans-serif">21+ only • Bet responsibly</text>
+</svg>

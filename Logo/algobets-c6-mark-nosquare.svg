@@ -2,10 +2,14 @@
   <defs>
     <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="35%" stop-color="#7C6DF3"/>
+      <stop offset="68%" stop-color="#5FA9F0"/>
       <stop offset="100%" stop-color="#22D3EE"/>
     </linearGradient>
     <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0%" stop-color="#14B8A6"/>
+      <stop offset="0%" stop-color="#15BFA8"/>
+      <stop offset="34%" stop-color="#23CDA3"/>
+      <stop offset="68%" stop-color="#52DEA2"/>
       <stop offset="100%" stop-color="#86EFAC"/>
     </linearGradient>
   </defs>

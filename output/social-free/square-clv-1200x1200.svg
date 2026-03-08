@@ -1,0 +1,18 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'>
+  <defs>
+    <linearGradient id='bgsq' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#030712'/>
+      <stop offset='100%' stop-color='#0b1120'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='1200' fill='url(#bgsq)'/>
+  <circle cx='980' cy='220' r='170' fill='#22d3ee' opacity='0.16'/>
+  <text x='100' y='170' fill='#22d3ee' font-family='Arial, sans-serif' font-size='34' font-weight='700'>ALGOBETS AI</text>
+  <text x='100' y='330' fill='#fff' font-family='Arial, sans-serif' font-size='108' font-weight='900'>CLV</text>
+  <text x='100' y='430' fill='#fff' font-family='Arial, sans-serif' font-size='76' font-weight='800'>IS THE</text>
+  <text x='100' y='520' fill='#fff' font-family='Arial, sans-serif' font-size='76' font-weight='800'>SCOREBOARD</text>
+  <text x='100' y='710' fill='#cbd5e1' font-family='Arial, sans-serif' font-size='44'>Beat the close over time.</text>
+  <text x='100' y='770' fill='#cbd5e1' font-family='Arial, sans-serif' font-size='44'>That is the process.</text>
+  <rect x='100' y='900' width='430' height='92' rx='16' fill='#22d3ee'/>
+  <text x='155' y='960' fill='#0b1120' font-family='Arial, sans-serif' font-size='46' font-weight='900'>OPEN APP</text>
+</svg>

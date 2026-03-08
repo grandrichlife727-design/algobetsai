@@ -1,0 +1,210 @@
+- generic [ref=e1]:
+  - main [ref=e91]:
+    - generic [ref=e92]:
+      - generic [ref=e93]:
+        - generic [ref=e94]: ⚡
+        - text: Algobets Ai
+      - generic [ref=e95]:
+        - generic [ref=e99]: Loading
+        - button "Upgrade" [ref=e100] [cursor=pointer]
+        - button "Sign In" [ref=e101] [cursor=pointer]
+        - button "Scan Now" [ref=e213] [cursor=pointer]:
+          - img [ref=e214]
+          - text: Scan Now
+    - generic [ref=e104]:
+      - generic [ref=e106]: 5-agent AI consensus · Live multi-book odds · Real-time edge detection
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e109]: —
+          - generic [ref=e110]: Avg edge today
+        - generic [ref=e111]:
+          - generic [ref=e112]: "0"
+          - generic [ref=e113]: Live picks
+      - status [ref=e217]: ⚠ Live odds quota is exhausted. Showing demo data until usage resets.
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - button "Simple" [ref=e119] [cursor=pointer]
+          - button "Expert" [ref=e120] [cursor=pointer]
+        - generic [ref=e121]: Plain English
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - strong [ref=e168]: "Step 1:"
+          - text: Create your free account.
+          - strong [ref=e169]: "Step 2:"
+          - text: Start your 3-day Premium trial to unlock +EV and faster refresh.
+        - generic [ref=e170]:
+          - button "Later" [ref=e171] [cursor=pointer]
+          - button "Start Free Trial" [ref=e172] [cursor=pointer]
+      - generic [ref=e122]:
+        - generic [ref=e123]: How Plans Work
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - strong [ref=e126]: 1) Free
+            - text: ": 2 picks/scan"
+          - generic [ref=e127]:
+            - strong [ref=e128]: 2) Premium
+            - text: ": 15 picks + full +EV + props"
+          - generic [ref=e129]:
+            - strong [ref=e130]: 3) VIP
+            - text: ": 50 picks + steam + fastest refresh"
+      - generic [ref=e131]:
+        - button "All Sports" [ref=e132] [cursor=pointer]
+        - button "🏀 NBA" [ref=e133] [cursor=pointer]
+        - button "🎓 NCAAB" [ref=e134] [cursor=pointer]
+        - button "🏒 NHL" [ref=e135] [cursor=pointer]
+        - button "⚾ MLB" [ref=e136] [cursor=pointer]
+        - button "⚽ EPL" [ref=e137] [cursor=pointer]
+        - button "A-Grade Only" [ref=e138] [cursor=pointer]
+      - generic [ref=e139]:
+        - generic [ref=e140]: 3 Edges found
+        - generic [ref=e141]: Updated 28s ago
+      - generic [ref=e142]:
+        - generic [ref=e218]:
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - generic [ref=e221]:
+                - generic [ref=e222]: 🏀 basketball_nba
+                - generic [ref=e223]: B
+                - generic [ref=e224]: Lakers @ Celtics
+                - generic [ref=e225]: 3:56 AM EST
+              - generic [ref=e226]: Lakers ML
+              - generic [ref=e227]:
+                - generic [ref=e228]: "+132"
+                - link "@ FanDuel ↗" [ref=e229] [cursor=pointer]:
+                  - /url: https://sportsbook.fanduel.com
+              - generic [ref=e230]:
+                - text: "Suggested stake:"
+                - strong [ref=e231]: 1.00% bankroll
+                - text: "· Conf:"
+                - strong [ref=e232]: 67%
+                - text: "· CLV Exp:"
+                - strong [ref=e233]: 0.0%
+              - generic [ref=e235]: +EV 6.4%
+            - img [ref=e237]:
+              - generic [ref=e239]: +6.4%
+              - generic [ref=e240]: EV
+          - generic [ref=e241]:
+            - strong [ref=e242]: Lakers ML
+            - text: in
+            - strong [ref=e243]: Lakers @ Celtics
+            - text: ". Best-book gap vs sharp reference remains favorable.. Early market pressure supports Lakers side.. Signals: Best-line EV, de-vig consensus, calibrated confidence"
+          - generic [ref=e244]:
+            - button "👉 How to bet this" [ref=e245] [cursor=pointer]
+            - button "Bet Slip" [ref=e246] [cursor=pointer]
+            - button "+ Parlay" [ref=e247] [cursor=pointer]
+            - button "Share" [ref=e248] [cursor=pointer]
+            - button "Post Win" [ref=e249] [cursor=pointer]
+            - button "▲ Less" [ref=e250] [cursor=pointer]
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - generic [ref=e254]:
+                - generic [ref=e255]: 🏒 icehockey_nhl
+                - generic [ref=e256]: B
+                - generic [ref=e257]: Rangers @ Bruins
+                - generic [ref=e258]: 5:56 AM EST
+              - generic [ref=e259]: Rangers ML
+              - generic [ref=e260]:
+                - generic [ref=e261]: "+121"
+                - link "@ FanDuel ↗" [ref=e262] [cursor=pointer]:
+                  - /url: https://sportsbook.fanduel.com
+              - generic [ref=e263]:
+                - text: "Suggested stake:"
+                - strong [ref=e264]: 1.00% bankroll
+                - text: "· Conf:"
+                - strong [ref=e265]: 64%
+                - text: "· CLV Exp:"
+                - strong [ref=e266]: 0.0%
+              - generic [ref=e268]: +EV 5.8%
+            - img [ref=e270]:
+              - generic [ref=e272]: +5.8%
+              - generic [ref=e273]: EV
+          - generic [ref=e274]:
+            - strong [ref=e275]: Rangers ML
+            - text: in
+            - strong [ref=e276]: Rangers @ Bruins
+            - text: ". Soft-book price still ahead of market median.. Line movement indicates buyback on underdog.. Signals: Consensus edge + line efficiency delta"
+          - generic [ref=e277]:
+            - button "👉 How to bet this" [ref=e278] [cursor=pointer]
+            - button "Bet Slip" [ref=e279] [cursor=pointer]
+            - button "+ Parlay" [ref=e280] [cursor=pointer]
+            - button "Share" [ref=e281] [cursor=pointer]
+            - button "Post Win" [ref=e282] [cursor=pointer]
+            - button "▲ Less" [ref=e283] [cursor=pointer]
+        - generic [ref=e284]:
+          - generic [ref=e285]:
+            - generic [ref=e286]:
+              - generic [ref=e287]:
+                - generic [ref=e288]: 🎓 basketball_ncaab
+                - generic [ref=e289]: C
+                - generic [ref=e290]: Duke @ UNC
+                - generic [ref=e291]: 11:56 PM EST
+              - generic [ref=e292]: Duke ML
+              - generic [ref=e293]:
+                - generic [ref=e294]: "-108"
+                - link "@ Pinnacle ↗" [ref=e295] [cursor=pointer]:
+                  - /url: https://www.pinnacle.com
+              - generic [ref=e296]:
+                - text: "Suggested stake:"
+                - strong [ref=e297]: 1.00% bankroll
+                - text: "· Conf:"
+                - strong [ref=e298]: 62%
+                - text: "· CLV Exp:"
+                - strong [ref=e299]: 0.0%
+              - generic [ref=e301]: +EV 4.9%
+            - img [ref=e303]:
+              - generic [ref=e305]: +4.9%
+              - generic [ref=e306]: EV
+          - generic [ref=e307]:
+            - strong [ref=e308]: Duke ML
+            - text: in
+            - strong [ref=e309]: Duke @ UNC
+            - text: ". Fair-line model shows slight price advantage.. Public split near even; price still playable.. Signals: EV threshold + confidence floor passed"
+          - generic [ref=e310]:
+            - button "👉 How to bet this" [ref=e311] [cursor=pointer]
+            - button "Bet Slip" [ref=e312] [cursor=pointer]
+            - button "+ Parlay" [ref=e313] [cursor=pointer]
+            - button "Share" [ref=e314] [cursor=pointer]
+            - button "Post Win" [ref=e315] [cursor=pointer]
+            - button "▲ Less" [ref=e316] [cursor=pointer]
+  - navigation [ref=e173]:
+    - button "Picks" [ref=e174] [cursor=pointer]:
+      - img [ref=e175]
+      - generic [ref=e177]: Picks
+    - button "Odds" [ref=e178] [cursor=pointer]:
+      - img [ref=e179]
+      - generic [ref=e184]: Odds
+    - button "Live" [ref=e185] [cursor=pointer]:
+      - img [ref=e186]
+      - generic [ref=e189]: Live
+    - button "Props" [ref=e190] [cursor=pointer]:
+      - img [ref=e191]
+      - generic [ref=e193]: Props
+    - button "+EV" [ref=e194] [cursor=pointer]:
+      - img [ref=e195]
+      - generic [ref=e197]: +EV
+    - button "Steam" [ref=e198] [cursor=pointer]:
+      - img [ref=e199]
+      - generic [ref=e201]: Steam
+    - button "Fades" [ref=e202] [cursor=pointer]:
+      - img [ref=e203]
+      - generic [ref=e205]: Fades
+    - button "More" [ref=e207] [cursor=pointer]:
+      - img [ref=e208]
+      - generic [ref=e212]: More
+  - generic:
+    - generic:
+      - button "Close"
+  - generic [ref=e152]:
+    - generic [ref=e153]: Create Your Free Account
+    - generic [ref=e154]: Use Gmail, Email, Phone, or Facebook to save picks and unlock upgrades.
+    - generic [ref=e155]:
+      - button "Gmail" [ref=e156] [cursor=pointer]
+      - button "Email" [ref=e157] [cursor=pointer]
+      - button "Phone" [ref=e158] [cursor=pointer]
+      - button "Facebook" [ref=e159] [cursor=pointer]
+    - generic [ref=e160]:
+      - generic [ref=e161]: Gmail Address
+      - textbox "you@gmail.com" [ref=e162]
+    - button "Continue" [active] [ref=e165] [cursor=pointer]
+  - status: Enter your account details

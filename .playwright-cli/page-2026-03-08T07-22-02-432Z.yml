@@ -1,0 +1,264 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ⚡
+        - generic [ref=e6]: Algobets AI
+      - generic [ref=e7]: Navigation
+      - button "Dashboard" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - text: Dashboard
+      - button "Picks 3" [ref=e194] [cursor=pointer]:
+        - img [ref=e13]
+        - text: Picks
+        - generic [ref=e15]: "3"
+      - button "Tools" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - text: Tools
+      - button "Offers" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - text: Offers
+      - button "History" [ref=e24] [cursor=pointer]:
+        - img [ref=e25]
+        - text: History
+      - button "Settings" [ref=e30] [cursor=pointer]:
+        - img [ref=e31]
+        - text: Settings
+      - generic [ref=e34]:
+        - text: Open an Account
+        - generic [ref=e35]:
+          - text: 🛡️ Gamble responsibly ·
+          - strong [ref=e36]: 1-800-522-4700
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e37] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=draftkings_offer&utm_content=sidebar&alg_uid=usr_ne6ewt439sq
+          - generic [ref=e38]: DK
+          - generic [ref=e39]:
+            - generic [ref=e40]: DraftKings
+            - generic [ref=e41]: Bet $5, Get $150
+          - generic [ref=e42]: →
+        - link "FD FanDuel $1,000 No Sweat Bet →" [ref=e43] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=fanduel_offer&utm_content=sidebar&alg_uid=usr_ne6ewt439sq
+          - generic [ref=e44]: FD
+          - generic [ref=e45]:
+            - generic [ref=e46]: FanDuel
+            - generic [ref=e47]: $1,000 No Sweat Bet
+          - generic [ref=e48]: →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e49] [cursor=pointer]:
+          - /url: https://sports.betmgm.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=betmgm_offer&utm_content=sidebar&alg_uid=usr_ne6ewt439sq
+          - generic [ref=e50]: MGM
+          - generic [ref=e51]:
+            - generic [ref=e52]: BetMGM
+            - generic [ref=e53]: First Bet up to $1,500
+          - generic [ref=e54]: →
+        - link "CZ Caesars Get up to $1,000 back →" [ref=e55] [cursor=pointer]:
+          - /url: https://sportsbook.caesars.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=caesars_offer&utm_content=sidebar&alg_uid=usr_ne6ewt439sq
+          - generic [ref=e56]: CZ
+          - generic [ref=e57]:
+            - generic [ref=e58]: Caesars
+            - generic [ref=e59]: Get up to $1,000 back
+          - generic [ref=e60]: →
+    - main [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: ⚡
+          - text: Algobets AI
+        - generic [ref=e65]:
+          - generic [ref=e66]: FREE
+          - generic [ref=e69]: Live
+          - button "3-Day Trial" [ref=e195] [cursor=pointer]
+          - 'button "Preview: Off" [ref=e70] [cursor=pointer]'
+          - button "Upgrade" [active] [ref=e71] [cursor=pointer]
+          - button "Sign In" [ref=e72] [cursor=pointer]
+          - button "Scan Now" [ref=e196] [cursor=pointer]:
+            - img [ref=e197]
+            - text: Scan Now
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]: +6.5%
+              - generic [ref=e79]: Avg edge today
+            - generic [ref=e80]:
+              - generic [ref=e81]: "3"
+              - generic [ref=e82]: Live picks
+            - generic [ref=e83]:
+              - generic [ref=e84]: FREE
+              - generic [ref=e85]: Current plan
+          - generic [ref=e86]:
+            - generic [ref=e87]:
+              - generic [ref=e88]:
+                - generic [ref=e89]: "Plan Levels: Free, Premium, VIP"
+                - generic [ref=e90]: "Free: Test the edges · Premium: Daily volume · VIP: Real-time speed"
+              - generic [ref=e91]: Choose your plan
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: FREE
+                - generic [ref=e95]: $0
+                - generic [ref=e96]:
+                  - generic [ref=e97]: 3 picks per scan
+                  - generic [ref=e98]: 20-minute release delay
+                  - generic [ref=e99]: NBA + NHL only
+                  - generic [ref=e100]: 20-minute refresh
+                - button "Get Started" [ref=e102] [cursor=pointer]
+              - generic [ref=e103]:
+                - generic [ref=e104]: PREMIUM
+                - generic [ref=e105]: Most Popular
+                - generic [ref=e106]: $19.99/mo
+                - generic [ref=e107]:
+                  - generic [ref=e108]: High-volume board
+                  - generic [ref=e109]: All sports + props + steam + fades
+                  - generic [ref=e110]: Full 5-agent breakdown
+                  - generic [ref=e111]: 5-minute refresh
+                  - generic [ref=e112]: Parlay builder
+                - button "Start 3-Day Trial" [ref=e114] [cursor=pointer]
+              - generic [ref=e115]:
+                - generic [ref=e116]: VIP
+                - generic [ref=e117]: $39.99/mo
+                - generic [ref=e118]:
+                  - generic [ref=e119]: VIP Discord access
+                  - generic [ref=e120]: Priority pick release
+                  - generic [ref=e121]: 1-minute refresh
+                  - generic [ref=e122]: Line rush alerts
+                - generic [ref=e123]:
+                  - button "Upgrade to VIP" [ref=e124] [cursor=pointer]
+                  - generic [ref=e125]: VIP Discord
+          - group [ref=e126]:
+            - generic "How the 5-Agent Edge Engine works View" [ref=e127] [cursor=pointer]:
+              - generic [ref=e128]: How the 5-Agent Edge Engine works
+              - generic [ref=e129]: View
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]: Today's Top Edges
+              - generic [ref=e133]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: "#1 Magic +4.5 @ Celtics"
+                      - generic: +8.4%
+                    - generic: "Why this pick: Best-Line EV + De-vig Consensus"
+                  - generic:
+                    - generic:
+                      - generic: "#2 Nuggets -3.5 vs Lakers"
+                      - generic: +6.2%
+                    - generic: "Why this pick: Best-Line EV + Steam Moves"
+                  - generic:
+                    - generic:
+                      - generic: "#3 Under 5.5 · Rangers @ Bruins"
+                      - generic: +4.9%
+                    - generic: "Why this pick: De-vig Consensus + Public Fades"
+                - generic [ref=e200]: Teaser preview only on Free. Upgrade to unlock full live picks.
+              - button "View All Picks" [ref=e136] [cursor=pointer]
+            - generic [ref=e137]:
+              - generic [ref=e138]: VIP Pick of the Day
+              - generic [ref=e201]:
+                - generic:
+                  - generic: Magic +4.5 @ Celtics -110 · +8.4% edge
+                - generic [ref=e203]:
+                  - generic [ref=e204]: VIP PICK LOCKED
+                  - generic [ref=e205]: Unlock the VIP Pick of the Day and Discord access
+                  - button "Unlock VIP" [ref=e206] [cursor=pointer]
+              - generic [ref=e146]:
+                - button "Unlock VIP" [ref=e147] [cursor=pointer]
+                - generic [ref=e148]: VIP Discord
+            - generic [ref=e149]:
+              - generic [ref=e150]: Market Status
+              - generic [ref=e151]:
+                - generic [ref=e207]: 3 games
+                - generic [ref=e208]: 2 books
+                - generic [ref=e209]: 3 edges
+              - button "Run Scan" [ref=e156] [cursor=pointer]
+              - generic [ref=e157]: "Last scan: 3:21 AM"
+          - generic [ref=e158]:
+            - generic [ref=e159]: More
+            - generic [ref=e160]:
+              - generic [ref=e161]:
+                - generic [ref=e162]: Market Impact News
+                - generic [ref=e163]:
+                  - generic [ref=e210]:
+                    - generic [ref=e211]:
+                      - generic [ref=e212]:
+                        - generic [ref=e213]: NBA
+                        - generic [ref=e214]: High
+                      - generic [ref=e215]: 42m ago
+                    - link "Porzingis, back from illness, says he 'will be healthy now'" [ref=e217] [cursor=pointer]:
+                      - /url: https://www.espn.com/nba/story/_/id/48140018/porzingis-back-illness-says-healthy-now
+                    - generic [ref=e218]: Kristaps Porzingis, playing in just his second game for the Warriors after recovering from another bout of illness, says he feels healthy and ready to play consistently again.
+                  - generic [ref=e219]:
+                    - generic [ref=e220]:
+                      - generic [ref=e221]:
+                        - generic [ref=e222]: NBA
+                        - generic [ref=e223]: Low
+                      - generic [ref=e224]: 17m ago
+                    - link "Memphis takes on Brooklyn on 3-game slide" [ref=e226] [cursor=pointer]:
+                      - /url: http://www.espn.com/nba/preview?gameId=401810787
+                    - generic [ref=e227]: Memphis Grizzlies (23-39, 11th in the Western Conference) vs. Brooklyn Nets (16-47, 14th in the Eastern Conference)
+                  - generic [ref=e228]:
+                    - generic [ref=e229]:
+                      - generic [ref=e230]:
+                        - generic [ref=e231]: NBA
+                        - generic [ref=e232]: Low
+                      - generic [ref=e233]: 17m ago
+                    - link "Detroit faces Miami on 3-game skid" [ref=e235] [cursor=pointer]:
+                      - /url: http://www.espn.com/nba/preview?gameId=401810778
+                    - generic [ref=e236]: Detroit Pistons (45-17, first in the Eastern Conference) vs. Miami Heat (35-29, seventh in the Eastern Conference)
+                  - generic [ref=e237]:
+                    - generic [ref=e238]:
+                      - generic [ref=e239]:
+                        - generic [ref=e240]: NBA
+                        - generic [ref=e241]: Low
+                      - generic [ref=e242]: 17m ago
+                    - link "Magic play the Bucks, seek 4th straight win" [ref=e244] [cursor=pointer]:
+                      - /url: http://www.espn.com/nba/preview?gameId=401810781
+                    - generic [ref=e245]: Orlando Magic (34-28, sixth in the Eastern Conference) vs. Milwaukee Bucks (27-35, 11th in the Eastern Conference)
+              - generic [ref=e167]:
+                - generic [ref=e168]: Best Offers
+                - generic [ref=e169]: "Disclosure: We may earn commissions from partner links."
+                - link "DK DraftKings Bet $5, Get $150 in bonus bets Claim" [ref=e170] [cursor=pointer]:
+                  - /url: https://sportsbook.draftkings.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=draftkings_offer&utm_content=home&alg_uid=usr_ne6ewt439sq
+                  - generic [ref=e171]: DK
+                  - generic [ref=e172]:
+                    - generic [ref=e173]: DraftKings
+                    - generic [ref=e174]: Bet $5, Get $150 in bonus bets
+                  - generic [ref=e175]: Claim
+                - link "FD FanDuel $1,000 no sweat first bet Claim" [ref=e176] [cursor=pointer]:
+                  - /url: https://sportsbook.fanduel.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=fanduel_offer&utm_content=home&alg_uid=usr_ne6ewt439sq
+                  - generic [ref=e177]: FD
+                  - generic [ref=e178]:
+                    - generic [ref=e179]: FanDuel
+                    - generic [ref=e180]: $1,000 no sweat first bet
+                  - generic [ref=e181]: Claim
+                - link "MGM BetMGM First bet offer up to $1,500 Claim" [ref=e182] [cursor=pointer]:
+                  - /url: https://sports.betmgm.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=betmgm_offer&utm_content=home&alg_uid=usr_ne6ewt439sq
+                  - generic [ref=e183]: MGM
+                  - generic [ref=e184]:
+                    - generic [ref=e185]: BetMGM
+                    - generic [ref=e186]: First bet offer up to $1,500
+                  - generic [ref=e187]: Claim
+                - link "CZ Caesars Up to $1,000 back on first bet loss Claim" [ref=e188] [cursor=pointer]:
+                  - /url: https://sportsbook.caesars.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=caesars_offer&utm_content=home&alg_uid=usr_ne6ewt439sq
+                  - generic [ref=e189]: CZ
+                  - generic [ref=e190]:
+                    - generic [ref=e191]: Caesars
+                    - generic [ref=e192]: Up to $1,000 back on first bet loss
+                  - generic [ref=e193]: Claim
+        - text: Most Popular
+  - generic:
+    - generic:
+      - button "Close"
+  - generic [ref=e247]:
+    - generic [ref=e248]: Unlock the 5-Agent Edge Engine
+    - generic [ref=e249]: Choose Premium or VIP to unlock the full 5-agent board.
+    - generic [ref=e250]: Free Preview -> Premium -> VIP
+    - generic [ref=e251]:
+      - button "Monthly" [ref=e252] [cursor=pointer]
+      - button "Annual" [ref=e253] [cursor=pointer]
+    - generic [ref=e254]: Monthly selected. Switch to annual to save.
+    - generic [ref=e255]:
+      - button "Premium Monthly $19.99/mo · Annual $179.99/yr · Save $59.89/yr (25%)Full 5-agent board + props + steam/fades + 5-minute refresh · Monthly billing at checkout" [ref=e256] [cursor=pointer]:
+        - generic [ref=e257]: Premium
+        - text: Monthly $19.99/mo · Annual $179.99/yr · Save $59.89/yr (25%)Full 5-agent board + props + steam/fades + 5-minute refresh · Monthly billing at checkout
+      - button "VIP Monthly $39.99/mo · Annual $399.99/yr · Save $79.89/yr (17%)Premium + VIP Discord + line-rush alerts + bet timing + CLV tools · Monthly billing at checkout" [ref=e258] [cursor=pointer]:
+        - generic [ref=e259]: VIP
+        - text: Monthly $39.99/mo · Annual $399.99/yr · Save $79.89/yr (17%)Premium + VIP Discord + line-rush alerts + bet timing + CLV tools · Monthly billing at checkout
+    - button "Cancel" [ref=e261] [cursor=pointer]
+  - status

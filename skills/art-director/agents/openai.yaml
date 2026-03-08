@@ -1,0 +1,4 @@
+interface:
+  display_name: "Art Director"
+  short_description: "Direct visual concepts and coordinate production-ready graphics"
+  default_prompt: "Use $art-director to define and guide the visual direction, then produce or request all required graphics for this task."

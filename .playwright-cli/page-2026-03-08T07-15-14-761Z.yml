@@ -1,0 +1,979 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ⚡
+        - generic [ref=e6]: Algobets AI
+      - text: Navigation
+      - button "Dashboard" [ref=e7]:
+        - img [ref=e8]
+        - text: Dashboard
+      - button "Picks 0" [ref=e11]:
+        - img [ref=e12]
+        - text: Picks 0
+      - button "Tools" [ref=e14]:
+        - img [ref=e15]
+        - text: Tools
+      - button "Offers" [ref=e18]:
+        - img [ref=e19]
+        - text: Offers
+      - button "History" [ref=e22]:
+        - img [ref=e23]
+        - text: History
+      - button "Settings" [ref=e28]:
+        - img [ref=e29]
+        - text: Settings
+      - generic [ref=e32]:
+        - text: Open an Account
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e33] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com
+          - generic [ref=e34]: DK
+          - generic [ref=e35]:
+            - generic [ref=e36]: DraftKings
+            - generic [ref=e37]: Bet $5, Get $150
+          - text: →
+        - link "FD FanDuel $1,000 No Sweat Bet →" [ref=e38] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com
+          - generic [ref=e39]: FD
+          - generic [ref=e40]:
+            - generic [ref=e41]: FanDuel
+            - generic [ref=e42]: $1,000 No Sweat Bet
+          - text: →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e43] [cursor=pointer]:
+          - /url: https://sports.betmgm.com
+          - generic [ref=e44]: MGM
+          - generic [ref=e45]:
+            - generic [ref=e46]: BetMGM
+            - generic [ref=e47]: First Bet up to $1,500
+          - text: →
+        - link "CZ Caesars Get up to $1,000 back →" [ref=e48] [cursor=pointer]:
+          - /url: https://sportsbook.caesars.com
+          - generic [ref=e49]: CZ
+          - generic [ref=e50]:
+            - generic [ref=e51]: Caesars
+            - generic [ref=e52]: Get up to $1,000 back
+          - text: →
+        - generic [ref=e53]:
+          - text: 🛡️ Gamble responsibly ·
+          - strong [ref=e54]: 1-800-522-4700
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]: ⚡ Algobets AI
+        - generic [ref=e58]:
+          - generic [ref=e59]: FREE
+          - generic [ref=e60]: Connecting
+          - generic [ref=e61]: Next scan in 00:00
+          - button "Manage" [ref=e62]
+          - button "3-Day Trial" [ref=e63]
+          - button "Add to Home Screen" [ref=e64]
+          - 'button "Preview: On" [ref=e65]'
+          - button "Upgrade" [ref=e66]
+          - button "Sign In" [ref=e67]
+          - button "Scan Now" [ref=e68]:
+            - img [ref=e69]
+            - text: Scan Now
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]: —
+              - generic [ref=e77]: Avg edge today
+            - generic [ref=e78]:
+              - generic [ref=e79]: —
+              - generic [ref=e80]: Live picks
+            - generic [ref=e81]:
+              - generic [ref=e82]: FREE
+              - generic [ref=e83]: Current plan
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - generic [ref=e87]: "Plan Levels: Free, Premium, VIP"
+                - generic [ref=e88]: "Free: Test the edges · Premium: Daily volume · VIP: Real-time speed"
+              - generic [ref=e89]: Choose your plan
+            - generic [ref=e90]:
+              - generic [ref=e91]:
+                - generic [ref=e92]: FREE
+                - generic [ref=e93]: $0
+                - generic [ref=e94]:
+                  - generic [ref=e95]: 3 picks per scan
+                  - generic [ref=e96]: 20-minute release delay
+                  - generic [ref=e97]: NBA + NHL only
+                  - generic [ref=e98]: 20-minute refresh
+                - button "Get Started" [ref=e100]
+              - generic [ref=e101]:
+                - generic [ref=e102]: PREMIUM
+                - generic [ref=e103]: Most Popular
+                - generic [ref=e104]: $19.99/mo
+                - generic [ref=e105]:
+                  - generic [ref=e106]: High-volume board
+                  - generic [ref=e107]: All sports + props + steam + fades
+                  - generic [ref=e108]: Full 5-agent breakdown
+                  - generic [ref=e109]: 5-minute refresh
+                  - generic [ref=e110]: Parlay builder
+                - button "Start 3-Day Trial" [active] [ref=e112]
+              - generic [ref=e113]:
+                - generic [ref=e114]: VIP
+                - generic [ref=e115]: $39.99/mo
+                - generic [ref=e116]:
+                  - generic [ref=e117]: VIP Discord access
+                  - generic [ref=e118]: Priority pick release
+                  - generic [ref=e119]: 1-minute refresh
+                  - generic [ref=e120]: Line rush alerts
+                - generic [ref=e121]:
+                  - button "Upgrade to VIP" [ref=e122]
+                  - text: VIP Discord
+          - group [ref=e123]:
+            - generic "How the 5-Agent Edge Engine worksView" [ref=e124]
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - generic [ref=e127]: Today's Top Edges
+              - generic [ref=e128]: Scanning all 5 agents...
+              - button "View All Picks" [ref=e130]
+            - generic [ref=e131]:
+              - generic [ref=e132]: VIP Pick of the Day
+              - generic [ref=e133]: Loading VIP pick preview...
+              - generic [ref=e134]:
+                - button "Open VIP" [ref=e135]
+                - text: VIP Discord
+            - generic [ref=e136]:
+              - generic [ref=e137]: Market Status
+              - generic [ref=e138]: 3 games 2 books 3 edges
+              - button "Run Scan" [ref=e140]
+              - generic [ref=e141]: "Last scan: never"
+          - generic [ref=e142]:
+            - generic [ref=e143]: More
+            - generic [ref=e144]:
+              - generic [ref=e146]: Market Impact News
+              - generic [ref=e147]:
+                - generic [ref=e148]: Best Offers
+                - link "DK DraftKings Bet $5, Get $150 in bonus bets Claim" [ref=e149] [cursor=pointer]:
+                  - /url: https://sportsbook.draftkings.com
+                  - generic [ref=e150]: DK
+                  - generic [ref=e151]:
+                    - generic [ref=e152]: DraftKings
+                    - generic [ref=e153]: Bet $5, Get $150 in bonus bets
+                  - text: Claim
+                - link "FD FanDuel $1,000 no sweat first bet Claim" [ref=e154] [cursor=pointer]:
+                  - /url: https://sportsbook.fanduel.com
+                  - generic [ref=e155]: FD
+                  - generic [ref=e156]:
+                    - generic [ref=e157]: FanDuel
+                    - generic [ref=e158]: $1,000 no sweat first bet
+                  - text: Claim
+                - link "MGM BetMGM First bet offer up to $1,500 Claim" [ref=e159] [cursor=pointer]:
+                  - /url: https://sports.betmgm.com
+                  - generic [ref=e160]: MGM
+                  - generic [ref=e161]:
+                    - generic [ref=e162]: BetMGM
+                    - generic [ref=e163]: First bet offer up to $1,500
+                  - text: Claim
+                - link "CZ Caesars Up to $1,000 back on first bet loss Claim" [ref=e164] [cursor=pointer]:
+                  - /url: https://sportsbook.caesars.com
+                  - generic [ref=e165]: CZ
+                  - generic [ref=e166]:
+                    - generic [ref=e167]: Caesars
+                    - generic [ref=e168]: Up to $1,000 back on first bet loss
+                  - text: Claim
+                - generic [ref=e169]: "Disclosure: We may earn commissions from partner links."
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - generic [ref=e172]: Today's Edges
+            - generic [ref=e173]: Full list of current picks.
+          - generic [ref=e174]:
+            - generic [ref=e175]:
+              - generic [ref=e176]: —
+              - generic [ref=e177]: Avg edge today
+            - generic [ref=e178]:
+              - generic [ref=e179]: —
+              - generic [ref=e180]: Live picks
+          - status
+          - generic [ref=e181]:
+            - generic [ref=e182]:
+              - strong [ref=e183]: "Step 1:"
+              - text: Create your free account.
+              - strong [ref=e184]: "Step 2:"
+              - text: Start your 3-day Premium trial.
+            - generic [ref=e185]:
+              - button "Later" [ref=e186]
+              - button "Start Free Trial" [ref=e187]
+          - button "Upgrade" [ref=e189]
+          - generic [ref=e190]:
+            - generic [ref=e191]: You're on Free. More picks are waiting in Premium.
+            - button "Upgrade" [ref=e192]
+          - generic [ref=e193]:
+            - generic [ref=e194]: How Plans Work
+            - generic [ref=e195]:
+              - generic [ref=e196]:
+                - strong [ref=e197]: Free
+                - text: ": 3 delayed picks with 20-minute refresh."
+              - generic [ref=e198]:
+                - strong [ref=e199]: Premium
+                - text: ": High-volume board, all sports/props, 5-minute refresh."
+              - generic [ref=e200]:
+                - strong [ref=e201]: VIP
+                - text: ": Priority release, execution tools, 1-minute refresh + Discord."
+          - generic [ref=e202]:
+            - button "All Sports" [ref=e203]
+            - button "🏀 NBA" [ref=e204]
+            - button "🎓 NCAAB" [ref=e205]
+            - button "🏒 NHL" [ref=e206]
+            - button "⚾ MLB" [ref=e207]
+            - button "⚽ EPL" [ref=e208]
+            - button "A-Grade Only" [ref=e209]
+          - generic [ref=e210]:
+            - combobox [ref=e211]:
+              - option "All markets" [selected]
+              - option "Spread"
+              - option "Moneyline"
+              - option "Total"
+              - option "Props"
+            - combobox [ref=e212]:
+              - 'option "Edge %: Any" [selected]'
+              - 'option "Edge %: 2%+"'
+              - 'option "Edge %: 5%+"'
+              - 'option "Edge %: 8%+"'
+            - combobox [ref=e213]:
+              - 'option "Confidence: Any" [selected]'
+              - 'option "Confidence: 65%+"'
+              - 'option "Confidence: 75%+"'
+              - 'option "Confidence: 85%+"'
+            - combobox [ref=e214]:
+              - 'option "Sort: Edge high-low" [selected]'
+              - 'option "Sort: Edge low-high"'
+              - 'option "Sort: Confidence"'
+              - 'option "Sort: Soonest start"'
+          - generic [ref=e215]: Today's Edges
+        - generic [ref=e216]:
+          - generic [ref=e217]:
+            - generic [ref=e218]: Live Odds
+            - generic [ref=e219]: Book-by-book moneylines from latest scan
+          - generic [ref=e220]:
+            - button "Today" [ref=e221]
+            - button "Tomorrow" [ref=e222]
+            - button "This Week" [ref=e223]
+        - generic [ref=e224]:
+          - generic [ref=e225]:
+            - generic [ref=e226]: Sportsbook Offers
+            - generic [ref=e227]: Bonus offers and affiliate links by sportsbook.
+          - generic [ref=e228]:
+            - generic [ref=e229]:
+              - link "DK DraftKings Bet $5, Get $150 in bonus bets Claim" [ref=e230] [cursor=pointer]:
+                - /url: https://sportsbook.draftkings.com
+                - generic [ref=e231]: DK
+                - generic [ref=e232]:
+                  - generic [ref=e233]: DraftKings
+                  - generic [ref=e234]: Bet $5, Get $150 in bonus bets
+                - text: Claim
+              - link "FD FanDuel $1,000 no sweat first bet Claim" [ref=e235] [cursor=pointer]:
+                - /url: https://sportsbook.fanduel.com
+                - generic [ref=e236]: FD
+                - generic [ref=e237]:
+                  - generic [ref=e238]: FanDuel
+                  - generic [ref=e239]: $1,000 no sweat first bet
+                - text: Claim
+              - link "MGM BetMGM First bet offer up to $1,500 Claim" [ref=e240] [cursor=pointer]:
+                - /url: https://sports.betmgm.com
+                - generic [ref=e241]: MGM
+                - generic [ref=e242]:
+                  - generic [ref=e243]: BetMGM
+                  - generic [ref=e244]: First bet offer up to $1,500
+                - text: Claim
+              - link "CZ Caesars Get up to $1,000 back if your first bet loses Claim" [ref=e245] [cursor=pointer]:
+                - /url: https://sportsbook.caesars.com
+                - generic [ref=e246]: CZ
+                - generic [ref=e247]:
+                  - generic [ref=e248]: Caesars
+                  - generic [ref=e249]: Get up to $1,000 back if your first bet loses
+                - text: Claim
+              - link "BR BetRivers Second chance bonus bet promo Claim" [ref=e250] [cursor=pointer]:
+                - /url: https://sportsbook.betrivers.com
+                - generic [ref=e251]: BR
+                - generic [ref=e252]:
+                  - generic [ref=e253]: BetRivers
+                  - generic [ref=e254]: Second chance bonus bet promo
+                - text: Claim
+              - link "FT Fanatics Sportsbook Sign-up bonus + FanCash rewards offers Claim" [ref=e255] [cursor=pointer]:
+                - /url: https://sportsbook.fanatics.com
+                - generic [ref=e256]: FT
+                - generic [ref=e257]:
+                  - generic [ref=e258]: Fanatics Sportsbook
+                  - generic [ref=e259]: Sign-up bonus + FanCash rewards offers
+                - text: Claim
+              - link "ES ESPN BET New user bonus bet package Claim" [ref=e260] [cursor=pointer]:
+                - /url: https://espnbet.com
+                - generic [ref=e261]: ES
+                - generic [ref=e262]:
+                  - generic [ref=e263]: ESPN BET
+                  - generic [ref=e264]: New user bonus bet package
+                - text: Claim
+              - link "HR Hard Rock Bet First bet and odds boost promos Claim" [ref=e265] [cursor=pointer]:
+                - /url: https://hardrocksportsbook.com
+                - generic [ref=e266]: HR
+                - generic [ref=e267]:
+                  - generic [ref=e268]: Hard Rock Bet
+                  - generic [ref=e269]: First bet and odds boost promos
+                - text: Claim
+            - generic [ref=e270]:
+              - generic [ref=e271]: Affiliate Dashboard
+              - generic [ref=e272]: Paste your affiliate URLs and track clicks by sportsbook.
+              - textbox "DraftKings affiliate URL" [ref=e274]
+              - textbox "FanDuel affiliate URL" [ref=e276]
+              - textbox "BetMGM affiliate URL" [ref=e278]
+              - textbox "Caesars affiliate URL" [ref=e280]
+              - button "Save Affiliate Links" [ref=e282]
+              - generic [ref=e283]: Loading affiliate data...
+              - generic [ref=e284]: No click data yet.
+              - generic [ref=e285]: Loading affiliate performance...
+              - generic [ref=e286]: No click data yet.
+              - generic [ref=e287]: "Disclosure: We may earn commissions from partner links."
+              - generic [ref=e288]: 21+ only. Gamble responsibly · 1-800-522-4700
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - generic [ref=e291]: Premium Features
+            - generic [ref=e292]: Props, +EV, steam, fades, and parlay tools in one workspace.
+          - generic [ref=e293]:
+            - generic [ref=e294]:
+              - generic [ref=e295]: Premium Signals
+              - generic [ref=e296]: Loading best bets...
+            - generic [ref=e297]:
+              - generic [ref=e298]: Premium Tools
+              - generic [ref=e299]:
+                - button "Props Edge" [ref=e300]
+                - button "+EV" [ref=e301]
+              - generic [ref=e302]:
+                - button "Steam" [ref=e303]
+                - button "Fades" [ref=e304]
+              - button "Parlay" [ref=e306]
+            - generic [ref=e307]:
+              - generic [ref=e308]: Prop Model Packs
+              - generic [ref=e309]: Loading model packs...
+              - button "Open Props Edge" [ref=e311]
+            - generic [ref=e312]:
+              - generic [ref=e313]: Parlay Optimizer Lite
+              - generic [ref=e314]: Add picks to parlay builder to get correlation warnings.
+              - generic [ref=e315]:
+                - button "Run Optimizer" [ref=e316]
+                - button "Open Parlay" [ref=e317]
+            - generic [ref=e318]:
+              - generic [ref=e319]: Line-Shop Assistant
+              - generic [ref=e320]: Loading line-shop opportunities...
+              - button "Open Odds" [ref=e322]
+            - generic [ref=e323]:
+              - generic [ref=e324]: Injury / Lineup Flags
+              - generic [ref=e325]: Loading latest sports headlines...
+            - generic [ref=e326]:
+              - generic [ref=e327]: Daily Recap
+              - generic [ref=e328]:
+                - combobox [ref=e329]:
+                  - option "Email" [selected]
+                  - option "SMS"
+                - textbox "you@example.com or +15551234567" [ref=e330]
+              - button "Save Recap" [ref=e332]
+              - generic [ref=e333]: Not configured.
+            - generic [ref=e334]:
+              - generic [ref=e335]: Plan Access
+              - generic [ref=e336]: Premium unlocks these four sections plus more picks volume.
+              - generic [ref=e337]: VIP adds earlier alerts, deeper markets, and execution tools.
+            - generic [ref=e338]:
+              - generic [ref=e339]: What VIP Adds
+              - generic [ref=e340]:
+                - strong [ref=e341]: "Core Edge:"
+                - text: earlier releases + high-conviction edge plays.
+              - generic [ref=e342]:
+                - strong [ref=e343]: "Execution:"
+                - text: CLV dashboard, timing engine, and market depth.
+              - generic [ref=e344]:
+                - strong [ref=e345]: "Automation:"
+                - text: webhook alerts, watchlists, and weekly reports.
+              - generic [ref=e346]:
+                - strong [ref=e347]: "Community:"
+                - text: private VIP Discord with live drops and discussion.
+              - generic [ref=e348]:
+                - button "Upgrade to VIP" [ref=e349]
+                - text: VIP Discord
+                - button "Open VIP Tools" [ref=e350]
+            - generic [ref=e351]:
+              - generic [ref=e352]: Feature Matrix
+              - generic [ref=e353]: "Free: 3 picks preview."
+              - generic [ref=e354]: "Premium: Props, +EV, Steam, Fades, and higher pick volume."
+              - generic [ref=e355]: "VIP: Premium + execution tools + line-rush alerts + VIP Discord."
+        - generic [ref=e356]:
+          - generic [ref=e357]:
+            - generic [ref=e358]: VIP Overview
+            - generic [ref=e359]: VIP focuses on faster refresh, execution quality, and private Discord access.
+          - generic [ref=e360]:
+            - generic [ref=e361]:
+              - generic [ref=e362]: 🏁VIP Quick Start
+              - generic [ref=e363]:
+                - strong [ref=e364]: "What VIP is for:"
+                - text: fewer, stronger cards with better timing and deeper execution context.
+              - generic [ref=e365]:
+                - strong [ref=e366]: "How to use it:"
+                - text: Core Edge → Execution → Portfolio → Alerts → VIP Discord.
+              - generic [ref=e367]:
+                - strong [ref=e368]: "Main gains:"
+                - text: earlier access, better entry timing, and tighter bankroll control.
+            - generic [ref=e369]:
+              - generic [ref=e370]: 💬VIP Discord Access
+              - generic [ref=e371]: Private channel with live drops, short voice notes, and member Q&A.
+              - button "Unlock with VIP" [ref=e373]
+            - generic [ref=e374]:
+              - generic [ref=e375]: Open VIP Sections
+              - button "Core Edge" [ref=e377]
+              - button "Execution" [ref=e379]
+              - generic [ref=e380]:
+                - button "Portfolio" [ref=e381]
+                - button "Alerts" [ref=e382]
+              - generic [ref=e383]:
+                - button "VIP Discord" [ref=e384]
+                - button "Reports" [ref=e385]
+        - generic [ref=e386]:
+          - generic [ref=e387]:
+            - generic [ref=e388]: VIP Core Edge
+            - generic [ref=e389]: Early-release cards and high-conviction VIP edge plays.
+          - generic [ref=e390]:
+            - generic [ref=e391]:
+              - generic [ref=e392]: 🔥Core Edge
+              - generic [ref=e393]: Loading release timing...
+              - generic [ref=e394]: "Next VIP drop window: calculating..."
+              - generic [ref=e395]: Loading Core Edge plays...
+              - generic [ref=e396]: Fewer, higher-conviction cards released before standard windows.
+            - generic [ref=e397]:
+              - generic [ref=e398]: 🎯VIP Pick of the Day
+              - generic [ref=e399]: Loading VIP pick...
+              - generic [ref=e400]: Exclusive daily pick for VIP members with execution timing guidance.
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - generic [ref=e403]: VIP Execution
+            - generic [ref=e404]: CLV tracking, timing engine, and market-depth context.
+          - generic [ref=e405]:
+            - generic [ref=e406]:
+              - generic [ref=e407]: ⚡Execution Intelligence
+              - generic [ref=e408]: Loading CLV metrics...
+              - generic [ref=e409]: CLV = Closing Line Value. It measures whether your price was better than the market close.
+              - generic [ref=e410]: Loading CLV scorecard...
+              - generic [ref=e411]: Loading timing guidance...
+              - generic [ref=e412]: Loading CLV by book...
+              - generic [ref=e413]: Loading market-depth opportunities...
+              - generic [ref=e414]: Use this block to decide bet now, wait, or pass.
+            - generic [ref=e415]:
+              - generic [ref=e416]: 📡VIP Live Plays
+              - generic [ref=e417]: Loading live algorithm...
+              - button "Refresh Live Plays" [ref=e419]
+              - generic [ref=e420]: "Budget guard: capped games + throttled refresh + cache fallback."
+        - generic [ref=e421]:
+          - generic [ref=e422]:
+            - generic [ref=e423]: VIP Portfolio
+            - generic [ref=e424]: Bankroll sizing and watchlist management.
+          - generic [ref=e426]:
+            - generic [ref=e427]: 📊Portfolio + Watchlist
+            - generic [ref=e428]:
+              - spinbutton [ref=e429]
+              - combobox [ref=e430]:
+                - option "Conservative"
+                - option "Standard" [selected]
+                - option "Aggressive"
+            - button "Build Portfolio" [ref=e432]
+            - generic [ref=e433]: No portfolio generated yet.
+            - textbox "Lakers, Chiefs, Tatum" [ref=e435]
+            - button "Save Watchlist" [ref=e437]
+            - generic [ref=e438]: No watchlist configured.
+        - generic [ref=e439]:
+          - generic [ref=e440]:
+            - generic [ref=e441]: VIP Alerts
+            - generic [ref=e442]: Webhook automation and trigger controls.
+          - generic [ref=e444]:
+            - generic [ref=e445]: 🔔Alerts + Automation
+            - textbox "Webhook URL (Discord/Slack)" [ref=e447]
+            - generic [ref=e448]:
+              - generic [ref=e449]:
+                - checkbox "Steam jumps" [ref=e450]
+                - text: Steam jumps
+              - generic [ref=e451]:
+                - checkbox "CLV shifts" [ref=e452]
+                - text: CLV shifts
+            - generic [ref=e453]:
+              - button "Save Alerts" [ref=e454]
+              - button "Send Line Rush Test" [ref=e455]
+            - generic [ref=e456]: No alert settings saved.
+            - generic [ref=e457]: "LINE RUSH ALERTS (VIP): trigger when a steam move is >2 points inside 10 minutes. VIP gets a 30-second head start before broader release."
+            - generic [ref=e458]: "Example: 🚨 LINE RUSH: Chiefs -3.5 → -5.5. Bet now before it closes."
+            - generic [ref=e459]: "Last preview: none."
+        - generic [ref=e460]:
+          - generic [ref=e461]:
+            - generic [ref=e462]: VIP Discord
+            - generic [ref=e463]: Private channel for drops, recaps, and live discussion.
+          - generic [ref=e465]:
+            - generic [ref=e466]: 💬VIP Discord
+            - generic [ref=e467]: Checking access...
+            - textbox "Discord User ID (Developer Mode copy)" [ref=e469]
+            - generic [ref=e470]:
+              - button "Link Discord" [ref=e471]
+              - button "Refresh Link" [ref=e472]
+            - generic [ref=e473]: Link your Discord ID once. Role sync can require manual support while backend sync is being finalized.
+            - button "Join Discord" [ref=e475]
+            - generic [ref=e476]: Private VIP channel for alert drops, card recaps, and live discussion.
+        - generic [ref=e477]:
+          - generic [ref=e478]:
+            - generic [ref=e479]: VIP Reports
+            - generic [ref=e480]: Generate weekly summaries and review trend quality.
+          - generic [ref=e482]:
+            - generic [ref=e483]: 🗓Weekly Report
+            - button "Generate Report" [ref=e485]
+            - generic [ref=e486]: No report generated yet.
+        - generic [ref=e487]:
+          - generic [ref=e488]:
+            - generic [ref=e489]: Tools Workspace
+            - generic [ref=e490]: Tools powered by the 5-Agent Edge Engine.
+          - generic [ref=e491]:
+            - generic [ref=e492]:
+              - generic [ref=e493]: Core Tools
+              - button "Parlay Builder Premium" [ref=e495]:
+                - generic [ref=e496]:
+                  - img [ref=e497]
+                  - text: Parlay Builder
+                - text: Premium
+              - button "Bet Tracker" [ref=e500]:
+                - generic [ref=e501]:
+                  - img [ref=e502]
+                  - text: Bet Tracker
+              - button "Payout Calculator" [ref=e506]:
+                - generic [ref=e507]:
+                  - img [ref=e508]
+                  - text: Payout Calculator
+            - generic [ref=e511]:
+              - generic [ref=e512]: Market Tools
+              - button "Steam Moves Premium" [ref=e514]:
+                - generic [ref=e515]:
+                  - img [ref=e516]
+                  - text: Steam Moves
+                - text: Premium
+              - button "Public Fades Premium" [ref=e519]:
+                - generic [ref=e520]:
+                  - img [ref=e521]
+                  - text: Public Fades
+                - text: Premium
+              - button "Line Rush Alerts VIP" [ref=e527]:
+                - generic [ref=e528]:
+                  - img [ref=e529]
+                  - text: Line Rush Alerts
+                - text: VIP
+              - button "Sharp Money Tracker VIP" [ref=e533]:
+                - generic [ref=e534]:
+                  - img [ref=e535]
+                  - text: Sharp Money Tracker
+                - text: VIP
+        - generic [ref=e538]:
+          - generic [ref=e539]: In-Game Mode
+          - generic [ref=e540]: Near-kickoff and live windows with faster pricing shifts
+        - generic [ref=e542]:
+          - generic [ref=e543]: Props Edge
+          - generic [ref=e544]: Budget-safe player props (NBA/NFL) with limited markets and best available book
+        - generic [ref=e545]:
+          - generic [ref=e546]:
+            - generic [ref=e547]: +EV Finder
+            - generic [ref=e548]: Bets priced better than fair value — powered by live Odds API data
+          - status
+          - generic [ref=e549]: ReadyPinnacle devig method
+          - generic [ref=e551]:
+            - generic [ref=e552]: Bet
+            - generic [ref=e553]: EV %
+            - generic [ref=e554]: Best book
+            - generic [ref=e555]: Odds
+        - generic [ref=e556]:
+          - generic [ref=e557]:
+            - generic [ref=e558]: Steam Moves
+            - generic [ref=e559]: Sharp line movement and best-line gaps by game
+          - generic [ref=e560]: ReadyFollow real market pressure
+        - generic [ref=e561]:
+          - generic [ref=e562]:
+            - generic [ref=e563]: Public % Fades
+            - generic [ref=e564]: Contrarian spots where public money is heavy on one side
+          - generic [ref=e565]: ReadyFade crowded tickets, tail sharp pricing
+        - generic [ref=e566]:
+          - generic [ref=e567]:
+            - generic [ref=e568]: Parlay Builder
+            - generic [ref=e569]: Add picks with the + button on any pick card
+          - generic [ref=e570]:
+            - generic [ref=e571]:
+              - text: No picks yet — hit
+              - strong [ref=e572]: + Parlay
+              - text: on any pick card.
+            - generic [ref=e573]:
+              - generic [ref=e574]: Parlay Odds
+              - generic [ref=e575]: $100 wins
+              - button "Clear all" [ref=e576]
+        - generic [ref=e577]:
+          - generic [ref=e578]:
+            - generic [ref=e579]: Boost Checker
+            - generic [ref=e580]: Is that sportsbook promo actually worth taking?
+          - generic [ref=e581]:
+            - generic [ref=e582]: Paste the normal and boosted odds — we'll tell you if it's +EV instantly.
+            - generic [ref=e583]:
+              - generic [ref=e584]:
+                - generic [ref=e585]: Normal odds
+                - textbox "-110" [ref=e586]
+              - generic [ref=e587]:
+                - generic [ref=e588]: Boosted odds
+                - textbox "+100" [ref=e589]
+              - generic [ref=e590]:
+                - generic [ref=e591]: Your stake ($)
+                - spinbutton [ref=e592]
+              - generic [ref=e593]:
+                - generic [ref=e594]: Fair odds (optional)
+                - textbox "-115" [ref=e595]
+            - generic [ref=e596]:
+              - generic [ref=e597]: +0.0%
+              - generic [ref=e598]:
+                - generic [ref=e599]:
+                  - generic [ref=e600]: $0
+                  - generic [ref=e601]: If it wins
+                - generic [ref=e602]:
+                  - generic [ref=e603]: "-$0"
+                  - generic [ref=e604]: If it loses
+                - generic [ref=e605]:
+                  - generic [ref=e606]: +$0
+                  - generic [ref=e607]: Edge vs normal
+        - generic [ref=e608]:
+          - generic [ref=e609]:
+            - generic [ref=e610]: Track Record
+            - generic [ref=e611]: CLV-verified results — measured against Pinnacle's closing line
+          - generic [ref=e612]:
+            - generic [ref=e613]:
+              - generic [ref=e614]: —
+              - generic [ref=e615]: All-time win rate
+            - generic [ref=e616]:
+              - generic [ref=e617]: —
+              - generic [ref=e618]: Total units won
+            - generic [ref=e619]:
+              - generic [ref=e620]: —
+              - generic [ref=e621]: ROI
+            - generic [ref=e622]:
+              - generic [ref=e623]: —
+              - generic [ref=e624]: Open picks
+            - generic [ref=e625]:
+              - generic [ref=e626]: —
+              - generic [ref=e627]: Scan streak
+            - generic [ref=e628]:
+              - generic [ref=e629]: —
+              - generic [ref=e630]: Graded picks
+          - generic [ref=e631]:
+            - generic [ref=e632]: Monthly P&L (Units)
+            - generic [ref=e633]: Recent six months
+          - generic [ref=e634]:
+            - generic [ref=e635]: AI AgentWin % firedWeight
+            - generic [ref=e636]: Best-Line EV68.4%+4.0
+            - generic [ref=e637]: De-vig Consensus65.1%+4.2
+            - generic [ref=e638]: Sharp-Book Weighting62.8%+3.6
+            - generic [ref=e639]: Steam Moves59.3%+8.0
+            - generic [ref=e640]: Public Fades57.2%+5.0
+          - generic [ref=e641]:
+            - generic [ref=e643]:
+              - generic [ref=e644]: Walk-Forward (Weekly)
+              - generic [ref=e645]:
+                - button "4w" [ref=e646]
+                - button "12w" [ref=e647]
+                - button "26w" [ref=e648]
+            - generic [ref=e650]: By Sport
+          - generic [ref=e652]: By Market
+        - generic [ref=e653]:
+          - generic [ref=e654]:
+            - generic [ref=e655]: Bet History
+            - generic [ref=e656]: Tracked bets, ROI by sport, and CLV performance.
+          - generic [ref=e657]: ReadyRetention + trust proof
+          - generic [ref=e659]:
+            - generic [ref=e660]: Bet Journal
+            - generic [ref=e661]: Track bets and export CSV for taxes/accounting.
+            - generic [ref=e662]:
+              - textbox "Lakers @ Suns" [ref=e663]
+              - textbox "Lakers ML" [ref=e664]
+            - generic [ref=e665]:
+              - textbox "+120" [ref=e666]
+              - button "Add" [ref=e667]
+            - button "Export CSV" [ref=e669]
+            - generic [ref=e670]: No journal entries yet.
+        - generic [ref=e671]:
+          - generic [ref=e672]:
+            - generic [ref=e673]: Community Feed
+            - generic [ref=e674]: Verified posts from members sharing picks and results.
+          - generic [ref=e675]:
+            - generic [ref=e676]:
+              - generic [ref=e677]: Verified feed only
+              - generic [ref=e678]: To reduce spam, posts can only be created from live pick cards using the post buttons.
+              - button "Refresh" [ref=e680]
+            - generic [ref=e681]:
+              - generic [ref=e682]: Creator Leaderboard
+              - generic [ref=e683]: Verified picks/wins only. Anti-spam weighted.
+              - generic [ref=e684]: Loading leaderboard...
+        - generic [ref=e685]:
+          - generic [ref=e686]:
+            - generic [ref=e687]: Your Profile
+            - generic [ref=e688]: Manage account, billing, and app preferences.
+          - generic [ref=e689]:
+            - generic [ref=e690]:
+              - generic [ref=e691]: Account
+              - generic [ref=e692]: Guest
+            - generic [ref=e693]:
+              - generic [ref=e694]: Method
+              - generic [ref=e695]: Guest
+            - generic [ref=e696]:
+              - generic [ref=e697]: Plan
+              - generic [ref=e698]: Free
+            - generic [ref=e699]:
+              - generic [ref=e700]: Pick Limit
+              - generic [ref=e701]: "2"
+            - generic [ref=e702]:
+              - generic [ref=e703]: Discord Access
+              - generic [ref=e704]: Locked
+            - generic [ref=e705]:
+              - button "Register / Sign In" [ref=e706]
+              - button "Upgrade" [ref=e707]
+              - button "Manage Billing" [ref=e708]
+              - button "Sign Out" [ref=e709]
+          - generic [ref=e710]:
+            - generic [ref=e711]:
+              - generic [ref=e712]: Personal Settings
+              - generic [ref=e713]: Set bankroll mode and state to personalize stakes and book links.
+              - generic [ref=e714]:
+                - combobox [ref=e715]:
+                  - option "Conservative" [selected]
+                  - option "Standard"
+                  - option "Aggressive"
+                - textbox "auto or NY" [ref=e716]
+              - button "Save Settings" [ref=e718]
+              - generic [ref=e719]: Using default settings.
+            - generic [ref=e720]:
+              - generic [ref=e721]: Notifications
+              - generic [ref=e722]: Configure alerts, digest delivery, and quick alert packs.
+              - generic [ref=e723]:
+                - generic [ref=e724]:
+                  - combobox [ref=e725]:
+                    - option "Email" [selected]
+                    - option "SMS"
+                  - textbox "you@example.com or +15551234567" [ref=e726]
+                - generic [ref=e727]:
+                  - spinbutton [ref=e728]: "2"
+                  - button "Save Alert" [ref=e729]
+                - generic [ref=e730]: No subscriptions yet.
+                - generic [ref=e731]:
+                  - combobox [ref=e732]:
+                    - option "Email" [selected]
+                    - option "SMS"
+                  - textbox "you@example.com or +15551234567" [ref=e733]
+                - generic [ref=e734]:
+                  - spinbutton [ref=e735]: "9"
+                  - button "Save Digest" [ref=e736]
+                - generic [ref=e737]: Digest disabled.
+                - generic [ref=e738]:
+                  - combobox [ref=e739]:
+                    - option "A-grade +EV" [selected]
+                    - option "Underdog Steam"
+                    - option "Totals Only"
+                  - button "Save Pack" [ref=e740]
+                - generic [ref=e741]: No pack enabled.
+              - generic [ref=e742]: Premium feature. Upgrade to enable alert destinations, digest delivery, and alert packs.
+              - button "Upgrade to Premium" [ref=e744]
+            - generic [ref=e745]:
+              - generic [ref=e746]: Theme
+              - generic [ref=e747]: Switch between dark and light interface styles.
+              - button "Toggle Theme" [ref=e749]
+              - generic [ref=e750]: "Current theme: Dark."
+            - generic [ref=e751]:
+              - generic [ref=e752]: Support
+              - generic [ref=e753]: Need help with account, billing, picks, or technical issues?
+              - link "support@algobetsai.com Contact Support Email" [ref=e755] [cursor=pointer]:
+                - /url: mailto:support@algobetsai.com?subject=Algobets%20Support%20Request
+                - generic [ref=e756]:
+                  - generic [ref=e757]: support@algobetsai.com
+                  - generic [ref=e758]: Contact Support
+                - text: Email
+        - generic [ref=e759]:
+          - generic [ref=e760]:
+            - generic [ref=e761]: How It Works
+            - generic [ref=e762]: Feature guide, system overview, and practical workflow
+          - generic [ref=e763]:
+            - generic [ref=e764]:
+              - generic [ref=e765]: Start Here (Daily Workflow)
+              - generic [ref=e766]: 1) Run Scan 2) Check +EV and Odds 3) Size bets with bankroll rules 4) Track outcomes.
+              - generic [ref=e767]: "Best practice: skip forced bets when the board is thin. Use Tomorrow’s Games to plan ahead."
+            - generic [ref=e768]:
+              - generic [ref=e769]: Core Tabs
+              - generic [ref=e770]: "Picks: ranked opportunities with edge and confidence."
+              - generic [ref=e771]: "Odds: book-by-book moneylines (Today/Tomorrow/Week)."
+              - generic [ref=e772]: "+EV: opportunities priced above fair value."
+              - generic [ref=e773]: "Steam/Fades: market pressure and contrarian spots."
+            - generic [ref=e774]:
+              - generic [ref=e775]: How Live Picks Work
+              - generic [ref=e776]: Live mode focuses on games near start or in-play windows where lines can move quickly.
+              - generic [ref=e777]: Use it to monitor timing-sensitive spots, then confirm current odds before placing.
+              - generic [ref=e778]: If a price moves against you, the edge may be gone. Re-check before entry.
+            - generic [ref=e779]:
+              - generic [ref=e780]: How +EV Works
+              - generic [ref=e781]: +EV compares best available book price to estimated fair probability (after de-vig).
+              - generic [ref=e782]: Higher +EV means better long-run value, not guaranteed short-term wins.
+              - generic [ref=e783]: Prioritize stronger EV with acceptable confidence and line stability.
+            - generic [ref=e784]:
+              - generic [ref=e785]: How Steam Works
+              - generic [ref=e786]: Steam flags fast market movement and book divergence that can indicate sharp pressure.
+              - generic [ref=e787]: "Best use: identify where price is likely to keep moving, then act before it closes."
+              - generic [ref=e788]: Premium users get full steam access and faster refresh windows.
+            - generic [ref=e789]:
+              - generic [ref=e790]: How Fades Work
+              - generic [ref=e791]: Fades surface situations where public ticket flow is heavy on one side.
+              - generic [ref=e792]: When pricing still favors the opposite side, contrarian value can appear.
+              - generic [ref=e793]: Fade signals are strongest when supported by EV and line/steam context.
+            - generic [ref=e794]:
+              - generic [ref=e795]: How Props Work
+              - generic [ref=e796]: Props Edge scans selected player markets and shows best available price/book.
+              - generic [ref=e797]: Use props as single positions or pair with straight bets only when value supports it.
+              - generic [ref=e798]: Props are budget-guarded to keep API spend controlled and data quality stable.
+            - generic [ref=e799]:
+              - generic [ref=e800]: 5-Agent System (Simple)
+              - generic [ref=e801]: "Best-Line EV: compares best available line vs fair probability."
+              - generic [ref=e802]: "De-vig Consensus: removes juice to estimate true market baseline."
+              - generic [ref=e803]: "Sharp-Book Weighting: prioritizes stronger market-making books."
+              - generic [ref=e804]: "Steam Signal: flags meaningful line divergence/movement."
+              - generic [ref=e805]: "Public Fades: highlights one-sided public ticket pressure."
+            - generic [ref=e806]:
+              - generic [ref=e807]: Free vs Premium
+              - generic [ref=e808]: "Free: lighter access and limited pick volume."
+              - generic [ref=e809]: "Premium: higher pick limits, full +EV, Props Edge, steam, and fades."
+              - generic [ref=e810]: Use monthly for flexibility; annual for lower effective monthly cost.
+            - generic [ref=e811]:
+              - generic [ref=e812]: Bankroll + Risk
+              - generic [ref=e813]: Use unit sizing (typically 0.5% to 2% per bet) and daily stop-loss limits.
+              - generic [ref=e814]: Do not chase losses. Treat this as long-horizon expected value.
+              - generic [ref=e815]: No pick is guaranteed. The edge comes from price discipline over sample size.
+            - generic [ref=e816]:
+              - generic [ref=e817]: Important Notes
+              - generic [ref=e818]: If live data is unavailable, the app can show cached/sample states.
+              - generic [ref=e819]: Line movement can invalidate edge quickly. Re-check odds before placing.
+              - generic [ref=e820]: 21+ only. Bet responsibly.
+            - generic [ref=e821]:
+              - generic [ref=e822]: News Impact (Insight)
+              - generic [ref=e823]: Optional context only. Use this to spot possible lineup/news-driven market dispersion.
+              - button "Refresh Impact" [ref=e825]
+              - generic [ref=e826]: No impact data loaded.
+  - navigation [ref=e827]:
+    - button "Dashboard" [ref=e828]:
+      - img [ref=e829]
+      - text: Dashboard
+    - button "Picks" [ref=e832]:
+      - img [ref=e833]
+      - text: Picks
+    - generic [ref=e835]:
+      - button "Tools" [ref=e836]:
+        - img [ref=e837]
+        - text: Tools
+      - generic [ref=e840]:
+        - button "Premium Home" [ref=e841]:
+          - img [ref=e842]
+          - text: Premium Home
+        - button "Props Edge" [ref=e844]:
+          - img [ref=e845]
+          - text: Props Edge
+        - button "+EV" [ref=e847]:
+          - img [ref=e848]
+          - text: +EV
+        - button "Steam" [ref=e850]:
+          - img [ref=e851]
+          - text: Steam
+        - button "Fades" [ref=e853]:
+          - img [ref=e854]
+          - text: Fades
+        - button "Parlay" [ref=e859]:
+          - img [ref=e860]
+          - text: Parlay
+    - button "Offers" [ref=e862]:
+      - img [ref=e863]
+      - text: Offers
+    - generic [ref=e866]:
+      - button "Settings" [ref=e867]:
+        - img [ref=e868]
+        - text: Settings
+      - generic [ref=e871]:
+        - button "VIP Home" [ref=e872]:
+          - img [ref=e873]
+          - text: VIP Home
+        - button "Core Edge" [ref=e875]:
+          - img [ref=e876]
+          - text: Core Edge
+        - button "Execution" [ref=e878]:
+          - img [ref=e879]
+          - text: Execution
+        - button "Portfolio" [ref=e881]:
+          - img [ref=e882]
+          - text: Portfolio
+        - button "Alerts" [ref=e884]:
+          - img [ref=e885]
+          - text: Alerts
+        - button "VIP Discord" [ref=e888]:
+          - img [ref=e889]
+          - text: VIP Discord
+        - button "Reports" [ref=e891]:
+          - img [ref=e892]
+          - text: Reports
+    - button "Odds" [ref=e896]:
+      - img [ref=e897]
+      - text: Odds
+    - generic [ref=e902]:
+      - button "More" [ref=e903]:
+        - img [ref=e904]
+        - text: More
+      - generic [ref=e908]:
+        - button "More Hub" [ref=e909]:
+          - img [ref=e910]
+          - text: More Hub
+        - generic [ref=e914]: Advanced
+        - button "Boost" [ref=e915]:
+          - img [ref=e916]
+          - text: Boost
+        - button "Record" [ref=e918]:
+          - img [ref=e919]
+          - text: Record
+        - button "History" [ref=e921]:
+          - img [ref=e922]
+          - text: History
+        - button "Social" [ref=e925]:
+          - img [ref=e926]
+          - text: Social
+        - button "Profile" [ref=e931]:
+          - img [ref=e932]
+          - text: Profile
+        - button "Offers" [ref=e935]:
+          - img [ref=e936]
+          - text: Offers
+  - button "Close" [ref=e941]
+  - generic [ref=e943]:
+    - generic [ref=e944]: Unlock the 5-Agent Edge Engine
+    - generic [ref=e945]: "Unlock the 5-Agent Edge Engine: Best-Line EV · De-vig · Steam · Fades · Timing/CLV."
+    - generic [ref=e946]: Free Preview -> Premium -> VIP
+    - generic [ref=e947]:
+      - button "Monthly" [ref=e948]
+      - button "Annual" [ref=e949]
+    - generic [ref=e950]: Annual plans save ~2 months when available.
+    - button "Cancel" [ref=e952]
+  - generic [ref=e954]:
+    - generic [ref=e955]: Create Free Account
+    - generic [ref=e956]: Optional for browsing. Needed for saved history, alerts, billing, and synced profile.
+    - generic [ref=e957]:
+      - button "Google" [ref=e958]
+      - button "Email" [ref=e959]
+      - button "Phone" [ref=e960]
+    - button "More options" [ref=e961]
+    - generic [ref=e962]:
+      - generic [ref=e963]: Email Address
+      - textbox "you@example.com" [ref=e964]
+    - generic [ref=e966]: Google sign-in uses secure OAuth and verified email identity.
+    - generic [ref=e967]:
+      - button "Cancel" [ref=e968]
+      - button "Continue" [ref=e969]
+  - generic [ref=e971]:
+    - generic [ref=e972]: Create Account in 10 Seconds
+    - generic [ref=e973]: Save picks, alerts, and billing under one profile.
+    - generic [ref=e974]:
+      - button "Continue with Google (Recommended)" [ref=e975]
+      - button "Continue with Email" [ref=e976]
+      - button "Continue with Phone" [ref=e977]
+      - button "Skip for now" [ref=e978]
+  - status

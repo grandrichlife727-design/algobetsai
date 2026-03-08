@@ -1,0 +1,231 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ⚡
+        - generic [ref=e6]: Algobets AI
+      - generic [ref=e7]: Navigation
+      - button "Dashboard" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - text: Dashboard
+      - button "Picks 3" [ref=e12] [cursor=pointer]:
+        - img [ref=e13]
+        - text: Picks
+        - generic [ref=e15]: "3"
+      - button "Tools" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - text: Tools
+      - button "Offers" [ref=e19] [cursor=pointer]:
+        - img [ref=e20]
+        - text: Offers
+      - button "History" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - text: History
+      - button "Settings" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - text: Settings
+      - generic [ref=e33]:
+        - text: Open an Account
+        - generic [ref=e34]:
+          - text: 🛡️ Gamble responsibly ·
+          - strong [ref=e35]: 1-800-522-4700
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e36] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=draftkings_offer&utm_content=sidebar&alg_uid=usr_4s1df3urbxr
+          - generic [ref=e37]: DK
+          - generic [ref=e38]:
+            - generic [ref=e39]: DraftKings
+            - generic [ref=e40]: Bet $5, Get $150
+          - generic [ref=e41]: →
+        - link "FD FanDuel $1,000 No Sweat Bet →" [ref=e42] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=fanduel_offer&utm_content=sidebar&alg_uid=usr_4s1df3urbxr
+          - generic [ref=e43]: FD
+          - generic [ref=e44]:
+            - generic [ref=e45]: FanDuel
+            - generic [ref=e46]: $1,000 No Sweat Bet
+          - generic [ref=e47]: →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e48] [cursor=pointer]:
+          - /url: https://sports.betmgm.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=betmgm_offer&utm_content=sidebar&alg_uid=usr_4s1df3urbxr
+          - generic [ref=e49]: MGM
+          - generic [ref=e50]:
+            - generic [ref=e51]: BetMGM
+            - generic [ref=e52]: First Bet up to $1,500
+          - generic [ref=e53]: →
+        - link "CZ Caesars Get up to $1,000 back →" [ref=e54] [cursor=pointer]:
+          - /url: https://sportsbook.caesars.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=caesars_offer&utm_content=sidebar&alg_uid=usr_4s1df3urbxr
+          - generic [ref=e55]: CZ
+          - generic [ref=e56]:
+            - generic [ref=e57]: Caesars
+            - generic [ref=e58]: Get up to $1,000 back
+          - generic [ref=e59]: →
+    - main [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]: ⚡
+          - text: Algobets AI
+        - generic [ref=e64]:
+          - generic [ref=e65]: FREE
+          - generic [ref=e68]: Live
+          - button "3-Day Trial" [ref=e69] [cursor=pointer]
+          - 'button "Demo: Off" [ref=e70] [cursor=pointer]'
+          - button "Upgrade" [ref=e71] [cursor=pointer]
+          - button "Sign In" [ref=e72] [cursor=pointer]
+          - button "Scan Now" [ref=e73] [cursor=pointer]:
+            - img [ref=e74]
+            - text: Scan Now
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]: Algobets AI
+            - generic [ref=e81]: Your edge dashboard. Demo data shown.
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]: —
+              - generic [ref=e85]: Avg edge today
+            - generic [ref=e86]:
+              - generic [ref=e87]: —
+              - generic [ref=e88]: Live picks
+            - generic [ref=e89]:
+              - generic [ref=e90]: FREE
+              - generic [ref=e91]: Current plan
+          - generic [ref=e92]:
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - generic [ref=e95]: "Plan Levels: Free, Premium, VIP"
+                - generic [ref=e96]: "Free: Test the edges · Premium: Daily volume · VIP: Real-time speed"
+              - generic [ref=e97]: Choose your plan
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e100]: FREE
+                - generic [ref=e101]: $0
+                - generic [ref=e102]:
+                  - generic [ref=e103]: 2 picks per scan
+                  - generic [ref=e104]: NBA + NHL only
+                  - generic [ref=e105]: 20-minute refresh
+                - button "Get Started" [ref=e107] [cursor=pointer]
+              - generic [ref=e108]:
+                - generic [ref=e109]: PREMIUM
+                - generic [ref=e110]: Most Popular
+                - generic [ref=e111]: $19.99/mo
+                - generic [ref=e112]:
+                  - generic [ref=e113]: Unlimited picks
+                  - generic [ref=e114]: All sports + props + steam + fades
+                  - generic [ref=e115]: 5-minute refresh
+                  - generic [ref=e116]: Parlay builder
+                - button "Start 3-Day Trial" [ref=e118] [cursor=pointer]
+              - generic [ref=e119]:
+                - generic [ref=e120]: VIP
+                - generic [ref=e121]: $39.99/mo
+                - generic [ref=e122]:
+                  - generic [ref=e123]: VIP Discord access
+                  - generic [ref=e124]: 50 picks
+                  - generic [ref=e125]: 1-minute refresh
+                  - generic [ref=e126]: Execution layer
+                  - generic [ref=e127]: Line rush alerts
+                - generic [ref=e128]:
+                  - button "Upgrade to VIP" [ref=e129] [cursor=pointer]
+                  - generic [ref=e130]: VIP Discord
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - strong [ref=e133]: 3-day trial already used
+              - text: on this account. Upgrade to Premium to unlock +EV plays, props, steam moves, and 5-minute refresh.
+            - button "Upgrade Premium" [ref=e135] [cursor=pointer]
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: Today's Top Edges
+              - generic [ref=e139]:
+                - generic:
+                  - generic:
+                    - generic: "#1 Magic +4.5 @ Celtics"
+                    - generic: +8.4%
+                  - generic:
+                    - generic: "#2 Nuggets -3.5 vs Lakers"
+                    - generic: +6.2%
+                  - generic:
+                    - generic: "#3 Under 5.5 · Rangers @ Bruins"
+                    - generic: +4.9%
+                - generic [ref=e140]: Teaser preview only on Free. Upgrade to unlock full live picks.
+              - button "View All Picks" [ref=e142] [cursor=pointer]
+            - generic [ref=e143]:
+              - generic [ref=e144]: VIP Pick of the Day
+              - generic [ref=e146]:
+                - generic:
+                  - generic: Magic +4.5 @ Celtics -110 · +8.4% edge
+                - generic [ref=e148]:
+                  - generic [ref=e149]: VIP PICK LOCKED
+                  - generic [ref=e150]: Unlock the VIP Pick of the Day and Discord access
+                  - button "Unlock VIP" [ref=e151] [cursor=pointer]
+              - generic [ref=e152]:
+                - button "Unlock VIP" [ref=e153] [cursor=pointer]
+                - generic [ref=e154]: VIP Discord
+            - generic [ref=e155]:
+              - generic [ref=e156]: Premium Unlocks
+              - generic [ref=e158]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - text: Props Edge
+                      - strong: "2"
+                      - text: Most Popular
+                    - generic:
+                      - text: +EV
+                      - strong: "0"
+                      - text: Most Popular
+                    - generic:
+                      - text: Steam
+                      - strong: "0"
+                      - text: Most Popular
+                    - generic:
+                      - text: Fades
+                      - strong: "0"
+                      - text: Most Popular
+                - generic [ref=e160]:
+                  - generic [ref=e161]: PREMIUM TEASE
+                  - generic [ref=e162]: "Includes: Props · +EV filter · Steam moves · Public fades · Parlay builder"
+                  - button "Unlock Premium" [ref=e163] [cursor=pointer]
+              - button "Unlock Premium" [ref=e165] [cursor=pointer]
+            - generic [ref=e166]:
+              - generic [ref=e167]: Market Status
+              - generic [ref=e168]: 3 games · 2 books · 3 edges found
+              - button "Run Scan" [ref=e170] [cursor=pointer]
+              - generic [ref=e171]: "Last scan: 12:29 AM"
+            - generic [ref=e172]:
+              - generic [ref=e173]: Best Offers
+              - generic [ref=e174]: "Disclosure: We may earn commissions from partner links."
+              - link "DK DraftKings Bet $5, Get $150 in bonus bets Claim" [ref=e175] [cursor=pointer]:
+                - /url: https://sportsbook.draftkings.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=draftkings_offer&utm_content=home&alg_uid=usr_4s1df3urbxr
+                - generic [ref=e176]: DK
+                - generic [ref=e177]:
+                  - generic [ref=e178]: DraftKings
+                  - generic [ref=e179]: Bet $5, Get $150 in bonus bets
+                - generic [ref=e180]: Claim
+              - link "FD FanDuel $1,000 no sweat first bet Claim" [ref=e181] [cursor=pointer]:
+                - /url: https://sportsbook.fanduel.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=fanduel_offer&utm_content=home&alg_uid=usr_4s1df3urbxr
+                - generic [ref=e182]: FD
+                - generic [ref=e183]:
+                  - generic [ref=e184]: FanDuel
+                  - generic [ref=e185]: $1,000 no sweat first bet
+                - generic [ref=e186]: Claim
+              - link "MGM BetMGM First bet offer up to $1,500 Claim" [ref=e187] [cursor=pointer]:
+                - /url: https://sports.betmgm.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=betmgm_offer&utm_content=home&alg_uid=usr_4s1df3urbxr
+                - generic [ref=e188]: MGM
+                - generic [ref=e189]:
+                  - generic [ref=e190]: BetMGM
+                  - generic [ref=e191]: First bet offer up to $1,500
+                - generic [ref=e192]: Claim
+              - link "CZ Caesars Up to $1,000 back on first bet loss Claim" [ref=e193] [cursor=pointer]:
+                - /url: https://sportsbook.caesars.com/?utm_source=algobets_ai&utm_medium=affiliate&utm_campaign=caesars_offer&utm_content=home&alg_uid=usr_4s1df3urbxr
+                - generic [ref=e194]: CZ
+                - generic [ref=e195]:
+                  - generic [ref=e196]: Caesars
+                  - generic [ref=e197]: Up to $1,000 back on first bet loss
+                - generic [ref=e198]: Claim
+            - generic [ref=e199]:
+              - generic [ref=e200]: Home News
+              - generic [ref=e202]:
+                - generic [ref=e203]: Loading sports headlines...
+                - generic [ref=e204]: Fetching latest NBA, NFL, MLB, and NHL stories.
+        - text: Most Popular
+  - generic:
+    - generic:
+      - button "Close"
+  - status

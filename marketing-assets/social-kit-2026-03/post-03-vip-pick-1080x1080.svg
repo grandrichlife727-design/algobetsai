@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07080d"/>
+      <stop offset="100%" stop-color="#1a1030"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffb700"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <text x="80" y="120" fill="#dbe9ff" font-size="42" font-family="Helvetica, Arial, sans-serif" font-weight="700">AlgoBets Ai</text>
+  <text x="80" y="180" fill="#ffcf5f" font-size="28" font-family="Helvetica, Arial, sans-serif" font-weight="700">VIP TIER</text>
+
+  <text x="80" y="330" fill="#ffffff" font-size="96" font-family="Helvetica, Arial, sans-serif" font-weight="900">VIP PICK</text>
+  <text x="80" y="420" fill="url(#accent)" font-size="96" font-family="Helvetica, Arial, sans-serif" font-weight="900">OF THE DAY</text>
+
+  <rect x="80" y="510" width="920" height="220" rx="24" fill="#121626" stroke="#2e3858"/>
+  <text x="120" y="585" fill="#9db1d8" font-size="28" font-family="Helvetica, Arial, sans-serif">VIP includes:</text>
+  <text x="120" y="640" fill="#dbe9ff" font-size="36" font-family="Helvetica, Arial, sans-serif" font-weight="700">• Highest-conviction daily card</text>
+  <text x="120" y="690" fill="#dbe9ff" font-size="36" font-family="Helvetica, Arial, sans-serif" font-weight="700">• Live plays + timing context</text>
+
+  <rect x="80" y="790" width="620" height="110" rx="18" fill="#ffb700"/>
+  <text x="126" y="860" fill="#1f1400" font-size="44" font-family="Helvetica, Arial, sans-serif" font-weight="900">Go VIP • $39.99/mo</text>
+
+  <text x="80" y="1008" fill="#7f8fb2" font-size="22" font-family="Helvetica, Arial, sans-serif">Private VIP Discord • 21+ only</text>
+</svg>

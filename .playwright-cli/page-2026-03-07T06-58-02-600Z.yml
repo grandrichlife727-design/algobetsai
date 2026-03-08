@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ⚡
+        - generic [ref=e6]: Algobets Ai
+      - generic [ref=e7]: Picks
+      - button "Today's Edges 0" [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+        - text: Today's Edges
+        - generic [ref=e11]: "0"
+      - button "Odds" [ref=e12] [cursor=pointer]:
+        - img [ref=e13]
+        - text: Odds
+      - button "Live" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - text: Live
+      - button "Props" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - text: Props
+      - button "+EV Finder" [ref=e26] [cursor=pointer]:
+        - img [ref=e27]
+        - text: +EV Finder
+      - button "Steam" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - text: Steam
+      - button "Public Fades" [ref=e32] [cursor=pointer]:
+        - img [ref=e33]
+        - text: Public Fades
+      - button "Parlay Builder" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+        - text: Parlay Builder
+      - generic [ref=e38]: More
+      - button "Boost Checker" [ref=e39] [cursor=pointer]:
+        - img [ref=e40]
+        - text: Boost Checker
+      - button "Track Record" [ref=e42] [cursor=pointer]:
+        - img [ref=e43]
+        - text: Track Record
+      - button "History" [ref=e45] [cursor=pointer]:
+        - img [ref=e46]
+        - text: History
+      - button "Community" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - text: Community
+      - button "Profile" [ref=e55] [cursor=pointer]:
+        - img [ref=e56]
+        - text: Profile
+      - button "Guide" [ref=e59] [cursor=pointer]:
+        - img [ref=e60]
+        - text: Guide
+      - generic [ref=e64]:
+        - text: Open an Account
+        - generic [ref=e65]:
+          - text: 🛡️ Gamble responsibly ·
+          - strong [ref=e66]: 1-800-522-4700
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e67] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com
+          - generic [ref=e68]: DK
+          - generic [ref=e69]:
+            - generic [ref=e70]: DraftKings
+            - generic [ref=e71]: Bet $5, Get $150
+          - generic [ref=e72]: →
+        - link "FD FanDuel $1,000 No Sweat Bet →" [ref=e73] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com
+          - generic [ref=e74]: FD
+          - generic [ref=e75]:
+            - generic [ref=e76]: FanDuel
+            - generic [ref=e77]: $1,000 No Sweat Bet
+          - generic [ref=e78]: →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e79] [cursor=pointer]:
+          - /url: https://sports.betmgm.com
+          - generic [ref=e80]: MGM
+          - generic [ref=e81]:
+            - generic [ref=e82]: BetMGM
+            - generic [ref=e83]: First Bet up to $1,500
+          - generic [ref=e84]: →
+        - link "CZ Caesars Get up to $1,000 back →" [ref=e85] [cursor=pointer]:
+          - /url: https://sportsbook.caesars.com
+          - generic [ref=e86]: CZ
+          - generic [ref=e87]:
+            - generic [ref=e88]: Caesars
+            - generic [ref=e89]: Get up to $1,000 back
+          - generic [ref=e90]: →
+    - main [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]: ⚡
+          - text: Algobets Ai
+        - generic [ref=e95]:
+          - generic [ref=e96]: FREE
+          - generic [ref=e99]: Loading
+          - button "Upgrade" [ref=e100] [cursor=pointer]
+          - button "Sign In" [ref=e101] [cursor=pointer]
+          - button "Scanning…":
+            - img
+            - text: Scanning…
+      - generic [ref=e104]:
+        - generic [ref=e106]: 5-agent AI consensus · Live multi-book odds · Real-time edge detection
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e109]: —
+            - generic [ref=e110]: Avg edge today
+          - generic [ref=e111]:
+            - generic [ref=e112]: "0"
+            - generic [ref=e113]: Live picks
+          - generic [ref=e114]:
+            - generic [ref=e115]: 64.2%
+            - generic [ref=e116]: 30-day win rate
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - button "Simple" [ref=e119] [cursor=pointer]
+            - button "Expert" [ref=e120] [cursor=pointer]
+          - generic [ref=e121]: Plain English
+        - generic [ref=e122]:
+          - generic [ref=e123]: How Plans Work
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - strong [ref=e126]: 1) Free
+              - text: ": 2 picks/scan"
+            - generic [ref=e127]:
+              - strong [ref=e128]: 2) Premium
+              - text: ": 15 picks + full +EV + props"
+            - generic [ref=e129]:
+              - strong [ref=e130]: 3) VIP
+              - text: ": 50 picks + steam + fastest refresh"
+        - generic [ref=e131]:
+          - button "All Sports" [ref=e132] [cursor=pointer]
+          - button "🏀 NBA" [ref=e133] [cursor=pointer]
+          - button "🎓 NCAAB" [ref=e134] [cursor=pointer]
+          - button "🏒 NHL" [ref=e135] [cursor=pointer]
+          - button "⚾ MLB" [ref=e136] [cursor=pointer]
+          - button "⚽ EPL" [ref=e137] [cursor=pointer]
+          - button "A-Grade Only" [ref=e138] [cursor=pointer]
+        - generic [ref=e139]:
+          - generic [ref=e140]: 0 Edges found
+          - generic [ref=e141]: —
+  - generic:
+    - generic:
+      - button "Close"
+  - status

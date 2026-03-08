@@ -1,0 +1,574 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "Algobets AI logo AlgoBets AI" [ref=e3] [cursor=pointer]:
+      - /url: "#"
+      - img "Algobets AI logo" [ref=e4]
+      - generic [ref=e5]: AlgoBets AI
+    - list [ref=e6]:
+      - listitem [ref=e7]:
+        - link "How It Works" [ref=e8] [cursor=pointer]:
+          - /url: "#how"
+      - listitem [ref=e9]:
+        - link "Features" [ref=e10] [cursor=pointer]:
+          - /url: "#features"
+      - listitem [ref=e11]:
+        - link "Pricing" [ref=e12] [cursor=pointer]:
+          - /url: "#pricing"
+      - listitem [ref=e13]:
+        - link "FAQ" [ref=e14] [cursor=pointer]:
+          - /url: "#faq"
+      - listitem [ref=e15]:
+        - link "Launch App →" [ref=e16] [cursor=pointer]:
+          - /url: 1.html
+  - generic [ref=e17]:
+    - generic: "-110"
+    - generic: 🏀 LAL vs BOS
+    - generic: "+142"
+    - generic: 🏈 KC -3.5
+    - generic: "-230"
+    - generic: EV +6.4%
+    - generic: "+175"
+    - generic: 🏒 NYR ML
+    - generic: "-108"
+    - generic: 🎓 Duke -1.5
+    - generic: "+290"
+    - generic: O/U 224.5
+    - generic [ref=e18]: Live Now · 5-Agent AI Edge System
+    - heading "Find Real Edges. Beat the Market." [level=1] [ref=e20]:
+      - text: Find Real Edges.
+      - generic [ref=e21]: Beat the Market.
+    - paragraph [ref=e22]: AI scans NBA, NFL, NHL, NCAAB, MLB, EPL & MMA for genuine value — live odds, sharp money tracking, CLV analysis, and instant parlay builder.
+    - generic [ref=e23]:
+      - link "⚡ Start for Free No credit card" [ref=e24] [cursor=pointer]:
+        - /url: "#email-gate"
+        - text: ⚡ Start for Free
+        - generic [ref=e25]: No credit card
+      - link "Start 3-Day Premium Trial" [ref=e26] [cursor=pointer]:
+        - /url: 1.html?upgrade=premium&src=landing_trial_hero
+      - link "See how it works ↓" [ref=e27] [cursor=pointer]:
+        - /url: "#how"
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: 🔒
+        - text: No credit card to start
+      - generic [ref=e31]: "|"
+      - generic [ref=e32]:
+        - generic [ref=e33]: 📱
+        - text: Web app — works on any device
+      - generic [ref=e34]: "|"
+      - generic [ref=e35]:
+        - generic [ref=e36]: ⚡
+        - text: Live odds every scan
+      - generic [ref=e37]: "|"
+      - generic [ref=e38]:
+        - generic [ref=e39]: 👥
+        - generic [ref=e40]: 2,847 users active today
+      - generic [ref=e41]: "|"
+      - generic [ref=e42]:
+        - generic [ref=e43]: 🔍
+        - generic [ref=e44]: 14,291 edges scanned today
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - img "Algobets AI logo" [ref=e51]
+          - generic [ref=e52]: 7-Agent System
+        - generic [ref=e55]: LIVE
+      - generic [ref=e56]:
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - generic [ref=e62]: 🏀 NBA · SPREAD
+                - generic [ref=e63]: Magic +4.5
+                - generic [ref=e64]: Orlando @ Boston · 7:30 PM
+              - generic [ref=e65]: 81%
+            - generic [ref=e67]: ⚡ 8.4% EDGE
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - generic [ref=e71]: ⚽ EPL · ML
+                - generic [ref=e72]: Arsenal +110
+                - generic [ref=e73]: Arsenal @ Man City · 3:00 PM
+              - generic [ref=e74]: 74%
+            - generic [ref=e76]: ⚡ 5.7% EDGE
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: 🏒 NHL · TOTAL
+                - generic [ref=e81]: Under 5.5
+                - generic [ref=e82]: Rangers @ Bruins · 8:00 PM
+              - generic [ref=e83]: 69%
+            - generic [ref=e85]: ⚡ 4.9% EDGE
+        - generic [ref=e86]:
+          - generic [ref=e87]: ⚡ LIVE LINE ALERT
+          - generic [ref=e88]:
+            - generic [ref=e89]: SHARP MONEY DETECTED
+            - generic [ref=e90]: Chiefs -3.5 → -5.5
+            - generic [ref=e91]: Line moved 2pts in 4 hrs · Steam move confirmed
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: PUBLIC
+                - generic [ref=e95]: 38%
+              - generic [ref=e96]:
+                - generic [ref=e97]: SHARP
+                - generic [ref=e98]: 72%
+              - generic [ref=e99]:
+                - generic [ref=e100]: EDGE
+                - generic [ref=e101]: A+
+          - generic [ref=e102]:
+            - generic [ref=e103]: 🏥 INJURY FLAG
+            - generic [ref=e104]: Anthony Davis — Questionable
+            - generic [ref=e105]: Right Knee · High impact on Lakers spread
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - generic [ref=e108]: My Parlay
+            - generic [ref=e109]: 3 LEGS
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - generic [ref=e112]: ✓
+              - generic [ref=e113]:
+                - generic [ref=e114]: Magic +4.5
+                - generic [ref=e115]: NBA · -110
+            - generic [ref=e116]:
+              - generic [ref=e117]: ✓
+              - generic [ref=e118]:
+                - generic [ref=e119]: Arsenal ML
+                - generic [ref=e120]: EPL · +110
+            - generic [ref=e121]:
+              - generic [ref=e122]: ✓
+              - generic [ref=e123]:
+                - generic [ref=e124]: Under 5.5
+                - generic [ref=e125]: NHL · -115
+          - generic [ref=e126]:
+            - generic [ref=e127]: $100 stake → payout
+            - generic [ref=e128]: $698.40
+            - generic [ref=e129]: +598% return · All legs +EV ✅
+      - generic [ref=e134]:
+        - generic [ref=e137]: Picks
+        - generic [ref=e140]: Parlay
+        - generic [ref=e143]: Tracker
+        - generic [ref=e146]: Chat
+        - generic [ref=e149]: More
+  - generic [ref=e151]:
+    - generic [ref=e152]:
+      - generic [ref=e153]: NBA
+      - generic [ref=e154]: Magic +4.5
+      - generic [ref=e155]: 8.4% edge
+    - generic [ref=e156]:
+      - generic [ref=e157]: NCAAB
+      - generic [ref=e158]: Colorado ML +180
+      - generic [ref=e159]: 9.1% edge
+    - generic [ref=e160]:
+      - generic [ref=e161]: NHL
+      - generic [ref=e162]: Under 5.5 · Rangers @ Bruins
+      - generic [ref=e163]: 4.9% edge
+    - generic [ref=e164]:
+      - generic [ref=e165]: NBA
+      - generic [ref=e166]: Nuggets -3.5
+      - generic [ref=e167]: 6.2% edge
+    - generic [ref=e168]:
+      - generic [ref=e169]: NFL
+      - generic [ref=e170]: Bills -7 · Over 48.5
+      - generic [ref=e171]: 5.8% edge
+    - generic [ref=e172]:
+      - generic [ref=e173]: NCAAB
+      - generic [ref=e174]: Kansas -5.5
+      - generic [ref=e175]: 7.3% edge
+    - generic [ref=e176]:
+      - generic [ref=e177]: MLB
+      - generic [ref=e178]: Yankees ML -115
+      - generic [ref=e179]: 4.1% edge
+    - generic [ref=e180]:
+      - generic [ref=e181]: NBA
+      - generic [ref=e182]: Magic +4.5
+      - generic [ref=e183]: 8.4% edge
+    - generic [ref=e184]:
+      - generic [ref=e185]: NCAAB
+      - generic [ref=e186]: Colorado ML +180
+      - generic [ref=e187]: 9.1% edge
+    - generic [ref=e188]:
+      - generic [ref=e189]: NHL
+      - generic [ref=e190]: Under 5.5 · Rangers @ Bruins
+      - generic [ref=e191]: 4.9% edge
+    - generic [ref=e192]:
+      - generic [ref=e193]: NBA
+      - generic [ref=e194]: Nuggets -3.5
+      - generic [ref=e195]: 6.2% edge
+    - generic [ref=e196]:
+      - generic [ref=e197]: NFL
+      - generic [ref=e198]: Bills -7 · Over 48.5
+      - generic [ref=e199]: 5.8% edge
+    - generic [ref=e200]:
+      - generic [ref=e201]: NCAAB
+      - generic [ref=e202]: Kansas -5.5
+      - generic [ref=e203]: 7.3% edge
+    - generic [ref=e204]:
+      - generic [ref=e205]: MLB
+      - generic [ref=e206]: Yankees ML -115
+      - generic [ref=e207]: 4.1% edge
+  - generic [ref=e208]:
+    - generic [ref=e209]:
+      - generic [ref=e210]: "5"
+      - generic [ref=e211]: AI Agents Per Pick
+    - generic [ref=e212]:
+      - generic [ref=e213]: "7"
+      - generic [ref=e214]: Sports Covered
+    - generic [ref=e215]:
+      - generic [ref=e216]: 63%
+      - generic [ref=e217]: Model Win Rate ATS
+    - generic [ref=e218]:
+      - generic [ref=e219]: +18%
+      - generic [ref=e220]: Avg ROI (Backtested)
+    - generic [ref=e221]:
+      - generic [ref=e222]: 2.8k+
+      - generic [ref=e223]: Active Users Today
+  - generic [ref=e224]:
+    - paragraph [ref=e225]: How It Works
+    - heading "5 AI Agents. One Decision." [level=2] [ref=e226]:
+      - text: 5 AI Agents.
+      - text: One Decision.
+    - paragraph [ref=e227]: Each pick is scored with three core pricing models plus two market overlays. We only surface edges with measurable pricing advantage.
+    - generic [ref=e228]:
+      - generic [ref=e229]:
+        - generic [ref=e230]: AGENT 01
+        - generic [ref=e231]: 📊
+        - generic [ref=e232]: Best-Line EV
+        - generic [ref=e233]: Finds the best available number across books, then computes expected value against fair probability.
+      - generic [ref=e234]:
+        - generic [ref=e235]: AGENT 02
+        - generic [ref=e236]: 📈
+        - generic [ref=e237]: De-vig Consensus
+        - generic [ref=e238]: Builds no-vig fair prices from multi-book moneylines to estimate true market probability.
+      - generic [ref=e239]:
+        - generic [ref=e240]: AGENT 03
+        - generic [ref=e241]: 💰
+        - generic [ref=e242]: Sharp-Book Weighting
+        - generic [ref=e243]: Weights stronger market-making books higher when building consensus fair prices.
+      - generic [ref=e244]:
+        - generic [ref=e245]: AGENT 04
+        - generic [ref=e246]: 🌊
+        - generic [ref=e247]: Steam Moves
+        - generic [ref=e248]: Flags sharp line pressure when best-book prices diverge meaningfully from market consensus.
+      - generic [ref=e249]:
+        - generic [ref=e250]: AGENT 05
+        - generic [ref=e251]: 🧊
+        - generic [ref=e252]: Public Fades
+        - generic [ref=e253]: Surfaces contrarian spots when public ticket concentration creates potentially mispriced sides.
+  - generic [ref=e255]:
+    - generic [ref=e256]:
+      - paragraph [ref=e257]: Real Picks
+      - heading "Live odds. Actual edges." [level=2] [ref=e258]:
+        - text: Live odds.
+        - text: Actual edges.
+      - paragraph [ref=e259]: Every pick pulls real-time odds via The Odds API — covering DraftKings, FanDuel, BetMGM, Caesars & more. No static data. No stale lines. If the edge disappears, the pick disappears.
+      - generic [ref=e260]:
+        - generic [ref=e261]:
+          - generic [ref=e262]: 📡
+          - generic [ref=e263]:
+            - generic [ref=e264]: Live Odds from 40+ Books
+            - generic [ref=e265]: Updated every scan. Compare DraftKings, FanDuel, BetMGM and more to find the best number.
+        - generic [ref=e266]:
+          - generic [ref=e267]: ⚡
+          - generic [ref=e268]:
+            - generic [ref=e269]: Edge Score on Every Pick
+            - generic [ref=e270]: Each play shows the estimated edge percentage — only play when it's in your favor.
+        - generic [ref=e271]:
+          - generic [ref=e272]: 📤
+          - generic [ref=e273]:
+            - generic [ref=e274]: Shareable Pick Cards
+            - generic [ref=e275]: Generate a branded card for any pick to share on Twitter/X or group chats instantly.
+    - generic [ref=e277]:
+      - generic [ref=e278]: TODAY'S TOP PICKS
+      - generic [ref=e279]: For informational purposes only. Not betting advice. Past performance does not guarantee future results.
+      - generic [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]: 🏀 NBA
+          - generic [ref=e283]: Magic +4.5
+          - generic [ref=e284]: Orlando @ Boston · 7:30 PM ET
+        - generic [ref=e287]:
+          - generic [ref=e288]: 81% CONF
+          - generic [ref=e289]: 8.4% edge
+      - generic [ref=e290]:
+        - generic [ref=e291]:
+          - generic [ref=e292]: 🎓 NCAAB
+          - generic [ref=e293]: Colorado ML +180
+          - generic [ref=e294]: Colorado @ Utah · 9:00 PM ET
+        - generic [ref=e297]:
+          - generic [ref=e298]: 76% CONF
+          - generic [ref=e299]: 9.1% edge
+      - generic [ref=e300]:
+        - generic [ref=e301]:
+          - generic [ref=e302]: 🏒 NHL
+          - generic [ref=e303]: Under 5.5 · Rangers @ Bruins
+          - generic [ref=e304]: Madison Square Garden · 8:00 PM ET
+        - generic [ref=e307]:
+          - generic [ref=e308]: 69% CONF
+          - generic [ref=e309]: 4.9% edge
+  - generic [ref=e311]:
+    - generic [ref=e312]:
+      - paragraph [ref=e313]: Parlay Builder
+      - heading "Stack edges. Own the payout." [level=2] [ref=e314]:
+        - text: Stack edges.
+        - text: Own the payout.
+      - paragraph [ref=e315]: Add any pick to your parlay with one tap. Real-time payout calculation. Know your exact exposure before you place a dollar.
+      - generic [ref=e316]:
+        - generic [ref=e317]:
+          - generic [ref=e318]: 🧮
+          - generic [ref=e319]:
+            - generic [ref=e320]: Instant Payout Calculator
+            - generic [ref=e321]: Adjustable stake with live payout — handles any combination of American, decimal, or fractional odds.
+        - generic [ref=e322]:
+          - generic [ref=e323]: 🎯
+          - generic [ref=e324]:
+            - generic [ref=e325]: Correlated Leg Warnings
+            - generic [ref=e326]: AI flags when legs are correlated (good) or dangerous combinations (bad) to protect your bankroll.
+    - generic [ref=e328]:
+      - generic [ref=e329]:
+        - generic [ref=e330]: My Parlay
+        - generic [ref=e331]: 3 LEGS
+      - generic [ref=e332]:
+        - generic [ref=e333]: ✓
+        - generic [ref=e334]:
+          - generic [ref=e335]: Magic +4.5
+          - generic [ref=e336]: NBA · -110
+      - generic [ref=e337]:
+        - generic [ref=e338]: ✓
+        - generic [ref=e339]:
+          - generic [ref=e340]: Colorado ML
+          - generic [ref=e341]: NCAAB · +180
+      - generic [ref=e342]:
+        - generic [ref=e343]: ✓
+        - generic [ref=e344]:
+          - generic [ref=e345]: Under 5.5
+          - generic [ref=e346]: NHL · -115
+      - generic [ref=e347]:
+        - generic [ref=e348]: $100 stake → payout
+        - generic [ref=e349]: $741.20
+        - generic [ref=e350]: "+641% return · Implied prob: 10.9%"
+  - generic [ref=e351]:
+    - generic [ref=e354]: TODAY'S EDGES REFRESHED
+    - generic [ref=e355]:
+      - strong [ref=e356]: "6"
+      - text: A-rated plays available now —
+      - strong [ref=e357]: refreshing in 4h 26m
+    - link "Claim Free Picks →" [ref=e358] [cursor=pointer]:
+      - /url: "#email-gate"
+  - generic [ref=e359]:
+    - paragraph [ref=e360]: Pricing
+    - heading "Simple. Transparent." [level=2] [ref=e361]
+    - paragraph [ref=e362]: Start free. Upgrade when you're ready to go sharp.
+    - generic [ref=e363]:
+      - generic [ref=e364]:
+        - generic [ref=e365]: Free
+        - generic [ref=e366]: $0
+        - generic [ref=e367]: Forever free · 2 free edge scans daily — no card needed
+        - list [ref=e368]:
+          - listitem [ref=e369]:
+            - generic [ref=e370]: ✓
+            - text: 2 AI edge scans per day
+          - listitem [ref=e371]:
+            - generic [ref=e372]: ✓
+            - text: Confidence score
+          - listitem [ref=e373]:
+            - generic [ref=e374]: ✓
+            - text: Parlay builder
+          - listitem [ref=e375]:
+            - generic [ref=e376]: ✓
+            - text: Bet tracker
+          - listitem [ref=e377]:
+            - generic [ref=e378]: ✓
+            - text: Shareable pick cards 🆕
+          - listitem [ref=e379]:
+            - generic [ref=e380]: —
+            - generic [ref=e381]: Full 5-agent breakdown
+          - listitem [ref=e382]:
+            - generic [ref=e383]: —
+            - generic [ref=e384]: Line movement alerts
+        - link "Get 2 Free Picks Today" [ref=e385] [cursor=pointer]:
+          - /url: "#email-gate"
+      - generic [ref=e386]:
+        - generic [ref=e387]: Most Popular
+        - generic [ref=e388]: Premium
+        - generic [ref=e389]: $19.99
+        - generic [ref=e390]: $19.99 monthly · $199.99 annually · cancel anytime
+        - generic [ref=e391]: Subscription auto-renews monthly. Cancel anytime in billing portal.
+        - list [ref=e392]:
+          - listitem [ref=e393]:
+            - generic [ref=e394]: ✓
+            - text: Unlimited picks/day
+          - listitem [ref=e395]:
+            - generic [ref=e396]: ✓
+            - text: Full 5-agent breakdown
+          - listitem [ref=e397]:
+            - generic [ref=e398]: ✓
+            - text: Live odds via The Odds API
+          - listitem [ref=e399]:
+            - generic [ref=e400]: ✓
+            - text: Line movement alerts
+          - listitem [ref=e401]:
+            - generic [ref=e402]: ✓
+            - text: Public fades access
+          - listitem [ref=e403]:
+            - generic [ref=e404]: ✓
+            - text: Shareable pick cards
+        - link "Upgrade to Premium →" [ref=e405] [cursor=pointer]:
+          - /url: 1.html?upgrade=premium&src=landing_pricing
+      - generic [ref=e406]:
+        - generic [ref=e407]: VIP
+        - generic [ref=e408]: $39.99
+        - generic [ref=e409]: $39.99 monthly · $399.99 annually · for serious bettors
+        - generic [ref=e410]: Subscription auto-renews monthly. Cancel anytime in billing portal.
+        - list [ref=e411]:
+          - listitem [ref=e412]:
+            - generic [ref=e413]: ✓
+            - text: Everything in Premium
+          - listitem [ref=e414]:
+            - generic [ref=e415]: ✓
+            - text: Sharp money tracker
+          - listitem [ref=e416]:
+            - generic [ref=e417]: ✓
+            - text: Steam move alerts
+          - listitem [ref=e418]:
+            - generic [ref=e419]: ✓
+            - text: Model confidence history
+          - listitem [ref=e420]:
+            - generic [ref=e421]: ✓
+            - text: Priority Telegram alerts
+          - listitem [ref=e422]:
+            - generic [ref=e423]: ✓
+            - text: 1-on-1 Discord access
+        - link "Go VIP →" [ref=e424] [cursor=pointer]:
+          - /url: 1.html?upgrade=vip&src=landing_pricing
+    - generic [ref=e425]:
+      - generic [ref=e426]: Where to Place Your Picks
+      - generic [ref=e427]: Found an edge? Place it here — and grab a welcome bonus while you're at it.
+      - generic [ref=e428]:
+        - link "HR Hard Rock Bet Up to $500 Bonus →" [ref=e429] [cursor=pointer]:
+          - /url: https://hardrock.bet/
+          - generic [ref=e430]:
+            - generic [ref=e431]: HR
+            - generic [ref=e432]: Hard Rock Bet
+          - generic [ref=e433]: Up to $500 Bonus →
+        - link "DK DraftKings Bet $5, Get $150 →" [ref=e434] [cursor=pointer]:
+          - /url: https://sportsbook.draftkings.com/
+          - generic [ref=e435]:
+            - generic [ref=e436]: DK
+            - generic [ref=e437]: DraftKings
+          - generic [ref=e438]: Bet $5, Get $150 →
+        - link "FD FanDuel No Sweat Bet up to $1k →" [ref=e439] [cursor=pointer]:
+          - /url: https://sportsbook.fanduel.com/
+          - generic [ref=e440]:
+            - generic [ref=e441]: FD
+            - generic [ref=e442]: FanDuel
+          - generic [ref=e443]: No Sweat Bet up to $1k →
+        - link "MGM BetMGM First Bet up to $1,500 →" [ref=e444] [cursor=pointer]:
+          - /url: https://sports.betmgm.com/
+          - generic [ref=e445]:
+            - generic [ref=e446]: MGM
+            - generic [ref=e447]: BetMGM
+          - generic [ref=e448]: First Bet up to $1,500 →
+      - generic [ref=e449]: "Must be 21+ and in a legal betting jurisdiction. Bonus terms apply. Showing books available in: Florida"
+    - generic [ref=e450]:
+      - paragraph [ref=e451]: Early Users
+      - heading "What sharps are saying." [level=2] [ref=e452]
+      - generic [ref=e453]:
+        - generic [ref=e454]:
+          - generic [ref=e455]: ★★★★★
+          - generic [ref=e456]: "\"The CLV tracking alone is worth the Pro subscription. Went 23–14 in my first month — lines were moving in my direction on 80% of plays. The Magic +4.5 call was up 2pts by tip. Algobets saw it before anyone.\""
+          - generic [ref=e457]:
+            - generic [ref=e458]: M
+            - generic [ref=e459]:
+              - generic [ref=e460]: Mike T.
+              - generic [ref=e461]: Pro subscriber · NBA spreads & totals · Chicago, IL
+        - generic [ref=e462]:
+          - generic [ref=e463]: ★★★★★
+          - generic [ref=e464]: "\"The 5-agent breakdown is what separates this from every tout service. I can see exactly why the model likes a play — pricing edge, consensus, and market pressure. That transparency builds real trust.\""
+          - generic [ref=e465]:
+            - generic [ref=e466]: J
+            - generic [ref=e467]:
+              - generic [ref=e468]: JD Reyes
+              - generic [ref=e469]: Sharp subscriber · NFL ML & spreads · Miami, FL
+        - generic [ref=e470]:
+          - generic [ref=e471]: ★★★★★
+          - generic [ref=e472]: "\"Finally an app that shows actual edge percentages instead of 'lock of the week' nonsense. The parlay optimizer flagged a correlated leg I missed. Saved me from a bad 5-legger. Instantly paid for itself.\""
+          - generic [ref=e473]:
+            - generic [ref=e474]: S
+            - generic [ref=e475]:
+              - generic [ref=e476]: Sarah K.
+              - generic [ref=e477]: Free → just upgraded to Pro · NHL & NBA · Toronto, ON
+    - generic [ref=e478]:
+      - paragraph [ref=e479]: FAQ
+      - heading "Good questions." [level=2] [ref=e480]
+      - generic [ref=e481]:
+        - generic [ref=e483] [cursor=pointer]:
+          - text: Is this a tout service? Are picks guaranteed?
+          - generic [ref=e484]: ⌄
+        - generic [ref=e486] [cursor=pointer]:
+          - text: Where does the odds data come from?
+          - generic [ref=e487]: ⌄
+        - generic [ref=e489] [cursor=pointer]:
+          - text: What sports do you cover?
+          - generic [ref=e490]: ⌄
+        - generic [ref=e492] [cursor=pointer]:
+          - text: Does it work on mobile?
+          - generic [ref=e493]: ⌄
+        - generic [ref=e495] [cursor=pointer]:
+          - text: Can I cancel my subscription anytime?
+          - generic [ref=e496]: ⌄
+        - generic [ref=e498] [cursor=pointer]:
+          - text: What's the backtested win rate?
+          - generic [ref=e499]: ⌄
+    - generic [ref=e500]:
+      - generic: "-110"
+      - generic: "+154"
+      - generic: NBA · 7:30 PM
+      - generic: O/U 224.5
+      - generic: "-230"
+      - generic: "+175"
+      - generic: +EV 6.2%
+      - generic: "-115"
+      - generic: NFL · 8:20 PM
+      - generic: "+290"
+      - heading "Stop guessing. Start edging." [level=2] [ref=e501]:
+        - text: Stop guessing.
+        - text: Start edging.
+      - paragraph [ref=e502]: Free account. Live odds. Real edges. No credit card.
+      - generic [ref=e503]:
+        - link "⚡ Launch Algobets Ai Free" [ref=e504] [cursor=pointer]:
+          - /url: 1.html
+        - link "Start 3-Day Premium Trial" [ref=e505] [cursor=pointer]:
+          - /url: 1.html?upgrade=premium&src=landing_trial_cta
+      - paragraph [ref=e506]: Must be 21+ to bet. Please gamble responsibly.
+    - generic [ref=e507]:
+      - img "Algobets AI logo" [ref=e508]
+      - generic [ref=e509]:
+        - link "Privacy Policy" [ref=e510] [cursor=pointer]:
+          - /url: https://algobetsai.onrender.com/api/legal/privacy
+        - link "Terms of Service" [ref=e511] [cursor=pointer]:
+          - /url: https://algobetsai.onrender.com/api/legal/terms
+        - link "Contact" [ref=e512] [cursor=pointer]:
+          - /url: mailto:grandrichlife727@gmail.com
+        - link "Telegram" [ref=e513] [cursor=pointer]:
+          - /url: https://t.me/EdgeBetAI
+      - generic [ref=e514]:
+        - paragraph [ref=e515]: Recommended Sportsbooks
+        - generic [ref=e516]:
+          - link "DraftKings" [ref=e517] [cursor=pointer]:
+            - /url: https://sportsbook.draftkings.com/
+          - link "FanDuel" [ref=e518] [cursor=pointer]:
+            - /url: https://sportsbook.fanduel.com/
+          - link "BetMGM" [ref=e519] [cursor=pointer]:
+            - /url: https://sports.betmgm.com/
+          - link "Caesars" [ref=e520] [cursor=pointer]:
+            - /url: https://www.caesars.com/sportsbook-and-casino
+          - link "ESPN Bet" [ref=e521] [cursor=pointer]:
+            - /url: https://www.espnbet.com/
+          - link "Bet365" [ref=e522] [cursor=pointer]:
+            - /url: https://www.bet365.com/
+          - link "Hard Rock Bet" [ref=e523] [cursor=pointer]:
+            - /url: https://hardrock.bet/
+          - link "Pinnacle" [ref=e524] [cursor=pointer]:
+            - /url: https://www.pinnacle.com/
+        - paragraph [ref=e525]: 21+ only. Legal jurisdictions only. Affiliate links — we may earn a commission.
+      - paragraph [ref=e526]: "Algobets Ai is an analytics and entertainment tool. We do not place bets on your behalf or handle funds. Sports betting involves risk. Only bet what you can afford to lose. Must be 21+ and located in a jurisdiction where sports betting is legal. Gambling problem? Call 1-800-GAMBLER (1-800-426-2537). NY: call/text 877-8-HOPENY or text HOPENY (467369). CO: 1-800-522-4700. PA: 1-800-GAMBLER + pacouncil.com. Visit ncpgambling.org."
+      - generic [ref=e527]: © 2026 Algobets Ai. All rights reserved.

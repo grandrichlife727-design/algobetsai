@@ -1,28 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="AlgoBets Ai app icon">
-  <defs>
-    <linearGradient id="bg" x1="0.02" y1="0.0" x2="0.98" y2="1.0">
-      <stop offset="0%" stop-color="#070b1a"/>
-      <stop offset="28%" stop-color="#0b1227"/>
-      <stop offset="58%" stop-color="#0f1731"/>
-      <stop offset="82%" stop-color="#12203b"/>
-      <stop offset="100%" stop-color="#152546"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.22" cy="0.16" r="1.05">
-      <stop offset="0%" stop-color="#5a7dff" stop-opacity="0.20"/>
-      <stop offset="35%" stop-color="#4f69e1" stop-opacity="0.12"/>
-      <stop offset="65%" stop-color="#3851bb" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="12" flood-color="#02040d" flood-opacity="0.55"/>
-    </filter>
-  </defs>
-
-  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="url(#bg)"/>
-  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="url(#glow)"/>
-
-  <g transform="translate(95 110) scale(1.798)" filter="url(#shadow)">
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 463.76 409">
+  <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
   <defs>
     <style>
       .st0 {
@@ -181,6 +159,5 @@
     <path class="st25" d="M232.61,44.02c-1,.41-2.23,3.07-1.44,3.67,3.53.83,8.43,1.99,9.03,6.74l-10.45,2.68,1.48,3.7,6.8.49-.17,1.25c-.05.36-1.66.42-2.04.37-10.36-1.16-21.53-.24-31.88,1.67l-14.2,2.62,2.97-17.33,4.22-3.64c8.37-1.41,27.83-3.74,35.67-2.23Z"/>
     <path class="st13" d="M88.93,178c-1.27,5.89-2.43,12.08-2.37,18.57.1,12.04.03,24.24,2.23,36.13l2.21,11.95c.68,3.68,4.29,9.53,6.05,13.07,6.56,13.22,1.44,14.64-6.36,27.48-6.6-6.48-13.12-25.93-15.77-34.37-1.7-5.42-1.67-11.09-2.78-16.49-1.43-6.99-4.11-13.32-3.82-20.76s.34-14.42.12-21.84c-.1-3.38.93-6.28,3.2-8.51l-.75-6.02c6.03.29,1.29,11.87,8.44,11.88.52-2.96.22-7.09,1.94-8.98,1.45-1.58,5.26-2.1,7.65-2.1Z"/>
     <path class="st10" d="M288.94,75.29c-.04.17-1.16.94-1.59.72l-1.67-.84c.15-.27,1.2-1.44,1.61-1.12l1.65,1.24Z"/>
-  </g>
   </g>
 </svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070910"/>
+      <stop offset="100%" stop-color="#121228"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <rect x="70" y="70" width="940" height="940" rx="30" fill="#0d1326" stroke="#1e2f57"/>
+
+  <text x="120" y="170" fill="#dbe9ff" font-size="42" font-family="Helvetica, Arial, sans-serif" font-weight="700">AlgoBets Ai</text>
+  <text x="120" y="230" fill="#22d3ee" font-size="28" font-family="Helvetica, Arial, sans-serif" font-weight="700">PREMIUM</text>
+
+  <text x="120" y="350" fill="#ffffff" font-size="88" font-family="Helvetica, Arial, sans-serif" font-weight="900">UNLOCK THE</text>
+  <text x="120" y="435" fill="url(#accent)" font-size="88" font-family="Helvetica, Arial, sans-serif" font-weight="900">FULL BOARD</text>
+
+  <g font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="700" fill="#dbe9ff">
+    <text x="120" y="560">+EV Finder</text>
+    <text x="120" y="620">Props Edge</text>
+    <text x="120" y="680">Steam Moves</text>
+    <text x="120" y="740">Public Fades</text>
+    <text x="120" y="800">Full pick details</text>
+  </g>
+
+  <rect x="120" y="860" width="520" height="96" rx="16" fill="url(#accent)"/>
+  <text x="160" y="922" fill="#02141d" font-size="40" font-family="Helvetica, Arial, sans-serif" font-weight="900">Upgrade to Premium</text>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='1920' viewBox='0 0 1080 1920'>
+  <defs>
+    <linearGradient id='bg2' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0%' stop-color='#05070d'/>
+      <stop offset='100%' stop-color='#0f172a'/>
+    </linearGradient>
+    <linearGradient id='cta' x1='0' y1='0' x2='1' y2='0'>
+      <stop offset='0%' stop-color='#22d3ee'/>
+      <stop offset='100%' stop-color='#7c3aed'/>
+    </linearGradient>
+  </defs>
+  <rect width='1080' height='1920' fill='url(#bg2)'/>
+  <circle cx='140' cy='260' r='180' fill='#22d3ee' opacity='0.14'/>
+  <circle cx='940' cy='1560' r='220' fill='#7c3aed' opacity='0.16'/>
+  <text x='88' y='180' fill='#22d3ee' font-family='Arial, sans-serif' font-size='34' font-weight='700'>ALGOBETS AI</text>
+  <text x='88' y='360' fill='#fff' font-family='Arial, sans-serif' font-size='92' font-weight='800'>PREMIUM</text>
+  <text x='88' y='470' fill='#fff' font-family='Arial, sans-serif' font-size='92' font-weight='800'>UNLOCKED</text>
+  <rect x='88' y='560' width='900' height='2' fill='#22d3ee' opacity='0.7'/>
+  <text x='88' y='700' fill='#dbeafe' font-family='Arial, sans-serif' font-size='52' font-weight='700'>More picks per scan</text>
+  <text x='88' y='780' fill='#dbeafe' font-family='Arial, sans-serif' font-size='52' font-weight='700'>Full +EV finder</text>
+  <text x='88' y='860' fill='#dbeafe' font-family='Arial, sans-serif' font-size='52' font-weight='700'>Faster refresh</text>
+  <rect x='88' y='1490' width='904' height='118' rx='22' fill='url(#cta)'/>
+  <text x='180' y='1568' fill='#fff' font-family='Arial, sans-serif' font-size='56' font-weight='900'>UPGRADE TO PREMIUM</text>
+  <text x='88' y='1760' fill='#94a3b8' font-family='Arial, sans-serif' font-size='30'>No guaranteed outcomes. Data-driven process only.</text>
+</svg>

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LumaLift Eye Therapy | Depuff in 3 Minutes</title>
+  <meta name="description" content="LumaLift Eye Therapy helps reduce puffiness and tired-looking eyes in a 3-minute routine." />
+  <meta property="og:title" content="LumaLift Eye Therapy" />
+  <meta property="og:description" content="Depuff tired eyes in 3 minutes." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f3ee;
+      --bg-2: #f2e4d5;
+      --ink: #2f2720;
+      --muted: #6f6254;
+      --clay: #b1784a;
+      --clay-dark: #8f5d35;
+      --card: #fffaf4;
+      --line: #e6d5c2;
+      --ok: #1c8b64;
+      --danger: #b64636;
+      --shadow: 0 16px 40px rgba(59, 42, 28, .12);
+      --radius: 20px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
+    body {
+      font-family: "DM Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 400px at -5% -10%, #ecd9c4 0%, transparent 55%),
+        radial-gradient(700px 420px at 100% 0, #f0decb 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg) 0%, #fff8f1 100%);
+      line-height: 1.45;
+    }
+
+    .wrap { width: min(var(--max), 92vw); margin: 0 auto; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff7ef;
+      color: var(--muted);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(10px);
+      background: rgba(248, 243, 238, .78);
+      border-bottom: 1px solid rgba(140, 107, 78, .15);
+    }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
+    }
+
+    .brand img { width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid var(--line); }
+    .brand-name { font-family: "Cormorant Garamond", serif; font-size: 28px; line-height: 1; white-space: nowrap; }
+
+    .cta-top {
+      border: none;
+      border-radius: 999px;
+      background: var(--clay);
+      color: #fff;
+      padding: 12px 18px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .hero {
+      padding: 42px 0 32px;
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1.1fr .9fr;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(42px, 7vw, 74px);
+      line-height: .95;
+      margin: 14px 0;
+      letter-spacing: -.02em;
+    }
+
+    .hero p { color: var(--muted); font-size: clamp(16px, 2.1vw, 20px); max-width: 60ch; }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 20px;
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn.primary { background: var(--clay); color: #fff; }
+    .btn.ghost { background: #fff3e8; color: var(--clay-dark); border: 1px solid #ead8c4; }
+
+    .hero-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .hero-card .img {
+      width: 100%;
+      aspect-ratio: 4/5;
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, #f3dfc8 0%, #eacfae 40%, #e8c69e 100%);
+      border: 1px solid #e3c8a7;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card .img::after {
+      content: "LumaLift";
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      color: #7b5939;
+      font-weight: 800;
+      letter-spacing: .08em;
+      font-size: 12px;
+    }
+
+    .benefits, .proof, .pricing, .faq, .footer-cta {
+      padding: 22px 0;
+    }
+
+    .sec-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(34px, 5vw, 52px);
+      margin: 0 0 12px;
+      line-height: 1;
+    }
+
+    .sec-sub { color: var(--muted); margin: 0 0 16px; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 26px rgba(56, 41, 27, .08);
+    }
+
+    .card h3 { margin: 0 0 6px; font-size: 20px; }
+    .card p { margin: 0; color: var(--muted); }
+
+    .stat {
+      text-align: center;
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff7ef;
+    }
+
+    .stat strong { display:block; font-size: 30px; margin-bottom: 6px; }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+    }
+
+    .price-card {
+      background: #fffaf4;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .price-card.featured {
+      border-color: #c48754;
+      box-shadow: 0 12px 34px rgba(166, 113, 66, .22);
+      transform: translateY(-4px);
+    }
+
+    .price-card .tag {
+      align-self: flex-start;
+      background: #f3dec8;
+      color: #835631;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .price-card h3 { margin: 0; font-size: 22px; }
+    .price { font-size: 40px; font-weight: 800; line-height: 1; }
+    .price span { font-size: 14px; color: var(--muted); font-weight: 500; }
+
+    .list { margin: 0; padding-left: 18px; color: var(--muted); }
+    .list li { margin: 6px 0; }
+
+    .trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .trust span {
+      background: #f5e6d5;
+      color: #6e583f;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fffaf4;
+      margin-bottom: 10px;
+    }
+
+    summary { cursor: pointer; font-weight: 700; }
+    details p { color: var(--muted); margin: 8px 0 0; }
+
+    .sticky-buy {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 60;
+      border: 1px solid #a97243;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #b1784a, #9a653b);
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 14px 20px;
+      text-decoration: none;
+      font-weight: 800;
+      box-shadow: 0 16px 30px rgba(143, 93, 53, .45);
+    }
+
+    footer { padding: 50px 0 100px; color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid-3, .price-grid { grid-template-columns: 1fr; }
+      .price-card.featured { transform: none; }
+      .brand-name { font-size: 24px; }
+    }
+
+    @media (min-width: 981px) {
+      .sticky-buy { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#top">
+        <img src="../branding/logo-mark.svg" alt="LumaLift logo mark" />
+        <span class="brand-name">LumaLift</span>
+      </a>
+      <a class="cta-top" href="#pricing">Get LumaLift</a>
+    </div>
+  </header>
+
+  <main id="top" class="wrap">
+    <section class="hero">
+      <div>
+        <span class="pill">Beauty Device Trend 2026</span>
+        <h1>Depuff tired eyes in<br />3 minutes.</h1>
+        <p>
+          LumaLift combines warming care + red-light glow support in a quick routine that fits into your morning. Portable, lightweight, and easy to use at home or on the go.
+        </p>
+        <div class="btn-row">
+          <a class="btn primary" href="#pricing">Shop Bundles</a>
+          <a class="btn ghost" href="#faq">How it works</a>
+        </div>
+        <div class="trust">
+          <span>30-Day Guarantee</span>
+          <span>Free Shipping $99+</span>
+          <span>Gift-Ready Packaging</span>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <div class="img" aria-label="LumaLift product visual placeholder"></div>
+        <p style="margin:12px 0 0;color:var(--muted);font-size:13px;">
+          Portable eye therapy wand. Use 3-5 minutes per eye area daily.
+        </p>
+      </aside>
+    </section>
+
+    <section class="benefits">
+      <h2 class="sec-title">Why LumaLift converts</h2>
+      <p class="sec-sub">Simple offer, visual results angle, and giftable pricing.</p>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Fast Routine</h3>
+          <p>Built for busy mornings. No complicated setup or long treatment flow.</p>
+        </article>
+        <article class="card">
+          <h3>Trend-Led Category</h3>
+          <p>At-home beauty devices remain one of the strongest social commerce segments.</p>
+        </article>
+        <article class="card">
+          <h3>High AOV Upsell</h3>
+          <p>Bundle offer structure drives larger cart sizes from a single product page.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="proof">
+      <h2 class="sec-title">Loved by daily users</h2>
+      <div class="grid-3">
+        <div class="stat"><strong>4.8/5</strong><span>Average rating</span></div>
+        <div class="stat"><strong>12,000+</strong><span>Units shipped</span></div>
+        <div class="stat"><strong>30-day</strong><span>Easy return window</span></div>
+      </div>
+    </section>
+
+    <section id="pricing" class="pricing">
+      <h2 class="sec-title">Choose your LumaLift bundle</h2>
+      <p class="sec-sub">Best value is 2-pack for personal + gift.</p>
+      <div class="price-grid">
+        <article class="price-card">
+          <h3>1x LumaLift</h3>
+          <div class="price">$49 <span>single unit</span></div>
+          <ul class="list">
+            <li>Portable eye therapy wand</li>
+            <li>USB charging cable</li>
+            <li>Quick start guide</li>
+          </ul>
+          <button class="btn primary" data-checkout="single">Buy Now</button>
+        </article>
+
+        <article class="price-card featured">
+          <span class="tag">Most Popular</span>
+          <h3>2x LumaLift</h3>
+          <div class="price">$79 <span>save $19</span></div>
+          <ul class="list">
+            <li>2x LumaLift devices</li>
+            <li>Gift one, keep one</li>
+            <li>Priority handling</li>
+          </ul>
+          <button class="btn primary" data-checkout="double">Buy 2-Pack</button>
+        </article>
+
+        <article class="price-card">
+          <h3>3x LumaLift</h3>
+          <div class="price">$99 <span>best per-unit price</span></div>
+          <ul class="list">
+            <li>3x LumaLift devices</li>
+            <li>Best for gifting</li>
+            <li>Priority handling</li>
+          </ul>
+          <button class="btn primary" data-checkout="triple">Buy 3-Pack</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="faq" class="faq">
+      <h2 class="sec-title">FAQ</h2>
+      <details>
+        <summary>How fast is shipping?</summary>
+        <p>Typical delivery is 6-12 business days depending on region and carrier load.</p>
+      </details>
+      <details>
+        <summary>How do I use LumaLift?</summary>
+        <p>Use gentle strokes around the under-eye area for 3-5 minutes, 1-2 times daily.</p>
+      </details>
+      <details>
+        <summary>Is there a return policy?</summary>
+        <p>Yes. 30-day easy returns from delivery date. Contact support for return instructions.</p>
+      </details>
+      <details>
+        <summary>Is checkout secure?</summary>
+        <p>Yes. Checkout is handled through Stripe secure payment links and encrypted processing.</p>
+      </details>
+    </section>
+
+    <section class="footer-cta card" style="margin-top:12px;">
+      <h2 style="margin:0 0 8px;font-family:'Cormorant Garamond',serif;font-size:38px;">Ready for brighter-looking eyes?</h2>
+      <p class="sec-sub">Tap below to choose your bundle and complete checkout in under a minute.</p>
+      <a class="btn primary" href="#pricing">Get LumaLift</a>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p><strong>LumaLift Eye Therapy</strong></p>
+    <p>support@lumalift.co | Terms | Privacy | Returns</p>
+    <p style="font-size:12px;">These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.</p>
+  </footer>
+
+  <a class="sticky-buy" href="#pricing">Get LumaLift</a>
+
+  <script>
+    const STRIPE_LINKS = {
+      single: "https://buy.stripe.com/REPLACE_SINGLE",
+      double: "https://buy.stripe.com/REPLACE_DOUBLE",
+      triple: "https://buy.stripe.com/REPLACE_TRIPLE"
+    };
+
+    document.querySelectorAll("[data-checkout]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const plan = btn.getAttribute("data-checkout");
+        const url = STRIPE_LINKS[plan];
+        if (!url || url.includes("REPLACE_")) {
+          alert("Add your Stripe Payment Link for this bundle in STRIPE_LINKS first.");
+          return;
+        }
+        window.open(url, "_blank", "noopener");
+      });
+    });
+  </script>
+</body>
+</html>

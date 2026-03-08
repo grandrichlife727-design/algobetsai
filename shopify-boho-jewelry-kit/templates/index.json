@@ -1,0 +1,17 @@
+{
+  "sections": {
+    "hero": {
+      "type": "boho-hero",
+      "settings": {}
+    },
+    "cats": {
+      "type": "boho-categories",
+      "settings": {}
+    },
+    "proof": {
+      "type": "boho-social-proof",
+      "settings": {}
+    }
+  },
+  "order": ["hero", "cats", "proof"]
+}

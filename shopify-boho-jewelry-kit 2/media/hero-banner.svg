@@ -1,0 +1,10 @@
+<svg width="1800" height="900" viewBox="0 0 1800 900" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <rect width="1800" height="900" fill="#F8F2E9"/>
+  <circle cx="1460" cy="130" r="240" fill="#EFDCC7"/>
+  <circle cx="250" cy="760" r="300" fill="#F1E5D7"/>
+  <text x="120" y="300" fill="#2F261F" font-family="Georgia, serif" font-size="94">SOL &amp; SAGE</text>
+  <text x="120" y="380" fill="#7B6753" font-family="Arial, sans-serif" font-size="42" letter-spacing="2">BOHO JEWELRY FOR EVERYDAY RITUALS</text>
+  <text x="120" y="470" fill="#2F261F" font-family="Arial, sans-serif" font-size="34">Layered necklaces • Statement earrings • Gift-ready sets</text>
+  <rect x="120" y="540" width="300" height="76" rx="38" fill="#9A6A3A"/>
+  <text x="176" y="588" fill="#fff" font-family="Arial, sans-serif" font-size="28" font-weight="700">SHOP NEW DROPS</text>
+</svg>

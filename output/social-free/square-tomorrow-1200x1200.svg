@@ -1,0 +1,17 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'>
+  <defs>
+    <linearGradient id='bgtt' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0%' stop-color='#0f172a'/>
+      <stop offset='100%' stop-color='#1e1b4b'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='1200' fill='url(#bgtt)'/>
+  <rect x='80' y='80' width='1040' height='1040' rx='28' fill='rgba(255,255,255,0.04)' stroke='rgba(124,58,237,0.4)'/>
+  <text x='140' y='190' fill='#a78bfa' font-family='Arial, sans-serif' font-size='32' font-weight='700'>DISCIPLINE MODE</text>
+  <text x='140' y='340' fill='#fff' font-family='Arial, sans-serif' font-size='88' font-weight='900'>NO EDGE</text>
+  <text x='140' y='440' fill='#fff' font-family='Arial, sans-serif' font-size='88' font-weight='900'>RIGHT NOW?</text>
+  <text x='140' y='620' fill='#e2e8f0' font-family='Arial, sans-serif' font-size='46'>Prep tomorrow's slate.</text>
+  <text x='140' y='690' fill='#e2e8f0' font-family='Arial, sans-serif' font-size='46'>Don't force bad bets.</text>
+  <rect x='140' y='890' width='520' height='96' rx='18' fill='#7c3aed'/>
+  <text x='190' y='952' fill='#fff' font-family='Arial, sans-serif' font-size='42' font-weight='900'>VIEW TOMORROW</text>
+</svg>

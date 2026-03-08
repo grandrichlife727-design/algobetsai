@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sports Betting Predictor"
+  short_description: "Estimate edge and size bets with strict risk controls"
+  default_prompt: "Use $sports-betting-predictor to evaluate betting opportunities with probabilities, edge, and bankroll-safe sizing."
