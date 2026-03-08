@@ -541,6 +541,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .hps-cta{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
 .hps-cta .pf-btn,.hps-cta .paywall-cta{font-size:11px;padding:6px 9px}
 @media(max-width:900px){.hps-grid{grid-template-columns:1fr}}
+.scan-feedback{margin-top:6px;min-height:16px}
+.scan-feedback.ok{color:var(--green)}
+.scan-feedback.err{color:#ff8e9f}
+.scan-feedback.loading{color:var(--cyan)}
 .up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
 .up-ov.on{display:flex}
 .up-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -820,6 +824,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">Market Status</div>
           <div id="home-glance" class="growth-sub">3 games · 2 books · 3 edges found</div>
           <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
+          <div class="growth-note scan-feedback" id="home-scan-feedback">Last scan: never</div>
         </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
@@ -4465,6 +4470,14 @@ function updateHomeSummary() {
   renderHomeModules();
 }
 
+function setHomeScanFeedback(text, tone = '') {
+  const el = document.getElementById('home-scan-feedback');
+  if (!el) return;
+  el.textContent = text || '';
+  el.classList.remove('ok', 'err', 'loading');
+  if (tone) el.classList.add(tone);
+}
+
 function renderHomeModules() {
   const topEl = document.getElementById('home-top-picks');
   const premiumEl = document.getElementById('home-premium');
@@ -5309,6 +5322,8 @@ async function doScan(silent = false) {
   if (demoMode) {
     applyDemoDataset(false);
     lastRefresh = Date.now();
+    const stamp = new Date(lastRefresh).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
     setApiStatus('ok');
     document.getElementById('s-edge').textContent = '+5.7%';
     document.getElementById('s-count').textContent = String(PICKS.length);
@@ -5329,6 +5344,7 @@ async function doScan(silent = false) {
   }
   if (scanCooldownRemaining > 0) {
     if (!silent) showToast(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`);
+    setHomeScanFeedback(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`, 'loading');
     updateScanCooldownUi();
     return;
   }
@@ -5337,15 +5353,10 @@ async function doScan(silent = false) {
   const btn = document.getElementById('scan-btn');
   const loadBar = document.getElementById('load-bar');
   btn.classList.add('loading');
-  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning…';
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning...';
   loadBar.classList.add('on');
+  setHomeScanFeedback('Scanning...', 'loading');
   setApiStatus('loading');
-  setTimeout(() => {
-    if (!isScanning) return;
-    btn.classList.remove('loading');
-    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Check for live odds';
-    loadBar.classList.remove('on');
-  }, 500);
 
   // Keep cached picks visible while refreshing in background.
   const eb = document.getElementById('err-banner'); if(eb) eb.classList.remove('on');
@@ -5413,6 +5424,7 @@ async function doScan(silent = false) {
       applyDemoDataset(true);
       showLiveUnavailableBanner();
       setApiStatus('err');
+      setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
     }
 
     if (evRes.status === 'fulfilled') {
@@ -5440,13 +5452,19 @@ async function doScan(silent = false) {
       if ((quotaExhausted || FORCE_DEMO_MODE) && ODDSGAMES.length === 0) {
         applyDemoDataset(true);
         showLiveUnavailableBanner();
+        setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
       }
       await loadTomorrowGames();
       showLiveUnavailableBanner();
+      if (!document.getElementById('home-scan-feedback')?.textContent) {
+        setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
+      }
     } else {
       setApiStatus('ok');
       const errBanner = document.getElementById('err-banner');
       if (errBanner) errBanner.classList.remove('on');
+      const stamp = new Date(lastRefresh).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+      setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
     }
 
     if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
@@ -5456,6 +5474,7 @@ async function doScan(silent = false) {
     applyDemoDataset(true);
     showLiveUnavailableBanner();
     setApiStatus('err');
+    setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
   }
 
   renderPicks();
