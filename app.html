@@ -257,12 +257,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .edge-badge.high{background:rgba(0,229,160,.16);color:var(--green);border:1px solid rgba(0,229,160,.28)}
 .edge-badge.mid{background:rgba(255,183,0,.15);color:var(--amber);border:1px solid rgba(255,183,0,.25)}
 .edge-badge.low{background:rgba(255,255,255,.08);color:var(--sub);border:1px solid var(--border)}
-.rank-badge{font-family:var(--mono);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.32);color:var(--cyan)}
+.rank-badge{font-family:var(--mono);font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;border:1px solid transparent}
+.rank-badge.r1{background:rgba(255,215,0,.2);border-color:rgba(255,215,0,.45);color:#ffd54d}
+.rank-badge.r2{background:rgba(192,192,192,.18);border-color:rgba(192,192,192,.4);color:#d8dde3}
+.rank-badge.r3{background:rgba(205,127,50,.2);border-color:rgba(205,127,50,.45);color:#d99963}
 .confidence-wrap{margin:8px 0 6px}
 .confidence-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px}
 .confidence-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
 .confidence-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:99px}
-.pick-line{font-size:11px;color:var(--sub);line-height:1.45}
+.pick-line{font-size:11px;color:var(--sub);line-height:1.45;white-space:normal;overflow-wrap:anywhere}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
 .sample-corner{position:absolute;top:8px;right:8px;z-index:2}
 
@@ -1735,6 +1738,7 @@ const PREF_KEY = 'algobets-pref-v1';
 const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const PICKS_CACHE_KEY = 'algobets-picks-cache-v1';
+const SAVED_PICKS_KEY = 'algobets-saved-picks-v1';
 const REF_TRACK_KEY = 'algobets-ref-track-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
@@ -3776,6 +3780,33 @@ function sharePickToX(id) {
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'noopener,noreferrer');
 }
 
+function savePickToTracker(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  try {
+    const raw = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+    const list = Array.isArray(raw) ? raw : [];
+    if (list.some(x => String(x.id) === String(p.id))) {
+      showToast('Pick already saved');
+      return;
+    }
+    const next = [{
+      id: p.id,
+      bet: p.bet,
+      game: p.game,
+      odds: p.odds,
+      ev: p.ev,
+      conf: p.conf,
+      sport: p.sport,
+      ts: Date.now(),
+    }, ...list].slice(0, 100);
+    localStorage.setItem(SAVED_PICKS_KEY, JSON.stringify(next));
+    showToast('Saved to tracker');
+  } catch (_) {
+    showToast('Could not save pick');
+  }
+}
+
 async function postPickToCommunity(id, mode = 'pick') {
   if (!ensureRegisteredUser()) return;
   const p = PICKS.find(x => x.id === id);
@@ -4425,18 +4456,12 @@ function updateHomeSummary() {
   const edge = document.getElementById('s-edge')?.textContent || '—';
   const count = document.getElementById('s-count')?.textContent || String(PICKS.length || 0);
   const plan = planLabel(currentPlan);
-  const updated = document.getElementById('home-updated');
   const he = document.getElementById('home-edge');
   const hc = document.getElementById('home-count');
   const hp = document.getElementById('home-plan');
   if (he) he.textContent = edge;
   if (hc) hc.textContent = count;
   if (hp) hp.textContent = plan;
-  if (updated) {
-    if (liveOddsPaused) updated.textContent = 'Demo mode - live odds paused';
-    else if (lastRefresh) updated.textContent = `Updated ${timeAgo(lastRefresh)}`;
-    else updated.textContent = '';
-  }
   renderHomeModules();
 }
 
@@ -4519,17 +4544,7 @@ function renderHomeModules() {
   setHomeCardVisible('home-card-vip', !!homeFlags.show_vip_snapshot);
 
   if (glanceEl) {
-    const gameCount = ODDSGAMES.length || SCHEDULE_GAMES.length || (liveOddsPaused ? 3 : 0);
-    const bookSet = new Set();
-    (ODDSGAMES || []).forEach(g => (g.books || []).forEach(b => bookSet.add(String(b.book || '').toLowerCase())));
-    const books = bookSet.size || (liveOddsPaused ? 2 : 0);
-    if (liveOddsPaused) {
-      glanceEl.innerHTML = `3 games tracked · 2 books scanned · 3 edges found · demo mode`;
-    } else {
-      const updated = lastRefresh ? timeAgo(lastRefresh) : '';
-      const suffix = updated ? ` · updated ${updated}` : '';
-      glanceEl.innerHTML = `${gameCount} games tracked · ${books} books scanned · ${PICKS.length} edges${suffix}`;
-    }
+    glanceEl.innerHTML = `3 games · 2 books · 3 edges found`;
   }
   setHomeCardVisible('home-card-market', !!homeFlags.show_market_status);
 
@@ -5466,6 +5481,8 @@ async function doScan(silent = false) {
 // ─── RENDER PICKS ─────────────────────────────────────────────────────────────
 function renderPicks() {
   const el = document.getElementById('picklist');
+  const picksRefreshedEl = document.getElementById('picks-refreshed');
+  if (picksRefreshedEl) picksRefreshedEl.textContent = '';
   const pts = PICKS.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
@@ -5474,14 +5491,6 @@ function renderPicks() {
   }).sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)));
 
   document.getElementById('picks-count').textContent = `Today's Edges (Demo Data)`;
-  if (liveOddsPaused) {
-    document.getElementById('picks-refreshed').textContent = 'Demo mode - live odds paused';
-  } else if (lastRefresh) {
-    const staleWarn = picksCacheAgeMinutes > 20 ? ` (cached ${picksCacheAgeMinutes}m old)` : '';
-    document.getElementById('picks-refreshed').textContent = `Updated ${timeAgo(lastRefresh)}${staleWarn}`;
-  } else {
-    document.getElementById('picks-refreshed').textContent = '';
-  }
   updatePaywallUi();
 
   if (!pts.length) {
@@ -5518,7 +5527,8 @@ function renderPicks() {
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">DEMO DATA</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
-    const rankBadge = `<span class="rank-badge">#${i + 1} Edge</span>`;
+    const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
+    const rankBadge = `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   ${sampleTag}
   <div class="pick-inner">
@@ -5536,8 +5546,8 @@ function renderPicks() {
         <div class="confidence-row"><span title="Model certainty from 5-agent consensus">Confidence</span><span title="Model certainty from 5-agent consensus">${conf}%</span></div>
         <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%"></div></div>
       </div>
-      <div class="pick-line">Best line: <strong>${p.bet.split('@')[0].trim()}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
-      <div class="pick-line" title="De-vigged market consensus price">Fair value: <strong>${esc(String(fairLine))}</strong></div>
+      <div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
+      <div class="pick-line" title="De-vigged market consensus price">Fair Value: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}
     </div>
@@ -5545,6 +5555,7 @@ function renderPicks() {
   </div>
   <div class="pick-actions">
     <button class="btn-parlay" onclick="addParlay(${p.id})">Add to Parlay</button>
+    <button class="btn-share" onclick="savePickToTracker(${p.id})">Save</button>
     <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
     <button class="btn-share" onclick="sharePickToX(${p.id})">Share to X</button>
     <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>
@@ -6107,12 +6118,8 @@ function setFilter(el, k) {
 
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
 function startAutoRefresh() {
-  // Update relative timestamps and do a silent refresh every 60s.
+  // Refresh silently every 60s without timestamp labels.
   setInterval(() => {
-    const el = document.getElementById('picks-refreshed');
-    if (el && lastRefresh && !liveOddsPaused) el.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
-    const h = document.getElementById('home-updated');
-    if (h && lastRefresh && !liveOddsPaused) h.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
     if (!liveOddsPaused && !isScanning && (currentTab === 'picks' || currentTab === 'home')) doScan(true);
   }, 60000);
 }
