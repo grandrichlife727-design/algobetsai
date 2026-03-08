@@ -1037,8 +1037,23 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </a>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Affiliate Strategy</div>
-          <div class="growth-sub">Track clicks from this page and rotate top converting offers by state.</div>
+          <div class="growth-title">Affiliate Dashboard</div>
+          <div class="growth-sub">Paste your affiliate URLs and track clicks by sportsbook.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-draftkings" type="text" placeholder="DraftKings affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-fanduel" type="text" placeholder="FanDuel affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-betmgm" type="text" placeholder="BetMGM affiliate URL"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="af-link-caesars" type="text" placeholder="Caesars affiliate URL"/>
+          </div>
+          <div class="rf-row"><button class="paywall-cta" onclick="saveAffiliateLinks()">Save Affiliate Links</button></div>
+          <div class="growth-note" id="af-note">Loading affiliate data...</div>
+          <div class="growth-note" id="af-note-detail">No click data yet.</div>
           <div class="growth-note" id="offers-af-note">Loading affiliate performance...</div>
           <div class="growth-note" id="offers-af-detail">No click data yet.</div>
           <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
@@ -1255,6 +1270,33 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')">Sharp Money Tracker <span class="nav-badge">VIP</span></button></div>
         </div>
         <div class="growth-card">
+          <div class="growth-title">Bankroll Planner</div>
+          <div class="growth-sub">Auto-calc units, stop-loss, and max exposure.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="br-bankroll" type="number" min="10" step="10" placeholder="1000"/>
+            <button class="paywall-cta" onclick="runBankrollPlan()">Run Plan</button>
+          </div>
+          <div class="growth-note" id="br-note">No plan generated yet.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Agent Weights</div>
+          <div class="growth-sub">Tune model emphasis for your style.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="aw-best" type="number" step="0.1" min="0.2" max="3" placeholder="Best Line"/>
+            <input class="auth-in" id="aw-steam" type="number" step="0.1" min="0.2" max="3" placeholder="Steam"/>
+          </div>
+          <div class="rf-row">
+            <button class="paywall-cta" onclick="saveAgentWeights()">Save Weights</button>
+          </div>
+          <div class="growth-note" id="aw-note">Using default weights.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">News Impact Engine</div>
+          <div class="growth-sub">Market dispersion signals likely news/lineup impact.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
+          <div class="growth-note" id="ni-note">No impact data loaded.</div>
+        </div>
+        <div class="growth-card">
           <div class="growth-title">Offers + Revenue</div>
           <div class="growth-sub">Open full sportsbook offers and monitor affiliate click performance.</div>
           <div class="rf-row"><button class="pf-btn" onclick="go('offers')">Open Offers</button></div>
@@ -1385,6 +1427,24 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Bet <span>History</span></div><div class="page-sub">Tracked bets, ROI by sport, and CLV performance.</div></div>
       <div class="sec-hdr"><span class="sec-title" id="history-count">Ready</span><span class="sec-meta">Retention + trust proof</span></div>
       <div class="picks-list" id="history-list"></div>
+      <div class="growth-grid" style="margin-top:10px;max-width:100%">
+        <div class="growth-card">
+          <div class="growth-title">Bet Journal</div>
+          <div class="growth-sub">Track bets and export CSV for taxes/accounting.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="jr-game" type="text" placeholder="Lakers @ Suns"/>
+            <input class="auth-in" id="jr-bet" type="text" placeholder="Lakers ML"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="jr-odds" type="text" placeholder="+120"/>
+            <button class="paywall-cta" onclick="addJournalEntry()">Add</button>
+          </div>
+          <div class="rf-row">
+            <button class="pf-btn" onclick="exportJournalCsv()">Export CSV</button>
+          </div>
+          <div class="growth-note" id="jr-note">No journal entries yet.</div>
+        </div>
+      </div>
     </div>
 
     <div id="v-community" style="display:none">
@@ -1422,65 +1482,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="growth-grid">
         <div class="growth-card">
-          <div class="growth-title">Referral Unlock</div>
-          <div class="growth-sub">Share your code. Both users get 72h Premium trial when redeemed.</div>
-          <div class="rf-row">
-            <div class="rf-code" id="ref-code">ALGO--------</div>
-            <button class="pf-btn" onclick="copyReferralCode()">Copy</button>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="ref-input" type="text" placeholder="Enter referral code"/>
-            <button class="paywall-cta" onclick="redeemReferral()">Redeem</button>
-          </div>
-          <div class="growth-note" id="ref-note">Loading referral status...</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Alert Capture</div>
-          <div class="growth-sub">Save alerts to email or SMS for +EV thresholds.</div>
-          <div class="rf-row">
-            <select class="auth-in" id="al-channel" style="font-family:var(--sans)">
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-            </select>
-            <input class="auth-in" id="al-target" type="text" placeholder="you@example.com or +15551234567"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="al-min-ev" type="number" min="0.5" max="25" step="0.5" value="2"/>
-            <button class="paywall-cta" onclick="saveAlertSubscription()">Save Alert</button>
-          </div>
-          <div class="growth-note" id="al-note">No subscriptions yet.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Daily Digest</div>
-          <div class="growth-sub">Get your top edges delivered daily.</div>
-          <div class="rf-row">
-            <select class="auth-in" id="dg-channel" style="font-family:var(--sans)">
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-            </select>
-            <input class="auth-in" id="dg-target" type="text" placeholder="you@example.com or +15551234567"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="dg-hour" type="number" min="0" max="23" step="1" value="9"/>
-            <button class="paywall-cta" onclick="saveDigestSubscription()">Save Digest</button>
-          </div>
-          <div class="growth-note" id="dg-note">Digest disabled.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Streak Reward</div>
-          <div class="growth-sub">Hit 5-day streak milestones to claim bonus Premium hours.</div>
-          <div class="rf-row">
-            <div class="growth-note" id="streak-note">Loading streak...</div>
-            <button class="paywall-cta" onclick="claimStreakReward()">Claim</button>
-          </div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">API Budget Dashboard</div>
-          <div class="growth-sub">Track usage and keep monthly API spend under control.</div>
-          <div class="growth-note" id="quota-note">Loading quota...</div>
-          <div class="growth-note" id="low-data-note">Global data mode is managed by backend settings.</div>
-        </div>
-        <div class="growth-card">
           <div class="growth-title">Personal Settings</div>
           <div class="growth-sub">Set bankroll mode and state to personalize stakes and book links.</div>
           <div class="rf-row">
@@ -1495,6 +1496,43 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <button class="paywall-cta" onclick="saveProfileSettings()">Save Settings</button>
           </div>
           <div class="growth-note" id="pf-note">Using default settings.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Notifications</div>
+          <div class="growth-sub">Configure alerts, digest delivery, and quick alert packs.</div>
+          <div class="rf-row">
+            <select class="auth-in" id="al-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="al-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="al-min-ev" type="number" min="0.5" max="25" step="0.5" value="2"/>
+            <button class="paywall-cta" onclick="saveAlertSubscription()">Save Alert</button>
+          </div>
+          <div class="growth-note" id="al-note">No subscriptions yet.</div>
+          <div class="rf-row" style="margin-top:8px">
+            <select class="auth-in" id="dg-channel" style="font-family:var(--sans)">
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+            <input class="auth-in" id="dg-target" type="text" placeholder="you@example.com or +15551234567"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="dg-hour" type="number" min="0" max="23" step="1" value="9"/>
+            <button class="paywall-cta" onclick="saveDigestSubscription()">Save Digest</button>
+          </div>
+          <div class="growth-note" id="dg-note">Digest disabled.</div>
+          <div class="rf-row" style="margin-top:8px">
+            <select class="auth-in" id="ap-pack" style="font-family:var(--sans)">
+              <option value="a_grade_ev4">A-grade +EV</option>
+              <option value="underdog_steam">Underdog Steam</option>
+              <option value="totals_only">Totals Only</option>
+            </select>
+            <button class="paywall-cta" onclick="saveAlertPack()">Save Pack</button>
+          </div>
+          <div class="growth-note" id="ap-note">No pack enabled.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">API Keys (VIP)</div>
@@ -1522,81 +1560,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">Help & Guide</div>
           <div class="growth-sub">Step-by-step walkthrough for Picks, Tools, History, and bankroll flow.</div>
           <div class="rf-row"><button class="pf-btn" onclick="go('guide')">Open Full Guide</button></div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Bankroll Planner</div>
-          <div class="growth-sub">Auto-calc units, stop-loss, and max exposure.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="br-bankroll" type="number" min="10" step="10" placeholder="1000"/>
-            <button class="paywall-cta" onclick="runBankrollPlan()">Run Plan</button>
-          </div>
-          <div class="growth-note" id="br-note">No plan generated yet.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Alert Packs</div>
-          <div class="growth-sub">Quick subscriptions: A-grade +EV, underdog steam, totals.</div>
-          <div class="rf-row">
-            <select class="auth-in" id="ap-pack" style="font-family:var(--sans)">
-              <option value="a_grade_ev4">A-grade +EV</option>
-              <option value="underdog_steam">Underdog Steam</option>
-              <option value="totals_only">Totals Only</option>
-            </select>
-            <button class="paywall-cta" onclick="saveAlertPack()">Save Pack</button>
-          </div>
-          <div class="growth-note" id="ap-note">No pack enabled.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Agent Weights</div>
-          <div class="growth-sub">Tune model emphasis for your style.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="aw-best" type="number" step="0.1" min="0.2" max="3" placeholder="Best Line"/>
-            <input class="auth-in" id="aw-steam" type="number" step="0.1" min="0.2" max="3" placeholder="Steam"/>
-          </div>
-          <div class="rf-row">
-            <button class="paywall-cta" onclick="saveAgentWeights()">Save Weights</button>
-          </div>
-          <div class="growth-note" id="aw-note">Using default weights.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Bet Journal</div>
-          <div class="growth-sub">Track bets and export CSV for taxes/accounting.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="jr-game" type="text" placeholder="Lakers @ Suns"/>
-            <input class="auth-in" id="jr-bet" type="text" placeholder="Lakers ML"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="jr-odds" type="text" placeholder="+120"/>
-            <button class="paywall-cta" onclick="addJournalEntry()">Add</button>
-          </div>
-          <div class="rf-row">
-            <button class="pf-btn" onclick="exportJournalCsv()">Export CSV</button>
-          </div>
-          <div class="growth-note" id="jr-note">No journal entries yet.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Affiliate Dashboard</div>
-          <div class="growth-sub">Paste your affiliate URLs and track clicks by sportsbook.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="af-link-draftkings" type="text" placeholder="DraftKings affiliate URL"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="af-link-fanduel" type="text" placeholder="FanDuel affiliate URL"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="af-link-betmgm" type="text" placeholder="BetMGM affiliate URL"/>
-          </div>
-          <div class="rf-row">
-            <input class="auth-in" id="af-link-caesars" type="text" placeholder="Caesars affiliate URL"/>
-          </div>
-          <div class="rf-row"><button class="paywall-cta" onclick="saveAffiliateLinks()">Save Affiliate Links</button><button class="pf-btn" onclick="go('offers')">Open Offers</button></div>
-          <div class="growth-note" id="af-note">Loading affiliate data...</div>
-          <div class="growth-note" id="af-note-detail">No click data yet.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">News Impact Engine</div>
-          <div class="growth-sub">Market dispersion signals likely news/lineup impact.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="loadNewsImpact()">Refresh Impact</button></div>
-          <div class="growth-note" id="ni-note">No impact data loaded.</div>
         </div>
       </div>
     </div>
@@ -6373,23 +6336,25 @@ function go(name) {
   if (name === 'premium') renderPremiumTools();
   if (name === 'home') updateHomeSummary();
   if (name === 'perf') loadPerformance();
-  if (name === 'history') loadHistory();
+  if (name === 'history') {
+    loadHistory();
+    loadJournalStats();
+  }
   if (name === 'community') loadCommunityFeed();
+  if (name === 'tools') {
+    loadAgentWeights();
+    loadNewsImpact();
+    loadAffiliate();
+  }
+  if (name === 'offers') loadAffiliate();
   if (name === 'vip' || name.startsWith('vip-')) renderVipTools();
   if (name === 'vip-discord') loadDiscordLink(true);
   if (name === 'vip-execution') refreshVipLivePlays(true);
   if (name === 'profile') {
-    loadReferralStatus();
     loadAlertSubscriptions();
     loadDigestSubscription();
-    loadStreakStatus();
     loadProfileSettings();
-    loadQuotaDashboard();
-    loadAgentWeights();
     loadAlertPacks();
-    loadAffiliate();
-    loadNewsImpact();
-    loadJournalStats();
   }
   saveState();
 }
@@ -6545,7 +6510,6 @@ try {
   }
 } catch (_) {}
 loadProfileSettings();
-loadQuotaDashboard();
 loadHomeSportsNews();
 fetchPlan();
 fetchPricing();
