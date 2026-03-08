@@ -1825,7 +1825,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
     <div class="auth-topline">
-      <div class="auth-title" id="auth-title">Create Free Account</div>
+      <div class="auth-title" id="auth-title">Sign In or Create Account</div>
       <div class="auth-chip">No card required</div>
     </div>
     <div class="auth-sub" id="auth-sub">Save your picks, alerts, and billing across devices.</div>
@@ -1845,7 +1845,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
     <div class="auth-actions">
       <button class="auth-skip" id="auth-skip-btn" onclick="closeAuthModal()">Skip for now</button>
-      <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Create Account</button>
+      <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Continue</button>
     </div>
     <label class="growth-sub" style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:11px">
       <input type="checkbox" id="auth-marketing-optin" style="margin-top:2px"/>
@@ -4055,7 +4055,7 @@ function selectAuthMethod(method) {
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
+    if (continueBtn) continueBtn.textContent = 'Continue';
   } else if (m === 'google') {
     if (fieldWrap) fieldWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
@@ -4070,7 +4070,7 @@ function selectAuthMethod(method) {
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
+    if (continueBtn) continueBtn.textContent = 'Continue';
   }
 }
 
@@ -4083,10 +4083,8 @@ function openAuthModal(preferredMethod = null) {
   const subEl = document.getElementById('auth-sub');
   const skipBtn = document.getElementById('auth-skip-btn');
   const hasIdentity = normalizeAuthMethod(userProfile.method) !== 'guest' && String(userProfile.identifier || '').trim().length > 0;
-  if (titleEl) titleEl.textContent = hasIdentity ? 'Welcome Back' : 'Create Free Account';
-  if (subEl) subEl.textContent = hasIdentity
-    ? 'Sign in to access saved picks, alerts, and billing settings.'
-    : 'Save your picks, alerts, billing, and profile sync across devices.';
+  if (titleEl) titleEl.textContent = 'Sign In or Create Account';
+  if (subEl) subEl.textContent = 'Use Google or email to access your picks, alerts, billing, and profile across devices.';
   const optInEl = document.getElementById('auth-marketing-optin');
   if (optInEl) optInEl.checked = String(localStorage.getItem(MARKETING_OPT_IN_KEY) || '0') === '1';
   if (skipBtn) skipBtn.style.display = hasIdentity ? 'none' : '';
