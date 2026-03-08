@@ -899,32 +899,32 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <details class="agent-accordion">
         <summary><span>How the 5-Agent Edge Engine works</span><span>View</span></summary>
         <div class="agent-body">
-          <div class="agent-sub">Every pick runs through five independent checks before one final edge score is published.</div>
+          <div class="agent-sub">Context-aware engine: each pick can trigger a different subset of agents based on market conditions.</div>
           <div class="agent-flow">
             <div class="agent-step">
               <div class="agent-step-top"><svg class="agent-step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg><div class="agent-step-k">Agent 1</div></div>
-              <div class="agent-step-v">Best-Line EV</div>
+              <div class="agent-step-v">Best-Line EV (core)</div>
             </div>
             <div class="agent-step">
               <div class="agent-step-top"><svg class="agent-step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M8 8h8"/><path d="M8 16h8"/></svg><div class="agent-step-k">Agent 2</div></div>
-              <div class="agent-step-v">De-vig Consensus</div>
+              <div class="agent-step-v">De-vig Consensus (core)</div>
             </div>
             <div class="agent-step">
               <div class="agent-step-top"><svg class="agent-step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><div class="agent-step-k">Agent 3</div></div>
-              <div class="agent-step-v">Steam Moves</div>
+              <div class="agent-step-v">Steam Moves (when present)</div>
             </div>
             <div class="agent-step">
               <div class="agent-step-top"><svg class="agent-step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M5 17c.8-2 2.2-3 3-3s2.2 1 3 3"/><path d="M13 17c.8-2 2.2-3 3-3s2.2 1 3 3"/></svg><div class="agent-step-k">Agent 4</div></div>
-              <div class="agent-step-v">Public Fades</div>
+              <div class="agent-step-v">Public Fades (when skewed)</div>
             </div>
             <div class="agent-step">
               <div class="agent-step-top"><svg class="agent-step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="agent-step-k">Agent 5</div></div>
-              <div class="agent-step-v">Timing/CLV</div>
+              <div class="agent-step-v">Timing/CLV (when applicable)</div>
             </div>
           </div>
           <div class="agent-out">
             <div class="agent-out-k">Combined Output</div>
-            <div class="agent-out-v">Weighted edge score -> confidence -> stake suggestion -> release to Picks, Premium, and VIP boards.</div>
+            <div class="agent-out-v">2-5 agents can fire per pick -> weighted edge score -> confidence -> stake suggestion -> release to boards.</div>
           </div>
         </div>
       </details>
