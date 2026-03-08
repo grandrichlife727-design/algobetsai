@@ -123,6 +123,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .news-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
 .news-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-top:4px}
 .news-sub{font-size:12px;color:var(--sub);line-height:1.45;margin-top:5px}
+.agent-accordion{margin:0 0 14px;border:1px solid var(--border2);border-radius:12px;background:rgba(255,255,255,.02)}
+.agent-accordion summary{cursor:pointer;list-style:none;padding:12px 14px;font-size:12px;font-weight:800;color:var(--text);display:flex;justify-content:space-between;align-items:center}
+.agent-accordion summary::-webkit-details-marker{display:none}
+.agent-accordion .agent-body{padding:0 14px 12px}
+.agent-accordion .agent-sub{font-size:12px;color:var(--sub);line-height:1.45}
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
@@ -819,11 +824,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
         </div>
       </div>
-      <div class="growth-card" style="margin:0 0 14px">
-        <div class="growth-title">5-Agent Edge Engine</div>
-        <div class="growth-sub">Every pick is scored by five independent agents and merged into one edge rating.</div>
-        <div class="growth-sub">Agents: Best-Line EV · De-vig Consensus · Steam Moves · Public Fades · Timing/CLV.</div>
-      </div>
+      <details class="agent-accordion">
+        <summary><span>How the 5-Agent Edge Engine works</span><span>View</span></summary>
+        <div class="agent-body">
+          <div class="agent-sub">Every pick is scored by five independent agents and merged into one edge rating.</div>
+          <div class="agent-sub">Best-Line EV · De-vig Consensus · Steam Moves · Public Fades · Timing/CLV.</div>
+        </div>
+      </details>
       <div class="trial-card" id="trial-card-home">
         <div class="trial-copy" id="trial-copy-home"><strong>Try Premium free for 3 days.</strong> Unlock +EV plays, props, steam moves, and 5-minute refresh.</div>
         <div class="trial-actions">
@@ -837,11 +844,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div id="home-top-picks" class="growth-sub">Scanning all 5 agents...</div>
           <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
-        <div class="growth-card" id="home-card-premium" data-home-card="premium_unlocks">
-          <div class="growth-title">Premium Unlocks</div>
-          <div id="home-premium" class="growth-sub">Includes: Props · +EV filter · Steam moves · Public fades · Parlay builder</div>
-          <div class="rf-row"><button class="paywall-cta" data-home-cta="premium_unlocks" onclick="go('premium')">Open Premium</button></div>
-        </div>
         <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
           <div class="growth-title">VIP Pick of the Day</div>
           <div id="home-vip" class="growth-sub">Loading VIP pick preview...</div>
@@ -852,6 +854,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div id="home-glance" class="growth-sub">3 games · 2 books · 3 edges found</div>
           <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
           <div class="growth-note scan-feedback" id="home-scan-feedback">Last scan: never</div>
+        </div>
+        <div class="growth-card" id="home-card-news" data-home-card="home_news">
+          <div class="growth-title">Market Impact News</div>
+          <div id="home-news" class="news-feed"></div>
         </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
@@ -876,10 +882,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <span class="offer-cta">Claim</span>
           </a>
           <div class="growth-note" style="margin-top:8px">Disclosure: We may earn commissions from partner links.</div>
-        </div>
-        <div class="growth-card" id="home-card-news" data-home-card="home_news">
-          <div class="growth-title">Market Impact News</div>
-          <div id="home-news" class="news-feed"></div>
         </div>
       </div>
     </div>
@@ -4754,8 +4756,8 @@ function togglePlanCards() {
 function applyHomeExperimentLayout() {
   const grid = document.getElementById('home-grid');
   if (!grid) return;
-  const orderA = ['home-card-picks', 'home-card-premium', 'home-card-vip', 'home-card-market', 'home-card-offers', 'home-card-news'];
-  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-premium', 'home-card-market', 'home-card-offers', 'home-card-news'];
+  const orderA = ['home-card-picks', 'home-card-vip', 'home-card-market', 'home-card-news', 'home-card-offers'];
+  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-market', 'home-card-news', 'home-card-offers'];
   const order = HOME_AB === 'B' ? orderB : orderA;
   order.forEach(id => {
     const node = document.getElementById(id);
@@ -4888,10 +4890,6 @@ function renderHomeModules() {
         </div>`;
     }
   }
-  const premiumBtn = document.querySelector('#home-card-premium [data-home-cta="premium_unlocks"]');
-  if (premiumBtn) premiumBtn.textContent = HOME_AB === 'B' ? 'Unlock Premium' : 'Open Premium';
-  setHomeCardVisible('home-card-premium', true);
-
   if (vipEl) {
     const pod = getVipPickOfDay();
     const liveCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
