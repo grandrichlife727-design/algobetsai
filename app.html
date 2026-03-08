@@ -935,7 +935,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="sec-hdr">
         <span class="sec-title" id="picks-count">Ready</span>
-        <span class="sec-meta" id="picks-refreshed">—</span>
+        <span class="sec-meta" id="picks-refreshed"></span>
       </div>
       <div class="picks-list" id="picklist">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
@@ -1954,6 +1954,8 @@ let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
 let TOMORROW_GAMES = [];
+let liveOddsPaused = false;
+let picksCacheAgeMinutes = 0;
 
 function liveTtlMs() { return LOW_DATA_MODE ? 15 * 60 * 1000 : LIVE_TTL_MS; }
 function tomorrowTtlMs() { return LOW_DATA_MODE ? 6 * 60 * 60 * 1000 : TOMORROW_TTL_MS; }
@@ -2040,9 +2042,53 @@ function showToast(msg) {
 }
 
 function samplePickSeed() {
+  return resilientDemoPicksRaw().map((p, i) => normalizePick(p, i));
+}
+
+function resilientDemoPicksRaw() {
   return [
-    normalizePick({sport: 'basketball_nba', label: 'NBA', game: 'Magic @ Celtics', bet: 'Magic +4.5 @ Celtics', odds: '-110', edge: 4.2, confidence: 72, best_book: 'draftkings', fair_line: '+2.5 (-110)'}, 991),
-    normalizePick({sport: 'basketball_nba', label: 'NBA', game: 'Nuggets @ Suns', bet: 'Nuggets -3.5 @ Suns', odds: '-108', edge: 3.6, confidence: 69, best_book: 'fanduel', fair_line: '-1.5 (-110)'}, 992),
+    {
+      sport: 'basketball_nba',
+      emoji: '🏀',
+      game: 'Magic +4.5 @ Celtics',
+      bet: 'Magic +4.5 @ Celtics',
+      odds: '-110',
+      edge: 8.4,
+      confidence_calibrated: 81,
+      best_book: 'draftkings',
+      display_time: '7:30 PM ET',
+      fair_line: '+2.5 (-110)',
+      demo_data: true,
+      agents: ['Best-Line EV', 'De-vig Consensus', 'Sharp-Book Weighting'],
+    },
+    {
+      sport: 'basketball_nba',
+      emoji: '🏀',
+      game: 'Nuggets -3.5 vs Lakers',
+      bet: 'Nuggets -3.5 vs Lakers',
+      odds: '-110',
+      edge: 6.2,
+      confidence_calibrated: 74,
+      best_book: 'fanduel',
+      display_time: '10:00 PM ET',
+      fair_line: '-5.5 (-110)',
+      demo_data: true,
+      agents: ['Best-Line EV', 'Steam Moves'],
+    },
+    {
+      sport: 'icehockey_nhl',
+      emoji: '🏒',
+      game: 'Under 5.5 · Rangers @ Bruins',
+      bet: 'Under 5.5 · Rangers @ Bruins',
+      odds: '-108',
+      edge: 4.9,
+      confidence_calibrated: 69,
+      best_book: 'betmgm',
+      display_time: '8:00 PM ET',
+      fair_line: 'Under 5.5 (-125)',
+      demo_data: true,
+      agents: ['De-vig Consensus', 'Public Fades'],
+    },
   ];
 }
 
@@ -2052,19 +2098,36 @@ function loadCachedPicksFirstPaint() {
     const rows = Array.isArray(cached?.picks) ? cached.picks : [];
     if (rows.length) {
       PICKS = rows.map((p, i) => normalizePick(p, i));
-      lastRefresh = Number(cached.ts || Date.now());
+      const ts = Number(cached.ts || Date.now());
+      lastRefresh = ts;
+      picksCacheAgeMinutes = Math.max(0, Math.round((Date.now() - ts) / 60000));
       return true;
     }
   } catch (_) {}
   PICKS = samplePickSeed();
   lastRefresh = Date.now();
+  picksCacheAgeMinutes = 0;
   return false;
 }
 
 function savePicksCache(rawPicks) {
   try {
     localStorage.setItem(PICKS_CACHE_KEY, JSON.stringify({ts: Date.now(), picks: Array.isArray(rawPicks) ? rawPicks.slice(0, 80) : []}));
+    picksCacheAgeMinutes = 0;
   } catch (_) {}
+}
+
+function showLiveUnavailableBanner() {
+  const errBanner = document.getElementById('err-banner');
+  if (!errBanner) return;
+  errBanner.innerHTML = `Live odds temporarily unavailable. Showing sample data. <button class="paywall-cta" style="margin-left:8px" onclick="retryLiveOdds()">Check for live odds</button>`;
+  errBanner.classList.add('on');
+}
+
+function retryLiveOdds() {
+  demoMode = false;
+  liveOddsPaused = false;
+  doScan(false);
 }
 
 function esc(v) {
@@ -2648,23 +2711,28 @@ function exportJournalCsv() {
   window.open(url, '_blank', 'noopener');
 }
 
-function applyDemoDataset() {
+function applyDemoDataset(pausedLive = false) {
+  const now = Date.now();
   const demoGamesRaw = [
     {
       sport: 'basketball_nba',
       label: 'NBA',
       emoji: '🏀',
-      away_team: 'Lakers',
+      away_team: 'Magic',
       home_team: 'Celtics',
-      commence_time: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
-      moneyline_by_book: {
-        draftkings: {away: 128, home: -146},
-        fanduel: {away: 132, home: -150},
-        betmgm: {away: 130, home: -148},
-        pinnacle: {away: 124, home: -141},
-      },
-      home_ml: -146,
-      away_ml: 128,
+      commence_time: new Date(now + 2 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {draftkings: {away: 145, home: -165}, fanduel: {away: 142, home: -162}, betmgm: {away: 143, home: -163}},
+      home_ml: -165, away_ml: 145,
+    },
+    {
+      sport: 'basketball_nba',
+      label: 'NBA',
+      emoji: '🏀',
+      away_team: 'Lakers',
+      home_team: 'Nuggets',
+      commence_time: new Date(now + 4.5 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {fanduel: {away: 138, home: -158}, draftkings: {away: 141, home: -162}, betmgm: {away: 140, home: -160}},
+      home_ml: -158, away_ml: 138,
     },
     {
       sport: 'icehockey_nhl',
@@ -2672,47 +2740,20 @@ function applyDemoDataset() {
       emoji: '🏒',
       away_team: 'Rangers',
       home_team: 'Bruins',
-      commence_time: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
-      moneyline_by_book: {
-        draftkings: {away: 118, home: -134},
-        fanduel: {away: 121, home: -138},
-        betmgm: {away: 120, home: -136},
-        pinnacle: {away: 114, home: -129},
-      },
-      home_ml: -134,
-      away_ml: 118,
-    },
-    {
-      sport: 'basketball_ncaab',
-      label: 'NCAAB',
-      emoji: '🎓',
-      away_team: 'Duke',
-      home_team: 'UNC',
-      commence_time: new Date(Date.now() + 22 * 3600 * 1000).toISOString(),
-      moneyline_by_book: {
-        draftkings: {away: -112, home: -108},
-        fanduel: {away: -110, home: -110},
-        betmgm: {away: -115, home: -105},
-        pinnacle: {away: -108, home: -102},
-      },
-      home_ml: -108,
-      away_ml: -112,
+      commence_time: new Date(now + 3 * 3600 * 1000).toISOString(),
+      moneyline_by_book: {betmgm: {away: 118, home: -135}, draftkings: {away: 116, home: -133}, fanduel: {away: 119, home: -137}},
+      home_ml: -135, away_ml: 118,
     },
   ];
 
-  const demoPicksRaw = [
-    {sport: 'basketball_nba', emoji: '🏀', game: 'Lakers @ Celtics', bet: 'Lakers ML', odds: '+132', edge: 6.4, confidence_calibrated: 67, best_book: 'fanduel', game_time: demoGamesRaw[0].commence_time, model_breakdown: {pinnacle_clv: 'Best-book gap vs sharp reference remains favorable.', sharp_money: 'Early market pressure supports Lakers side.', confirms: 'Best-line EV, de-vig consensus, calibrated confidence'}},
-    {sport: 'icehockey_nhl', emoji: '🏒', game: 'Rangers @ Bruins', bet: 'Rangers ML', odds: '+121', edge: 5.8, confidence_calibrated: 64, best_book: 'fanduel', game_time: demoGamesRaw[1].commence_time, model_breakdown: {pinnacle_clv: 'Soft-book price still ahead of market median.', sharp_money: 'Line movement indicates buyback on underdog.', confirms: 'Consensus edge + line efficiency delta'}},
-    {sport: 'basketball_ncaab', emoji: '🎓', game: 'Duke @ UNC', bet: 'Duke ML', odds: '-108', edge: 4.9, confidence_calibrated: 62, best_book: 'pinnacle', game_time: demoGamesRaw[2].commence_time, model_breakdown: {pinnacle_clv: 'Fair-line model shows slight price advantage.', sharp_money: 'Public split near even; price still playable.', confirms: 'EV threshold + confidence floor passed'}},
-  ];
-
+  const demoPicksRaw = resilientDemoPicksRaw();
   const demoEvRaw = [
-    {bet: 'Lakers ML +132', game: 'Lakers @ Celtics', ev: 6.4, books_compared: 4, bookOdds: '+132'},
-    {bet: 'Rangers ML +121', game: 'Rangers @ Bruins', ev: 5.8, books_compared: 4, bookOdds: '+121'},
-    {bet: 'Duke ML -108', game: 'Duke @ UNC', ev: 4.9, books_compared: 4, bookOdds: '-108'},
+    {bet: 'Magic +4.5', game: 'Magic @ Celtics', ev: 8.4, books_compared: 3, bookOdds: '-110'},
+    {bet: 'Nuggets -3.5', game: 'Nuggets vs Lakers', ev: 6.2, books_compared: 3, bookOdds: '-110'},
+    {bet: 'Under 5.5', game: 'Rangers @ Bruins', ev: 4.9, books_compared: 3, bookOdds: '-108'},
   ];
 
-  demoMode = true;
+  liveOddsPaused = !!pausedLive;
   ODDSGAMES = normalizeOddsGames(demoGamesRaw);
   if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
   PICKS = demoPicksRaw.map((p, i) => normalizePick(p, i)).sort((a, b) => b.ev - a.ev);
@@ -2724,11 +2765,11 @@ function applyDemoDataset() {
     {sport: 'NHL', game: 'Rangers @ Bruins', minutes_since_start: -18, home_team: 'Bruins', away_team: 'Rangers', home_ml: -132, away_ml: 116},
   ];
   PROPSDATA = [
-    {player: 'Jayson Tatum', market: 'player_points', side: 'Over', line: 28.5, odds: -108, book: 'FanDuel', game: 'Lakers @ Celtics', game_time: demoGamesRaw[0].commence_time},
-    {player: 'Artemi Panarin', market: 'player_points', side: 'Over', line: 1.5, odds: +105, book: 'DraftKings', game: 'Rangers @ Bruins', game_time: demoGamesRaw[1].commence_time},
+    {player: 'Paolo Banchero', market: 'player_points', side: 'Over', line: 22.5, odds: -110, book: 'DraftKings', game: 'Magic @ Celtics', game_time: demoGamesRaw[0].commence_time},
+    {player: 'Jamal Murray', market: 'player_points', side: 'Over', line: 23.5, odds: -108, book: 'FanDuel', game: 'Lakers @ Nuggets', game_time: demoGamesRaw[1].commence_time},
   ];
   TOMORROW_GAMES = [
-    {emoji: '🎓', game: 'Duke @ UNC', game_time: demoGamesRaw[2].commence_time},
+    {emoji: '🏒', game: 'Rangers @ Bruins', game_time: demoGamesRaw[2].commence_time},
   ];
 }
 
@@ -4338,7 +4379,8 @@ function toggleDemoMode() {
   localStorage.setItem(DEMO_MODE_KEY, demoMode ? '1' : '0');
   updateDemoToggleUi();
   if (demoMode) {
-    applyDemoDataset();
+    liveOddsPaused = false;
+    applyDemoDataset(false);
     lastRefresh = Date.now();
     setApiStatus('ok');
     renderPicks();
@@ -4353,6 +4395,7 @@ function toggleDemoMode() {
     return;
   }
   showToast('Demo mode disabled');
+  liveOddsPaused = false;
   doScan(true);
 }
 
@@ -4440,7 +4483,11 @@ function updateHomeSummary() {
   if (he) he.textContent = edge;
   if (hc) hc.textContent = count;
   if (hp) hp.textContent = plan;
-  if (updated) updated.textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '';
+  if (updated) {
+    if (liveOddsPaused) updated.textContent = 'Demo mode - live odds paused';
+    else if (lastRefresh) updated.textContent = `Updated ${timeAgo(lastRefresh)}`;
+    else updated.textContent = '';
+  }
   renderHomeModules();
 }
 
@@ -4875,7 +4922,7 @@ function setApiStatus(state) {
   const dot = document.getElementById('api-dot');
   const lbl = document.getElementById('api-lbl');
   dot.className = 'api-dot ' + state;
-  lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Error' : 'Loading';
+  lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Paused' : 'Syncing';
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
 }
 
@@ -4939,9 +4986,11 @@ function normalizePick(p, idx) {
     ? `<strong>${betText}</strong> in <strong>${gameText}</strong>. ${esc(mb.pinnacle_clv)}. ${esc(mb.sharp_money || '')}. ${mb.confirms ? 'Signals: ' + esc(mb.confirms) : ''}`
     : `<strong>${betText}</strong> at ${oddsText} on <strong>${bookText}</strong> has +${ev}% edge over true probability.`;
 
-  let timeStr = p.game_time || '';
+  let timeStr = p.display_time || p.game_time || '';
   if (timeStr) {
-    try { timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}); } catch(e){}
+    if (!/[AP]M ET/i.test(String(timeStr))) {
+      try { timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}); } catch(e){}
+    }
   }
 
   return {
@@ -4957,6 +5006,9 @@ function normalizePick(p, idx) {
     ev,
     conf: Math.round(conf),
     clvExp: Number(p.clv_expectation || 0),
+    fairLine: p.fair_line || p.fairLine || '',
+    agents: Array.isArray(p.agents) ? p.agents : [],
+    demoData: !!p.demo_data,
     mScore: Number(p.model_v2?.ensemble_score || p.agent_score || 0),
     book: bookText,
     bookRaw: bookLabel(p.best_book || ''),
@@ -5289,7 +5341,7 @@ function setPropsSport(sport) {
 async function doScan(silent = false) {
   if (isScanning) return;
   if (demoMode) {
-    applyDemoDataset();
+    applyDemoDataset(false);
     lastRefresh = Date.now();
     setApiStatus('ok');
     document.getElementById('s-edge').textContent = '+5.7%';
@@ -5322,23 +5374,17 @@ async function doScan(silent = false) {
   btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning…';
   loadBar.classList.add('on');
   setApiStatus('loading');
+  setTimeout(() => {
+    if (!isScanning) return;
+    btn.classList.remove('loading');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Check for live odds';
+    loadBar.classList.remove('on');
+  }, 500);
 
   // Keep cached picks visible while refreshing in background.
   const eb = document.getElementById('err-banner'); if(eb) eb.classList.remove('on');
 
-  if (!silent) {
-    document.getElementById('picklist').innerHTML = `
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
-        <div class="skeleton skeleton-shimmer" style="height:12px;width:40%"></div>
-        <div class="skeleton skeleton-shimmer" style="height:18px;width:65%"></div>
-        <div class="skeleton skeleton-shimmer" style="height:10px;width:30%"></div>
-      </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;gap:10px;display:flex;flex-direction:column">
-        <div class="skeleton skeleton-shimmer" style="height:12px;width:35%"></div>
-        <div class="skeleton skeleton-shimmer" style="height:18px;width:55%"></div>
-        <div class="skeleton skeleton-shimmer" style="height:10px;width:28%"></div>
-      </div>`;
-  }
+  if (!silent) renderPicks();
 
   try {
     // Add ?refresh=true&bust= cache-busting param so Render doesn't serve cached/stale response
@@ -5384,6 +5430,7 @@ async function doScan(silent = false) {
         // REMOVED gameTimeRaw filter to ensure API picks are always shown
         .sort((a, b) => b.ev - a.ev);
       savePicksCache(arr);
+      liveOddsPaused = false;
       FADESDATA = computePublicFadesFromPicks(PICKS);
       updatePlanUi();
       updatePaywallUi();
@@ -5396,7 +5443,10 @@ async function doScan(silent = false) {
       updateTrialCard();
       maybePromptAuthNudge();
     } else {
-        console.error("Picks request failed:", picksRes.reason);
+      console.error("Picks request failed:", picksRes.reason);
+      applyDemoDataset(true);
+      showLiveUnavailableBanner();
+      setApiStatus('err');
     }
 
     if (evRes.status === 'fulfilled') {
@@ -5422,34 +5472,24 @@ async function doScan(silent = false) {
 
     if (PICKS.length === 0 && EVDATA.length === 0) {
       if ((quotaExhausted || FORCE_DEMO_MODE) && ODDSGAMES.length === 0) {
-        applyDemoDataset();
-        showToast('Demo mode active while live odds are unavailable');
+        applyDemoDataset(true);
+        showLiveUnavailableBanner();
       }
       await loadTomorrowGames();
-      const errBanner = document.getElementById('err-banner');
-      if (errBanner) {
-        const allFailed = [picksRes, evRes].every(r => r.status === 'rejected');
-        errBanner.textContent = quotaExhausted
-          ? '⚠ Live odds quota is exhausted. Showing demo data until usage resets.'
-          : (allFailed
-            ? '⚠ Backend is offline or warming up. Render free instances take up to 50s to wake. Try Scan Now again.'
-            : '⚠ No edges found right now. The model may be recalibrating or no lines have moved yet. Check back shortly.');
-        errBanner.classList.add('on');
-      }
+      showLiveUnavailableBanner();
     } else {
       setApiStatus('ok');
+      const errBanner = document.getElementById('err-banner');
+      if (errBanner) errBanner.classList.remove('on');
     }
 
     if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
 
   } catch(err) {
     console.error('Scan error:', err);
+    applyDemoDataset(true);
+    showLiveUnavailableBanner();
     setApiStatus('err');
-    const errBanner = document.getElementById('err-banner');
-    if (errBanner) {
-      errBanner.textContent = '⚠ Could not reach backend — check console. Make sure the Render backend is running and allows CORS.';
-      errBanner.classList.add('on');
-    }
   }
 
   renderPicks();
@@ -5483,7 +5523,14 @@ function renderPicks() {
   }).sort((a, b) => personalizedPickScore(b) - personalizedPickScore(a));
 
   document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
-  document.getElementById('picks-refreshed').textContent = lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '';
+  if (liveOddsPaused) {
+    document.getElementById('picks-refreshed').textContent = 'Demo mode - live odds paused';
+  } else if (lastRefresh) {
+    const staleWarn = picksCacheAgeMinutes > 20 ? ` (cached ${picksCacheAgeMinutes}m old)` : '';
+    document.getElementById('picks-refreshed').textContent = `Updated ${timeAgo(lastRefresh)}${staleWarn}`;
+  } else {
+    document.getElementById('picks-refreshed').textContent = '';
+  }
   updatePaywallUi();
 
   if (!pts.length) {
@@ -5495,7 +5542,7 @@ function renderPicks() {
       <div class="empty-sub">${lastScan}</div>
       <div class="empty-sub" style="margin-top:4px">${stats || 14} edges found in last scan</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="paywall-cta" style="background:var(--green);color:#032114" onclick="doScan()">Run First Scan</button>
+        <button class="paywall-cta" style="background:var(--green);color:#032114" onclick="${liveOddsPaused ? '' : 'doScan()'}" ${liveOddsPaused ? 'disabled title="Live API unavailable"' : ''}>${liveOddsPaused ? 'Unavailable - try later' : 'Run Scan'}</button>
         <button class="pf-btn" onclick="go('history')">View Previous Results</button>
       </div>
       ${renderTomorrowGamesBlock()}
@@ -5517,8 +5564,9 @@ function renderPicks() {
     const conf = Math.max(50, Math.min(95, Number(p.conf || 50)));
     const socialViewers = 1 + ((Number(p.id || i) + Math.floor(Date.now() / 60000)) % 5);
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
-    const sampleTag = Number(p.id) >= 991 ? `<span class="sample-badge">SAMPLE</span>` : '';
+    const sampleTag = p.demoData ? `<span class="sample-badge">DEMO DATA</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
+    const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   <div class="pick-inner">
     <div class="pick-left">
@@ -5538,6 +5586,7 @@ function renderPicks() {
       <div class="pick-line">Best line: <strong>${p.bet.split('@')[0].trim()}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
       <div class="pick-line">Fair line: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
+      ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
@@ -6108,10 +6157,10 @@ function startAutoRefresh() {
   // Update relative timestamps and do a silent refresh every 60s.
   setInterval(() => {
     const el = document.getElementById('picks-refreshed');
-    if (el && lastRefresh) el.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
+    if (el && lastRefresh && !liveOddsPaused) el.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
     const h = document.getElementById('home-updated');
-    if (h && lastRefresh) h.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
-    if (!isScanning && (currentTab === 'picks' || currentTab === 'home')) doScan(true);
+    if (h && lastRefresh && !liveOddsPaused) h.textContent = `Updated ${timeAgo(lastRefresh)} • auto`;
+    if (!liveOddsPaused && !isScanning && (currentTab === 'picks' || currentTab === 'home')) doScan(true);
   }, 60000);
 }
 
