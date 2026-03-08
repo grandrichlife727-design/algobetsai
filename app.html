@@ -674,10 +674,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     Dashboard
   </button>
-  <button class="nav-item" onclick="go('picks')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-    Picks <span class="nav-badge" id="nb-picks">0</span>
-  </button>
   <button class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     History
@@ -768,7 +764,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
               <div>NBA + NHL only</div>
               <div>20-minute refresh</div>
             </div>
-            <div class="hps-cta"><button class="pf-btn" id="hps-free-cta" onclick="go('picks')">Get Started</button></div>
+            <div class="hps-cta"><button class="pf-btn" id="hps-free-cta" onclick="go('home')">Get Started</button></div>
           </div>
           <div class="hps-col premium">
             <div class="hps-k">PREMIUM</div>
@@ -808,7 +804,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
           <div class="growth-title">Today's Edges (Demo Data)</div>
           <div id="home-top-picks" class="growth-sub">Scanning market feed...</div>
-          <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
+          <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('home')">View All Picks</button></div>
         </div>
         <div class="growth-card" id="home-card-premium" data-home-card="premium_unlocks">
           <div class="growth-title">Premium Unlocks</div>
@@ -1584,10 +1580,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="mnav-btn active" id="mn-home" onclick="go('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     <span class="mnav-label">Dashboard</span>
-  </button>
-  <button class="mnav-btn" id="mn-picks" onclick="go('picks')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-    <span class="mnav-label">Picks</span>
   </button>
   <div class="mnav-premium-wrap">
     <button class="mnav-btn" id="mn-premium" onclick="go('history')">
@@ -3710,7 +3702,7 @@ function renderHistory() {
   if (!el || !ct) return;
   ct.textContent = `${HISTORYDATA.length} recent scan${HISTORYDATA.length !== 1 ? 's' : ''}`;
   if (!HISTORYDATA.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div><div style="margin-top:10px"><button class="paywall-cta" onclick="go('picks')">Add Bet</button></div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div><div style="margin-top:10px"><button class="paywall-cta" onclick="go('home')">Add Bet</button></div></div>`;
     return;
   }
   el.innerHTML = HISTORYDATA.map(h => {
@@ -6051,6 +6043,7 @@ function toggleMobileVip(e) {
 }
 
 function go(name) {
+  if (name === 'picks') name = 'home';
   if (!ALL_TABS.includes(name)) return;
   if (name === 'steam' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
