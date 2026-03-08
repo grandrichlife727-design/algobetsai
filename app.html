@@ -781,6 +781,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-price">$0</div>
             <div class="hps-list">
               <div>2 picks per scan</div>
+              <div>20-minute release delay</div>
               <div>NBA + NHL only</div>
               <div>20-minute refresh</div>
             </div>
@@ -908,7 +909,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="tier-compare" id="tier-compare">
         <div class="tier-title">How Plans Work</div>
       <div class="tier-strip">
-        <div class="tier-tag"><strong>Free</strong>: Test the edge. Risk nothing.</div>
+        <div class="tier-tag"><strong>Free</strong>: 2 delayed picks with 20-minute refresh.</div>
         <div class="tier-tag premium"><strong>Premium</strong>: Unlimited picks, all sports/props, 5-minute refresh.</div>
         <div class="tier-tag vip"><strong>VIP</strong>: 50 picks, execution tools, 1-minute refresh + Discord.</div>
       </div>
@@ -1773,6 +1774,7 @@ const PREF_KEY = 'algobets-pref-v1';
 const AUTH_NUDGE_KEY = 'algobets-auth-nudge-v1';
 const SCAN_COUNT_KEY = 'algobets-scan-count-v1';
 const PICKS_CACHE_KEY = 'algobets-picks-cache-v1';
+const FREE_DELAY_STATE_KEY = 'algobets-free-delay-v1';
 const SAVED_PICKS_KEY = 'algobets-saved-picks-v1';
 const REF_TRACK_KEY = 'algobets-ref-track-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
@@ -1956,9 +1958,56 @@ let WALK_WEEKS = 12;
 let TOMORROW_GAMES = [];
 let liveOddsPaused = false;
 let picksCacheAgeMinutes = 0;
+let FREE_DELAY_STATE = {release_at: 0, pending: [], released: []};
+const FREE_DELAY_MS = 20 * 60 * 1000;
 
 function liveTtlMs() { return LOW_DATA_MODE ? 15 * 60 * 1000 : LIVE_TTL_MS; }
 function tomorrowTtlMs() { return LOW_DATA_MODE ? 6 * 60 * 60 * 1000 : TOMORROW_TTL_MS; }
+
+function loadFreeDelayState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FREE_DELAY_STATE_KEY) || '{}');
+    FREE_DELAY_STATE = {
+      release_at: Number(raw.release_at || 0),
+      pending: Array.isArray(raw.pending) ? raw.pending.slice(0, 80) : [],
+      released: Array.isArray(raw.released) ? raw.released.slice(0, 80) : [],
+    };
+  } catch (_) {
+    FREE_DELAY_STATE = {release_at: 0, pending: [], released: []};
+  }
+}
+
+function saveFreeDelayState() {
+  try { localStorage.setItem(FREE_DELAY_STATE_KEY, JSON.stringify(FREE_DELAY_STATE)); } catch (_) {}
+}
+
+function finalizeFreeDelayReleaseIfDue() {
+  const now = Date.now();
+  if (Number(FREE_DELAY_STATE.release_at || 0) > 0 &&
+      now >= Number(FREE_DELAY_STATE.release_at || 0) &&
+      Array.isArray(FREE_DELAY_STATE.pending) &&
+      FREE_DELAY_STATE.pending.length) {
+    FREE_DELAY_STATE.released = FREE_DELAY_STATE.pending.slice(0, 80);
+    FREE_DELAY_STATE.pending = [];
+    FREE_DELAY_STATE.release_at = 0;
+    saveFreeDelayState();
+  }
+}
+
+function queueFreeDelayBoard(rawPicks) {
+  finalizeFreeDelayReleaseIfDue();
+  FREE_DELAY_STATE.pending = Array.isArray(rawPicks) ? rawPicks.slice(0, 80) : [];
+  FREE_DELAY_STATE.release_at = Date.now() + FREE_DELAY_MS;
+  saveFreeDelayState();
+}
+
+function getFreeReleasedBoard() {
+  finalizeFreeDelayReleaseIfDue();
+  const now = Date.now();
+  const remainingMs = Math.max(0, Number(FREE_DELAY_STATE.release_at || 0) - now);
+  const rows = Array.isArray(FREE_DELAY_STATE.released) ? FREE_DELAY_STATE.released : [];
+  return {rows, remainingMs};
+}
 function newsImpactTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : NEWS_IMPACT_TTL_MS; }
 function perfTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : PERF_TTL_MS; }
 function propsTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : 20 * 60 * 1000; }
@@ -4766,13 +4815,23 @@ function renderHomeModules() {
   const resultEl = document.getElementById('home-results');
   const tomorrowEl = document.getElementById('home-tomorrow');
   const newsEl = document.getElementById('home-news');
+  const freePlan = normalizePlan(currentPlan) === 'free';
+  const applyFreeDelay = freePlan && !demoMode && !liveOddsPaused;
+  const freeRelease = applyFreeDelay ? getFreeReleasedBoard() : {rows: [], remainingMs: 0};
+  const homeSource = applyFreeDelay
+    ? (Array.isArray(freeRelease.rows) ? freeRelease.rows.map((p, i) => normalizePick(p, i)) : [])
+    : PICKS;
 
   if (topEl) {
-    if (!PICKS.length) {
-      topEl.innerHTML = 'No edges loaded yet. Tap <strong>Run Scan</strong> to refresh.';
+    if (!homeSource.length) {
+      if (applyFreeDelay && freeRelease.remainingMs > 0) {
+        topEl.innerHTML = `Free board updates with a 20-minute delay.<div class="growth-note">Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}.</div>`;
+      } else {
+        topEl.innerHTML = 'No edges loaded yet. Tap <strong>Run Scan</strong> to refresh.';
+      }
     } else {
       const premiumOn = canUsePremium();
-      const rows = PICKS.slice().sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0)).slice(0, 3).map((p, i) =>
+      const rows = homeSource.slice().sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0)).slice(0, 3).map((p, i) =>
         `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
           <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
           <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
@@ -4847,7 +4906,7 @@ function renderHomeModules() {
 
   if (trendEl) {
     const bySport = {};
-    PICKS.forEach(p => {
+    homeSource.forEach(p => {
       const k = String(p.sport || '').replace(/[^\w\s]/g, '').trim() || 'Other';
       bySport[k] = (bySport[k] || 0) + 1;
     });
@@ -5705,6 +5764,7 @@ async function doScan(silent = false) {
         // REMOVED gameTimeRaw filter to ensure API picks are always shown
         .sort((a, b) => b.ev - a.ev);
       savePicksCache(arr);
+      if (normalizePlan(currentPlan) === 'free' && !demoMode) queueFreeDelayBoard(arr);
       liveOddsPaused = false;
       FADESDATA = computePublicFadesFromPicks(PICKS);
       updatePlanUi();
@@ -5762,7 +5822,13 @@ async function doScan(silent = false) {
       const errBanner = document.getElementById('err-banner');
       if (errBanner) errBanner.classList.remove('on');
       const stamp = new Date(lastRefresh).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-      setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
+      if (normalizePlan(currentPlan) === 'free' && !demoMode && !liveOddsPaused) {
+        const wait = getFreeReleasedBoard().remainingMs;
+        if (wait > 0) setHomeScanFeedback(`Free board updates in ${fmtCountdown(Math.ceil(wait / 1000))}`, 'loading');
+        else setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
+      } else {
+        setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
+      }
     }
 
     if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
@@ -5799,13 +5865,19 @@ async function doScan(silent = false) {
 function renderPicks() {
   const el = document.getElementById('picklist');
   const picksRefreshedEl = document.getElementById('picks-refreshed');
-  const usingDemoData = demoMode || liveOddsPaused || PICKS.some(p => p.demoData);
+  const isFreePlan = normalizePlan(currentPlan) === 'free';
+  const applyFreeDelay = isFreePlan && !demoMode && !liveOddsPaused;
+  const freeRelease = applyFreeDelay ? getFreeReleasedBoard() : {rows: [], remainingMs: 0};
+  const sourcePicks = applyFreeDelay
+    ? (Array.isArray(freeRelease.rows) ? freeRelease.rows.map((p, i) => normalizePick(p, i)) : [])
+    : PICKS;
+  const usingDemoData = demoMode || liveOddsPaused || sourcePicks.some(p => p.demoData);
   if (picksRefreshedEl) {
     picksRefreshedEl.textContent = usingDemoData
       ? 'Live odds paused'
       : (lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '');
   }
-  const pts = PICKS.filter(p => {
+  const pts = sourcePicks.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
@@ -5832,11 +5904,13 @@ function renderPicks() {
   updatePaywallUi();
 
   if (!pts.length) {
-    const lastScan = lastRefresh ? `Last scan: ${timeAgo(lastRefresh)}` : 'No scan yet';
+    const lastScan = applyFreeDelay && freeRelease.remainingMs > 0
+      ? `Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}`
+      : (lastRefresh ? `Last scan: ${timeAgo(lastRefresh)}` : 'No scan yet');
     const stats = Number(document.getElementById('s-count')?.textContent || 0);
     el.innerHTML = `<div class="empty">
       <div class="empty-icon">🚀</div>
-      <div class="empty-title">No live edges loaded yet</div>
+      <div class="empty-title">${applyFreeDelay && freeRelease.remainingMs > 0 ? 'Free board uses a 20-minute delay' : 'No live edges loaded yet'}</div>
       <div class="empty-sub">${lastScan}</div>
       <div class="empty-sub" style="margin-top:4px">${stats || 14} edges found in last scan</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -5847,7 +5921,6 @@ function renderPicks() {
     </div>`;
     return;
   }
-  const isFreePlan = normalizePlan(currentPlan) === 'free';
   const freeVisibleLimit = 2;
   const teaserLimit = 1;
   const useFreeTease = isFreePlan && pts.length > freeVisibleLimit;
@@ -6578,6 +6651,7 @@ loadPickPrefs();
 loadPremiumSettings();
 loadVipSettings();
 loadVipLiveState();
+loadFreeDelayState();
 loadTrialUiState();
 loadProfile();
 updateLowDataUi();
