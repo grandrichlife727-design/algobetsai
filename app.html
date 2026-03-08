@@ -6015,11 +6015,11 @@ function renderPicks() {
     return;
   }
   const freeVisibleLimit = 2;
-  const teaserLimit = 1;
+  const teaserLimit = 0;
   const freeRenderSource = isFreePlan ? getFreeTeaserList(pts, freeVisibleLimit, teaserLimit) : pts;
-  const useFreeTease = isFreePlan && freeRenderSource.length > freeVisibleLimit;
+  const useFreeTease = false;
   const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
-  const renderList = useFreeTease ? freeRenderSource.slice(0, Math.min(freeRenderSource.length, freeVisibleLimit + teaserLimit)) : freeRenderSource;
+  const renderList = isFreePlan ? freeRenderSource.slice(0, freeVisibleLimit) : freeRenderSource;
 
   el.innerHTML = renderList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
@@ -6075,17 +6075,20 @@ function renderPicks() {
   </div>
 </div>`;
     if (!lockedTease) return card;
-    return `<div class="feature-lock" style="margin-top:0">
-      <div class="blur-wrap" style="filter:blur(8px)">${card}</div>
-      <div class="lock-overlay">
+    return card;
+  }).join('');
+
+  if (isFreePlan && hiddenCount > 0) {
+    el.innerHTML += `<div class="feature-lock" style="margin-top:0">
+      <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
         <div class="lock-card">
-          <div class="lock-title">🔒 +${edgeVal.toFixed(1)}% edge detected</div>
-          <div class="lock-sub">Create free account to unlock. ${hiddenCount} more picks are waiting.</div>
-          <button class="paywall-cta" onclick="openAuthModal('email')">Create free account to unlock</button>
+          <div class="lock-title">🔒 ${hiddenCount} more picks locked</div>
+          <div class="lock-sub">Upgrade to Premium to unlock full board access.</div>
+          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button>
         </div>
       </div>
     </div>`;
-  }).join('');
+  }
 }
 
 function toggleExplain(id) {
