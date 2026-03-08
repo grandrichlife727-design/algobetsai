@@ -603,6 +603,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .up-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
 .profile-home{margin-bottom:12px;border:1px solid var(--border2);border-radius:12px;padding:12px;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(139,92,246,.06))}
+.ph-head{display:flex;align-items:center;gap:10px}
+.ph-avatar{width:42px;height:42px;border-radius:999px;border:1px solid var(--border2);background:rgba(255,255,255,.05);display:grid;place-items:center;color:var(--cyan);font-family:var(--mono);font-size:13px;font-weight:800;overflow:hidden;flex-shrink:0}
+.ph-avatar img{width:100%;height:100%;object-fit:cover}
 .ph-title{font-size:18px;font-weight:900;letter-spacing:.1px}
 .ph-sub{font-size:12px;color:var(--sub);margin-top:4px}
 .ph-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
@@ -1550,8 +1553,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div id="v-profile" style="display:none">
       <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage account, billing, and app preferences.</div></div>
       <div class="profile-home">
-        <div class="ph-title" id="ph-greet">Welcome to your home base</div>
-        <div class="ph-sub" id="ph-sub">Track your progress, open picks, and account settings from one place.</div>
+        <div class="ph-head">
+          <div class="ph-avatar" id="ph-avatar">AB</div>
+          <div>
+            <div class="ph-title" id="ph-greet">Welcome to your home base</div>
+            <div class="ph-sub" id="ph-sub">Track your progress, open picks, and account settings from one place.</div>
+          </div>
+        </div>
         <div class="rf-row" style="margin-top:10px">
           <button class="pf-btn" onclick="go('home')">Dashboard</button>
           <button class="pf-btn" onclick="go('picks')">Picks</button>
@@ -2071,7 +2079,7 @@ let currentTab = 'home';
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
-let userProfile = {method: 'guest', identifier: '', name: ''};
+let userProfile = {method: 'guest', identifier: '', name: '', avatar: ''};
 let scanCooldownRemaining = 0;
 let scanCooldownTicker = null;
 let HISTORYDATA = [];
@@ -2493,6 +2501,16 @@ function maskIdentifier(method, identifier) {
   return raw.length > 3 ? `${raw.slice(0, 2)}***` : raw;
 }
 
+function profileInitials() {
+  const raw = String(userProfile?.name || userProfile?.identifier || '').trim();
+  if (!raw) return 'AB';
+  if (raw.includes('@')) return raw.split('@')[0].slice(0, 2).toUpperCase();
+  const parts = raw.replace(/[^a-zA-Z0-9\s]/g, ' ').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'AB';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+}
+
 function profilePickLimit() {
   const p = normalizePlan(currentPlan);
   const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
@@ -2586,6 +2604,7 @@ function renderProfile() {
   const saved = document.getElementById('ph-saved');
   const streak = document.getElementById('ph-streak');
   const scans = document.getElementById('ph-scans');
+  const avatar = document.getElementById('ph-avatar');
   const favInput = document.getElementById('ph-fav-input');
   const favNote = document.getElementById('ph-fav-note');
   const favList = document.getElementById('ph-fav-list');
@@ -2629,6 +2648,14 @@ function renderProfile() {
   if (saved) saved.textContent = String(savedCount);
   if (streak) streak.textContent = `${streakDays}d`;
   if (scans) scans.textContent = String(Number(scanCount || 0));
+  if (avatar) {
+    const av = String(userProfile?.avatar || '').trim();
+    if (av && /^https?:\/\//i.test(av)) {
+      avatar.innerHTML = `<img src="${esc(av)}" alt="Profile photo"/>`;
+    } else {
+      avatar.textContent = profileInitials();
+    }
+  }
   const favorites = getFavoriteTeams();
   if (favInput && document.activeElement !== favInput) favInput.value = favorites.join(', ');
   if (favNote) favNote.textContent = favorites.length ? `Following ${favorites.length} team${favorites.length === 1 ? '' : 's'}.` : 'No favorite teams saved yet.';
@@ -3880,6 +3907,7 @@ function loadProfile() {
       method: normalizeAuthMethod(p.method),
       identifier: String(p.identifier || '').trim(),
       name: String(p.name || '').trim(),
+      avatar: String(p.avatar || '').trim(),
     };
   } catch (err) {
     console.warn('[Algobets] Could not load profile:', err);
@@ -3962,7 +3990,11 @@ async function handleGoogleCredential(response) {
     return {
       token: String(session?.token || '').trim(),
       user_id: String(session?.user_id || '').trim().toLowerCase(),
-      profile: {identifier: email},
+      profile: {
+        identifier: email,
+        name: String(claims?.name || '').trim(),
+        avatar: String(claims?.picture || '').trim(),
+      },
     };
   };
   const verifyViaGoogleTokenInfo = async () => {
@@ -3998,7 +4030,9 @@ async function handleGoogleCredential(response) {
     const uid = String(data.user_id || '').trim().toLowerCase();
     if (uid) window.setAlgobetsUserId(uid);
     const identifier = String(data?.profile?.identifier || '').trim();
-    userProfile = {method: 'google', identifier, name: ''};
+    const name = String(data?.profile?.name || '').trim();
+    const avatar = String(data?.profile?.avatar || data?.profile?.picture || '').trim();
+    userProfile = {method: 'google', identifier, name, avatar};
     saveProfile();
     await syncMarketingConsent(identifier, 'google');
     authNudgeState.completed = true;
@@ -4256,7 +4290,7 @@ async function submitAuthProfile() {
       return;
     }
   }
-  userProfile = {method, identifier: value, name: ''};
+  userProfile = {method, identifier: value, name: '', avatar: ''};
   saveProfile();
   await syncMarketingConsent(value, method);
   await ensureAuthSession(true);
@@ -4274,7 +4308,7 @@ async function submitAuthProfile() {
 }
 
 function signOutProfile() {
-  userProfile = {method: 'guest', identifier: '', name: ''};
+  userProfile = {method: 'guest', identifier: '', name: '', avatar: ''};
   saveProfile();
   const nextUserId = makeUserId();
   USER_ID = nextUserId;
@@ -4785,7 +4819,12 @@ async function ensureAuthSession(force = false) {
   if (serverMethod !== 'guest' && serverIdentifier) {
     const changed = normalizeAuthMethod(userProfile.method) !== serverMethod || String(userProfile.identifier || '').trim() !== serverIdentifier;
     if (changed) {
-      userProfile = {method: serverMethod, identifier: serverIdentifier, name: String(userProfile.name || '').trim()};
+      userProfile = {
+        method: serverMethod,
+        identifier: serverIdentifier,
+        name: String(data?.profile?.name || userProfile.name || '').trim(),
+        avatar: String(data?.profile?.avatar || data?.profile?.picture || userProfile.avatar || '').trim(),
+      };
       saveProfile();
       renderProfile();
     }
