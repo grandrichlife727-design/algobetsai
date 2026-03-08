@@ -5452,6 +5452,8 @@ async function startCheckout(tier, cycle = billingCycle) {
     const msg = String(err?.detail || err?.message || '');
     if (/billing is temporarily disabled/i.test(msg)) showToast('Billing is temporarily disabled');
     else if (/stripe is not configured/i.test(msg)) showToast('Stripe is not configured on backend');
+    else if (/invalid api key/i.test(msg)) showToast('Billing auth key missing on backend proxy');
+    else if (/authentication required/i.test(msg)) showToast('Please sign in again before checkout');
     else if (/authenticated user required/i.test(msg)) showToast('Please create a free account first');
     else if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
     else if (/subscription item/i.test(msg)) showToast('Could not upgrade subscription item');
