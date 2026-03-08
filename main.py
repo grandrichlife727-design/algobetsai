@@ -517,7 +517,10 @@ async def security_middleware(request: Request, call_next):
 
     if REQUIRE_BACKEND_API_KEY and _is_sensitive_path(path) and path != "/api/billing/webhook":
         provided = request.headers.get("x-api-key", "")
-        if not BACKEND_API_KEY or provided != BACKEND_API_KEY:
+        has_valid_key = bool(BACKEND_API_KEY) and provided == BACKEND_API_KEY
+        # Browser clients cannot safely hold the backend API key.
+        # Allow authenticated bearer-token requests to sensitive endpoints.
+        if not has_valid_key and not auth_ok:
             _audit_security_event(request, "security.api_key_invalid", "Invalid x-api-key.")
             return JSONResponse(status_code=401, content={"detail": "Invalid API key."})
 
