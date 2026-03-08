@@ -131,6 +131,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-accordion summary::-webkit-details-marker{display:none}
 .agent-accordion .agent-body{padding:0 14px 12px}
 .agent-accordion .agent-sub{font-size:12px;color:var(--sub);line-height:1.45}
+.agent-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
+.agent-step{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:8px}
+.agent-step-k{font-size:10px;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.6px}
+.agent-step-v{font-size:12px;font-weight:700;color:var(--text);margin-top:3px;line-height:1.35}
+.agent-out{margin-top:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.24);border-radius:10px;padding:9px 10px}
+.agent-out-k{font-size:10px;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.6px}
+.agent-out-v{font-size:12px;color:var(--text);margin-top:3px;line-height:1.4}
+@media(max-width:900px){.agent-flow{grid-template-columns:1fr 1fr}}
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
@@ -889,8 +897,18 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <details class="agent-accordion">
         <summary><span>How the 5-Agent Edge Engine works</span><span>View</span></summary>
         <div class="agent-body">
-          <div class="agent-sub">Every pick is scored by five independent agents and merged into one edge rating.</div>
-          <div class="agent-sub">Best-Line EV · De-vig Consensus · Steam Moves · Public Fades · Timing/CLV.</div>
+          <div class="agent-sub">Every pick runs through five independent checks before one final edge score is published.</div>
+          <div class="agent-flow">
+            <div class="agent-step"><div class="agent-step-k">Agent 1</div><div class="agent-step-v">Best-Line EV</div></div>
+            <div class="agent-step"><div class="agent-step-k">Agent 2</div><div class="agent-step-v">De-vig Consensus</div></div>
+            <div class="agent-step"><div class="agent-step-k">Agent 3</div><div class="agent-step-v">Steam Moves</div></div>
+            <div class="agent-step"><div class="agent-step-k">Agent 4</div><div class="agent-step-v">Public Fades</div></div>
+            <div class="agent-step"><div class="agent-step-k">Agent 5</div><div class="agent-step-v">Timing/CLV</div></div>
+          </div>
+          <div class="agent-out">
+            <div class="agent-out-k">Combined Output</div>
+            <div class="agent-out-v">Weighted edge score -> confidence -> stake suggestion -> release to Picks, Premium, and VIP boards.</div>
+          </div>
         </div>
       </details>
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
