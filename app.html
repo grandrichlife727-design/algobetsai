@@ -5102,9 +5102,29 @@ function renderHomeModules() {
       if (premiumOn) {
         topEl.innerHTML = rows;
       } else {
+        const previewRows = homeSource
+          .slice()
+          .sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0))
+          .slice(0, 3)
+          .map((p, i) => {
+            const locked = i > 0;
+            const label = locked ? `#${i + 1} Premium/VIP Locked` : `#${i + 1} ${esc(p.bet)}`;
+            const evLabel = locked ? 'LOCKED' : `+${Number(p.ev || 0).toFixed(1)}%`;
+            const why = locked
+              ? 'Upgrade to reveal pick details, edge score, and timing.'
+              : `Why this pick: ${esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal')}`;
+            return `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;gap:8px">
+                <div style="font-weight:700;color:var(--text)">${label}</div>
+                <div style="color:${locked ? 'var(--amber)' : 'var(--cyan)'};font-family:var(--mono)">${evLabel}</div>
+              </div>
+              <div class="pick-why">${why}</div>
+            </div>`;
+          })
+          .join('');
         topEl.innerHTML = `
-          <div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${rows}</div>
-          <div class="growth-note">Teaser preview only on Free. Upgrade to unlock full live picks.</div>`;
+          ${previewRows}
+          <div class="growth-note">Free includes 1 daily top edge. Upgrade to unlock full live picks.</div>`;
       }
     }
   }
