@@ -2699,10 +2699,24 @@ async def auth_session(body: AuthSessionRequest, request: Request):
     identifier = str(body.identifier or "").strip().lower()[:160]
     rec = _ensure_growth_user(user_id)
     profile = rec.setdefault("profile_identity", {})
-    profile.update({"method": method or "guest", "identifier": identifier, "updated_at": int(time.time())})
+    prev_method = str(profile.get("method") or "guest").strip().lower()
+    prev_identifier = str(profile.get("identifier") or "").strip().lower()
+    # Do not overwrite a known identity with a guest placeholder during session refresh.
+    if method == "guest" and not identifier and prev_method != "guest" and prev_identifier:
+        method_to_store = prev_method
+        identifier_to_store = prev_identifier
+    else:
+        method_to_store = method or "guest"
+        identifier_to_store = identifier
+    profile.update({"method": method_to_store, "identifier": identifier_to_store, "updated_at": int(time.time())})
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
-    return {"token": token, "user_id": user_id, "expires_in": AUTH_TOKEN_TTL_SECONDS}
+    return {
+        "token": token,
+        "user_id": user_id,
+        "expires_in": AUTH_TOKEN_TTL_SECONDS,
+        "profile": {"method": method_to_store, "identifier": identifier_to_store},
+    }
 
 
 @app.post("/api/auth/google")

@@ -649,23 +649,73 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .fade-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,183,0,.24);background:rgba(255,183,0,.1);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700}
 .auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:720;padding:16px}
 .auth-ov.on{display:flex}
-.auth-modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
-.auth-title{font-size:16px;font-weight:800}
-.auth-sub{font-size:12px;color:var(--sub);margin:5px 0 10px}
-.auth-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.auth-m{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;font-family:var(--sans);text-align:left}
-.auth-m.on{border-color:rgba(0,212,255,.35);color:var(--cyan)}
+.auth-modal{width:100%;max-width:468px;background:linear-gradient(180deg,#12121a,#0f0f16);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;box-shadow:0 26px 74px rgba(0,0,0,.5)}
+.auth-title{font-size:20px;font-weight:900;letter-spacing:.2px;color:#fff}
+.auth-sub{font-size:12px;color:#b3b3c4;margin:7px 0 12px;line-height:1.55}
+.auth-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.auth-chip{font-size:10px;font-family:var(--mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(34,211,238,.25);background:rgba(34,211,238,.1);color:var(--cyan)}
+.auth-methods{display:grid;grid-template-columns:1fr;gap:8px}
+.auth-m{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:11px 12px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;font-family:var(--sans);text-align:left;display:flex;flex-direction:column;gap:3px;transition:border-color .15s,background .15s,transform .15s}
+.auth-m:hover{border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
+.auth-m.on{border-color:rgba(34,211,238,.42);color:#d6fbff;background:rgba(34,211,238,.12)}
+.auth-m-google{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.025))}
+.auth-m-head{display:flex;align-items:center;gap:8px}
+.auth-g-icon{width:17px;height:17px;display:inline-grid;place-items:center;background:#fff;border-radius:50%;font-size:10px;font-weight:900;color:#1a73e8;line-height:1;flex-shrink:0}
+.auth-apple-icon{width:17px;height:17px;display:inline-grid;place-items:center;background:#151515;border:1px solid rgba(255,255,255,.2);border-radius:50%;font-size:11px;font-weight:900;color:#fff;line-height:1;flex-shrink:0}
+.auth-m-title{font-size:12px;font-weight:800;color:inherit}
+.auth-m-sub{font-size:10px;color:#a7a7b7;font-weight:600;line-height:1.35}
 .auth-m.secondary{display:none}
-.auth-m.secondary.on{display:block}
-.auth-more-link{margin-top:8px;background:none;border:none;color:var(--cyan);font-size:11px;font-weight:700;cursor:pointer;padding:0}
-.auth-field{margin-top:10px}
-.auth-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px}
-.auth-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-size:14px;font-family:var(--mono)}
-.auth-in:focus{outline:none;border-color:rgba(0,212,255,.35)}
-.auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.auth-m.secondary.on{display:flex}
+.auth-more-link{margin-top:8px;background:none;border:none;color:var(--cyan);font-size:11px;font-weight:700;cursor:pointer;padding:0;text-align:left}
+.auth-divider{display:flex;align-items:center;gap:8px;margin:11px 0 2px}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+.auth-divider span{font-size:10px;color:#8e8ea3;font-family:var(--mono)}
+.auth-field{margin-top:8px}
+.auth-lbl{font-size:10px;color:#9a9aae;margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px}
+.auth-in{width:100%;background:rgba(255,255,255,.03);background-color:rgba(255,255,255,.03)!important;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:var(--text);font-size:14px;font-family:var(--mono);-webkit-appearance:none;appearance:none;box-shadow:inset 0 0 0 1000px rgba(255,255,255,.03);color-scheme:dark}
+.auth-in:focus{outline:none;border-color:rgba(34,211,238,.42);background:rgba(255,255,255,.03);background-color:rgba(255,255,255,.03)!important;box-shadow:inset 0 0 0 1000px rgba(255,255,255,.03)}
+.auth-in:-webkit-autofill,
+.auth-in:-webkit-autofill:hover,
+.auth-in:-webkit-autofill:focus{
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,.03) inset !important;
+  box-shadow: 0 0 0 1000px rgba(255,255,255,.03) inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
+.auth-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+.auth-skip{background:none;border:none;color:#a7a7b7;font-size:11px;font-weight:700;cursor:pointer;padding:0 2px}
+.auth-skip:hover{color:#fff}
 .google-auth-wrap{margin-top:10px;display:none}
 .google-auth-wrap.on{display:block}
-.google-auth-note{font-size:10px;color:var(--muted);margin-top:6px}
+.google-auth-note{font-size:10px;color:#a7a7b7;margin-top:6px;display:flex;align-items:center;gap:6px}
+.apple-auth-wrap{margin-top:10px;display:none}
+.apple-auth-wrap.on{display:block}
+.apple-auth-btn{width:100%;background:#121212;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;padding:11px 12px;font-size:13px;font-weight:800;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.apple-auth-note{font-size:10px;color:#a7a7b7;margin-top:6px}
+.auth-footnote{margin-top:10px;font-size:10px;color:#8f8fa2;line-height:1.45}
+@media(max-width:560px){
+  .auth-ov{padding:10px}
+  .auth-modal{max-width:100%;padding:14px;border-radius:14px}
+  .auth-title{font-size:19px}
+  .auth-sub{font-size:12px;margin:6px 0 10px}
+  .auth-m{padding:12px 12px}
+  .auth-m-title{font-size:13px}
+  .auth-m-sub{font-size:11px}
+  .auth-more-link{font-size:12px}
+  .auth-lbl{font-size:11px}
+  .auth-in{padding:12px 12px;font-size:15px}
+  .auth-actions{margin-top:10px}
+  .auth-skip{font-size:12px}
+  .auth-actions .paywall-cta{padding:10px 14px;font-size:13px}
+  .apple-auth-btn{padding:12px 12px;font-size:14px}
+}
+@media(max-width:420px){
+  .auth-modal{padding:13px}
+  .auth-title{font-size:18px}
+  .auth-chip{font-size:9px;padding:3px 7px}
+  .auth-m{padding:11px}
+  .auth-actions .paywall-cta{padding:10px 12px}
+}
 .auth-nudge-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:730;padding:16px}
 .auth-nudge-ov.on{display:flex}
 .auth-nudge{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
@@ -1452,10 +1502,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="pf-row"><div class="pf-k">Pick Limit</div><div class="pf-v" id="pf-limit">2</div></div>
         <div class="pf-row"><div class="pf-k">Discord Access</div><div class="pf-v" id="pf-discord">Locked</div></div>
         <div class="pf-actions">
-          <button class="pf-btn primary" onclick="openAuthModal()">Register / Sign In</button>
-          <button class="pf-btn" onclick="openUpgradePicker()">Upgrade</button>
-          <button class="pf-btn" onclick="openBillingPortal()">Manage Billing</button>
-          <button class="pf-btn" onclick="signOutProfile()">Sign Out</button>
+          <button class="pf-btn primary" id="pf-auth-btn" onclick="openAuthModal()">Register / Sign In</button>
+          <button class="pf-btn" id="pf-upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
+          <button class="pf-btn" id="pf-billing-btn" onclick="openBillingPortal()">Manage Billing</button>
+          <button class="pf-btn" id="pf-signout-btn" onclick="signOutProfile()">Sign Out</button>
         </div>
       </div>
       <div class="growth-grid">
@@ -1701,26 +1751,36 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="auth-ov" id="auth-ov" onclick="closeAuthModal(event)">
   <div class="auth-modal">
-    <div class="auth-title">Create Free Account</div>
-    <div class="auth-sub">Optional for browsing. Needed for saved history, alerts, billing, and synced profile.</div>
+    <div class="auth-topline">
+      <div class="auth-title" id="auth-title">Create Free Account</div>
+      <div class="auth-chip">No card required</div>
+    </div>
+    <div class="auth-sub" id="auth-sub">Save your picks, alerts, and billing across devices.</div>
     <div class="auth-methods">
-      <button class="auth-m on" id="am-google" onclick="selectAuthMethod('google')">Google</button>
-      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')">Email</button>
-      <button class="auth-m secondary" id="am-phone" onclick="selectAuthMethod('phone')">Phone</button>
+      <button class="auth-m auth-m-google on" id="am-google" onclick="selectAuthMethod('google')"><span class="auth-m-head"><span class="auth-g-icon">G</span><span class="auth-m-title">Continue with Google</span></span><span class="auth-m-sub">Fastest sign in with verified identity</span></button>
+      <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')"><span class="auth-m-head"><span class="auth-m-title">Email</span></span><span class="auth-m-sub">Use any email address</span></button>
+      <button class="auth-m secondary" id="am-apple" onclick="selectAuthMethod('apple')"><span class="auth-m-head"><span class="auth-apple-icon"></span><span class="auth-m-title">Apple</span></span><span class="auth-m-sub">Sign in with Apple</span></button>
+      <button class="auth-m secondary" id="am-phone" onclick="selectAuthMethod('phone')"><span class="auth-m-head"><span class="auth-m-title">Phone</span></span><span class="auth-m-sub">Text-ready account</span></button>
     </div>
     <button class="auth-more-link" id="auth-more-link" onclick="toggleAuthMore()">More options</button>
+    <div class="auth-divider" id="auth-divider"><span>or continue with</span></div>
     <div class="auth-field">
       <div class="auth-lbl" id="auth-lbl">Email Address</div>
       <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
     </div>
     <div class="google-auth-wrap" id="google-auth-wrap">
       <div id="google-signin-btn"></div>
-      <div class="google-auth-note">Google sign-in uses secure OAuth and verified email identity.</div>
+      <div class="google-auth-note"><span class="auth-g-icon">G</span>Google sign-in uses secure OAuth and verified email identity.</div>
+    </div>
+    <div class="apple-auth-wrap" id="apple-auth-wrap">
+      <button class="apple-auth-btn" onclick="handleAppleSignInClick()"><span class="auth-apple-icon"></span>Continue with Apple</button>
+      <div class="apple-auth-note">Apple sign-in is ready for activation once Apple Developer credentials are connected.</div>
     </div>
     <div class="auth-actions">
-      <button class="bill-link" onclick="closeAuthModal()">Cancel</button>
-      <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Continue</button>
+      <button class="auth-skip" id="auth-skip-btn" onclick="closeAuthModal()">Skip for now</button>
+      <button class="paywall-cta" id="auth-continue" onclick="submitAuthProfile()">Create Account</button>
     </div>
+    <div class="auth-footnote">By continuing, you agree to the Terms and Privacy Policy.</div>
   </div>
 </div>
 
@@ -2308,6 +2368,7 @@ function saveTrialUiState() {
 function normalizeAuthMethod(method) {
   const m = String(method || '').toLowerCase();
   if (m === 'google' || m === 'gmail' || m === 'facebook') return 'google';
+  if (m === 'apple') return 'apple';
   if (m === 'email' || m === 'phone') return m;
   return 'guest';
 }
@@ -2315,6 +2376,7 @@ function normalizeAuthMethod(method) {
 function authMethodLabel(method) {
   const m = normalizeAuthMethod(method);
   if (m === 'google') return 'Google';
+  if (m === 'apple') return 'Apple';
   if (m === 'email') return 'Email';
   if (m === 'phone') return 'Phone';
   return 'Guest';
@@ -2380,14 +2442,27 @@ function renderProfile() {
   const plan = document.getElementById('pf-plan');
   const limit = document.getElementById('pf-limit');
   const discord = document.getElementById('pf-discord');
+  const authBtn = document.getElementById('pf-auth-btn');
+  const upgradeBtn = document.getElementById('pf-upgrade-btn');
+  const billingBtn = document.getElementById('pf-billing-btn');
+  const signoutBtn = document.getElementById('pf-signout-btn');
+  const registered = isLoggedInProfile();
+  const normalizedPlan = normalizePlan(currentPlan);
   if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
   if (method) method.textContent = authMethodLabel(userProfile.method);
-  if (plan) plan.textContent = planLabel(currentPlan);
+  if (plan) plan.textContent = planLabel(normalizedPlan);
   if (limit) {
     const lim = profilePickLimit();
     limit.textContent = lim >= 9999 ? 'Unlimited' : String(lim);
   }
   if (discord) discord.textContent = canUseVip() ? 'Active' : 'Locked';
+  if (authBtn) authBtn.style.display = registered ? 'none' : '';
+  if (upgradeBtn) upgradeBtn.style.display = (!registered || !BILLING_ENABLED_UI || normalizedPlan === 'vip') ? 'none' : '';
+  if (billingBtn) {
+    billingBtn.style.display = (!registered || !BILLING_ENABLED_UI) ? 'none' : '';
+    billingBtn.textContent = normalizedPlan === 'free' ? 'Billing & Plans' : 'Manage Billing';
+  }
+  if (signoutBtn) signoutBtn.style.display = registered ? '' : 'none';
   updateAuthUi();
 }
 
@@ -3759,8 +3834,11 @@ function selectAuthMethod(method) {
   const lbl = document.getElementById('auth-lbl');
   const input = document.getElementById('auth-input');
   const fieldWrap = input ? input.closest('.auth-field') : null;
+  const divider = document.getElementById('auth-divider');
   const googleWrap = document.getElementById('google-auth-wrap');
+  const appleWrap = document.getElementById('apple-auth-wrap');
   const continueBtn = document.getElementById('auth-continue');
+  const hasIdentity = normalizeAuthMethod(userProfile.method) !== 'guest' && String(userProfile.identifier || '').trim().length > 0;
   if (!lbl || !input) return;
 
   if (m === 'email') {
@@ -3768,27 +3846,44 @@ function selectAuthMethod(method) {
     input.placeholder = 'you@example.com';
     input.type = 'email';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
+    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
+    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Sign In with Email' : 'Create Account';
   } else if (m === 'phone') {
     lbl.textContent = 'Phone Number';
     input.placeholder = '+1 (555) 123-4567';
     input.type = 'tel';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
+    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
+    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Sign In with Phone' : 'Create Account';
   } else if (m === 'google') {
     if (fieldWrap) fieldWrap.style.display = 'none';
+    if (divider) divider.style.display = 'none';
     if (googleWrap) googleWrap.classList.add('on');
+    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = 'none';
     renderGoogleAuthButton();
+  } else if (m === 'apple') {
+    if (fieldWrap) fieldWrap.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+    if (googleWrap) googleWrap.classList.remove('on');
+    if (appleWrap) appleWrap.classList.add('on');
+    if (continueBtn) continueBtn.style.display = 'none';
   } else {
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
     input.type = 'text';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
+    if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
+    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
   }
 }
 
@@ -3797,6 +3892,15 @@ function openAuthModal(preferredMethod = null) {
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
+  const titleEl = document.getElementById('auth-title');
+  const subEl = document.getElementById('auth-sub');
+  const skipBtn = document.getElementById('auth-skip-btn');
+  const hasIdentity = normalizeAuthMethod(userProfile.method) !== 'guest' && String(userProfile.identifier || '').trim().length > 0;
+  if (titleEl) titleEl.textContent = hasIdentity ? 'Welcome Back' : 'Create Free Account';
+  if (subEl) subEl.textContent = hasIdentity
+    ? 'Sign in to access saved picks, alerts, and billing settings.'
+    : 'Save your picks, alerts, billing, and profile sync across devices.';
+  if (skipBtn) skipBtn.style.display = hasIdentity ? 'none' : '';
   selectAuthMethod(m);
   const landingEmail = String(localStorage.getItem('algobets_email') || '').trim();
   if (m === 'email') {
@@ -3811,21 +3915,32 @@ function openAuthModal(preferredMethod = null) {
     if (m !== 'google') input.focus();
   });
   const phoneBtn = document.getElementById('am-phone');
+  const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
+  const hasExpandedOptionSelected = m === 'phone' || m === 'apple';
   if (phoneBtn) {
-    if (m === 'phone') phoneBtn.classList.remove('secondary');
+    if (hasExpandedOptionSelected) phoneBtn.classList.remove('secondary');
     else phoneBtn.classList.add('secondary');
   }
-  if (moreBtn) moreBtn.style.display = (m === 'phone') ? 'none' : 'block';
+  if (appleBtn) {
+    if (hasExpandedOptionSelected) appleBtn.classList.remove('secondary');
+    else appleBtn.classList.add('secondary');
+  }
+  if (moreBtn) moreBtn.style.display = hasExpandedOptionSelected ? 'none' : 'block';
   renderGoogleAuthButton();
 }
 
 function toggleAuthMore() {
   const phoneBtn = document.getElementById('am-phone');
+  const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
-  if (!phoneBtn) return;
-  phoneBtn.classList.remove('secondary');
+  if (phoneBtn) phoneBtn.classList.remove('secondary');
+  if (appleBtn) appleBtn.classList.remove('secondary');
   if (moreBtn) moreBtn.style.display = 'none';
+}
+
+function handleAppleSignInClick() {
+  showToast('Apple sign-in needs Apple Developer credentials. Use Google or Email for now.');
 }
 
 function closeAuthModal(e) {
@@ -3872,6 +3987,10 @@ async function submitAuthProfile() {
     showToast('Use the Google button to continue');
     return;
   }
+  if (method === 'apple') {
+    showToast('Use the Apple button to continue');
+    return;
+  }
   const input = document.getElementById('auth-input');
   if (!input) return;
   const value = String(input.value || '').trim();
@@ -3907,7 +4026,9 @@ async function submitAuthProfile() {
 function signOutProfile() {
   userProfile = {method: 'guest', identifier: '', name: ''};
   saveProfile();
-  window.setAlgobetsUserId(makeUserId());
+  const nextUserId = makeUserId();
+  USER_ID = nextUserId;
+  localStorage.setItem('algobets-user-id', nextUserId);
   AUTH_TOKEN = '';
   localStorage.removeItem(AUTH_TOKEN_KEY);
   renderProfile();
@@ -4409,6 +4530,16 @@ async function ensureAuthSession(force = false) {
   AUTH_TOKEN = String(data.token || '').trim();
   if (AUTH_TOKEN) localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
   if (data.user_id && data.user_id !== USER_ID) window.setAlgobetsUserId(String(data.user_id).trim().toLowerCase());
+  const serverMethod = normalizeAuthMethod(data?.profile?.method);
+  const serverIdentifier = String(data?.profile?.identifier || '').trim();
+  if (serverMethod !== 'guest' && serverIdentifier) {
+    const changed = normalizeAuthMethod(userProfile.method) !== serverMethod || String(userProfile.identifier || '').trim() !== serverIdentifier;
+    if (changed) {
+      userProfile = {method: serverMethod, identifier: serverIdentifier, name: String(userProfile.name || '').trim()};
+      saveProfile();
+      renderProfile();
+    }
+  }
   return AUTH_TOKEN;
 }
 
@@ -4650,6 +4781,7 @@ function tierAnnualSavingsText(tier) {
 
 function updatePlanUi() {
   const p = normalizePlan(currentPlan);
+  const registered = isLoggedInProfile();
   const pill = document.getElementById('plan-pill');
   if (pill) {
     pill.className = `plan-pill ${p}`;
@@ -4660,10 +4792,13 @@ function updatePlanUi() {
   const trialBtn = document.getElementById('trial-btn');
   if (up) {
     const nxt = nextTier(p);
-    up.style.display = (nxt && BILLING_ENABLED_UI) ? '' : 'none';
+    up.style.display = (nxt && BILLING_ENABLED_UI && registered) ? '' : 'none';
     up.textContent = nxt ? 'Upgrade' : 'Upgraded';
   }
-  if (manage) manage.style.display = (!BILLING_ENABLED_UI || p === 'free') ? 'none' : '';
+  if (manage) {
+    manage.style.display = (!BILLING_ENABLED_UI || !registered) ? 'none' : '';
+    manage.textContent = p === 'free' ? 'Plans' : 'Manage';
+  }
   if (trialBtn) trialBtn.style.display = (BILLING_ENABLED_UI && p === 'free') ? 'inline-flex' : 'none';
   renderProfile();
   renderToolLocks();
@@ -5360,13 +5495,22 @@ function maybeOpenUpgradeFromQuery() {
 
 async function openBillingPortal() {
   if (!ensureBillingUser()) return;
+  if (normalizePlan(currentPlan) === 'free') {
+    openUpgradePicker();
+    showToast('Choose Premium or VIP to continue to billing');
+    return;
+  }
   try {
     const origin = window.location.origin + window.location.pathname;
     const res = await backendPost('/api/billing/portal', {return_url: origin});
     if (res.portal_url) window.open(res.portal_url, '_blank', 'noopener');
   } catch (err) {
     console.error(err);
-    showToast('Billing portal unavailable');
+    const msg = String(err?.detail || err?.message || '');
+    if (/invalid portal return url/i.test(msg)) showToast('Billing return URL is not allowed in backend config');
+    else if (/billing is temporarily disabled/i.test(msg)) showToast('Billing is temporarily unavailable');
+    else if (/authenticated user required/i.test(msg)) showToast('Sign in first to manage billing');
+    else showToast('Billing portal unavailable');
   }
 }
 
