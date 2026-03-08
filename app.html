@@ -775,7 +775,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="hps-top">
           <div>
             <div class="hps-title">Plan Levels: Free, Premium, VIP</div>
-            <div class="hps-sub">Free: Test the edges · Premium: Daily volume · VIP: Real-time speed</div>
+            <div class="hps-sub">Free: Test the edges · Premium: Daily volume · VIP: Faster refresh + Discord</div>
           </div>
           <div class="hps-pill">Choose your plan</div>
         </div>
@@ -914,7 +914,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="tier-strip">
         <div class="tier-tag"><strong>Free</strong>: Test the edge. Risk nothing.</div>
         <div class="tier-tag premium"><strong>Premium</strong>: Unlimited picks, all sports/props, 5-minute refresh.</div>
-        <div class="tier-tag vip"><strong>VIP</strong>: 50 picks, execution layer, 1-minute refresh + Discord.</div>
+        <div class="tier-tag vip"><strong>VIP</strong>: 50 picks, execution tools, 1-minute refresh + Discord.</div>
       </div>
       </div>
       <div class="filters">
@@ -1115,13 +1115,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">Feature Matrix</div>
           <div class="growth-sub">Free: 2 picks preview.</div>
           <div class="growth-sub">Premium: Props, +EV, Steam, Fades, and higher pick volume.</div>
-          <div class="growth-sub">VIP: Premium + execution layer + automations + VIP Discord.</div>
+          <div class="growth-sub">VIP: Premium + execution tools + line-rush alerts + VIP Discord.</div>
         </div>
       </div>
     </div>
 
     <div id="v-vip" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Overview</span></div><div class="page-sub">VIP is built for speed, execution quality, and direct access to high-value features.</div></div>
+      <div class="page-hdr"><div class="page-title">VIP <span>Overview</span></div><div class="page-sub">VIP focuses on faster refresh, execution quality, and private Discord access.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🏁</span>VIP Quick Start</div>
@@ -1241,7 +1241,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <button class="pf-btn" onclick="linkDiscordAccount()">Link Discord</button>
             <button class="pf-btn" onclick="loadDiscordLink(true)">Refresh Link</button>
           </div>
-          <div class="growth-note" id="vip-discord-link-note">Link your Discord ID once. Roles sync automatically from Stripe plan changes.</div>
+          <div class="growth-note" id="vip-discord-link-note">Link your Discord ID once. Role sync can require manual support while backend sync is being finalized.</div>
           <div class="rf-row"><button class="pf-btn" onclick="joinVipDiscord()">Join Discord</button></div>
           <div class="growth-note">Private VIP channel for alert drops, card recaps, and live discussion.</div>
         </div>
@@ -3016,7 +3016,7 @@ async function loadDiscordLink(force = false) {
     if (note) {
       note.textContent = DISCORD_LINK.discord_user_id
         ? `Linked Discord ID: ${DISCORD_LINK.discord_user_id}`
-        : 'Link your Discord ID once. Roles sync automatically from Stripe plan changes.';
+        : 'Link your Discord ID once. Role sync can require manual support while backend sync is being finalized.';
     }
   } catch (_) {
     if (note) note.textContent = 'Could not load Discord link.';
@@ -3462,7 +3462,7 @@ function renderVipTools() {
   }
   if (discordInputEl) discordInputEl.value = String(DISCORD_LINK?.discord_user_id || '');
   if (discordNoteEl && !DISCORD_LINK?.discord_user_id && DISCORD_ROLE_SYNC_ENABLED) {
-    discordNoteEl.textContent = 'Link your Discord ID once. Roles sync automatically from Stripe plan changes.';
+    discordNoteEl.textContent = 'Link your Discord ID once. Role sync can require manual support while backend sync is being finalized.';
   }
   if (DISCORD_ROLE_SYNC_ENABLED && !DISCORD_LINK?.discord_user_id) {
     loadDiscordLink();
@@ -5139,10 +5139,10 @@ function openUpgradePicker() {
   const opts = p === 'free'
     ? [
         {tier: 'premium', title: 'Premium', desc: 'More picks + Props + +EV + Steam + Fades'},
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + early alerts + CLV + execution tools'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + CLV + execution tools'},
       ]
     : [
-        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + early alerts + CLV + execution tools'},
+        {tier: 'vip', title: 'VIP', desc: 'Premium + VIP Discord + line-rush alerts + CLV + execution tools'},
       ];
   sub.textContent = p === 'free'
     ? 'Choose Premium or VIP.'
