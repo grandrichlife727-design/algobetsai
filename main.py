@@ -430,7 +430,7 @@ app = FastAPI(title="Algobets Ai API", version="5.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Deploy marker for Render auto-deploy synchronization.
-RENDER_DEPLOY_MARKER = "2026-03-08-google-client-id-sync"
+RENDER_DEPLOY_MARKER = "2026-03-08-google-client-id-sync-2"
 
 app.add_middleware(
     CORSMiddleware,
