@@ -1540,14 +1540,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row" id="settings-notifications-upgrade" style="display:none;margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to Premium</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">API Keys (VIP)</div>
-          <div class="growth-sub">Manage private model/API integrations for automation.</div>
-          <div class="rf-row">
-            <input class="auth-in" id="vip-api-key" type="password" placeholder="vip_xxx..." disabled/>
-            <button class="paywall-cta" id="vip-api-key-btn" onclick="openUpgradePicker()">Unlock VIP</button>
-          </div>
-        </div>
-        <div class="growth-card">
           <div class="growth-title">Theme</div>
           <div class="growth-sub">Switch between dark and light interface styles.</div>
           <div class="rf-row">
@@ -4663,9 +4655,6 @@ function renderToolLocks() {
 
 function renderSettingsExtras() {
   const premiumOn = canUsePremium();
-  const vipOn = canUseVip();
-  const apiInput = document.getElementById('vip-api-key');
-  const apiBtn = document.getElementById('vip-api-key-btn');
   const notifCard = document.getElementById('settings-notifications-card');
   const notifSub = document.getElementById('settings-notifications-sub');
   const notifContent = document.getElementById('settings-notifications-content');
@@ -4678,11 +4667,6 @@ function renderSettingsExtras() {
   if (notifContent) notifContent.style.display = premiumOn ? '' : 'none';
   if (notifLocked) notifLocked.style.display = premiumOn ? 'none' : '';
   if (notifUpgrade) notifUpgrade.style.display = premiumOn ? 'none' : '';
-  if (apiInput) apiInput.disabled = !vipOn;
-  if (apiBtn) {
-    apiBtn.textContent = vipOn ? 'Save Key' : 'Unlock VIP';
-    apiBtn.onclick = vipOn ? () => showToast('API key saved') : () => openUpgradePicker();
-  }
   const note = document.getElementById('theme-note');
   if (note) note.textContent = `Current theme: ${themeMode === 'light' ? 'Light' : 'Dark'}.`;
 }
