@@ -602,6 +602,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .up-badge.current{border-color:rgba(255,183,0,.28);background:rgba(255,183,0,.1);color:var(--amber)}
 .up-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .profile-card{max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.profile-home{margin-bottom:12px;border:1px solid var(--border2);border-radius:12px;padding:12px;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(139,92,246,.06))}
+.ph-title{font-size:18px;font-weight:900;letter-spacing:.1px}
+.ph-sub{font-size:12px;color:var(--sub);margin-top:4px}
+.ph-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.ph-stat{border:1px solid var(--border);border-radius:10px;background:rgba(6,6,10,.5);padding:8px}
+.ph-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.ph-v{font-size:16px;font-weight:800;color:var(--text);margin-top:2px}
+@media(max-width:700px){.ph-stats{grid-template-columns:1fr 1fr 1fr}.ph-title{font-size:17px}}
 .pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .pf-row:last-child{border-bottom:none}
 .pf-k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
@@ -1538,6 +1546,20 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
     <div id="v-profile" style="display:none">
       <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage account, billing, and app preferences.</div></div>
+      <div class="profile-home">
+        <div class="ph-title" id="ph-greet">Welcome to your home base</div>
+        <div class="ph-sub" id="ph-sub">Track your progress, open picks, and account settings from one place.</div>
+        <div class="rf-row" style="margin-top:10px">
+          <button class="pf-btn" onclick="go('home')">Dashboard</button>
+          <button class="pf-btn" onclick="go('picks')">Picks</button>
+          <button class="pf-btn" onclick="go('history')">History</button>
+        </div>
+        <div class="ph-stats">
+          <div class="ph-stat"><div class="ph-k">Saved Picks</div><div class="ph-v" id="ph-saved">0</div></div>
+          <div class="ph-stat"><div class="ph-k">Scan Streak</div><div class="ph-v" id="ph-streak">0d</div></div>
+          <div class="ph-stat"><div class="ph-k">Scans Run</div><div class="ph-v" id="ph-scans">0</div></div>
+        </div>
+      </div>
       <div class="profile-card">
         <div class="pf-row"><div class="pf-k">Account</div><div class="pf-v" id="pf-account">Guest</div></div>
         <div class="pf-row"><div class="pf-k">Method</div><div class="pf-v" id="pf-method">Guest</div></div>
@@ -2549,8 +2571,25 @@ function renderProfile() {
   const upgradeBtn = document.getElementById('pf-upgrade-btn');
   const billingBtn = document.getElementById('pf-billing-btn');
   const signoutBtn = document.getElementById('pf-signout-btn');
+  const greet = document.getElementById('ph-greet');
+  const sub = document.getElementById('ph-sub');
+  const saved = document.getElementById('ph-saved');
+  const streak = document.getElementById('ph-streak');
+  const scans = document.getElementById('ph-scans');
   const registered = isLoggedInProfile();
   const normalizedPlan = normalizePlan(currentPlan);
+  let savedCount = 0;
+  try {
+    const raw = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+    savedCount = Array.isArray(raw) ? raw.length : 0;
+  } catch (_) {
+    savedCount = 0;
+  }
+  const streakDays = Number(STREAKDATA?.current_days || PERFDATA?.streak?.current_days || 0);
+  const identifier = String(userProfile.identifier || '').trim();
+  const first = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+  const firstName = first ? first.replace(/[^a-zA-Z0-9]/g, ' ').trim().split(/\s+/)[0] : '';
+  const helloName = firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : 'there';
   if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
   if (method) method.textContent = authMethodLabel(userProfile.method);
   if (plan) plan.textContent = planLabel(normalizedPlan);
@@ -2566,6 +2605,17 @@ function renderProfile() {
     billingBtn.textContent = normalizedPlan === 'free' ? 'Billing & Plans' : 'Manage Billing';
   }
   if (signoutBtn) signoutBtn.style.display = registered ? '' : 'none';
+  if (greet) greet.textContent = registered ? `Welcome back, ${helloName}` : 'Welcome to your home base';
+  if (sub) {
+    sub.textContent = registered
+      ? (normalizedPlan === 'free'
+        ? 'You are on Free. Save picks and build your daily routine, then upgrade when ready.'
+        : `You are on ${planLabel(normalizedPlan)}. Your account hub for picks, progress, and billing.`)
+      : 'Create your account to save picks, sync devices, and build your betting routine.';
+  }
+  if (saved) saved.textContent = String(savedCount);
+  if (streak) streak.textContent = `${streakDays}d`;
+  if (scans) scans.textContent = String(Number(scanCount || 0));
   updateAuthUi();
 }
 
