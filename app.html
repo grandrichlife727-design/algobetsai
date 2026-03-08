@@ -5981,14 +5981,25 @@ function renderPicks() {
   function getFreeTeaserList(rows, visibleLimit, lockedLimit) {
     if (!Array.isArray(rows) || !rows.length) return [];
     const ranked = rows.slice().sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)));
-    const skipTop = Math.min(3, Math.max(1, ranked.length - 1));
+    const skipTop = ranked.length > visibleLimit ? Math.min(3, Math.max(1, ranked.length - visibleLimit)) : 0;
     const pool = ranked.slice(skipTop);
-    const source = pool.length ? pool : ranked.slice(1);
+    const source = pool.length ? pool : ranked;
     if (!source.length) return ranked.slice(0, Math.min(rows.length, visibleLimit + lockedLimit));
     const daySeed = Math.floor(Date.now() / 86400000);
     const start = daySeed % source.length;
     const rotated = source.slice(start).concat(source.slice(0, start));
-    return rotated.slice(0, Math.min(rotated.length, visibleLimit + lockedLimit));
+    const target = visibleLimit + lockedLimit;
+    const picks = rotated.slice(0, Math.min(rotated.length, target));
+    if (picks.length >= target || ranked.length <= picks.length) return picks;
+    const seen = new Set(picks.map(p => String(p.id)));
+    for (const p of ranked) {
+      const key = String(p.id);
+      if (seen.has(key)) continue;
+      picks.push(p);
+      seen.add(key);
+      if (picks.length >= target) break;
+    }
+    return picks.slice(0, target);
   }
 
   document.getElementById('picks-count').textContent = usingDemoData
