@@ -1735,7 +1735,19 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const _qp = new URLSearchParams(window.location.search);
-const TRUSTED_BACKENDS = ['https://algobetsai.onrender.com'];
+const DEFAULT_RENDER_BACKEND = 'https://algobetsai.onrender.com';
+const CURRENT_ORIGIN_BACKEND = (() => {
+  try {
+    const u = new URL(window.location.origin);
+    const isHttp = ['http:', 'https:'].includes(u.protocol);
+    const isGithubPages = u.hostname.endsWith('github.io');
+    if (!isHttp || isGithubPages) return '';
+    return String(window.location.origin).replace(/\/+$/, '');
+  } catch (_) {
+    return '';
+  }
+})();
+const TRUSTED_BACKENDS = [DEFAULT_RENDER_BACKEND, CURRENT_ORIGIN_BACKEND].filter(Boolean);
 function normalizeBackendUrl(v) {
   return String(v || '').trim().replace(/\/+$/,'');
 }
@@ -1756,7 +1768,7 @@ if (_backendFromQp && isTrustedBackendUrl(_backendFromQp)) localStorage.setItem(
 const _backendStored = normalizeBackendUrl(localStorage.getItem('algobets-backend') || '');
 const BACKEND = isTrustedBackendUrl(_backendFromQp)
   ? _backendFromQp
-  : (isTrustedBackendUrl(_backendStored) ? _backendStored : 'https://algobetsai.onrender.com');
+  : (isTrustedBackendUrl(_backendStored) ? _backendStored : (CURRENT_ORIGIN_BACKEND || DEFAULT_RENDER_BACKEND));
 const _backendKeyFromQp = String(_qp.get('backend_key') || '').trim();
 if (_backendKeyFromQp) localStorage.setItem('algobets-backend-key', _backendKeyFromQp);
 const BACKEND_KEY = String(localStorage.getItem('algobets-backend-key') || '').trim();

@@ -1640,7 +1640,17 @@
   <!-- (Already mobile-responsive, enhanced below with mobile-specific CTA) -->
 
   <script>
-    const BACKEND = 'https://algobetsai.onrender.com';
+    const BACKEND = (() => {
+      try {
+        const u = new URL(window.location.origin);
+        const isHttp = ['http:', 'https:'].includes(u.protocol);
+        const isGithubPages = u.hostname.endsWith('github.io');
+        if (!isHttp || isGithubPages) return 'https://algobetsai.onrender.com';
+        return String(window.location.origin).replace(/\/+$/, '');
+      } catch (_) {
+        return 'https://algobetsai.onrender.com';
+      }
+    })();
     const GOOGLE_CLIENT_ID_FALLBACK = '157971599190-33u9s5601gu42h2eh3gsdro8kb1scpdp.apps.googleusercontent.com';
     let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
     let googleLoaded = false;
