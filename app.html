@@ -85,7 +85,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
-.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.nav-item:focus-visible,.scan-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
@@ -178,8 +178,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   .sec-meta{font-size:12px}
   .stat-val{font-size:24px}
   .stat-label{font-size:12px}
-  .mode-btn{font-size:12px;padding:7px 13px}
-  .mode-hint{font-size:12px}
   .filter{font-size:14px;padding:7px 14px}
   .pick-bet{font-size:17px}
   .pick-odds{font-size:16px}
@@ -510,11 +508,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* MODE TOGGLE */
-.mode-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.mode-group{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:3px;gap:2px}
-.mode-btn{padding:5px 12px;border-radius:5px;border:none;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s}
-.mode-btn.active{background:var(--card);color:var(--text)}
-.mode-hint{font-size:11px;color:var(--muted)}
 .trial-card{display:none;justify-content:space-between;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(124,58,237,.14));border:1px solid rgba(34,211,238,.24);border-radius:10px;padding:12px;margin:-6px 0 14px}
 .trial-card.on{display:flex}
 .trial-copy{font-size:12px;color:var(--sub);line-height:1.45}
@@ -905,13 +898,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">847</div><div class="stat-label">users scanning now</div></div>
       </div>
       <div class="error-banner" id="err-banner" role="status" aria-live="polite"></div>
-      <div class="mode-row">
-        <div class="mode-group">
-          <button class="mode-btn active" id="m-simple" onclick="setMode('simple')">Simple</button>
-          <button class="mode-btn" id="m-expert" onclick="setMode('expert')">Expert</button>
-        </div>
-        <span class="mode-hint" id="mode-hint">Plain English</span>
-      </div>
       <div class="trial-card" id="trial-card">
         <div class="trial-copy" id="trial-copy"><strong>Step 1:</strong> Create your free account. <strong>Step 2:</strong> Start your 3-day Premium trial.</div>
         <div class="trial-actions">
@@ -1886,7 +1872,6 @@ const SPORTS = [
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let mode = 'simple';
 let filter = 'all';
 let pickMarket = 'all';
 let pickMinEdge = 0;
@@ -2204,7 +2189,6 @@ function loadState() {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return;
     const st = JSON.parse(raw);
-    if (st.mode === 'simple' || st.mode === 'expert') mode = st.mode;
     if (typeof st.filter === 'string') filter = st.filter;
     if (typeof st.currentTab === 'string') currentTab = st.currentTab;
     if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
@@ -2220,7 +2204,7 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem(STATE_KEY, JSON.stringify({mode, filter, legs, currentTab, oddsRange}));
+    localStorage.setItem(STATE_KEY, JSON.stringify({filter, legs, currentTab, oddsRange}));
   } catch(err) {
     console.warn('[Algobets] Could not save UI state:', err);
   }
@@ -6678,15 +6662,6 @@ function go(name) {
   saveState();
 }
 
-function setMode(m) {
-  mode = m;
-  document.getElementById('m-simple').classList.toggle('active', m === 'simple');
-  document.getElementById('m-expert').classList.toggle('active', m === 'expert');
-  document.getElementById('mode-hint').textContent = m === 'simple' ? 'Plain English' : 'Full signal data';
-  saveState();
-  renderPicks();
-}
-
 function setFilter(el, k) {
   document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
@@ -6774,7 +6749,6 @@ function disableBrokenSettingsButtons() {
 }
 
 function applySavedSelections() {
-  if (mode === 'expert') setMode('expert');
   const savedFilterEl = document.querySelector(`.filter[onclick="setFilter(this,'${filter}')"]`);
   const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
   const activeFilter = savedFilterEl ? filter : 'all';
