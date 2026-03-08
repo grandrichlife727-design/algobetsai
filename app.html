@@ -5979,12 +5979,17 @@ function renderPicks() {
   });
 
   function freeTeaserBetLabel(p) {
-    const raw = String(p.game || p.bet || 'Matchup').trim();
-    return raw
-      .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, 'Total')
+    const matchup = String(p.game || p.bet || 'Matchup')
+      .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, '')
       .replace(/\s[+-]\d+(\.\d+)?/g, '')
       .replace(/\s{2,}/g, ' ')
       .trim();
+    const market = String(p.market || '').toLowerCase();
+    if (market === 'spread') return `${matchup} · Spread Teaser`;
+    if (market === 'moneyline' || market === 'ml') return `${matchup} · ML Teaser`;
+    if (market === 'total') return `${matchup} · Total Teaser`;
+    if (/\b(under|over)\b/i.test(String(p.bet || ''))) return `${matchup} · Total Teaser`;
+    return `${matchup} · Edge Teaser`;
   }
 
   function getFreeTeaserList(rows, visibleLimit, lockedLimit) {
