@@ -6041,7 +6041,8 @@ function renderPicks() {
   const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
   const renderList = isFreePlan ? freeRenderSource.slice(0, freeVisibleLimit) : freeRenderSource;
   let displayList = renderList;
-  if (isFreePlan && renderList.length < freeVisibleLimit) {
+  const canBackfillTeasers = !pickQuery && filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
+  if (isFreePlan && canBackfillTeasers && renderList.length < freeVisibleLimit) {
     const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, 0);
     const seen = new Set(renderList.map(p => `${String(p.game || '')}|${String(p.bet || '')}`));
     const merged = renderList.slice();
