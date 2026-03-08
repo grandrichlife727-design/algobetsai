@@ -6598,6 +6598,29 @@ function renderPicks() {
     : `Today's Edges (Live)`;
   updatePaywallUi();
 
+  // If preview/demo is on but filters hide all cards, restore defaults so users always see sample picks.
+  if (!pts.length && demoMode && Array.isArray(sourcePicks) && sourcePicks.length) {
+    const hasRestrictiveFilters =
+      filter !== 'all' || pickMarket !== 'all' || Number(pickMinEdge || 0) > 0 || Number(pickMinConf || 0) > 0;
+    if (hasRestrictiveFilters) {
+      filter = 'all';
+      pickMarket = 'all';
+      pickMinEdge = 0;
+      pickMinConf = 0;
+      const allFilter = document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
+      document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+      if (allFilter) allFilter.classList.add('active');
+      const marketSel = document.getElementById('picks-market');
+      const edgeSel = document.getElementById('picks-edge');
+      const confSel = document.getElementById('picks-conf');
+      if (marketSel) marketSel.value = 'all';
+      if (edgeSel) edgeSel.value = '0';
+      if (confSel) confSel.value = '0';
+      showToast('Preview filters reset to show sample picks');
+      return renderPicks();
+    }
+  }
+
   if (!pts.length) {
     const lastScan = applyFreeDelay && freeRelease.remainingMs > 0
       ? `Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}`
