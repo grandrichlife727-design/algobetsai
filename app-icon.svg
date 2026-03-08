@@ -17,9 +17,8 @@
   </defs>
   <rect x="36" y="36" width="952" height="952" rx="216" fill="url(#bg)"/>
   <rect x="36" y="36" width="952" height="952" rx="216" fill="url(#glow)"/>
-  <rect x="36" y="36" width="952" height="952" rx="216" fill="none" stroke="#2a3d79" stroke-opacity="0.45" stroke-width="5"/>
-  <!-- Exact provided mark, scaled up for stronger app icon presence -->
-  <g transform="translate(132 171) scale(1.64)" filter="url(#shadow)">
+  <!-- Exact provided mark, scaled for ~80% occupancy -->
+  <g transform="translate(102 151) scale(1.766)" filter="url(#shadow)">
   <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
   <defs>
     <style>
