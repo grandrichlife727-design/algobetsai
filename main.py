@@ -2361,6 +2361,9 @@ class CheckoutRequest(BaseModel):
     success_url: str
     cancel_url: str
     user_id: Optional[str] = None
+    trial_days: Optional[int] = None
+    require_payment_method: Optional[bool] = False
+    trial_mode: Optional[str] = None
 
 
 class PortalRequest(BaseModel):
@@ -3557,6 +3560,17 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
 
     tier = normalize_plan_name(body.tier)
     billing_cycle = str(body.billing_cycle or "monthly").strip().lower()
+    trial_days = int(body.trial_days or 0)
+    trial_requested = (
+        tier == PLAN_PREMIUM
+        and trial_days > 0
+        and bool(body.require_payment_method)
+        and str(body.trial_mode or "").strip().lower() == "card_required_auto_charge"
+    )
+    if trial_requested:
+        # Trials are monthly-only and one-time per user.
+        billing_cycle = "monthly"
+        trial_days = max(1, min(trial_days, 7))
     price_id = _resolve_price_id_for_tier_and_cycle(tier, billing_cycle)
     customer = await asyncio.to_thread(_find_or_create_customer, user_id)
     active_sub = await asyncio.to_thread(_get_active_subscription_for_customer, customer.id)
@@ -3610,17 +3624,41 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
             "proration": True,
         }
 
-    session = await asyncio.to_thread(
-        stripe.checkout.Session.create,
-        mode="subscription",
-        customer=customer.id,
-        line_items=[{"price": price_id, "quantity": 1}],
-        success_url=body.success_url,
-        cancel_url=body.cancel_url,
-        allow_promotion_codes=True,
-        client_reference_id=user_id,
-        metadata={"userId": user_id, "tier": tier, "billing_cycle": billing_cycle},
-    )
+    # Card-required trial: one-time for Premium, only when no paid plan is already active.
+    if trial_requested:
+        if plan_rank(current_plan) >= plan_rank(PLAN_PREMIUM):
+            raise HTTPException(status_code=400, detail="Paid plan already active.")
+        rec = _ensure_growth_user(user_id)
+        if rec.get("free_trial_claimed"):
+            raise HTTPException(status_code=400, detail="Free trial already claimed.")
+
+    session_payload: dict[str, Any] = {
+        "mode": "subscription",
+        "customer": customer.id,
+        "line_items": [{"price": price_id, "quantity": 1}],
+        "success_url": body.success_url,
+        "cancel_url": body.cancel_url,
+        "allow_promotion_codes": True,
+        "client_reference_id": user_id,
+        "metadata": {"userId": user_id, "tier": tier, "billing_cycle": billing_cycle},
+    }
+    if trial_requested:
+        session_payload["payment_method_collection"] = "always"
+        session_payload["subscription_data"] = {
+            "trial_period_days": trial_days,
+            "trial_settings": {"end_behavior": {"missing_payment_method": "cancel"}},
+            "metadata": {
+                "userId": user_id,
+                "tier": tier,
+                "billing_cycle": billing_cycle,
+                "trial_days": str(trial_days),
+                "trial_mode": "card_required_auto_charge",
+            },
+        }
+        session_payload["metadata"]["trial_days"] = str(trial_days)
+        session_payload["metadata"]["trial_mode"] = "card_required_auto_charge"
+
+    session = await asyncio.to_thread(stripe.checkout.Session.create, **session_payload)
     return {"checkout_url": session.url, "session_id": session.id}
 
 
@@ -3685,10 +3723,21 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
     if event_type == "checkout.session.completed":
         user_id = _normalize_user_id(obj.get("client_reference_id") or obj.get("metadata", {}).get("userId") or "")
         meta_tier = normalize_plan_name(obj.get("metadata", {}).get("tier", ""))
+        meta_trial_mode = str(obj.get("metadata", {}).get("trial_mode", "")).strip().lower()
+        try:
+            meta_trial_days = int(obj.get("metadata", {}).get("trial_days", 0) or 0)
+        except Exception:
+            meta_trial_days = 0
         if meta_tier in {PLAN_PREMIUM, PLAN_VIP}:
             resolved_plan = meta_tier
         else:
             resolved_plan = PLAN_PREMIUM
+        if user_id and meta_trial_mode == "card_required_auto_charge" and meta_trial_days > 0:
+            rec = _ensure_growth_user(user_id)
+            now = int(time.time())
+            if not rec.get("free_trial_claimed"):
+                rec["free_trial_claimed"] = True
+                rec["free_trial_claimed_at"] = now
     elif event_type.startswith("customer.subscription."):
         customer_id = obj.get("customer")
         try:
