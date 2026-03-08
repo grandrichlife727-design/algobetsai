@@ -2371,6 +2371,10 @@ class PortalRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class BillingCancelTrialRequest(BaseModel):
+    at_period_end: Optional[bool] = True
+
+
 class AuthSessionRequest(BaseModel):
     user_id: str
     method: Optional[str] = "guest"
@@ -2557,6 +2561,18 @@ def _find_or_create_customer(user_id: str):
     except Exception:
         pass
     return stripe.Customer.create(email=email, metadata={"userId": user_id})
+
+
+def _find_customer_for_user(user_id: str):
+    if not user_id:
+        return None
+    try:
+        customers = stripe.Customer.search(query=f'metadata["userId"]:"{user_id}"', limit=1)
+        if customers.data:
+            return customers.data[0]
+    except Exception:
+        return None
+    return None
 
 
 def _get_active_subscription_for_customer(customer_id: str):
@@ -3049,9 +3065,32 @@ async def trial_status(request: Request):
     rec = _ensure_growth_user(user_id)
     now = time.time()
     trial_until = float(rec.get("trial_until", 0) or 0)
+    # Sync with Stripe trialing state when available so UI can show accurate countdown/cancel.
+    stripe_trialing = False
+    if STRIPE_SECRET:
+        try:
+            customer = await asyncio.to_thread(_find_customer_for_user, user_id)
+            customer_id = str((customer or {}).get("id") or "").strip() if isinstance(customer, dict) else ""
+            if customer_id:
+                active_sub = await asyncio.to_thread(_get_active_subscription_for_customer, customer_id)
+                if isinstance(active_sub, dict):
+                    status = str(active_sub.get("status") or "").strip().lower()
+                    if status == "trialing":
+                        stripe_trialing = True
+                        trial_end = int(active_sub.get("trial_end") or 0)
+                        if trial_end > int(now):
+                            trial_until = max(trial_until, float(trial_end))
+                            rec["trial_until"] = trial_until
+                            rec["free_trial_claimed"] = True
+                            rec["free_trial_claimed_at"] = int(rec.get("free_trial_claimed_at") or now)
+                            _save_growth_db()
+                            _invalidate_plan_cache(user_id)
+        except Exception:
+            pass
+    claimed = bool(rec.get("free_trial_claimed")) or stripe_trialing
     return {
-        "eligible": not bool(rec.get("free_trial_claimed")),
-        "claimed": bool(rec.get("free_trial_claimed")),
+        "eligible": not claimed,
+        "claimed": claimed,
         "claimed_at": int(rec.get("free_trial_claimed_at", 0) or 0) or None,
         "trial_active_until": int(trial_until) if trial_until > now else None,
         "trial_seconds_left": max(0, int(trial_until - now)),
@@ -3684,6 +3723,61 @@ async def billing_portal(body: PortalRequest, request: Request):
     return {"portal_url": session.url}
 
 
+@app.post("/api/billing/cancel-trial")
+@limiter.limit("20/hour")
+async def billing_cancel_trial(body: BillingCancelTrialRequest, request: Request):
+    if not BILLING_ENABLED:
+        raise HTTPException(status_code=503, detail="Billing is temporarily disabled.")
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe is not configured.")
+    user_id = _normalize_user_id(_request_user_id(request))
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Authenticated user required.")
+
+    customer = await asyncio.to_thread(_find_customer_for_user, user_id)
+    customer_id = str((customer or {}).get("id") or "").strip() if isinstance(customer, dict) else ""
+    if not customer_id:
+        raise HTTPException(status_code=404, detail="No billing customer found.")
+    active_sub = await asyncio.to_thread(_get_active_subscription_for_customer, customer_id)
+    if not isinstance(active_sub, dict):
+        raise HTTPException(status_code=404, detail="No active subscription found.")
+
+    status = str(active_sub.get("status") or "").strip().lower()
+    if status not in {"trialing", "active", "past_due", "unpaid"}:
+        raise HTTPException(status_code=400, detail="Subscription is not cancellable.")
+
+    cancel_at_period_end = bool(body.at_period_end if body.at_period_end is not None else True)
+    if bool(active_sub.get("cancel_at_period_end")) and cancel_at_period_end:
+        trial_end = int(active_sub.get("trial_end") or 0)
+        return {
+            "ok": True,
+            "already_scheduled": True,
+            "status": status,
+            "cancel_at_period_end": True,
+            "trial_end": trial_end or None,
+        }
+
+    updated_sub = await asyncio.to_thread(
+        stripe.Subscription.modify,
+        str(active_sub.get("id")),
+        cancel_at_period_end=cancel_at_period_end,
+    )
+    trial_end = int(updated_sub.get("trial_end") or 0) if isinstance(updated_sub, dict) else 0
+    if user_id and trial_end > int(time.time()):
+        rec = _ensure_growth_user(user_id)
+        rec["trial_until"] = float(trial_end)
+        rec["free_trial_claimed"] = True
+        rec["free_trial_claimed_at"] = int(rec.get("free_trial_claimed_at") or time.time())
+        _save_growth_db()
+        _invalidate_plan_cache(user_id)
+    return {
+        "ok": True,
+        "status": str(updated_sub.get("status") or status) if isinstance(updated_sub, dict) else status,
+        "cancel_at_period_end": bool(updated_sub.get("cancel_at_period_end")) if isinstance(updated_sub, dict) else cancel_at_period_end,
+        "trial_end": trial_end or None,
+    }
+
+
 @app.post("/api/billing/webhook")
 @limiter.limit("120/minute")
 async def billing_webhook(request: Request, stripe_signature: str = Header(default="", alias="Stripe-Signature")):
@@ -3747,6 +3841,7 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
         except Exception:
             user_id = ""
         status = str(obj.get("status") or "").strip().lower()
+        trial_end = int(obj.get("trial_end") or 0)
         if status in {"active", "trialing", "past_due", "unpaid"}:
             items = obj.get("items", {}).get("data", [])
             price_id = ""
@@ -3760,6 +3855,20 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
             resolved_plan = PLAN_FREE
 
     if user_id:
+        rec = _ensure_growth_user(user_id)
+        if event_type.startswith("customer.subscription."):
+            status = str(obj.get("status") or "").strip().lower()
+            if status == "trialing":
+                trial_end = int(obj.get("trial_end") or 0)
+                if trial_end > now_ts:
+                    rec["trial_until"] = float(trial_end)
+                    rec["free_trial_claimed"] = True
+                    rec["free_trial_claimed_at"] = int(rec.get("free_trial_claimed_at") or now_ts)
+            elif status in {"active", "past_due", "unpaid", "canceled", "incomplete_expired"}:
+                # If trial has ended, clear stale trial countdown while preserving one-time trial claim.
+                trial_until = float(rec.get("trial_until", 0) or 0)
+                if trial_until and trial_until <= float(now_ts):
+                    rec["trial_until"] = 0
         _set_billing_entitlement(user_id, resolved_plan, source=event_type)
         _invalidate_plan_cache(user_id)
         discord_sync = await _sync_discord_roles_for_user(user_id, resolved_plan)

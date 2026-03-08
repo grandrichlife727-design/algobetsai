@@ -5033,7 +5033,12 @@ function updatePlanUi() {
     manage.style.display = (!BILLING_ENABLED_UI || !registered) ? 'none' : '';
     manage.textContent = p === 'free' ? 'Plans' : 'Manage';
   }
-  if (trialBtn) trialBtn.style.display = (BILLING_ENABLED_UI && p === 'free') ? 'inline-flex' : 'none';
+  if (trialBtn) {
+    const trialActive = Number(trialStatusState?.trial_seconds_left || 0) > 0;
+    trialBtn.style.display = (BILLING_ENABLED_UI && (p === 'free' || trialActive)) ? 'inline-flex' : 'none';
+    trialBtn.textContent = trialActive ? 'Cancel Trial' : '3-Day Trial';
+    trialBtn.onclick = trialActive ? () => cancelTrialSubscription() : () => quickTrialAction();
+  }
   renderProfile();
   renderToolLocks();
   renderSettingsExtras();
@@ -5581,6 +5586,7 @@ function updateTrialCard() {
   const isFree = normalizePlan(currentPlan) === 'free';
   const registered = ensureRegisteredUser(false);
   const secs = Number(trialStatusState.trial_seconds_left || 0);
+  const trialActive = secs > 0;
   const eligible = !!trialStatusState.eligible;
 
   cardSet.forEach(({card, copy}) => {
@@ -5588,14 +5594,19 @@ function updateTrialCard() {
     const claimBtn = card.querySelector('.trial-claim');
     const dismissBtn = card.querySelector('.trial-dismiss');
 
-    if (isFree && secs > 0) {
-      copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. You have Premium access right now.`;
+    if (trialActive) {
+      copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. Card on file will be charged unless you cancel before trial ends.`;
       if (claimBtn) {
-        claimBtn.disabled = true;
-        claimBtn.textContent = 'Trial Active';
-        claimBtn.style.opacity = '.7';
+        claimBtn.disabled = false;
+        claimBtn.textContent = 'Manage Billing';
+        claimBtn.style.opacity = '1';
+        claimBtn.onclick = () => openBillingPortal();
       }
-      if (dismissBtn) dismissBtn.style.display = 'none';
+      if (dismissBtn) {
+        dismissBtn.style.display = '';
+        dismissBtn.textContent = 'Cancel Trial';
+        dismissBtn.onclick = () => cancelTrialSubscription();
+      }
       card.classList.add('on');
       return;
     }
@@ -5812,7 +5823,7 @@ function maybeOpenUpgradeFromQuery() {
 
 async function openBillingPortal() {
   if (!ensureBillingUser()) return;
-  if (normalizePlan(currentPlan) === 'free') {
+  if (normalizePlan(currentPlan) === 'free' && Number(trialStatusState?.trial_seconds_left || 0) <= 0) {
     openUpgradePicker();
     showToast('Choose Premium or VIP to continue to billing');
     return;
@@ -5847,6 +5858,38 @@ async function openBillingPortal() {
     else if (/billing is temporarily disabled/i.test(msg)) showToast('Billing is temporarily unavailable');
     else if (/authenticated user required/i.test(msg)) showToast('Sign in first to manage billing');
     else showToast('Billing portal unavailable');
+  }
+}
+
+async function cancelTrialSubscription() {
+  if (!ensureBillingUser()) return;
+  const secs = Number(trialStatusState?.trial_seconds_left || 0);
+  if (secs <= 0) {
+    showToast('No active trial to cancel');
+    return;
+  }
+  try {
+    const res = await backendPost('/api/billing/cancel-trial', {at_period_end: true});
+    if (res?.ok) {
+      showToast('Trial cancellation scheduled. Access remains until trial end.');
+      await loadTrialStatus();
+      await fetchPlan();
+      return;
+    }
+    showToast('Could not cancel trial right now');
+  } catch (err) {
+    console.error(err);
+    const msg = String(err?.detail || err?.message || '');
+    if (/no active subscription/i.test(msg)) {
+      showToast('No active trial subscription found');
+      return;
+    }
+    if (/not cancellable/i.test(msg)) {
+      showToast('This subscription cannot be cancelled here');
+      return;
+    }
+    showToast('Opening billing portal...');
+    await openBillingPortal();
   }
 }
 
