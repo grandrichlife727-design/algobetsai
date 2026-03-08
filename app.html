@@ -40,6 +40,16 @@
   --display: 'Bebas Neue', sans-serif;
   --grad: linear-gradient(135deg, var(--cyan2), var(--violet));
 }
+body.theme-light{
+  --bg:#f4f7fb;
+  --surface:#ffffff;
+  --card:#f8fafc;
+  --border:rgba(15,23,42,.12);
+  --border2:rgba(15,23,42,.22);
+  --muted:#475569;
+  --sub:#334155;
+  --text:#0f172a;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 html, body {
@@ -223,6 +233,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+.pick-controls{display:grid;grid-template-columns:1.2fr repeat(4,minmax(0,1fr));gap:8px;margin:-6px 0 12px}
+.pick-controls input,.pick-controls select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--sans)}
+@media(max-width:900px){.pick-controls{grid-template-columns:1fr 1fr}}
+.tool-lock{opacity:.72;border-style:dashed}
+.tool-lock:hover{opacity:1}
 
 /* SECTION */
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:4px}
@@ -674,6 +689,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     Dashboard
   </button>
+  <button class="nav-item" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    Picks <span class="nav-badge" id="nb-picks">0</span>
+  </button>
+  <button class="nav-item" onclick="go('tools')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+    Tools
+  </button>
   <button class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     History
@@ -764,7 +787,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
               <div>NBA + NHL only</div>
               <div>20-minute refresh</div>
             </div>
-            <div class="hps-cta"><button class="pf-btn" id="hps-free-cta" onclick="go('home')">Get Started</button></div>
+            <div class="hps-cta"><button class="pf-btn" id="hps-free-cta" onclick="go('picks')">Get Started</button></div>
           </div>
           <div class="hps-col premium">
             <div class="hps-k">PREMIUM</div>
@@ -772,10 +795,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-price">$19.99/mo</div>
             <div class="hps-list">
               <div>Unlimited picks</div>
-              <div>All sports + props</div>
+              <div>All sports + props + steam + fades</div>
               <div>5-minute refresh</div>
-              <div>Full 5-agent breakdown</div>
-              <div>Steam moves + public fades</div>
+              <div>Parlay builder</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
           </div>
@@ -783,11 +805,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-k">VIP</div>
             <div class="hps-price">$39.99/mo</div>
             <div class="hps-list">
-              <div>Unlimited picks</div>
+              <div>50 picks</div>
               <div>1-minute refresh</div>
-              <div>Line rush alerts</div>
+              <div>Execution layer</div>
               <div>Discord access</div>
-              <div>Priority support</div>
+              <div>Line rush alerts</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button></div>
           </div>
@@ -802,9 +824,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
-          <div class="growth-title">Today's Edges (Demo Data)</div>
+          <div class="growth-title">Today's Top Edges</div>
           <div id="home-top-picks" class="growth-sub">Scanning market feed...</div>
-          <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('home')">View All Picks</button></div>
+          <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
         <div class="growth-card" id="home-card-premium" data-home-card="premium_unlocks">
           <div class="growth-title">Premium Unlocks</div>
@@ -887,11 +909,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="tier-compare" id="tier-compare">
         <div class="tier-title">How Plans Work</div>
-        <div class="tier-strip">
-          <div class="tier-tag"><strong>Free</strong>: Test the edge. Risk nothing.</div>
-          <div class="tier-tag premium"><strong>Premium</strong>: Find 15 edges per day. Full 5-agent breakdown.</div>
-          <div class="tier-tag vip"><strong>VIP</strong>: Bet before lines move. Real-time alerts + Discord access.</div>
-        </div>
+      <div class="tier-strip">
+        <div class="tier-tag"><strong>Free</strong>: Test the edge. Risk nothing.</div>
+        <div class="tier-tag premium"><strong>Premium</strong>: Unlimited picks, all sports/props, 5-minute refresh.</div>
+        <div class="tier-tag vip"><strong>VIP</strong>: 50 picks, execution layer, 1-minute refresh + Discord.</div>
+      </div>
       </div>
       <div class="filters">
         <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
@@ -901,6 +923,34 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
+      </div>
+      <div class="pick-controls">
+        <input id="picks-search" type="search" placeholder="Search team, player, market..." oninput="setPickQuery(this.value)"/>
+        <select id="picks-market" onchange="setPickMarket(this.value)">
+          <option value="all">All markets</option>
+          <option value="spread">Spread</option>
+          <option value="moneyline">Moneyline</option>
+          <option value="total">Total</option>
+          <option value="props">Props</option>
+        </select>
+        <select id="picks-edge" onchange="setPickMinEdge(this.value)">
+          <option value="0">Edge %: Any</option>
+          <option value="2">Edge %: 2%+</option>
+          <option value="5">Edge %: 5%+</option>
+          <option value="8">Edge %: 8%+</option>
+        </select>
+        <select id="picks-conf" onchange="setPickMinConf(this.value)">
+          <option value="0">Confidence: Any</option>
+          <option value="65">Confidence: 65%+</option>
+          <option value="75">Confidence: 75%+</option>
+          <option value="85">Confidence: 85%+</option>
+        </select>
+        <select id="picks-sort" onchange="setPickSort(this.value)">
+          <option value="edge_desc">Sort: Edge high-low</option>
+          <option value="edge_asc">Sort: Edge low-high</option>
+          <option value="conf_desc">Sort: Confidence</option>
+          <option value="time_asc">Sort: Soonest start</option>
+        </select>
       </div>
       <div class="sec-hdr">
         <span class="sec-title" id="picks-count">Today's Edges (Demo Data)</span>
@@ -1175,19 +1225,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
     </div>
 
-    <div id="v-more" style="display:none">
-      <div class="page-hdr"><div class="page-title">More <span>Features</span></div><div class="page-sub">Everything else: builders, tracking, account, and help.</div></div>
+    <div id="v-tools" style="display:none">
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Build tickets, track bets, and run edge tools by plan.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">Builder + Tracking</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('boost')">Boost Checker</button><button class="pf-btn" onclick="go('perf')">Track Record</button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('history')">History</button></div>
+          <div class="growth-title">Core Tools</div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">Parlay Builder <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('history')">Bet Tracker</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('boost')">Payout Calculator</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Account + Help</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('profile')">Profile</button><button class="pf-btn" onclick="go('guide')">Guide</button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('vip')">VIP Tools</button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('community')">Community</button></div>
+          <div class="growth-title">Market Tools</div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">Steam Moves <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">Public Fades <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')">Line Rush Alerts <span class="nav-badge">VIP</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')">Sharp Money Tracker <span class="nav-badge">VIP</span></button></div>
         </div>
       </div>
     </div>
@@ -1309,7 +1361,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-history" style="display:none">
-      <div class="page-hdr"><div class="page-title">Pick <span>History</span></div><div class="page-sub">Recent scans and top edges captured for your account</div></div>
+      <div class="page-hdr"><div class="page-title">Bet <span>History</span></div><div class="page-sub">Tracked bets, ROI by sport, and CLV performance.</div></div>
       <div class="sec-hdr"><span class="sec-title" id="history-count">Ready</span><span class="sec-meta">Retention + trust proof</span></div>
       <div class="picks-list" id="history-list"></div>
     </div>
@@ -1422,6 +1474,22 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <button class="paywall-cta" onclick="saveProfileSettings()">Save Settings</button>
           </div>
           <div class="growth-note" id="pf-note">Using default settings.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">API Keys (VIP)</div>
+          <div class="growth-sub">Manage private model/API integrations for automation.</div>
+          <div class="rf-row">
+            <input class="auth-in" id="vip-api-key" type="password" placeholder="vip_xxx..." disabled/>
+            <button class="paywall-cta" id="vip-api-key-btn" onclick="openUpgradePicker()">Unlock VIP</button>
+          </div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Theme</div>
+          <div class="growth-sub">Switch between dark and light interface styles.</div>
+          <div class="rf-row">
+            <button class="pf-btn" onclick="toggleThemeMode()">Toggle Theme</button>
+          </div>
+          <div class="growth-note" id="theme-note">Current theme: Dark.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Bankroll Planner</div>
@@ -1581,10 +1649,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     <span class="mnav-label">Dashboard</span>
   </button>
+  <button class="mnav-btn" id="mn-picks" onclick="go('picks')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    <span class="mnav-label">Picks</span>
+  </button>
   <div class="mnav-premium-wrap">
-    <button class="mnav-btn" id="mn-premium" onclick="go('history')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"/></svg>
-      <span class="mnav-label">History</span>
+    <button class="mnav-btn" id="mn-tools" onclick="go('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+      <span class="mnav-label">Tools</span>
     </button>
     <div class="mnav-premium-panel" id="mnav-premium-panel" style="display:none">
       <button class="mnav-more-item" onclick="go('premium')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Premium Home</button>
@@ -1595,8 +1667,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
     </div>
   </div>
+  <button class="mnav-btn" id="mn-history" onclick="go('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    <span class="mnav-label">History</span>
+  </button>
   <div class="mnav-vip-wrap">
-    <button class="mnav-btn vip-nav" id="mn-vip" onclick="go('profile')" title="Settings">
+    <button class="mnav-btn vip-nav" id="mn-settings" onclick="go('profile')" title="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
       <span class="mnav-label">Settings</span>
     </button>
@@ -1743,6 +1819,7 @@ const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
 const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
+const THEME_KEY = 'algobets-theme-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
 const DEFAULT_AFFILIATE_LINKS = {
   draftkings: 'https://sportsbook.draftkings.com',
@@ -1834,6 +1911,11 @@ const SPORTS = [
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let mode = 'simple';
 let filter = 'all';
+let pickQuery = '';
+let pickMarket = 'all';
+let pickMinEdge = 0;
+let pickMinConf = 0;
+let pickSort = 'edge_desc';
 let legs = [];
 let PICKS = [];
 let EVDATA = [];
@@ -1854,7 +1936,7 @@ let newsImpactFetchedAt = 0;
 let perfFetchedAt = 0;
 let lastRefresh = null;
 let isScanning = false;
-let currentTab = 'picks';
+let currentTab = 'home';
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
@@ -1864,6 +1946,7 @@ let scanCooldownTicker = null;
 let HISTORYDATA = [];
 let COMMUNITYDATA = [];
 let PRICING = {};
+let themeMode = String(localStorage.getItem(THEME_KEY) || 'dark').toLowerCase() === 'light' ? 'light' : 'dark';
 let billingCycle = 'monthly';
 let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
 let trialUiState = {dismissed: false};
@@ -3700,20 +3783,83 @@ function renderHistory() {
   const el = document.getElementById('history-list');
   const ct = document.getElementById('history-count');
   if (!el || !ct) return;
-  ct.textContent = `${HISTORYDATA.length} recent scan${HISTORYDATA.length !== 1 ? 's' : ''}`;
-  if (!HISTORYDATA.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No history yet</div><div class="empty-sub">Run a scan and your top picks will appear here.</div><div style="margin-top:10px"><button class="paywall-cta" onclick="go('home')">Add Bet</button></div></div>`;
+  let tracked = [];
+  try {
+    tracked = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+    if (!Array.isArray(tracked)) tracked = [];
+  } catch (_) {
+    tracked = [];
+  }
+  const freeCap = normalizePlan(currentPlan) === 'free' ? 10 : Infinity;
+  const visible = tracked.slice(0, freeCap);
+  ct.textContent = `${visible.length} tracked bet${visible.length !== 1 ? 's' : ''}`;
+  if (!visible.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">No tracked bets yet</div><div class="empty-sub">Save picks from the Picks page to build history analytics.</div><div style="margin-top:10px"><button class="paywall-cta" onclick="go('picks')">Add Bet</button></div></div>`;
     return;
   }
-  el.innerHTML = HISTORYDATA.map(h => {
-    const top = (h.top_picks || []).map((p, idx) => `<div class="h-item">${esc(p.sport || '')}: <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} <span style="color:var(--cyan)">(+${esc(String(p.ev || 0))}%)</span> <button class="btn-share" style="padding:2px 6px;margin-left:6px" onclick="shareHistoryPick(${JSON.stringify(h.ts)},${idx})">Share</button></div>`).join('');
-    const plan = normalizePlan(h.plan || 'free');
-    return `<div class="h-card">
-      <div class="h-top"><span class="h-time">${fmtTs(h.ts)}</span><span class="h-pill ${plan}">${planLabel(plan)}</span></div>
-      <div class="h-meta">${h.picks_visible || 0} shown of ${h.picks_total || 0} picks · ${(h.sports_covered || []).length} sports</div>
-      <div class="h-list">${top || '<div class="h-item">No picks captured in this scan.</div>'}</div>
+  const avgEdge = visible.reduce((s, p) => s + Number(p.ev || 0), 0) / Math.max(1, visible.length);
+  const avgClv = visible.reduce((s, p) => s + Number(p.clvExp || 0), 0) / Math.max(1, visible.length);
+  const bySport = {};
+  visible.forEach(p => {
+    const k = String(p.sport || 'Other').replace(/[^\w\s]/g, '').trim() || 'Other';
+    if (!bySport[k]) bySport[k] = {n: 0, ev: 0};
+    bySport[k].n += 1;
+    bySport[k].ev += Number(p.ev || 0);
+  });
+  const roiRows = Object.entries(bySport)
+    .sort((a, b) => b[1].ev - a[1].ev)
+    .map(([sport, v]) => `<div class="h-item">${esc(sport)} · ${v.n} bets · ROI ${((v.ev / Math.max(1, v.n))).toFixed(1)}%</div>`)
+    .join('');
+  const capNote = Number.isFinite(freeCap) && tracked.length > freeCap ? `<div class="growth-note">Free plan cap: showing 10 of ${tracked.length} tracked bets.</div>` : '';
+  const rows = visible.map((p, idx) => `<div class="h-item">${idx + 1}. <strong>${esc(p.bet || '—')}</strong> ${esc(String(p.odds || ''))} · +${Number(p.ev || 0).toFixed(1)}% EV · ${esc(String(p.sport || ''))}</div>`).join('');
+  el.innerHTML = `
+    <div class="h-card">
+      <div class="h-top"><span class="h-time">Performance Stats</span><span class="h-pill premium">Tracker</span></div>
+      <div class="h-meta">${visible.length} bets · Projected ROI ${avgEdge.toFixed(1)}% · Avg CLV ${avgClv.toFixed(1)}%</div>
+      <div class="h-list">${roiRows || '<div class="h-item">No sport-level data yet.</div>'}</div>
+      <div class="rf-row" style="margin-top:8px"><button class="pf-btn" onclick="exportHistoryCsv()">Export CSV</button></div>
+      ${capNote}
+    </div>
+    <div class="h-card">
+      <div class="h-top"><span class="h-time">Tracked Bets</span><span class="h-pill free">${planLabel(currentPlan)}</span></div>
+      <div class="h-list">${rows}</div>
     </div>`;
-  }).join('');
+}
+
+function exportHistoryCsv() {
+  let tracked = [];
+  try {
+    tracked = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+    if (!Array.isArray(tracked)) tracked = [];
+  } catch (_) {
+    tracked = [];
+  }
+  if (!tracked.length) {
+    showToast('No tracked bets to export');
+    return;
+  }
+  const lines = ['id,bet,sport,odds,edge_percent,confidence,timestamp'];
+  tracked.forEach(p => {
+    const row = [
+      p.id,
+      `"${String(p.bet || '').replace(/"/g, '""')}"`,
+      `"${String(p.sport || '').replace(/"/g, '""')}"`,
+      String(p.odds || ''),
+      String(p.ev || 0),
+      String(p.conf || 0),
+      new Date(Number(p.ts || Date.now())).toISOString(),
+    ];
+    lines.push(row.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'algobets-history.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function shareHistoryPick(ts, idx) {
@@ -3735,7 +3881,10 @@ async function shareHistoryPick(ts, idx) {
 }
 
 async function loadHistory() {
-  if (!ensureRegisteredUser()) return;
+  if (!ensureRegisteredUser(false)) {
+    renderHistory();
+    return;
+  }
   try {
     const res = await backendGet('/api/history?limit=30');
     HISTORYDATA = Array.isArray(res.history) ? res.history : [];
@@ -3794,6 +3943,7 @@ function savePickToTracker(id) {
       odds: p.odds,
       ev: p.ev,
       conf: p.conf,
+      clvExp: p.clvExp || 0,
       sport: p.sport,
       ts: Date.now(),
     }, ...list].slice(0, 100);
@@ -4325,9 +4475,43 @@ function updatePlanUi() {
   if (manage) manage.style.display = p === 'free' ? 'none' : '';
   if (trialBtn) trialBtn.style.display = p === 'free' ? 'inline-flex' : 'none';
   renderProfile();
+  renderToolLocks();
+  renderSettingsExtras();
   updateHomeSummary();
   updateScanCooldownUi();
   updateTrialCard();
+}
+
+function renderToolLocks() {
+  document.querySelectorAll('#v-tools .tool-gated').forEach(btn => {
+    const tier = String(btn.getAttribute('data-tier') || 'free');
+    const locked = (tier === 'vip' && !canUseVip()) || (tier === 'premium' && !canUsePremium());
+    btn.classList.toggle('tool-lock', locked);
+  });
+}
+
+function renderSettingsExtras() {
+  const vipOn = canUseVip();
+  const apiInput = document.getElementById('vip-api-key');
+  const apiBtn = document.getElementById('vip-api-key-btn');
+  if (apiInput) apiInput.disabled = !vipOn;
+  if (apiBtn) {
+    apiBtn.textContent = vipOn ? 'Save Key' : 'Unlock VIP';
+    apiBtn.onclick = vipOn ? () => showToast('API key saved') : () => openUpgradePicker();
+  }
+  const note = document.getElementById('theme-note');
+  if (note) note.textContent = `Current theme: ${themeMode === 'light' ? 'Light' : 'Dark'}.`;
+}
+
+function applyThemeMode() {
+  document.body.classList.toggle('theme-light', themeMode === 'light');
+  localStorage.setItem(THEME_KEY, themeMode);
+  renderSettingsExtras();
+}
+
+function toggleThemeMode() {
+  themeMode = themeMode === 'light' ? 'dark' : 'light';
+  applyThemeMode();
 }
 
 function quickTrialAction() {
@@ -4485,9 +4669,9 @@ function renderHomeModules() {
       topEl.innerHTML = 'No edges loaded yet. Tap <strong>Run Scan</strong> to refresh.';
     } else {
       const premiumOn = canUsePremium();
-      const rows = PICKS.slice(0, 4).map((p, i) =>
+      const rows = PICKS.slice().sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0)).slice(0, 3).map((p, i) =>
         `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
-          <div style="font-weight:700;color:var(--text)">${esc(p.bet)}</div>
+          <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
           <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
         </div>`
       ).join('');
@@ -4963,6 +5147,11 @@ function normalizePick(p, idx) {
       try { timeStr = new Date(timeStr).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}); } catch(e){}
     }
   }
+  const betRaw = String(p.bet || '').toLowerCase();
+  const marketType = String(p.market_type || '').toLowerCase()
+    || (betRaw.includes('over') || betRaw.includes('under') ? 'total'
+      : (betRaw.includes(' ml') || betRaw.includes('moneyline') ? 'moneyline'
+      : (betRaw.includes('points') || betRaw.includes('rebounds') || betRaw.includes('assists') ? 'props' : 'spread')));
 
   return {
     id:   idx + 1,
@@ -4989,6 +5178,7 @@ function normalizePick(p, idx) {
     elo:  p.elo_edge   || 0,
     chips,
     explain,
+    market: marketType,
   };
 }
 
@@ -5499,7 +5689,21 @@ function renderPicks() {
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
     return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
-  }).sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)));
+  }).filter(p => {
+    if (pickMarket !== 'all' && String(p.market || '') !== pickMarket) return false;
+    if (Number(p.ev || 0) < pickMinEdge) return false;
+    if (Number(p.conf || 0) < pickMinConf) return false;
+    if (pickQuery) {
+      const hay = `${p.bet} ${p.game} ${p.sport} ${p.market}`.toLowerCase();
+      if (!hay.includes(pickQuery)) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (pickSort === 'edge_asc') return Number(a.ev || 0) - Number(b.ev || 0);
+    if (pickSort === 'conf_desc') return Number(b.conf || 0) - Number(a.conf || 0);
+    if (pickSort === 'time_asc') return String(a.time || '').localeCompare(String(b.time || ''));
+    return (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0));
+  });
 
   document.getElementById('picks-count').textContent = `Today's Edges (Demo Data)`;
   updatePaywallUi();
@@ -5997,7 +6201,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
@@ -6042,8 +6246,24 @@ function toggleMobileVip(e) {
   panel.classList.toggle('on');
 }
 
+function openTierFeature(tab, tier = 'free') {
+  const needPremium = tier === 'premium';
+  const needVip = tier === 'vip';
+  if (needVip && !canUseVip()) {
+    showToast('VIP feature');
+    openUpgradePicker();
+    return;
+  }
+  if (needPremium && !canUsePremium()) {
+    showToast('Premium feature');
+    openUpgradePicker();
+    return;
+  }
+  go(tab);
+}
+
 function go(name) {
-  if (name === 'picks') name = 'home';
+  if (name === 'more') name = 'tools';
   if (!ALL_TABS.includes(name)) return;
   if (name === 'steam' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
@@ -6069,10 +6289,12 @@ function go(name) {
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
     const ni = document.querySelector(`.nav-item[onclick="go('${t}')"]`); if (ni) ni.classList.toggle('active', t === name);
   });
-  const vipBtn = document.getElementById('mn-vip');
-  if (vipBtn) vipBtn.classList.toggle('active', name === 'profile');
-  const premiumBtn = document.getElementById('mn-premium');
-  if (premiumBtn) premiumBtn.classList.toggle('active', name === 'history');
+  const settingsBtn = document.getElementById('mn-settings');
+  if (settingsBtn) settingsBtn.classList.toggle('active', name === 'profile');
+  const toolsBtn = document.getElementById('mn-tools');
+  if (toolsBtn) toolsBtn.classList.toggle('active', name === 'tools');
+  const historyBtn = document.getElementById('mn-history');
+  if (historyBtn) historyBtn.classList.toggle('active', name === 'history');
   const moreBtn = document.getElementById('mn-more');
   if (moreBtn) moreBtn.classList.toggle('active', MOBILE_MORE_TABS.includes(name));
   window.scrollTo({top:0,behavior:'smooth'});
@@ -6125,6 +6347,31 @@ function setFilter(el, k) {
   el.classList.add('active');
   filter = k;
   saveState();
+  renderPicks();
+}
+
+function setPickQuery(v) {
+  pickQuery = String(v || '').trim().toLowerCase();
+  renderPicks();
+}
+
+function setPickMarket(v) {
+  pickMarket = String(v || 'all').toLowerCase();
+  renderPicks();
+}
+
+function setPickMinEdge(v) {
+  pickMinEdge = Number(v || 0);
+  renderPicks();
+}
+
+function setPickMinConf(v) {
+  pickMinConf = Number(v || 0);
+  renderPicks();
+}
+
+function setPickSort(v) {
+  pickSort = String(v || 'edge_desc');
   renderPicks();
 }
 
@@ -6216,6 +6463,7 @@ bindUiAccessibility();
 disableBrokenSettingsButtons();
 bindHomeTracking();
 updateDemoToggleUi();
+applyThemeMode();
 setupInstallPrompt();
 registerServiceWorker();
 if (demoMode) applyDemoDataset();
