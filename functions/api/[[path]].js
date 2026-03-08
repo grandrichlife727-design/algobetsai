@@ -31,8 +31,6 @@ export async function onRequest(context) {
   const method = request.method.toUpperCase();
   const rawPath = (Array.isArray(params.path) ? params.path.join("/") : String(params.path || "")).replace(/,/g, "/");
   const url = toUpstreamUrl(request.url, rawPath);
-  const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
-  const isApiPath = normalizedPath.startsWith("/api/");
   const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
   const init = {
     method,
@@ -40,7 +38,8 @@ export async function onRequest(context) {
     redirect: "follow",
   };
   const proxyApiKey = String(env?.BACKEND_API_KEY || "").trim();
-  if (isApiPath && !hasApiKey && proxyApiKey) {
+  // This function only handles /api/* routes in Pages, so always inject when missing.
+  if (!hasApiKey && proxyApiKey) {
     init.headers.set("x-api-key", proxyApiKey);
   }
   if (!["GET", "HEAD"].includes(method)) init.body = request.body;
