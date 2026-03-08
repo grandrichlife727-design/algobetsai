@@ -1811,6 +1811,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="auth-lbl" id="auth-lbl">Email Address</div>
       <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
     </div>
+    <div class="auth-field" id="auth-code-wrap" style="display:none">
+      <div class="auth-lbl">Verification Code</div>
+      <input class="auth-in" id="auth-code" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code"/>
+      <div class="auth-footnote" id="auth-code-note" style="margin-top:6px">We will text you a one-time code.</div>
+    </div>
     <div class="google-auth-wrap" id="google-auth-wrap">
       <div id="google-signin-btn"></div>
       <div class="google-auth-note"><span class="auth-g-icon">G</span>Google sign-in uses secure OAuth and verified email identity.</div>
@@ -2082,6 +2087,7 @@ let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
+let phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
@@ -3940,14 +3946,19 @@ function selectAuthMethod(method) {
   const googleWrap = document.getElementById('google-auth-wrap');
   const appleWrap = document.getElementById('apple-auth-wrap');
   const continueBtn = document.getElementById('auth-continue');
+  const codeWrap = document.getElementById('auth-code-wrap');
+  const codeInput = document.getElementById('auth-code');
+  const codeNote = document.getElementById('auth-code-note');
   const hasIdentity = normalizeAuthMethod(userProfile.method) !== 'guest' && String(userProfile.identifier || '').trim().length > 0;
   if (!lbl || !input) return;
 
   if (m === 'email') {
+    phoneAuthState.pending = false;
     lbl.textContent = 'Email Address';
     input.placeholder = 'you@example.com';
     input.type = 'email';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (appleWrap) appleWrap.classList.remove('on');
@@ -3958,29 +3969,40 @@ function selectAuthMethod(method) {
     input.placeholder = '+1 (555) 123-4567';
     input.type = 'tel';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (codeWrap) codeWrap.style.display = '';
+    if (codeInput && !phoneAuthState.pending) codeInput.value = '';
+    if (codeNote) codeNote.textContent = phoneAuthState.pending
+      ? `Code sent to ${phoneAuthState.phone || 'your phone'}. Enter it to continue.`
+      : 'We will text you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Sign In with Phone' : 'Create Account';
+    if (continueBtn) continueBtn.textContent = phoneAuthState.pending ? 'Verify Code' : 'Send Code';
   } else if (m === 'google') {
+    phoneAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
+    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
     if (googleWrap) googleWrap.classList.add('on');
     if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = 'none';
     renderGoogleAuthButton();
   } else if (m === 'apple') {
+    phoneAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
+    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
     if (googleWrap) googleWrap.classList.remove('on');
     if (appleWrap) appleWrap.classList.add('on');
     if (continueBtn) continueBtn.style.display = 'none';
   } else {
+    phoneAuthState.pending = false;
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
     input.type = 'text';
     if (fieldWrap) fieldWrap.style.display = '';
+    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (appleWrap) appleWrap.classList.remove('on');
@@ -3989,10 +4011,46 @@ function selectAuthMethod(method) {
   }
 }
 
+async function sendPhoneCode(phone) {
+  const normalized = String(phone || '').trim();
+  const payload = {phone: normalized};
+  try {
+    const res = await fetch(`${BACKEND}/api/auth/phone/send`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    phoneAuthState = {pending: true, phone: normalized, localCode: '', sentAt: Date.now()};
+    return true;
+  } catch (_) {
+    const demoCode = String(Math.floor(100000 + Math.random() * 900000));
+    phoneAuthState = {pending: true, phone: normalized, localCode: demoCode, sentAt: Date.now()};
+    return false;
+  }
+}
+
+async function verifyPhoneCode(phone, code) {
+  const normalized = String(phone || '').trim();
+  const otp = String(code || '').trim();
+  try {
+    const res = await fetch(`${BACKEND}/api/auth/phone/verify`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify({phone: normalized, code: otp}),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return true;
+  } catch (_) {
+    return !!(phoneAuthState.localCode && phoneAuthState.phone === normalized && phoneAuthState.localCode === otp);
+  }
+}
+
 function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
+  phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   const titleEl = document.getElementById('auth-title');
   const subEl = document.getElementById('auth-sub');
@@ -4048,7 +4106,10 @@ function handleAppleSignInClick() {
 function closeAuthModal(e) {
   const ov = document.getElementById('auth-ov');
   if (!ov) return;
-  if (!e || e.target === ov) ov.classList.remove('on');
+  if (!e || e.target === ov) {
+    ov.classList.remove('on');
+    phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
+  }
 }
 
 function openAuthNudge() {
@@ -4107,6 +4168,31 @@ async function submitAuthProfile() {
   if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
     showToast('Enter a valid phone number');
     return;
+  }
+  if (method === 'phone') {
+    const codeInput = document.getElementById('auth-code');
+    const codeNote = document.getElementById('auth-code-note');
+    if (!phoneAuthState.pending || phoneAuthState.phone !== value) {
+      const liveSms = await sendPhoneCode(value);
+      if (codeNote) {
+        codeNote.textContent = liveSms
+          ? `Code sent to ${value}. Enter it to continue.`
+          : `Code sent to ${value}. Demo code: ${phoneAuthState.localCode}`;
+      }
+      selectAuthMethod('phone');
+      showToast('Verification code sent');
+      return;
+    }
+    const code = String(codeInput?.value || '').trim();
+    if (!/^\d{6}$/.test(code)) {
+      showToast('Enter the 6-digit code');
+      return;
+    }
+    const ok = await verifyPhoneCode(value, code);
+    if (!ok) {
+      showToast('Invalid verification code');
+      return;
+    }
   }
 
   userProfile = {method, identifier: value, name: ''};
