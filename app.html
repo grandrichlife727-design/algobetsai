@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="Algobets AI surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
+<meta name="description" content="AlgoBets Ai surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
 <meta name="theme-color" content="#06060a"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Algobets AI"/>
+<meta name="apple-mobile-web-app-title" content="AlgoBets Ai"/>
 <link rel="icon" href="app-icon.svg"/>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png"/>
-<title>Algobets AI — Smart Picks</title>
+<title>AlgoBets Ai — Smart Picks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -4310,11 +4310,11 @@ async function shareHistoryPick(ts, idx) {
   const row = HISTORYDATA.find(h => Number(h.ts) === Number(ts));
   const p = row?.top_picks?.[Number(idx)];
   if (!p) return;
-  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets AI`;
+  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via AlgoBets Ai`;
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets AI Pick', text, url});
+      await navigator.share({title: 'AlgoBets Ai Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');
@@ -4341,7 +4341,7 @@ async function loadHistory() {
 
 function buildShareTextFromPick(p, mode = 'pick') {
   const tag = mode === 'win' ? 'WIN ✅' : 'Pick 🎯';
-  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets AI`;
+  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via AlgoBets Ai`;
 }
 
 async function sharePick(id, mode = 'pick') {
@@ -4352,7 +4352,7 @@ async function sharePick(id, mode = 'pick') {
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets AI Pick', text, url});
+      await navigator.share({title: 'AlgoBets Ai Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');

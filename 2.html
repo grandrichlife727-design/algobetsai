@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="Algobets AI surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
+<meta name="description" content="AlgoBets Ai surfaces +EV picks, steam moves, public fades, and betting tools in one live dashboard."/>
 <meta name="theme-color" content="#06060a"/>
-<title>Algobets AI — Smart Picks</title>
+<title>AlgoBets Ai — Smart Picks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -462,7 +462,7 @@ html, body {
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
-    <img class="logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
+    <img class="logo-img" src="Logo/algobetsailogo.svg" alt="AlgoBets Ai logo">
   </div>
   <span class="nav-section">Picks</span>
   <button class="nav-item active" onclick="go('picks')">
@@ -539,7 +539,7 @@ html, body {
 <main class="main">
   <div class="topbar">
     <div class="topbar-logo">
-      <img class="topbar-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
+      <img class="topbar-logo-img" src="Logo/algobetsailogo.svg" alt="AlgoBets Ai logo">
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -1274,11 +1274,11 @@ async function shareHistoryPick(ts, idx) {
   const row = HISTORYDATA.find(h => Number(h.ts) === Number(ts));
   const p = row?.top_picks?.[Number(idx)];
   if (!p) return;
-  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via Algobets Ai`;
+  const text = `${p.bet || 'Pick'} ${p.odds || ''} (${p.game || ''}) | +${p.ev || 0}% EV via AlgoBets Ai`;
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets Ai Pick', text, url});
+      await navigator.share({title: 'AlgoBets Ai Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');
@@ -1302,7 +1302,7 @@ async function loadHistory() {
 
 function buildShareTextFromPick(p, mode = 'pick') {
   const tag = mode === 'win' ? 'WIN ✅' : 'Pick 🎯';
-  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via Algobets Ai`;
+  return `${tag} ${p.bet} ${p.odds} (${p.game}) | +${p.ev}% EV via AlgoBets Ai`;
 }
 
 async function sharePick(id, mode = 'pick') {
@@ -1312,7 +1312,7 @@ async function sharePick(id, mode = 'pick') {
   const url = window.location.href.split('?')[0];
   try {
     if (navigator.share) {
-      await navigator.share({title: 'Algobets Ai Pick', text, url});
+      await navigator.share({title: 'AlgoBets Ai Pick', text, url});
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('Pick copied to clipboard');
