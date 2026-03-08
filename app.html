@@ -866,6 +866,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="offer-info"><div class="offer-name">Caesars</div><div class="offer-promo">Up to $1,000 back on first bet loss</div></div>
             <span class="offer-cta">Claim</span>
           </a>
+          <div class="growth-note" style="margin-top:8px">Disclosure: We may earn commissions from partner links.</div>
         </div>
         <div class="growth-card" id="home-card-news" data-home-card="home_news">
           <div class="growth-title">Home News</div>
@@ -1029,6 +1030,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Affiliate Strategy</div>
           <div class="growth-sub">Track clicks from this page and rotate top converting offers by state.</div>
+          <div class="growth-note" id="offers-af-note">Loading affiliate performance...</div>
+          <div class="growth-note" id="offers-af-detail">No click data yet.</div>
+          <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
           <div class="growth-note">21+ only. Gamble responsibly · 1-800-522-4700</div>
         </div>
       </div>
@@ -1240,6 +1244,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">Public Fades <span class="nav-badge">Premium</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')">Line Rush Alerts <span class="nav-badge">VIP</span></button></div>
           <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')">Sharp Money Tracker <span class="nav-badge">VIP</span></button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Offers + Revenue</div>
+          <div class="growth-sub">Open full sportsbook offers and monitor affiliate click performance.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('offers')">Open Offers</button></div>
+          <div class="growth-note" id="tools-af-note">Loading affiliate performance...</div>
+          <div class="growth-note" id="tools-af-detail">No click data yet.</div>
+          <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
         </div>
       </div>
     </div>
@@ -1490,6 +1502,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <button class="pf-btn" onclick="toggleThemeMode()">Toggle Theme</button>
           </div>
           <div class="growth-note" id="theme-note">Current theme: Dark.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Support</div>
+          <div class="growth-sub">Need help with account, billing, picks, or technical issues?</div>
+          <div class="rf-row"><a class="offer-link" href="mailto:support@algobetsai.com?subject=Algobets%20Support%20Request" style="padding:10px 12px"><div class="offer-info"><div class="offer-name">support@algobetsai.com</div><div class="offer-promo">Contact Support</div></div><span class="offer-cta">Email</span></a></div>
+          <div class="rf-row"><a class="pf-btn" href="#v-guide" onclick="go('guide')">Troubleshooting FAQ</a></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Bankroll Planner</div>
@@ -2877,9 +2895,39 @@ function buildTrackedAffiliateUrl(book, source = 'app') {
   }
 }
 
+function affiliateBookScore(book) {
+  const clicks = Number((affiliateStats.by_book || {})[book] || 0);
+  const convPct = Math.max(0, Number(AFFILIATE?.estimated_conversion_pct || 2.5));
+  const epc = Number(AFFILIATE_EPC_EST[book] || 50);
+  return (clicks + 1) * (convPct / 100) * epc;
+}
+
+function reorderOfferLinks() {
+  const scoreOf = (el) => affiliateBookScore(String(el.getAttribute('data-book') || '').toLowerCase());
+  const homeWrap = document.getElementById('home-card-offers');
+  if (homeWrap) {
+    const links = Array.from(homeWrap.querySelectorAll('a.offer-link[data-book]'));
+    links.sort((a, b) => scoreOf(b) - scoreOf(a));
+    links.forEach(l => homeWrap.appendChild(l));
+  }
+  const offersView = document.getElementById('v-offers');
+  if (offersView) {
+    const firstCard = offersView.querySelector('.growth-card');
+    if (firstCard) {
+      const links = Array.from(firstCard.querySelectorAll('a.offer-link[data-book]'));
+      links.sort((a, b) => scoreOf(b) - scoreOf(a));
+      links.forEach(l => firstCard.appendChild(l));
+    }
+  }
+}
+
 function renderAffiliateDashboard() {
   const note = document.getElementById('af-note');
   const detail = document.getElementById('af-note-detail');
+  const toolsNote = document.getElementById('tools-af-note');
+  const toolsDetail = document.getElementById('tools-af-detail');
+  const offersNote = document.getElementById('offers-af-note');
+  const offersDetail = document.getElementById('offers-af-detail');
   const convPct = Math.max(0, Number(AFFILIATE?.estimated_conversion_pct || 2.5));
   const convRate = convPct / 100;
   const clickRows = Object.entries(affiliateStats.by_book || {}).filter(([, v]) => Number(v) > 0).sort((a, b) => Number(b[1]) - Number(a[1]));
@@ -2899,6 +2947,11 @@ function renderAffiliateDashboard() {
     const est = estRevenue > 0 ? `Estimated value: ~$${estRevenue.toFixed(0)} (model estimate).` : 'No click data yet.';
     detail.textContent = top ? `${top} · ${est}` : est;
   }
+  if (toolsNote) toolsNote.textContent = note ? note.textContent : `Local clicks tracked: ${Number(affiliateStats.total_clicks || 0)}`;
+  if (toolsDetail) toolsDetail.textContent = detail ? detail.textContent : 'No click data yet.';
+  if (offersNote) offersNote.textContent = note ? note.textContent : `Local clicks tracked: ${Number(affiliateStats.total_clicks || 0)}`;
+  if (offersDetail) offersDetail.textContent = detail ? detail.textContent : 'No click data yet.';
+  reorderOfferLinks();
 }
 
 function applyAffiliateLinks() {
