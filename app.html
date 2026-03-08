@@ -117,7 +117,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .brand-ai{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;letter-spacing:.2px;color:#dde3f1;-webkit-text-fill-color:#dde3f1}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
-.nav-item:focus-visible,.scan-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.nav-item:focus-visible,.scan-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible,.fab-btn:focus-visible,.fab-action:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
@@ -562,6 +562,22 @@ img,svg,video,canvas{max-width:100%;height:auto}
   padding:9px 8px calc(max(10px, env(safe-area-inset-bottom,0px)));grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;
   box-shadow:0 -10px 30px rgba(0,0,0,.35)}
 @media(max-width:900px){.mobile-nav{display:grid}}
+.mobile-fab{display:none;position:fixed;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:230}
+.fab-btn{width:52px;height:52px;border-radius:999px;border:1px solid rgba(34,211,238,.45);background:linear-gradient(135deg,rgba(34,211,238,.95),rgba(124,58,237,.92));color:#001722;display:grid;place-items:center;box-shadow:0 12px 28px rgba(0,0,0,.44),0 0 16px rgba(34,211,238,.3);font-size:20px;cursor:pointer}
+.fab-btn svg{width:21px;height:21px;stroke:currentColor}
+.fab-panel{position:absolute;right:0;bottom:60px;width:min(84vw,290px);background:rgba(10,12,20,.97);border:1px solid var(--border2);border-radius:12px;box-shadow:0 18px 38px rgba(0,0,0,.48);padding:10px;display:none}
+.mobile-fab.open .fab-panel{display:block}
+.fab-title{font-size:10px;font-family:var(--mono);letter-spacing:.7px;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
+.fab-actions{display:grid;gap:7px}
+.fab-action{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 10px;cursor:pointer;text-align:left;font-family:var(--sans)}
+.fab-action:hover{border-color:var(--border2)}
+.fab-action-k{font-size:12px;font-weight:800}
+.fab-action-v{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.35}
+.fab-agent{margin-top:8px;padding:8px 9px;border:1px solid rgba(0,229,160,.25);border-radius:9px;background:rgba(0,229,160,.08)}
+.fab-agent-k{font-size:10px;color:var(--green);font-family:var(--mono);text-transform:uppercase;letter-spacing:.6px}
+.fab-agent-v{font-size:12px;color:var(--text);font-weight:700;margin-top:3px}
+.fab-agent-sub{font-size:10px;color:var(--sub);margin-top:2px}
+@media(max-width:900px){.mobile-fab{display:block}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;
   color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;border-radius:8px;cursor:pointer;font-family:var(--sans);
   transition:transform .1s ease,background .12s ease,box-shadow .12s ease,color .12s;flex:1;min-width:0;touch-action:manipulation;
@@ -1931,6 +1947,29 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
   </div>
 </nav>
+<div class="mobile-fab" id="mobile-fab">
+  <button class="fab-btn" id="fab-btn" onclick="toggleMobileFab(event)" aria-label="Quick actions" title="Quick actions">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <div class="fab-panel" id="fab-panel">
+    <div class="fab-title">Quick Actions</div>
+    <div class="fab-actions">
+      <button class="fab-action" onclick="fabQuickScan()">
+        <div class="fab-action-k">Run Scan</div>
+        <div class="fab-action-v">Refresh board now</div>
+      </button>
+      <button class="fab-action" onclick="fabOpenTopEdge()">
+        <div class="fab-action-k">Top Edge</div>
+        <div class="fab-action-v" id="fab-top-edge-copy">Open highest edge pick</div>
+      </button>
+    </div>
+    <div class="fab-agent">
+      <div class="fab-agent-k">Most Profitable Agent Right Now</div>
+      <div class="fab-agent-v" id="fab-agent-name">Agent 01 - Best-Line EV</div>
+      <div class="fab-agent-sub" id="fab-agent-sub">Based on current board signal frequency.</div>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="act-overlay" onclick="closeModal(event)">
   <div class="modal" id="act-modal">
@@ -6364,6 +6403,7 @@ function updateAgentHealthUi() {
     el.textContent = '';
     el.removeAttribute('title');
     updateAgentPulseIndicator();
+    updateFabQuickActions();
     return;
   }
   const labels = hot.map(v => `A${Number(v.agent_id || 0)}`).join(' ');
@@ -6371,6 +6411,7 @@ function updateAgentHealthUi() {
   el.title = hot.map(v => `${v.label}: ${Number(v.accuracy_pct || 0).toFixed(1)}% (${Number(v.sample_size || 0)} picks, 48h)`).join(' | ');
   el.classList.add('on');
   updateAgentPulseIndicator();
+  updateFabQuickActions();
 }
 
 function fmtCountdown(totalSec) {
@@ -7099,6 +7140,7 @@ function renderPicks() {
   const pulsePick = pts[0] || sourcePicks[0] || null;
   const pulseAgents = pulsePick ? parseActiveAgents(pulsePick) : [];
   updateAgentPulseIndicator(pulseAgents.length ? pulseAgents : [1, 2]);
+  updateFabQuickActions();
 
   function freeTeaserBetLabel(p) {
     const matchup = String(p.game || p.bet || 'Matchup')
@@ -7177,6 +7219,7 @@ function renderPicks() {
 
   if (!pts.length) {
     updateAgentPulseIndicator([1, 2]);
+    updateFabQuickActions();
     const lastScan = applyFreeDelay && freeRelease.remainingMs > 0
       ? `Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}`
       : (lastRefresh ? `Last scan: ${timeAgo(lastRefresh)}` : 'No scan yet');
@@ -7849,6 +7892,77 @@ function bindMobileNavFeedback() {
   document.addEventListener('pointercancel', (e) => clearTap(e.target), {passive: true});
 }
 
+function closeMobileFab() {
+  const wrap = document.getElementById('mobile-fab');
+  if (wrap) wrap.classList.remove('open');
+}
+
+function toggleMobileFab(e) {
+  if (e) e.stopPropagation();
+  const wrap = document.getElementById('mobile-fab');
+  if (!wrap) return;
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) updateFabQuickActions();
+}
+
+function bestAgentRightNow() {
+  const freq = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+  const windowed = (Array.isArray(PICKS) ? PICKS : []).slice(0, 12);
+  windowed.forEach((p) => parseActiveAgents(p).forEach((id) => { if (freq[id] != null) freq[id] += 1; }));
+  let bestId = 0;
+  let bestScore = -1;
+  for (let id = 1; id <= 5; id += 1) {
+    const score = Number(freq[id] || 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = id;
+    }
+  }
+  if (bestScore <= 0) {
+    const cond = AGENT_HEALTH?.conditional || {};
+    const hot = Object.values(cond)
+      .filter(v => v && Number.isFinite(Number(v.agent_id)) && Number(v.accuracy_pct || 0) > 0)
+      .sort((a, b) => Number(b.accuracy_pct || 0) - Number(a.accuracy_pct || 0));
+    if (hot.length) {
+      bestId = Number(hot[0].agent_id || 1);
+      const meta = AGENT_UI[bestId] || {label: `Agent ${bestId}`};
+      return {id: bestId, label: meta.label, reason: `Hot over 48h (${Number(hot[0].accuracy_pct || 0).toFixed(1)}% accuracy)`};
+    }
+    bestId = 1;
+    const meta = AGENT_UI[bestId] || {label: `Agent ${bestId}`};
+    return {id: bestId, label: meta.label, reason: 'Defaulting to core market anchor'};
+  }
+  const meta = AGENT_UI[bestId] || {label: `Agent ${bestId}`};
+  return {id: bestId, label: meta.label, reason: `Fired on ${bestScore} of last ${Math.max(1, windowed.length)} picks`};
+}
+
+function updateFabQuickActions() {
+  const topCopy = document.getElementById('fab-top-edge-copy');
+  const agentName = document.getElementById('fab-agent-name');
+  const agentSub = document.getElementById('fab-agent-sub');
+  const top = Array.isArray(PICKS) && PICKS.length ? PICKS[0] : null;
+  if (topCopy) {
+    topCopy.textContent = top ? `Current board leader: +${Number(top.ev || 0).toFixed(1)}% edge` : 'Open highest edge pick';
+  }
+  const agent = bestAgentRightNow();
+  if (agentName) agentName.textContent = `Agent ${agent.id.toString().padStart(2, '0')} - ${agent.label}`;
+  if (agentSub) agentSub.textContent = agent.reason;
+}
+
+function fabQuickScan() {
+  closeMobileFab();
+  doScan();
+}
+
+function fabOpenTopEdge() {
+  closeMobileFab();
+  go('picks');
+  setTimeout(() => {
+    const first = document.querySelector('#picklist .pick');
+    if (first && typeof first.scrollIntoView === 'function') first.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, 220);
+}
+
 function openTierFeature(tab, tier = 'free') {
   const needPremium = tier === 'premium';
   const needVip = tier === 'vip';
@@ -7892,6 +8006,7 @@ function go(name) {
   closeMobilePremium();
   closeMobileMore();
   closeMobileVip();
+  closeMobileFab();
   ALL_TABS.forEach(t => {
     const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
@@ -8029,6 +8144,8 @@ function bindUiAccessibility() {
     if (moreWrap && !moreWrap.contains(e.target)) closeMobileMore();
     const vipWrap = document.querySelector('.mnav-vip-wrap');
     if (vipWrap && !vipWrap.contains(e.target)) closeMobileVip();
+    const fabWrap = document.getElementById('mobile-fab');
+    if (fabWrap && !fabWrap.contains(e.target)) closeMobileFab();
   });
 }
 
@@ -8082,6 +8199,7 @@ registerServiceWorker();
 if (demoMode) applyDemoDataset();
 loadCachedPicksFirstPaint();
 applySavedSelections();
+updateFabQuickActions();
 updateScanCooldownUi();
 renderPerf();
 loadBoostExamples();
