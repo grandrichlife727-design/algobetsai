@@ -1,0 +1,21 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Algobets C6 mark no square">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#86EFAC"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="110" cy="110" r="44" fill="none" stroke="url(#ring)" stroke-opacity="0.82" stroke-width="7" stroke-linecap="round" stroke-dasharray="225 88" transform="rotate(-18 110 110)"/>
+
+  <path d="M84 150 L110 96 L136 150" fill="none" stroke="#F3F4F6" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 126 H124" stroke="#F3F4F6" stroke-width="10" stroke-linecap="round"/>
+
+  <path d="M50 148 L86 118 L104 132 L164 74" fill="none" stroke="url(#line)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="50" cy="148" r="7" fill="#34D399"/>
+  <circle cx="164" cy="74" r="7" fill="#86EFAC"/>
+</svg>
