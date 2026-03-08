@@ -1724,6 +1724,10 @@ const VIP_LIVE_POLL_MS = 90000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
 const VIP_LIVE_DAILY_CALL_CAP = 180;
+const LIVE_TTL_MS = 5 * 60 * 1000;
+const TOMORROW_TTL_MS = 2 * 60 * 60 * 1000;
+const NEWS_IMPACT_TTL_MS = 30 * 60 * 1000;
+const PERF_TTL_MS = 30 * 60 * 1000;
 
 function makeUserId() {
   return `usr_${Math.random().toString(36).slice(2, 14)}`;
@@ -1789,6 +1793,10 @@ let SCHEDULE_GAMES = [];
 let activePropsSport = 'basketball_nba';
 let propsLoading = false;
 let propsFetchedAt = 0;
+let liveFetchedAt = 0;
+let tomorrowFetchedAt = 0;
+let newsImpactFetchedAt = 0;
+let perfFetchedAt = 0;
 let lastRefresh = null;
 let isScanning = false;
 let currentTab = 'home';
@@ -2229,11 +2237,16 @@ async function loadLive() {
     renderLive();
     return;
   }
+  if (LIVEDATA.length && (Date.now() - liveFetchedAt) < LIVE_TTL_MS) {
+    renderLive();
+    return;
+  }
   const el = document.getElementById('live-list');
   if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading live mode...</div></div>`;
   try {
     const res = await backendGet('/api/live');
     LIVEDATA = Array.isArray(res.live) ? res.live : [];
+    liveFetchedAt = Date.now();
   } catch (err) {
     LIVEDATA = [];
     if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Live mode unavailable</div></div>`;
@@ -2345,9 +2358,11 @@ function startVipLiveTicker() {
 }
 
 async function loadTomorrowGames() {
+  if (TOMORROW_GAMES.length && (Date.now() - tomorrowFetchedAt) < TOMORROW_TTL_MS) return;
   try {
     const res = await backendGet('/api/games?day_offset=1&limit=14');
     TOMORROW_GAMES = Array.isArray(res.games) ? res.games : [];
+    tomorrowFetchedAt = Date.now();
   } catch (err) {
     TOMORROW_GAMES = [];
   }
@@ -2770,10 +2785,15 @@ async function linkDiscordAccount() {
 
 async function loadNewsImpact() {
   const note = document.getElementById('ni-note');
+  if (NEWSIMPACT.length && (Date.now() - newsImpactFetchedAt) < NEWS_IMPACT_TTL_MS) {
+    if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
+    return;
+  }
   if (note) note.textContent = 'Loading impact...';
   try {
     const res = await backendGet('/api/news-impact');
     NEWSIMPACT = Array.isArray(res.impacts) ? res.impacts : [];
+    newsImpactFetchedAt = Date.now();
     if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
   } catch (err) {
     if (note) note.textContent = 'Impact feed unavailable.';
@@ -5625,8 +5645,13 @@ async function loadPerformance() {
     renderPerf();
     return;
   }
+  if (PERFDATA && (Date.now() - perfFetchedAt) < PERF_TTL_MS) {
+    renderPerf();
+    return;
+  }
   try {
-    PERFDATA = await backendGet('/api/performance');
+    PERFDATA = await backendGet('/api/performance?settle=false');
+    perfFetchedAt = Date.now();
     await loadWalkforward();
     loadCLV();
   } catch (err) {
@@ -5884,8 +5909,7 @@ function setFilter(el, k) {
 
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
 function startAutoRefresh() {
-  // Refresh every 8 minutes in background
-  setInterval(() => { if (!isScanning) doScan(true); }, 8 * 60 * 1000);
+  // Budget-safe mode: no background scan polling. Scans are user-initiated.
   // Update "Updated X ago" label every 30s
   setInterval(() => {
     const el = document.getElementById('picks-refreshed');
@@ -5978,7 +6002,6 @@ try {
 } catch (_) {}
 loadProfileSettings();
 loadQuotaDashboard();
-loadTomorrowGames();
 loadHomeSportsNews();
 fetchPlan();
 fetchPricing();
