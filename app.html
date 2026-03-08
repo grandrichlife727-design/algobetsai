@@ -748,7 +748,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
       <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
       <button class="bill-link" id="install-btn" style="display:none" onclick="installApp()">Add to Home Screen</button>
-      <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Demo: On</button>
+      <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Preview: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="handleAuthButton()">Sign In</button>
       <button class="scan-btn" id="scan-btn" onclick="doScan()">
@@ -764,7 +764,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div id="v-home">
       <div class="page-hdr">
         <div class="page-title">Algobets AI</div>
-        <div class="page-sub">Your edge dashboard. Demo data shown.</div>
+        <div class="page-sub">Your edge dashboard.</div>
       </div>
       <div class="hero-stats">
         <div class="stat s-green"><div class="stat-val" id="home-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
@@ -955,7 +955,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </select>
       </div>
       <div class="sec-hdr">
-        <span class="sec-title" id="picks-count">Today's Edges (Demo Data)</span>
+        <span class="sec-title" id="picks-count">Today's Edges</span>
         <span class="sec-meta" id="picks-refreshed"></span>
       </div>
       <div class="picks-list" id="picklist">
@@ -1601,7 +1601,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Important Notes</div>
-          <div class="growth-sub">If live data is unavailable, the app can show cached/demo states.</div>
+          <div class="growth-sub">If live data is unavailable, the app can show cached/sample states.</div>
           <div class="growth-sub">Line movement can invalidate edge quickly. Re-check odds before placing.</div>
           <div class="growth-sub">21+ only. Bet responsibly.</div>
         </div>
@@ -4629,7 +4629,7 @@ function quickTrialAction() {
 function updateDemoToggleUi() {
   const btn = document.getElementById('demo-btn');
   if (!btn) return;
-  btn.textContent = `Demo: ${demoMode ? 'On' : 'Off'}`;
+  btn.textContent = `Preview: ${demoMode ? 'On' : 'Off'}`;
   btn.style.borderColor = demoMode ? 'rgba(0,229,160,.3)' : '';
   btn.style.color = demoMode ? 'var(--green)' : '';
 }
@@ -4651,10 +4651,10 @@ function toggleDemoMode() {
     renderSteam();
     renderFades();
     renderHomeModules();
-    showToast('Demo mode enabled');
+    showToast('Preview mode enabled');
     return;
   }
-  showToast('Demo mode disabled');
+  showToast('Preview mode disabled');
   liveOddsPaused = false;
   doScan(true);
 }
@@ -5641,7 +5641,7 @@ async function doScan(silent = false) {
     renderVipTools();
     renderHomeModules();
     updatePlanUi();
-    if (!silent) showToast('Demo mode active');
+    if (!silent) showToast('Preview mode active');
     return;
   }
   if (scanCooldownRemaining > 0) {
@@ -5726,7 +5726,7 @@ async function doScan(silent = false) {
       applyDemoDataset(true);
       showLiveUnavailableBanner();
       setApiStatus('err');
-      setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
+      setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
     }
 
     if (evRes.status === 'fulfilled') {
@@ -5754,12 +5754,12 @@ async function doScan(silent = false) {
       if ((quotaExhausted || FORCE_DEMO_MODE) && ODDSGAMES.length === 0) {
         applyDemoDataset(true);
         showLiveUnavailableBanner();
-        setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
+        setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
       }
       await loadTomorrowGames();
       showLiveUnavailableBanner();
       if (!document.getElementById('home-scan-feedback')?.textContent) {
-        setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
+        setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
       }
     } else {
       setApiStatus('ok');
@@ -5776,7 +5776,7 @@ async function doScan(silent = false) {
     applyDemoDataset(true);
     showLiveUnavailableBanner();
     setApiStatus('err');
-    setHomeScanFeedback('API limit reached. Showing demo data.', 'err');
+    setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
   }
 
   renderPicks();
@@ -5806,7 +5806,7 @@ function renderPicks() {
   const usingDemoData = demoMode || liveOddsPaused || PICKS.some(p => p.demoData);
   if (picksRefreshedEl) {
     picksRefreshedEl.textContent = usingDemoData
-      ? 'Demo mode — live odds paused'
+      ? 'Live odds paused'
       : (lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '');
   }
   const pts = PICKS.filter(p => {
@@ -5831,7 +5831,7 @@ function renderPicks() {
   });
 
   document.getElementById('picks-count').textContent = usingDemoData
-    ? `Today's Edges (Demo Data)`
+    ? `Today's Edges`
     : `Today's Edges (Live)`;
   updatePaywallUi();
 
@@ -5866,7 +5866,7 @@ function renderPicks() {
     const conf = Math.max(50, Math.min(95, Number(p.conf || 50)));
     const socialViewers = 1 + ((Number(p.id || i) + Math.floor(Date.now() / 60000)) % 5);
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
-    const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">DEMO DATA</span>` : '';
+    const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">SAMPLE</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
