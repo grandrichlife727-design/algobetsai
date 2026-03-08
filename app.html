@@ -2101,6 +2101,7 @@ const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
 const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
+const APP_BUILD = '2026-03-08-agent-health-hotfix-1';
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
