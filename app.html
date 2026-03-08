@@ -5978,6 +5978,15 @@ function renderPicks() {
     return `${matchup} · Edge Teaser`;
   }
 
+  function freeMarketLabel(p) {
+    const market = String(p.market || '').toLowerCase();
+    if (market === 'spread') return 'Spread';
+    if (market === 'moneyline' || market === 'ml') return 'Moneyline';
+    if (market === 'total') return 'Total';
+    if (/\b(under|over)\b/i.test(String(p.bet || ''))) return 'Total';
+    return 'Market';
+  }
+
   function getFreeTeaserList(rows, visibleLimit, lockedLimit) {
     if (!Array.isArray(rows) || !rows.length) return [];
     const ranked = rows.slice().sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)));
@@ -6059,6 +6068,8 @@ function renderPicks() {
     const agentCount = Array.isArray(p.agents) ? p.agents.length : 0;
     const consensusVotes = Math.max(1, Math.min(5, agentCount || Math.round((Number(p.conf || 60) / 100) * 5)));
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
+    const edgeTier = edgeVal > 5 ? 'High' : edgeVal >= 2 ? 'Medium' : 'Low';
+    const teaserMarket = freeMarketLabel(p);
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
     const rankBadge = showDetailed
       ? `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`
@@ -6087,6 +6098,7 @@ function renderPicks() {
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
         : `<div class="pick-line">Game shown. Actionable pick and lines are Premium.</div>`}
+      ${showDetailed ? '' : `<div class="pick-line">Market: <strong>${teaserMarket}</strong> · Edge tier: <strong>${edgeTier}</strong> · Signal: <strong>${consensusVotes}/5</strong></div>`}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
