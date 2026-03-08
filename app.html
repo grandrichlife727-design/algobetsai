@@ -1666,6 +1666,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub">Switch between dark and light interface styles.</div>
           <div class="rf-row">
             <button class="pf-btn" onclick="toggleThemeMode()">Toggle Theme</button>
+            <button class="pf-btn" onclick="resetInstallPrompt()">Show Add to Home Screen Again</button>
           </div>
           <div class="growth-note" id="theme-note">Current theme: Dark.</div>
         </div>
@@ -4902,6 +4903,12 @@ function dismissInstallPrompt() {
   hideInstallButton(true);
   closeInstallHelp();
   showToast('Install prompt hidden');
+}
+
+function resetInstallPrompt() {
+  try { localStorage.removeItem(INSTALL_CTA_HIDE_KEY); } catch (_) {}
+  if (!isInStandaloneMode()) showInstallButton();
+  showToast('Add to Home Screen prompt restored');
 }
 
 async function installApp() {
