@@ -1748,8 +1748,7 @@ const CURRENT_ORIGIN_BACKEND = (() => {
     const u = new URL(window.location.origin);
     const isHttp = ['http:', 'https:'].includes(u.protocol);
     const isGithubPages = u.hostname.endsWith('github.io');
-    const isCloudflarePages = u.hostname.endsWith('pages.dev');
-    if (!isHttp || isGithubPages || isCloudflarePages) return '';
+    if (!isHttp || isGithubPages) return '';
     return String(window.location.origin).replace(/\/+$/, '');
   } catch (_) {
     return '';
