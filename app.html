@@ -716,6 +716,18 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.clv-ticker{margin-top:8px;border:1px solid rgba(0,212,255,.22);border-radius:10px;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(124,58,237,.06));padding:9px}
+.clv-ticker-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+.clv-ticker-title{font-size:10px;font-family:var(--mono);letter-spacing:.65px;text-transform:uppercase;color:var(--cyan);font-weight:800}
+.clv-ticker-badge{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:999px;border:1px solid rgba(0,229,160,.3);color:var(--green);background:rgba(0,229,160,.11)}
+.clv-ticker-rows{display:flex;flex-direction:column;gap:6px}
+.clv-ticker-row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:11px;line-height:1.35}
+.clv-ticker-row:last-child{border-bottom:none;padding-bottom:0}
+.clv-ticker-row:first-child{padding-top:0}
+.clv-ticker-left{color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clv-ticker-right{font-family:var(--mono);font-weight:700;white-space:nowrap}
+.clv-ticker-right.pos{color:var(--green)}
+.clv-ticker-right.neg{color:var(--red)}
 .home-secondary{margin-top:12px}
 .home-secondary-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:0 0 8px 2px}
 .pick-why{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.35}
@@ -1381,6 +1393,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub" id="vip-clv"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:46%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:72%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:38%"></span></div>
           <div class="growth-note" id="vip-clv-explain">CLV = Closing Line Value. It measures whether your price was better than the market close.</div>
           <div class="growth-sub" id="vip-clv-score"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:51%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:78%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:40%"></span></div>
+          <div class="clv-ticker" id="vip-clv-ticker">
+            <div class="clv-ticker-head">
+              <div class="clv-ticker-title">Live CLV Ticker - Last 5 Closed Picks</div>
+              <span class="clv-ticker-badge">Agent 05</span>
+            </div>
+            <div class="clv-ticker-rows">
+              <div class="clv-ticker-row"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:74%"></span><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:18%"></span></div>
+              <div class="clv-ticker-row"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:68%"></span><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:22%"></span></div>
+              <div class="clv-ticker-row"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:79%"></span><span class="skeleton skeleton-shimmer" style="display:inline-block;height:9px;width:17%"></span></div>
+            </div>
+          </div>
           <div id="vip-timing" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:57%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:84%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:44%"></span></div>
           <div class="growth-sub" id="vip-clv-lab"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:52%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:74%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:36%"></span></div>
           <div class="growth-sub" id="vip-depth"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:54%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:82%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:41%"></span></div>
@@ -3892,10 +3915,112 @@ function joinVipDiscord() {
   window.open(VIP_DISCORD_URL, '_blank', 'noopener,noreferrer');
 }
 
+function readTrackedPicks() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function fmtUsOdds(v) {
+  const n = Number(v || 0);
+  if (!Number.isFinite(n) || n === 0) return 'PK';
+  const rounded = Math.round(n);
+  return rounded > 0 ? `+${rounded}` : String(rounded);
+}
+
+function shortClvTeamLabel(text) {
+  const src = String(text || '').trim();
+  if (!src) return 'Pick';
+  if (src.includes('@')) {
+    const [away, home] = src.split('@').map(s => s.trim());
+    if (away && home) return `${away.split(' ').pop() || away} @ ${home.split(' ').pop() || home}`;
+  }
+  const parts = src.split(/\s+vs\.?\s+/i).map(s => s.trim()).filter(Boolean);
+  if (parts.length === 2) return `${parts[0].split(' ').pop() || parts[0]} vs ${parts[1].split(' ').pop() || parts[1]}`;
+  return src.split(' ').slice(0, 4).join(' ');
+}
+
+function inferClvLineMove(pick, clvVal) {
+  const bet = String(pick?.bet || '');
+  const clv = Number(clvVal || 0);
+  const spreadMatch = bet.match(/([+-]\d+(?:\.\d+)?)/);
+  if (spreadMatch) {
+    const entry = Number(spreadMatch[1]);
+    const close = entry - clv;
+    const asLine = (v) => (v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1));
+    return {entry: asLine(entry), close: asLine(close), type: 'line'};
+  }
+  const totalMatch = bet.match(/\b(over|under)\s*(\d+(?:\.\d+)?)/i);
+  if (totalMatch) {
+    const side = String(totalMatch[1] || '').toLowerCase();
+    const entry = Number(totalMatch[2]);
+    const close = side === 'over' ? entry + clv : entry - clv;
+    return {entry: entry.toFixed(1), close: close.toFixed(1), type: 'total'};
+  }
+  const entryOdds = Number(pick?.odds || 0);
+  if (Number.isFinite(entryOdds) && entryOdds !== 0) {
+    const delta = Math.max(4, Math.round(Math.abs(clv) * 10));
+    const closeOdds = clv >= 0 ? entryOdds - delta : entryOdds + delta;
+    return {entry: fmtUsOdds(entryOdds), close: fmtUsOdds(closeOdds), type: 'odds'};
+  }
+  return {entry: 'Entry', close: 'Close', type: 'text'};
+}
+
+function buildVipClvTickerRows() {
+  const tracked = readTrackedPicks()
+    .filter(p => Number.isFinite(Number(p?.ts || 0)))
+    .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+  const now = Date.now();
+  const closedMinMs = 3 * 60 * 60 * 1000;
+  const closed = tracked.filter(p => (now - Number(p.ts || 0)) >= closedMinMs);
+  const source = (closed.length ? closed : tracked).slice(0, 20);
+  const rows = source.map((p) => {
+    const clv = Number(p?.clvExp || 0);
+    const line = inferClvLineMove(p, clv);
+    const left = `${shortClvTeamLabel(p?.game || p?.bet)} (${line.entry}) -> ${line.close}`;
+    return {left, clv, ts: Number(p?.ts || 0)};
+  }).slice(0, 5);
+  return {
+    closedUsed: closed.length > 0,
+    rows,
+  };
+}
+
+function renderVipClvTicker(el) {
+  if (!el) return;
+  const data = buildVipClvTickerRows();
+  const rows = data.rows;
+  const headNote = data.closedUsed ? 'Closed picks' : 'Recent picks proxy';
+  if (!rows.length) {
+    el.innerHTML = `
+      <div class="clv-ticker-head">
+        <div class="clv-ticker-title">Live CLV Ticker - Last 5 Closed Picks</div>
+        <span class="clv-ticker-badge">${headNote}</span>
+      </div>
+      <div class="growth-note">Save picks to tracker to populate CLV ticker entries.</div>`;
+    return;
+  }
+  const body = rows.map((r) => {
+    const sign = r.clv >= 0 ? '+' : '';
+    const cls = r.clv >= 0 ? 'pos' : 'neg';
+    return `<div class="clv-ticker-row"><span class="clv-ticker-left">${esc(r.left)}</span><strong class="clv-ticker-right ${cls}">${sign}${r.clv.toFixed(1)} CLV</strong></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="clv-ticker-head">
+      <div class="clv-ticker-title">Live CLV Ticker - Last 5 Closed Picks</div>
+      <span class="clv-ticker-badge">${headNote}</span>
+    </div>
+    <div class="clv-ticker-rows">${body}</div>`;
+}
+
 function renderVipTools() {
   const vipOn = canUseVip();
   const clvEl = document.getElementById('vip-clv');
   const clvScoreEl = document.getElementById('vip-clv-score');
+  const clvTickerEl = document.getElementById('vip-clv-ticker');
   const earlyEl = document.getElementById('vip-early');
   const releaseWindowEl = document.getElementById('vip-release-window');
   const podEl = document.getElementById('vip-pod');
@@ -3919,6 +4044,7 @@ function renderVipTools() {
     if (discordTeaseEl) discordTeaseEl.style.display = '';
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
     if (clvScoreEl) clvScoreEl.textContent = 'CLV scorecard is locked for VIP.';
+    if (clvTickerEl) clvTickerEl.innerHTML = `<div class="growth-note">Live CLV ticker is a VIP-only execution feature.</div>`;
     if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
     if (releaseWindowEl) releaseWindowEl.textContent = 'Next VIP drop window is locked for VIP.';
     if (podEl) {
@@ -3965,6 +4091,7 @@ function renderVipTools() {
     const grade = beatClose >= 57 ? 'A' : beatClose >= 52 ? 'B' : beatClose >= 48 ? 'C' : 'D';
     clvScoreEl.innerHTML = `CLV scorecard: <strong>${grade}</strong> · <strong>${beatClose.toFixed(1)}%</strong> beat close · <strong>${totalTracked}</strong> tracked picks`;
   }
+  renderVipClvTicker(clvTickerEl);
   if (earlyEl) {
     const mins = PICKS.length ? Math.max(8, Math.min(35, Math.round(Number(PICKS[0].ev || 5) * 4))) : 15;
     earlyEl.innerHTML = `VIP release lead: <strong>${mins} minutes</strong> before Premium window.`;
