@@ -4862,11 +4862,13 @@ function tierAnnualSavingsText(tier) {
 function updatePlanUi() {
   const p = normalizePlan(currentPlan);
   const registered = isLoggedInProfile();
+  const homeShowcase = document.getElementById('home-plan-showcase');
   const pill = document.getElementById('plan-pill');
   if (pill) {
     pill.className = `plan-pill ${p}`;
     pill.textContent = planLabel(p);
   }
+  if (homeShowcase) homeShowcase.style.display = p === 'free' ? '' : 'none';
   const up = document.getElementById('upgrade-btn');
   const manage = document.getElementById('manage-btn');
   const trialBtn = document.getElementById('trial-btn');
