@@ -605,6 +605,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.home-secondary{margin-top:12px}
+.home-secondary-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:0 0 8px 2px}
+.pick-why{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.35}
 .h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
 .h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .h-time{font-size:11px;color:var(--muted)}
@@ -780,7 +783,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="hps-top">
           <div>
             <div class="hps-title">Plan Levels: Free, Premium, VIP</div>
-            <div class="hps-sub">Free: Test the edges · Premium: Daily volume · VIP: Faster refresh + Discord</div>
+            <div class="hps-sub">Free: Test the edges · Premium: Daily volume · VIP: Real-time speed</div>
           </div>
           <div class="hps-pill">Choose your plan</div>
         </div>
@@ -815,9 +818,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-list">
               <div>VIP Discord access</div>
               <div>Priority pick release</div>
-              <div>5-agent early release window</div>
               <div>1-minute refresh</div>
-              <div>Execution tools</div>
               <div>Line rush alerts</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button> <span class="vip-chip">VIP Discord</span></div>
@@ -831,13 +832,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="agent-sub">Best-Line EV · De-vig Consensus · Steam Moves · Public Fades · Timing/CLV.</div>
         </div>
       </details>
-      <div class="trial-card" id="trial-card-home">
-        <div class="trial-copy" id="trial-copy-home"><strong>Try Premium free for 3 days.</strong> Unlock +EV plays, props, steam moves, and 5-minute refresh.</div>
-        <div class="trial-actions">
-          <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
-          <button class="trial-claim" onclick="claimFreeTrial()">Start Free Trial</button>
-        </div>
-      </div>
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
           <div class="growth-title">Today's Top Edges</div>
@@ -855,6 +849,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
           <div class="growth-note scan-feedback" id="home-scan-feedback">Last scan: never</div>
         </div>
+      </div>
+      <div class="home-secondary">
+        <div class="home-secondary-title">More</div>
+        <div class="growth-grid" id="home-grid-secondary" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-news" data-home-card="home_news">
           <div class="growth-title">Market Impact News</div>
           <div id="home-news" class="news-feed"></div>
@@ -882,6 +880,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <span class="offer-cta">Claim</span>
           </a>
           <div class="growth-note" style="margin-top:8px">Disclosure: We may earn commissions from partner links.</div>
+        </div>
         </div>
       </div>
     </div>
@@ -4756,8 +4755,8 @@ function togglePlanCards() {
 function applyHomeExperimentLayout() {
   const grid = document.getElementById('home-grid');
   if (!grid) return;
-  const orderA = ['home-card-picks', 'home-card-vip', 'home-card-market', 'home-card-news', 'home-card-offers'];
-  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-market', 'home-card-news', 'home-card-offers'];
+  const orderA = ['home-card-picks', 'home-card-vip', 'home-card-market'];
+  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-market'];
   const order = HOME_AB === 'B' ? orderB : orderA;
   order.forEach(id => {
     const node = document.getElementById(id);
@@ -4845,9 +4844,12 @@ function renderHomeModules() {
     } else {
       const premiumOn = canUsePremium();
       const rows = homeSource.slice().sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0)).slice(0, 3).map((p, i) =>
-        `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
-          <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
-          <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
+        `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
+            <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
+          </div>
+          <div class="pick-why">Why this pick: ${esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal')}</div>
         </div>`
       ).join('');
       if (premiumOn) {
