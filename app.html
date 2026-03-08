@@ -116,6 +116,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .news-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px}
 .news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .news-tag{font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.7px}
+.news-impact{font-size:10px;font-weight:800;border:1px solid var(--border2);border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.5px}
+.news-impact.high{color:var(--red);border-color:rgba(255,95,95,.45);background:rgba(255,95,95,.12)}
+.news-impact.med{color:var(--amber);border-color:rgba(255,183,0,.45);background:rgba(255,183,0,.12)}
+.news-impact.low{color:var(--green);border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.1)}
 .news-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
 .news-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-top:4px}
 .news-sub{font-size:12px;color:var(--sub);line-height:1.45;margin-top:5px}
@@ -872,7 +876,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-note" style="margin-top:8px">Disclosure: We may earn commissions from partner links.</div>
         </div>
         <div class="growth-card" id="home-card-news" data-home-card="home_news">
-          <div class="growth-title">Home News</div>
+          <div class="growth-title">Market Impact News</div>
           <div id="home-news" class="news-feed"></div>
         </div>
       </div>
@@ -4958,12 +4962,61 @@ function renderHomeModules() {
       newsEl.innerHTML = `<div class="news-item"><div class="news-title">Loading sports headlines...</div><div class="news-sub">Fetching latest NBA, NFL, MLB, and NHL stories.</div></div>`;
       return;
     }
-    const items = HOME_SPORTS_NEWS.length ? HOME_SPORTS_NEWS.slice(0, 4) : [
+    const LEAGUE_MAP = {
+      NBA: ['NBA', 'NCAAB'],
+      NHL: ['NHL'],
+      NFL: ['NFL'],
+      MLB: ['MLB'],
+      EPL: ['EPL'],
+    };
+    const activeLeagues = new Set();
+    homeSource.forEach(p => {
+      const s = String(p.sport || '').toUpperCase();
+      if (s.includes('NBA')) activeLeagues.add('NBA');
+      if (s.includes('NCAAB')) activeLeagues.add('NCAAB');
+      if (s.includes('NHL')) activeLeagues.add('NHL');
+      if (s.includes('NFL')) activeLeagues.add('NFL');
+      if (s.includes('MLB')) activeLeagues.add('MLB');
+      if (s.includes('EPL') || s.includes('SOCCER')) activeLeagues.add('EPL');
+    });
+    const scoreNews = (n) => {
+      const txt = `${String(n.title || '')} ${String(n.sub || '')}`.toLowerCase();
+      let score = 1;
+      if (/out|questionable|doubtful|injur|inactive|scratch|suspend|ruled out/.test(txt)) score += 6;
+      if (/lineup|starting|minutes limit|rest|trade|coaching|weather/.test(txt)) score += 3;
+      if (/preview|recap|highlights/.test(txt)) score -= 2;
+      return score;
+    };
+    const newsImpact = (n) => {
+      const s = scoreNews(n);
+      if (s >= 7) return {label: 'High', cls: 'high'};
+      if (s >= 4) return {label: 'Med', cls: 'med'};
+      return {label: 'Low', cls: 'low'};
+    };
+    const ranked = HOME_SPORTS_NEWS
+      .filter(n => {
+        if (!activeLeagues.size) return true;
+        const lg = String(n.league || '').toUpperCase();
+        return Array.from(activeLeagues).some(a => (LEAGUE_MAP[a] || [a]).includes(lg));
+      })
+      .sort((a, b) => {
+        const sa = scoreNews(a), sb = scoreNews(b);
+        if (sb !== sa) return sb - sa;
+        return Number(new Date(b.ts || 0).getTime()) - Number(new Date(a.ts || 0).getTime());
+      });
+    const seen = new Set();
+    const deduped = ranked.filter(n => {
+      const key = String(n.title || '').trim().toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const items = deduped.length ? deduped.slice(0, 4) : [
       {league: 'Sports', ts: Date.now(), title: 'Live sports news is temporarily unavailable', sub: 'News feed will auto-refresh. You can still use picks and odds in the meantime.', link: ''},
     ];
     newsEl.innerHTML = items.map(n => `
       <div class="news-item">
-        <div class="news-top"><div class="news-tag">${esc(n.league || 'Sports')}</div><div class="news-time">${n.ts ? timeAgo(new Date(n.ts).getTime()) : 'now'}</div></div>
+        <div class="news-top"><div style="display:flex;gap:6px;align-items:center"><div class="news-tag">${esc(n.league || 'Sports')}</div><div class="news-impact ${newsImpact(n).cls}">${newsImpact(n).label}</div></div><div class="news-time">${n.ts ? timeAgo(new Date(n.ts).getTime()) : 'now'}</div></div>
         <div class="news-title">${n.link ? `<a href="${esc(n.link)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${esc(n.title)}</a>` : esc(n.title)}</div>
         <div class="news-sub">${esc(n.sub)}</div>
       </div>
