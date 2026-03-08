@@ -1554,7 +1554,7 @@ async def _maybe_send_premium_sms_alert(
         lines.append(
             f"{label}: {str(t.get('bet') or '')} {str(t.get('odds') or '')} EV+{float(t.get('ev', 0.0) or 0.0):.1f}%"
         )
-    msg = "Algobets AI Premium Alert\n" + "\n".join(lines) + f"\n{FRONTEND_URL.rstrip('/')}/1.html"
+    msg = "Algobets AI Premium Alert\n" + "\n".join(lines) + f"\n{FRONTEND_URL.rstrip('/')}/app.html"
     try:
         out = await _send_sms_twilio(target, msg)
         cfg["sms_status"] = "live"
@@ -3971,7 +3971,7 @@ async def affiliate_status(request: Request):
     return {
         "affiliate": {
             "code": code,
-            "link": f"{FRONTEND_URL.rstrip('/')}/1.html?ref={code}",
+            "link": f"{FRONTEND_URL.rstrip('/')}/app.html?ref={code}",
             "clicks_30d": len(clicks_30d),
             "referrals_total": len(refs),
             "estimated_conversion_pct": round((len(refs) / max(1, len(clicks_30d))) * 100.0, 1),
