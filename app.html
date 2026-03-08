@@ -5997,15 +5997,17 @@ function renderPicks() {
     return;
   }
   const freeVisibleLimit = 3;
-  const teaserLimit = 0;
+  const freeBlurredLimit = 2;
+  const freePreviewLimit = freeVisibleLimit + freeBlurredLimit;
+  const teaserLimit = isFreePlan ? freeBlurredLimit : 0;
   const freeRenderSource = isFreePlan ? getFreeTeaserList(pts, freeVisibleLimit, teaserLimit) : pts;
-  const useFreeTease = false;
-  const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
-  const renderList = isFreePlan ? freeRenderSource.slice(0, freeVisibleLimit) : freeRenderSource;
+  const useFreeTease = isFreePlan && freeRenderSource.length > freeVisibleLimit;
+  const hiddenCount = isFreePlan ? Math.max(0, pts.length - freePreviewLimit) : 0;
+  const renderList = isFreePlan ? freeRenderSource.slice(0, freePreviewLimit) : freeRenderSource;
   let displayList = renderList;
   const canBackfillTeasers = filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
-  if (isFreePlan && canBackfillTeasers && renderList.length < freeVisibleLimit) {
-    const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, 0);
+  if (isFreePlan && canBackfillTeasers && renderList.length < freePreviewLimit) {
+    const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, freeBlurredLimit);
     const seen = new Set(renderList.map(p => `${String(p.game || '')}|${String(p.bet || '')}`));
     const merged = renderList.slice();
     for (const p of fillers) {
@@ -6013,14 +6015,13 @@ function renderPicks() {
       if (seen.has(key)) continue;
       merged.push(p);
       seen.add(key);
-      if (merged.length >= freeVisibleLimit) break;
+      if (merged.length >= freePreviewLimit) break;
     }
-    displayList = merged.slice(0, freeVisibleLimit);
+    displayList = merged.slice(0, freePreviewLimit);
   }
 
   el.innerHTML = displayList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
-    const isPrimaryLock = lockedTease && i === freeVisibleLimit;
     const showDetailed = !isFreePlan;
     const edgeVal = Number(p.ev || 0);
     const edgeClass = edgeVal > 5 ? 'high' : edgeVal >= 2 ? 'mid' : 'low';
@@ -6076,7 +6077,16 @@ function renderPicks() {
   </div>
 </div>`;
     if (!lockedTease) return card;
-    return card;
+    return `<div class="feature-lock" style="margin-top:0">
+      <div class="blur-wrap" style="filter:blur(8px)">${card}</div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">🔒 Premium pick preview</div>
+          <div class="lock-sub">Unlock full side, line, and fair value.</div>
+          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 
   if (isFreePlan && hiddenCount > 0) {
