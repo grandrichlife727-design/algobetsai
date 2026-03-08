@@ -160,12 +160,26 @@
       transition: opacity 0.2s, transform 0.2s !important;
     }
     .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .nav-mobile-login {
+      display: none;
+      color: #d6eaf7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+    .nav-mobile-login:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 
     @media (max-width: 640px) {
       .nav-links { display: none; }
       .nav-logo-img { width: 26px; height: 26px; border-radius: 7px; }
       .nav-logo-text { font-size: 23px; }
       .nav-logo { gap: 6px; }
+      .nav-mobile-login { display: inline-flex; align-items: center; }
       .hero-login { font-size: 12px; }
     }
 
@@ -946,6 +960,7 @@
       <!-- ➡️  Replace # with your actual app URL -->
       <li><a class="nav-cta" href="app.html">Launch App →</a></li>
     </ul>
+    <a class="nav-mobile-login" href="app.html?auth=login&src=landing_nav_login_mobile">Log In</a>
   </nav>
 
   <!-- ─── HERO ─────────────────────────────────────────── -->
