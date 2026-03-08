@@ -1,7 +1,7 @@
-const CACHE_NAME = 'algobets-pwa-v2';
+const CACHE_NAME = 'algobets-pwa-v3';
 const CORE_ASSETS = [
   './',
-  '1.html',
+  'app.html',
   'manifest.webmanifest',
   'app-icon.svg',
   'icons/icon-192.png',
@@ -32,6 +32,6 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match('1.html')))
+      .catch(() => caches.match(req).then((cached) => cached || caches.match('app.html')))
   );
 });

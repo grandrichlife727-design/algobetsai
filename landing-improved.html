@@ -10,6 +10,7 @@
   <meta property="og:image" content="https://grandrichlife727-design.github.io/algobetsai/landing-improved.html" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="app-icon.svg" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
   <meta name="theme-color" content="#06060a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,9 +19,9 @@
   <script type="application/json" id="pwa-manifest">
   {
     "name": "AlgoBets Ai",
-    "short_name": "Algobets",
+    "short_name": "AlgoBets Ai",
     "description": "5-Agent AI Sports Betting Edge Finder",
-    "start_url": "/1.html",
+    "start_url": "/app.html",
     "display": "standalone",
     "background_color": "#06060a",
     "theme_color": "#06060a",
@@ -922,7 +923,7 @@
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#faq">FAQ</a></li>
       <!-- ➡️  Replace # with your actual app URL -->
-      <li><a class="nav-cta" href="1.html">Launch App →</a></li>
+      <li><a class="nav-cta" href="app.html">Launch App →</a></li>
     </ul>
   </nav>
 
@@ -964,7 +965,7 @@
         ⚡ Start for Free
         <span style="font-size:12px; opacity:0.75; font-weight:500">No credit card</span>
       </a>
-      <a href="1.html?upgrade=premium&src=landing_trial_hero" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
+      <a href="app.html?upgrade=premium&src=landing_trial_hero" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
         Start 3-Day Premium Trial
       </a>
       <a href="#how" class="btn-ghost">
@@ -1421,7 +1422,7 @@
           <li class="price-feature"><span class="price-check">✓</span> Public fades access</li>
           <li class="price-feature"><span class="price-check">✓</span> Shareable pick cards</li>
         </ul>
-        <a href="1.html?upgrade=premium&src=landing_pricing" class="price-btn price-btn-primary">Upgrade to Premium →</a>
+        <a href="app.html?upgrade=premium&src=landing_pricing" class="price-btn price-btn-primary">Upgrade to Premium →</a>
       </div>
 
       <!-- SHARP -->
@@ -1438,7 +1439,7 @@
           <li class="price-feature"><span class="price-check">✓</span> Priority Telegram alerts</li>
           <li class="price-feature"><span class="price-check">✓</span> 1-on-1 Discord access</li>
         </ul>
-        <a href="1.html?upgrade=vip&src=landing_pricing" class="price-btn price-btn-ghost">Go VIP →</a>
+        <a href="app.html?upgrade=vip&src=landing_pricing" class="price-btn price-btn-ghost">Go VIP →</a>
       </div>
     </div>
 
@@ -1571,10 +1572,10 @@
     <h2 class="cta-title reveal">Stop guessing.<br>Start edging.</h2>
     <p class="cta-sub reveal">Free account. Live odds. Real edges. No credit card.</p>
     <div class="hero-actions reveal">
-      <a href="1.html" class="btn-primary" style="font-size:17px; padding:18px 40px;">
+      <a href="app.html" class="btn-primary" style="font-size:17px; padding:18px 40px;">
         ⚡ Launch AlgoBets Ai Free
       </a>
-      <a href="1.html?upgrade=premium&src=landing_trial_cta" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
+      <a href="app.html?upgrade=premium&src=landing_trial_cta" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
         Start 3-Day Premium Trial
       </a>
     </div>
@@ -1741,7 +1742,7 @@
         localStorage.setItem('algobets-profile-v1', JSON.stringify({method: 'email', identifier: email, name: ''}));
         localStorage.setItem('algobets-offer-intent', 'trial_premium_3d');
       } catch(err) {}
-      const next = new URL('1.html', window.location.href);
+      const next = new URL('app.html', window.location.href);
       const ref = new URLSearchParams(window.location.search).get('ref');
       if (ref) next.searchParams.set('ref', ref);
       window.location.href = next.toString();
@@ -1750,7 +1751,7 @@
     function startPremiumTrialLanding(e) {
       if (e) e.preventDefault();
       try { localStorage.setItem('algobets-offer-intent', 'trial_premium_3d'); } catch (_) {}
-      window.location.href = '1.html?upgrade=premium&src=landing_trial';
+      window.location.href = 'app.html?upgrade=premium&src=landing_trial';
     }
 
     async function loadLandingPublicConfig() {
@@ -1854,7 +1855,7 @@
         if (userId) localStorage.setItem('algobets-user-id', userId);
         if (identifier) localStorage.setItem('algobets-profile-v1', JSON.stringify({method: 'google', identifier, name: ''}));
         localStorage.setItem('algobets-offer-intent', 'trial_premium_3d');
-        window.location.href = '1.html?upgrade=premium&src=landing_google';
+        window.location.href = 'app.html?upgrade=premium&src=landing_google';
       } catch (_) {}
     }
     // Close on overlay click
