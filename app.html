@@ -759,6 +759,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .install-step{font-size:13px;color:var(--text);line-height:1.45}
 .install-step b{color:var(--cyan)}
 .install-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+.btn-ico{width:15px;height:15px;display:inline-block;vertical-align:-2px;margin-right:6px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -845,7 +846,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
       <button class="bill-link" id="trial-btn" style="display:none" onclick="quickTrialAction()">3-Day Trial</button>
-      <button class="bill-link" id="install-btn" style="display:none" onclick="installApp()">Add to Home Screen</button>
+      <button class="bill-link" id="install-btn" style="display:none" onclick="installApp()"><svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M12 8v6M9 11h6"/></svg>Add to Home Screen</button>
       <button class="bill-link" id="demo-btn" onclick="toggleDemoMode()">Preview: On</button>
       <button class="scan-btn bill-btn" id="upgrade-btn" onclick="openUpgradePicker()">Upgrade</button>
       <button class="bill-link auth-btn" id="auth-btn" onclick="handleAuthButton()">Sign In</button>
@@ -4829,15 +4830,16 @@ function showInstallButton() {
     if (localStorage.getItem(INSTALL_CTA_HIDE_KEY) === '1') return;
   } catch (_) {}
   const btn = document.getElementById('install-btn');
-  if (btn) btn.style.display = 'inline-flex';
+  if (btn) {
+    btn.style.display = 'inline-flex';
+    btn.innerHTML = '<svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"></rect><path d="M12 8v6M9 11h6"></path></svg>Add to Home Screen';
+  }
 }
 
 function setupInstallPrompt() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.textContent = 'Add to Home Screen';
     showInstallButton();
   });
 
