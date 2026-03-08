@@ -205,6 +205,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-status-pill.red{color:#ffb4c0;border-color:rgba(255,77,106,.42);background:rgba(255,77,106,.16)}
 .agent-status-copy{font-size:12px;color:var(--sub);line-height:1.45}
 .agent-status-foot{margin-top:7px;font-size:10px;color:var(--muted);line-height:1.4}
+@media(max-width:900px){
+  .agent-status-pop{
+    left:10px !important;
+    right:10px !important;
+    top:auto !important;
+    bottom:calc(84px + env(safe-area-inset-bottom));
+    max-width:none;
+    width:auto;
+    border-radius:12px;
+  }
+}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -748,6 +759,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.timing-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,183,0,.34);background:rgba(255,183,0,.14);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.35px}
 .clv-ticker{margin-top:8px;border:1px solid rgba(0,212,255,.22);border-radius:10px;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(124,58,237,.06));padding:9px}
 .clv-ticker-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
 .clv-ticker-title{font-size:10px;font-family:var(--mono);letter-spacing:.65px;text-transform:uppercase;color:var(--cyan);font-weight:800}
@@ -2131,6 +2143,7 @@ const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const THEME_KEY = 'algobets-theme-v1';
 const VIP_DISCORD_UNLOCK_TOAST_KEY = 'algobets-vip-discord-unlock-toast-v1';
+const AGENT_DOT_HINT_KEY = 'algobets-agent-dot-hint-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
 const DEFAULT_AFFILIATE_LINKS = {
   draftkings: 'https://sportsbook.draftkings.com',
@@ -2449,6 +2462,10 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('on');
   setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+function delayMs(ms) {
+  return new Promise(resolve => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
 
 function samplePickSeed() {
@@ -4206,7 +4223,7 @@ function renderVipTools() {
         const col = rec === 'Bet Now' ? 'var(--green)' : rec === 'Watch Line' ? 'var(--amber)' : 'var(--muted)';
         return `<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
           <span>${esc(p.bet)} ${esc(p.odds)}</span>
-          <strong style="color:${col}">${rec}</strong>
+          <span class="timing-chip" style="color:${col};border-color:${rec === 'Bet Now' ? 'rgba(0,229,160,.35)' : 'rgba(255,183,0,.34)'};background:${rec === 'Bet Now' ? 'rgba(0,229,160,.13)' : 'rgba(255,183,0,.14)'}">${rec}</span>
         </div>`;
       }).join('');
     }
@@ -6524,6 +6541,14 @@ function bindAgentStatusCards() {
     });
     pop.addEventListener('mouseleave', () => scheduleHideAgentStatusCard());
   }
+  try {
+    const mobile = window.matchMedia('(max-width: 900px)').matches;
+    const seen = localStorage.getItem(AGENT_DOT_HINT_KEY) === '1';
+    if (mobile && !seen) {
+      setTimeout(() => showToast('Tip: tap Agent LEDs (1-5) for live status details'), 900);
+      localStorage.setItem(AGENT_DOT_HINT_KEY, '1');
+    }
+  } catch (_) {}
 }
 
 function parseActiveAgents(pick) {
@@ -7108,6 +7133,15 @@ function setPropsSport(sport) {
   loadProps(true);
 }
 
+async function runFreeScanRevealFlow() {
+  if (normalizePlan(currentPlan) !== 'free') return;
+  setHomeScanFeedback('Agents are validating premium-only edges...', 'loading');
+  await delayMs(2000);
+  const total = Array.isArray(PICKS) ? PICKS.length : 0;
+  const found = Math.max(3, Math.min(5, total || 3));
+  showToast(`${found} VIP edges found. Upgrade to reveal.`);
+  openUpgradePicker();
+}
 
 
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
@@ -7133,7 +7167,17 @@ async function doScan(silent = false) {
     renderVipTools();
     renderHomeModules();
     updatePlanUi();
-    if (!silent) showToast('Preview mode active');
+    if (!silent) {
+      if (normalizePlan(currentPlan) === 'free') {
+        setHomeScanFeedback('Running 5-agent scan...', 'loading');
+        setApiStatus('loading');
+        await delayMs(2000);
+        setApiStatus('ok');
+        await runFreeScanRevealFlow();
+      } else {
+        showToast('Preview mode active');
+      }
+    }
     return;
   }
   if (scanCooldownRemaining > 0) {
@@ -7272,7 +7316,10 @@ async function doScan(silent = false) {
       }
     }
 
-    if (!silent && PICKS.length > 0) showToast(`✓ Found ${PICKS.length} edges`);
+    if (!silent && PICKS.length > 0) {
+      if (normalizePlan(currentPlan) === 'free') await runFreeScanRevealFlow();
+      else showToast(`✓ Found ${PICKS.length} edges`);
+    }
 
   } catch(err) {
     console.error('Scan error:', err);
