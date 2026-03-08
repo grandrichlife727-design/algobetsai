@@ -2063,6 +2063,12 @@ window.setAlgobetsUserId = function(uid) {
 const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
 const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
 const _authFromQp = String(_qp.get('auth') || '').trim().toLowerCase();
+const _tabFromQp = String(_qp.get('tab') || '').trim().toLowerCase();
+const START_TAB_ALLOW = new Set([
+  'home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports',
+  'odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide','more'
+]);
+const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
@@ -2405,7 +2411,10 @@ function bookLabel(bk) {
 function loadState() {
   try {
     const raw = localStorage.getItem(STATE_KEY);
-    if (!raw) return;
+    if (!raw) {
+      if (START_TAB_QP) currentTab = START_TAB_QP;
+      return;
+    }
     const st = JSON.parse(raw);
     if (typeof st.filter === 'string') filter = st.filter;
     if (typeof st.currentTab === 'string') currentTab = st.currentTab;
@@ -2418,6 +2427,7 @@ function loadState() {
   } catch(err) {
     console.warn('[Algobets] Could not read saved UI state:', err);
   }
+  if (START_TAB_QP) currentTab = START_TAB_QP;
 }
 
 function saveState() {
