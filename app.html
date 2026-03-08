@@ -363,6 +363,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-fire-chip.active{opacity:1;box-shadow:0 0 0 1px rgba(34,211,238,.18),0 0 10px rgba(34,211,238,.16)}
 .agent-fire-chip.core{border-color:rgba(34,211,238,.28);background:rgba(34,211,238,.09);color:var(--cyan)}
 .agent-fire-chip.cond{border-color:rgba(255,183,0,.35);background:rgba(255,183,0,.1);color:var(--amber)}
+.system-slam{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(0,229,160,.42);background:linear-gradient(135deg,rgba(0,229,160,.22),rgba(34,211,238,.18));color:#d8fff2;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.45px;text-transform:uppercase;box-shadow:0 0 12px rgba(0,229,160,.24)}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
 .sample-corner{position:absolute;top:8px;right:8px;z-index:2}
 
@@ -6151,7 +6152,9 @@ function parseActiveAgents(pick) {
 
 function renderActiveAgentPills(activeAgents = []) {
   const vals = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
-  return `<div class="agent-fired"><span class="agent-fired-label">Agent Pulse</span>${[1,2,3,4,5].map(id => {
+  const activeCount = vals.size;
+  const slamBadge = activeCount === 5 ? `<span class="system-slam" title="All 5 agents fired">System Slam</span>` : '';
+  return `<div class="agent-fired"><span class="agent-fired-label">Agent Pulse</span>${slamBadge}${[1,2,3,4,5].map(id => {
     const meta = AGENT_UI[id] || {abbr: `A${id}`, label: `Agent ${id}`, cls: 'cond'};
     const on = vals.has(id);
     return `<span class="agent-fire-chip ${meta.cls} ${on ? 'active' : 'inactive'}" title="${esc(meta.label)}">${meta.abbr}</span>`;
