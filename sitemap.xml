@@ -12,4 +12,22 @@
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://grandrichlife727-design.github.io/algobetsai/ev-picks/</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://grandrichlife727-design.github.io/algobetsai/steam-moves/</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://grandrichlife727-design.github.io/algobetsai/player-props/</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
 </urlset>
