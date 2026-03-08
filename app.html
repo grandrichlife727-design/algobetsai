@@ -1530,12 +1530,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">Support</div>
           <div class="growth-sub">Need help with account, billing, picks, or technical issues?</div>
           <div class="rf-row"><a class="offer-link" href="mailto:support@algobetsai.com?subject=Algobets%20Support%20Request" style="padding:10px 12px"><div class="offer-info"><div class="offer-name">support@algobetsai.com</div><div class="offer-promo">Contact Support</div></div><span class="offer-cta">Email</span></a></div>
-          <div class="rf-row"><a class="pf-btn" href="#v-guide" onclick="go('guide')">Troubleshooting FAQ</a></div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Help & Guide</div>
-          <div class="growth-sub">Step-by-step walkthrough for Picks, Tools, History, and bankroll flow.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('guide')">Open Full Guide</button></div>
         </div>
       </div>
     </div>
@@ -1631,7 +1625,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <span class="mnav-label">Picks</span>
   </button>
   <div class="mnav-premium-wrap">
-    <button class="mnav-btn" id="mn-tools" onclick="go('tools')">
+    <button class="mnav-btn" id="mn-tools" onclick="currentTab==='tools'?toggleMobilePremium(event):go('tools')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
       <span class="mnav-label">Tools</span>
     </button>
@@ -1649,7 +1643,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <span class="mnav-label">Offers</span>
   </button>
   <div class="mnav-vip-wrap">
-    <button class="mnav-btn" id="mn-settings" onclick="go('profile')" title="Settings">
+    <button class="mnav-btn" id="mn-settings" onclick="currentTab==='profile'?toggleMobileVip(event):go('profile')" title="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
       <span class="mnav-label">Settings</span>
     </button>
@@ -1680,7 +1674,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
       <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
       <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
-      <button class="mnav-more-item" onclick="go('guide')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Guide</button>
       <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
     </div>
   </div>
@@ -1992,7 +1985,7 @@ let homeFlags = {...HOME_FLAGS_DEFAULT};
 const homeSeenCards = new Set();
 const TIER_PRICE_DISPLAY = {
   premium: {monthly: '$19.99/mo', annual: '$179.99/yr'},
-  vip: {monthly: '$79.99/mo', annual: '$799.99/yr'},
+  vip: {monthly: '$39.99/mo', annual: '$399.99/yr'},
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -2294,7 +2287,7 @@ function profilePickLimit() {
   const fromTier = Number(planConfig?.max_picks || planConfig?.pick_limit || 0);
   if (fromTier > 0) return fromTier;
   if (p === 'vip') return 50;
-  if (p === 'premium') return 20;
+  if (p === 'premium') return 9999;
   return 2;
 }
 
@@ -2334,7 +2327,10 @@ function renderProfile() {
   if (account) account.textContent = maskIdentifier(userProfile.method, userProfile.identifier);
   if (method) method.textContent = authMethodLabel(userProfile.method);
   if (plan) plan.textContent = planLabel(currentPlan);
-  if (limit) limit.textContent = String(profilePickLimit());
+  if (limit) {
+    const lim = profilePickLimit();
+    limit.textContent = lim >= 9999 ? 'Unlimited' : String(lim);
+  }
   if (discord) discord.textContent = canUseVip() ? 'Active' : 'Locked';
   updateAuthUi();
 }
@@ -5807,7 +5803,12 @@ async function doScan(silent = false) {
 function renderPicks() {
   const el = document.getElementById('picklist');
   const picksRefreshedEl = document.getElementById('picks-refreshed');
-  if (picksRefreshedEl) picksRefreshedEl.textContent = '';
+  const usingDemoData = demoMode || liveOddsPaused || PICKS.some(p => p.demoData);
+  if (picksRefreshedEl) {
+    picksRefreshedEl.textContent = usingDemoData
+      ? 'Demo mode — live odds paused'
+      : (lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '');
+  }
   const pts = PICKS.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
@@ -5829,7 +5830,9 @@ function renderPicks() {
     return (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0));
   });
 
-  document.getElementById('picks-count').textContent = `Today's Edges (Demo Data)`;
+  document.getElementById('picks-count').textContent = usingDemoData
+    ? `Today's Edges (Demo Data)`
+    : `Today's Edges (Live)`;
   updatePaywallUi();
 
   if (!pts.length) {
@@ -6330,7 +6333,7 @@ function closeModal(e) {
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
-const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
+const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile'];
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');

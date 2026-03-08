@@ -39,10 +39,11 @@ import statistics
 from datetime import datetime, timedelta
 from typing import Optional, Any
 from zoneinfo import ZoneInfo
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse, FileResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -438,6 +439,7 @@ app.add_middleware(
 )
 
 _allowed_origin_set = {o.rstrip("/").lower() for o in ALLOWED_ORIGINS if o}
+PROJECT_DIR = Path(__file__).resolve().parent
 
 
 def _origin_allowed(origin: str) -> bool:
@@ -2640,6 +2642,22 @@ async def health_check():
         "data_source": "odds_api" if ODDS_API_KEY else "none",
         "quota_remaining": _quota_remaining,
     }
+
+
+@app.get("/")
+async def frontend_root():
+    app_file = PROJECT_DIR / "app.html"
+    if app_file.exists():
+        return FileResponse(str(app_file))
+    raise HTTPException(status_code=404, detail="Frontend app.html not found")
+
+
+@app.get("/app.html")
+async def frontend_app_html():
+    app_file = PROJECT_DIR / "app.html"
+    if app_file.exists():
+        return FileResponse(str(app_file))
+    raise HTTPException(status_code=404, detail="Frontend app.html not found")
 
 
 @app.get("/api/config/public")
