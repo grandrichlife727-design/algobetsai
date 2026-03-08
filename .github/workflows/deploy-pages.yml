@@ -1,0 +1,61 @@
+name: Deploy Frontend (GitHub Pages)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare publish directory
+        run: |
+          set -euo pipefail
+          mkdir -p public
+          cp -f index.html public/
+          cp -f app.html public/
+          cp -f sw.js public/
+          cp -f manifest.webmanifest public/
+          cp -f robots.txt public/
+          cp -f sitemap.xml public/
+          cp -f app-icon.svg public/
+
+          if [ -d app ]; then cp -R app public/; fi
+          if [ -d icons ]; then cp -R icons public/; fi
+          if [ -d ev-picks ]; then cp -R ev-picks public/; fi
+          if [ -d steam-moves ]; then cp -R steam-moves public/; fi
+          if [ -d player-props ]; then cp -R player-props public/; fi
+          if [ -d Logo ]; then cp -R Logo public/; fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
