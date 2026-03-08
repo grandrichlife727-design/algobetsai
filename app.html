@@ -5455,18 +5455,23 @@ async function startCheckout(tier, cycle = billingCycle) {
     console.error(err);
     const msg = String(err?.detail || err?.message || '');
     if (/invalid checkout redirect url/i.test(msg)) {
+      const fallbackReturns = [
+        `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
+        'https://grandrichlife727-design.github.io/algobetsai/1.html'
+      ];
       try {
-        const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
-        const retry = await backendPost('/api/billing/checkout', {
-          tier: desired,
-          billing_cycle: finalCycle,
-          success_url: `${backendReturn}?checkout=success`,
-          cancel_url: `${backendReturn}?checkout=cancel`
-        });
-        if (retry?.checkout_url) {
-          showToast('Opening checkout...');
-          window.location.href = retry.checkout_url;
-          return;
+        for (const ret of fallbackReturns) {
+          const retry = await backendPost('/api/billing/checkout', {
+            tier: desired,
+            billing_cycle: finalCycle,
+            success_url: `${ret}?checkout=success`,
+            cancel_url: `${ret}?checkout=cancel`
+          });
+          if (retry?.checkout_url) {
+            showToast('Opening checkout...');
+            window.location.href = retry.checkout_url;
+            return;
+          }
         }
       } catch (_) {}
       showToast('Checkout blocked: add this site to BILLING_RETURN_ORIGINS on backend');
@@ -5575,12 +5580,17 @@ async function openBillingPortal() {
     console.error(err);
     const msg = String(err?.detail || err?.message || '');
     if (/invalid portal return url/i.test(msg)) {
+      const fallbackReturns = [
+        `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
+        'https://grandrichlife727-design.github.io/algobetsai/1.html'
+      ];
       try {
-        const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
-        const retry = await backendPost('/api/billing/portal', {return_url: backendReturn});
-        if (retry?.portal_url) {
-          window.open(retry.portal_url, '_blank', 'noopener');
-          return;
+        for (const ret of fallbackReturns) {
+          const retry = await backendPost('/api/billing/portal', {return_url: ret});
+          if (retry?.portal_url) {
+            window.open(retry.portal_url, '_blank', 'noopener');
+            return;
+          }
         }
       } catch (_) {}
       showToast('Billing return URL is not allowed in backend config');
