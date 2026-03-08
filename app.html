@@ -128,6 +128,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .vip-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:var(--amber);border:1px solid rgba(255,183,0,.35);background:rgba(255,183,0,.1);padding:2px 7px;border-radius:999px;font-family:var(--mono)}
 .sidebar-bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
 .resp-notice{font-size:10px;color:var(--muted);line-height:1.55;padding:8px 8px 0}
+.aff-disclosure{font-size:11px;color:#cbd5e1;line-height:1.5;padding:8px;border:1px solid rgba(34,211,238,.24);background:rgba(34,211,238,.09);border-radius:8px;margin:0 8px 8px}
 
 /* BOOK AFFILIATE LINKS */
 .book-link{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;text-decoration:none;transition:background .12s;margin-bottom:2px}
@@ -188,6 +189,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .plan-pill.vip{color:var(--green);border-color:rgba(0,229,160,.25);background:rgba(0,229,160,.08)}
 .cooldown-pill{display:none;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,183,0,.3);background:rgba(255,183,0,.09);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:700;white-space:nowrap}
 .cooldown-pill.on{display:inline-flex}
+.cooldown-pill.auto{border-color:rgba(0,212,255,.34);background:rgba(0,212,255,.11);color:var(--cyan)}
 .bill-btn{background:rgba(0,229,160,.9);color:#00160f;padding:6px 10px;font-size:11px}
 .bill-link{background:none;border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
@@ -281,6 +283,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* HERO STATS */
 .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.scan-policy-note{margin:-8px 0 14px;font-size:12px;color:var(--sub);line-height:1.45;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.scan-policy-note strong{color:var(--text);font-weight:700}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
 .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
 .stat.s-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
@@ -527,14 +531,19 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .modal-close{width:100%;margin-top:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--sub);font-size:13px;font-weight:600;padding:9px;cursor:pointer;font-family:var(--sans)}
 
 /* MOBILE NAV */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:200;
-  padding:9px 8px calc(env(safe-area-inset-bottom,0px) + 10px);grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,10,16,.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:220;
+  padding:9px 8px calc(max(10px, env(safe-area-inset-bottom,0px)));grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;
+  box-shadow:0 -10px 30px rgba(0,0,0,.35)}
 @media(max-width:900px){.mobile-nav{display:grid}}
 .mnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;
-  color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;cursor:pointer;font-family:var(--sans);transition:color .12s;flex:1;min-width:0;touch-action:manipulation}
+  color:var(--sub);font-size:10px;font-weight:700;padding:5px 0;border-radius:8px;cursor:pointer;font-family:var(--sans);
+  transition:transform .1s ease,background .12s ease,box-shadow .12s ease,color .12s;flex:1;min-width:0;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;position:relative}
 .mnav-btn.active{color:var(--cyan)}
 .mnav-btn svg{width:23px;height:23px;opacity:.55;flex-shrink:0}.mnav-btn.active svg{opacity:1}
 .mnav-label{font-size:10px;font-weight:800;line-height:1;margin-top:1px}
+.mnav-btn.active::after{content:'';position:absolute;top:2px;left:22%;right:22%;height:2px;border-radius:999px;background:var(--cyan);opacity:.95}
+.mnav-btn:active,.mnav-btn.tap-feedback{transform:translateY(1px) scale(.97);background:rgba(34,211,238,.12);box-shadow:inset 0 0 0 1px rgba(34,211,238,.22)}
 @media(max-width:380px){.mnav-btn svg{width:21px;height:21px}.mnav-label{font-size:9px}}
 .mnav-premium-wrap,.mnav-vip-wrap,.mnav-more-wrap{position:relative;min-width:0;display:flex}
 .mnav-premium-wrap>.mnav-btn,.mnav-vip-wrap>.mnav-btn,.mnav-more-wrap>.mnav-btn{width:100%}
@@ -545,6 +554,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .mnav-more-panel{right:4px}
 .mnav-more-item{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;font-family:var(--sans);padding:8px;border-radius:7px;cursor:pointer;text-align:left}
 .mnav-more-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.mnav-more-item:active,.mnav-more-item.tap-feedback{transform:translateY(1px);background:rgba(34,211,238,.12);box-shadow:inset 0 0 0 1px rgba(34,211,238,.18)}
 .mnav-more-item svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
 .mnav-more-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 8px 4px}
 .mnav-aff-link{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;text-decoration:none;color:var(--sub);transition:background .12s}
@@ -858,6 +868,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   </button>
   <div class="sidebar-bot">
     <span class="nav-section" style="padding-top:4px">Open an Account</span>
+    <div class="aff-disclosure"><strong>Affiliate Disclosure:</strong> We may earn commissions from partner sportsbook links.</div>
     <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="book-link" data-book="draftkings">
       <div class="book-icon" style="background:#53D338;color:#000">DK</div>
       <div class="book-info"><div class="book-name">DraftKings</div><div class="book-promo">Bet $5, Get $150</div></div>
@@ -917,6 +928,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-cyan"><div class="stat-val" id="home-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
         <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
       </div>
+      <div class="scan-policy-note" id="scan-policy-note"></div>
       <div class="home-plan-showcase" id="home-plan-showcase">
         <div class="hps-top">
           <div>
@@ -945,7 +957,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
               <div>High-volume board</div>
               <div>All sports + props + steam + fades</div>
               <div>Full 5-agent breakdown</div>
-              <div>5-minute refresh</div>
+              <div>2-minute auto refresh</div>
               <div>Parlay builder</div>
             </div>
             <div class="hps-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial (Card Required)</button></div>
@@ -955,7 +967,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-price">$39.99/mo</div>
             <div class="hps-list">
               <div>VIP Pick of the Day + priority release</div>
-              <div>1-minute refresh + timing guidance</div>
+              <div>~45-second auto refresh + timing guidance</div>
               <div>Get better lines before they move</div>
               <div>Instant alerts, daily recap, and one-tap presets</div>
               <div>Private VIP Discord access</div>
@@ -999,12 +1011,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
           <div class="growth-title">Today's Top Edges</div>
-          <div id="home-top-picks" class="growth-sub">Scanning all 5 agents...</div>
+          <div id="home-top-picks" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:48%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:86%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:60%"></span></div>
           <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
         <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
           <div class="growth-title">VIP Pick of the Day</div>
-          <div id="home-vip" class="growth-sub">Loading VIP pick preview...</div>
+          <div id="home-vip" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:56%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:78%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:44%"></span></div>
           <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button> <span class="vip-chip">VIP Discord</span></div>
         </div>
       </div>
@@ -1017,6 +1029,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card" id="home-card-offers" data-home-card="best_offers">
           <div class="growth-title">Best Offers</div>
+          <div class="aff-disclosure" style="margin:8px 0 0"><strong>Affiliate Disclosure:</strong> We may earn commissions from these links.</div>
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" style="margin-top:8px" data-book="draftkings">
             <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
             <div class="offer-info"><div class="offer-name">DraftKings</div><div class="offer-promo">Bet $5, Get $150 in bonus bets</div></div>
@@ -1072,8 +1085,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-title">How Plans Work</div>
       <div class="tier-strip">
         <div class="tier-tag"><strong>Free</strong>: 3 delayed picks with 20-minute refresh.</div>
-        <div class="tier-tag premium"><strong>Premium</strong>: High-volume board, all sports/props, 5-minute refresh.</div>
-        <div class="tier-tag vip"><strong>VIP</strong>: VIP pick of the day, 1-minute refresh, better-line timing, alerts/recap, and Discord.</div>
+        <div class="tier-tag premium"><strong>Premium</strong>: High-volume board, all sports/props, 2-minute auto refresh.</div>
+        <div class="tier-tag vip"><strong>VIP</strong>: VIP pick of the day, ~45-second auto refresh, better-line timing, alerts/recap, and Discord.</div>
       </div>
       </div>
       <div class="filters-wrap">
@@ -1149,6 +1162,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Sportsbook <span>Offers</span></div><div class="page-sub">Bonus offers and affiliate links by sportsbook.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
+          <div class="aff-disclosure" style="margin:0 0 10px"><strong>Affiliate Disclosure:</strong> We may earn commissions if you sign up through these partner links.</div>
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" data-book="draftkings">
             <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
             <div class="offer-info"><div class="offer-name">DraftKings</div><div class="offer-promo">Bet $5, Get $150 in bonus bets</div></div>
@@ -1206,9 +1220,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <input class="auth-in" id="af-link-caesars" type="text" placeholder="Caesars affiliate URL"/>
           </div>
           <div class="rf-row"><button class="paywall-cta" onclick="saveAffiliateLinks()">Save Affiliate Links</button></div>
-          <div class="growth-note" id="af-note">Loading affiliate data...</div>
+          <div class="growth-note" id="af-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:150px;vertical-align:middle"></span></div>
           <div class="growth-note" id="af-note-detail">No click data yet.</div>
-          <div class="growth-note" id="offers-af-note">Loading affiliate performance...</div>
+          <div class="growth-note" id="offers-af-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:190px;vertical-align:middle"></span></div>
           <div class="growth-note" id="offers-af-detail">No click data yet.</div>
           <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
           <div class="growth-note">21+ only. Gamble responsibly · 1-800-522-4700</div>
@@ -1221,7 +1235,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Premium Signals</div>
-          <div class="growth-sub" id="premium-bestbets">Loading best bets...</div>
+          <div class="growth-sub" id="premium-bestbets"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:62%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:88%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:52%"></span></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Premium Tools</div>
@@ -1231,7 +1245,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Prop Model Packs</div>
-          <div class="growth-sub" id="premium-packs">Loading model packs...</div>
+          <div class="growth-sub" id="premium-packs"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:58%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:74%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:46%"></span></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('props')">Open Props Edge</button></div>
         </div>
         <div class="growth-card">
@@ -1241,12 +1255,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Line-Shop Assistant</div>
-          <div class="growth-sub" id="premium-lineshop">Loading line-shop opportunities...</div>
+          <div class="growth-sub" id="premium-lineshop"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:52%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:81%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:43%"></span></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('odds')">Open Odds</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Injury / Lineup Flags</div>
-          <div class="growth-sub" id="premium-injury">Loading latest sports headlines...</div>
+          <div class="growth-sub" id="premium-injury"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:48%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:84%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:57%"></span></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Daily Recap</div>
@@ -1311,14 +1325,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
-          <div class="growth-sub" id="vip-early">Loading release timing...</div>
+          <div class="growth-sub" id="vip-early"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:50%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:66%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:36%"></span></div>
           <div class="growth-note" id="vip-release-window">Next VIP drop window: calculating...</div>
-          <div id="vip-core-list" class="growth-sub">Loading Core Edge plays...</div>
+          <div id="vip-core-list" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:58%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:86%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:62%"></span></div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🎯</span>VIP Pick of the Day</div>
-          <div class="growth-sub" id="vip-pod">Loading VIP pick...</div>
+          <div class="growth-sub" id="vip-pod"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:54%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:80%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:45%"></span></div>
           <div class="growth-note">Exclusive daily pick for VIP members with execution timing guidance.</div>
         </div>
       </div>
@@ -1329,17 +1343,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">⚡</span>Execution Intelligence</div>
-          <div class="growth-sub" id="vip-clv">Loading CLV metrics...</div>
+          <div class="growth-sub" id="vip-clv"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:46%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:72%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:38%"></span></div>
           <div class="growth-note" id="vip-clv-explain">CLV = Closing Line Value. It measures whether your price was better than the market close.</div>
-          <div class="growth-sub" id="vip-clv-score">Loading CLV scorecard...</div>
-          <div id="vip-timing" class="growth-sub">Loading timing guidance...</div>
-          <div class="growth-sub" id="vip-clv-lab">Loading CLV by book...</div>
-          <div class="growth-sub" id="vip-depth">Loading market-depth opportunities...</div>
+          <div class="growth-sub" id="vip-clv-score"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:51%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:78%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:40%"></span></div>
+          <div id="vip-timing" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:57%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:84%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:44%"></span></div>
+          <div class="growth-sub" id="vip-clv-lab"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:52%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:74%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:36%"></span></div>
+          <div class="growth-sub" id="vip-depth"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:54%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:82%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:41%"></span></div>
           <div class="growth-note">Use this block to decide bet now, wait, or pass.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">📡</span>VIP Live Plays</div>
-          <div class="growth-sub" id="vip-live-note">Loading live algorithm...</div>
+          <div class="growth-sub" id="vip-live-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:170px;vertical-align:middle"></span></div>
           <div class="picks-list" id="vip-live-list"></div>
           <div class="rf-row"><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
           <div class="growth-note">Budget guard: capped games + throttled refresh + cache fallback.</div>
@@ -1481,6 +1495,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div id="parlay-result" style="display:none" class="parlay-result">
           <div class="pl-row"><span>Parlay Odds</span><span class="pl-val" id="parlay-odds"></span></div>
           <div class="pl-row"><span>$100 wins</span><span class="pl-val" id="parlay-win"></span></div>
+          <div class="growth-note" id="parlay-corr-note" style="margin-top:8px"></div>
           <button class="parlay-clear" onclick="clearParlay()">Clear all</button>
         </div>
       </div>
@@ -1593,7 +1608,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Creator Leaderboard</div>
           <div class="growth-sub">Verified picks/wins only. Anti-spam weighted.</div>
-          <div class="growth-note" id="leaderboard-note">Loading leaderboard...</div>
+          <div class="growth-note" id="leaderboard-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:140px;vertical-align:middle"></span></div>
         </div>
         <div class="community-feed" id="community-feed"></div>
       </div>
@@ -1636,7 +1651,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid">
         <div class="growth-card">
           <div class="growth-title">Personal Settings</div>
-          <div class="growth-sub">Set bankroll mode and state to personalize stakes and book links.</div>
+          <div class="growth-sub">Set bankroll mode, bankroll amount, and state to personalize stakes and book links.</div>
           <div class="rf-row">
             <select class="auth-in" id="pf-bankroll" style="font-family:var(--sans)">
               <option value="conservative">Conservative</option>
@@ -1644,6 +1659,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
               <option value="aggressive">Aggressive</option>
             </select>
             <input class="auth-in" id="pf-state" type="text" maxlength="5" placeholder="auto or NY"/>
+          </div>
+          <div class="rf-row">
+            <input class="auth-in" id="pf-bankroll-amount" type="number" min="50" step="50" placeholder="Bankroll amount (e.g. 1000)"/>
           </div>
           <div class="rf-row">
             <button class="paywall-cta" onclick="saveProfileSettings()">Save Settings</button>
@@ -2031,7 +2049,7 @@ const AFFILIATE_EPC_EST = {
   espnbet: 50,
   hardrock: 45,
 };
-const VIP_LIVE_POLL_MS = 90000;
+const VIP_LIVE_POLL_MS = 45000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
 const VIP_LIVE_DAILY_CALL_CAP = 180;
@@ -2150,7 +2168,7 @@ let quotaData = null;
 let quotaExhausted = false;
 let LOW_DATA_MODE = true;
 let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
-let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
+let profileSettings = {state: 'auto', bankroll_mode: 'standard', bankroll_amount: 0};
 let LIVEDATA = [];
 let VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
 let vipLiveTicker = null;
@@ -2409,6 +2427,28 @@ function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
 
+function skeletonLines(widths = ['92%', '68%', '48%'], height = 10) {
+  const rows = (Array.isArray(widths) ? widths : ['92%', '68%', '48%'])
+    .map(w => `<div class="skeleton skeleton-shimmer" style="height:${height}px;width:${String(w)}"></div>`)
+    .join('');
+  return `<div style="display:flex;flex-direction:column;gap:8px">${rows}</div>`;
+}
+
+function skeletonCard(widths = ['92%', '68%', '48%']) {
+  return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">${skeletonLines(widths, 10)}</div>`;
+}
+
+function skeletonList(count = 2) {
+  return Array.from({length: Math.max(1, Number(count) || 2)}, (_, i) => {
+    const variants = [
+      ['42%', '72%', '34%'],
+      ['36%', '64%', '28%'],
+      ['40%', '70%', '30%'],
+    ];
+    return skeletonCard(variants[i % variants.length]);
+  }).join('');
+}
+
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
   return map[bk] || bk;
@@ -2579,7 +2619,22 @@ function suggestedStakeText(ev) {
   const base = mode === 'conservative' ? 0.5 : mode === 'aggressive' ? 1.5 : 1.0;
   const mult = ev >= 7 ? 1.5 : ev >= 4 ? 1.0 : 0.6;
   const pct = Math.max(0.25, Math.min(3.0, base * mult));
+  const bankroll = Number(profileSettings?.bankroll_amount || 0);
+  if (bankroll >= 50) {
+    const dollars = Math.max(1, Math.round((bankroll * pct) / 100));
+    return `$${dollars} (${pct.toFixed(2)}% of bankroll)`;
+  }
   return `${pct.toFixed(2)}% bankroll`;
+}
+
+function suggestedStakeMeta(ev) {
+  const mode = String(profileSettings?.bankroll_mode || 'standard');
+  const base = mode === 'conservative' ? 0.5 : mode === 'aggressive' ? 1.5 : 1.0;
+  const mult = ev >= 7 ? 1.5 : ev >= 4 ? 1.0 : 0.6;
+  const pct = Math.max(0.25, Math.min(3.0, base * mult));
+  const bankroll = Number(profileSettings?.bankroll_amount || 0);
+  const dollars = bankroll >= 50 ? Math.max(1, Math.round((bankroll * pct) / 100)) : 0;
+  return {pct, bankroll, dollars};
 }
 
 function bankrollMode() {
@@ -2751,17 +2806,26 @@ async function loadProfileSettings() {
   try {
     if (!ensureRegisteredUser(false)) throw new Error('guest');
     const res = await backendGet('/api/profile/settings');
-    profileSettings = res.settings || profileSettings;
+    const remote = res.settings || {};
+    const localAmt = Number(localStorage.getItem('algobets-bankroll-amount') || 0);
+    profileSettings = {
+      state: String(remote.state || profileSettings.state || 'auto'),
+      bankroll_mode: String(remote.bankroll_mode || profileSettings.bankroll_mode || 'standard'),
+      bankroll_amount: Number(remote.bankroll_amount || localAmt || profileSettings.bankroll_amount || 0),
+    };
   } catch (err) {
     const localState = localStorage.getItem('algobets-state') || 'auto';
     const localBank = localStorage.getItem('algobets-bankroll') || 'standard';
-    profileSettings = {state: localState, bankroll_mode: localBank};
+    const localBankrollAmount = Number(localStorage.getItem('algobets-bankroll-amount') || 0);
+    profileSettings = {state: localState, bankroll_mode: localBank, bankroll_amount: localBankrollAmount};
   }
   const st = document.getElementById('pf-state');
   const bk = document.getElementById('pf-bankroll');
+  const ba = document.getElementById('pf-bankroll-amount');
   if (st) st.value = profileSettings.state || 'auto';
   if (bk) bk.value = profileSettings.bankroll_mode || 'standard';
-  if (note) note.textContent = `State: ${(profileSettings.state || 'auto').toUpperCase()} · Bankroll: ${profileSettings.bankroll_mode || 'standard'}`;
+  if (ba) ba.value = Number(profileSettings.bankroll_amount || 0) || '';
+  if (note) note.textContent = `State: ${(profileSettings.state || 'auto').toUpperCase()} · Mode: ${profileSettings.bankroll_mode || 'standard'} · Bankroll: ${Number(profileSettings.bankroll_amount || 0) > 0 ? `$${Number(profileSettings.bankroll_amount).toLocaleString()}` : 'not set'}`;
   applyStateBookOrdering();
   updateLowDataUi();
 }
@@ -2769,13 +2833,15 @@ async function loadProfileSettings() {
 async function saveProfileSettings() {
   const st = String(document.getElementById('pf-state')?.value || 'auto').trim();
   const bk = String(document.getElementById('pf-bankroll')?.value || 'standard').trim().toLowerCase();
+  const ba = Math.max(0, Number(document.getElementById('pf-bankroll-amount')?.value || 0));
   const state = st ? st : 'auto';
-  profileSettings = {state, bankroll_mode: bk};
+  profileSettings = {state, bankroll_mode: bk, bankroll_amount: ba};
   localStorage.setItem('algobets-state', state);
   localStorage.setItem('algobets-bankroll', bk);
+  localStorage.setItem('algobets-bankroll-amount', String(ba));
   try {
     if (ensureRegisteredUser(false)) {
-      await backendPost('/api/profile/settings', {state, bankroll_mode: bk});
+      await backendPost('/api/profile/settings', {state, bankroll_mode: bk, bankroll_amount: ba});
     }
     showToast('Settings saved');
   } catch (err) {
@@ -2856,7 +2922,7 @@ async function loadLive() {
     return;
   }
   const el = document.getElementById('live-list');
-  if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading live mode...</div></div>`;
+  if (el) el.innerHTML = skeletonList(2);
   try {
     const res = await backendGet('/api/live');
     LIVEDATA = Array.isArray(res.live) ? res.live : [];
@@ -3444,7 +3510,7 @@ async function loadNewsImpact() {
     if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
     return;
   }
-  if (note) note.textContent = 'Loading impact...';
+  if (note) note.innerHTML = `<span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:120px;vertical-align:middle"></span>`;
   try {
     const res = await backendGet('/api/news-impact');
     NEWSIMPACT = Array.isArray(res.impacts) ? res.impacts : [];
@@ -3525,6 +3591,55 @@ function savePremiumRecap() {
   showToast('Premium recap saved');
 }
 
+function inferMarketTypeFromBetText(bet = '') {
+  const raw = String(bet || '').toLowerCase();
+  if (raw.includes('over ') || raw.includes('under ')) return 'total';
+  if (raw.includes(' ml') || raw.includes('moneyline')) return 'moneyline';
+  if (raw.includes('points') || raw.includes('rebounds') || raw.includes('assists') || raw.includes('yards') || raw.includes('prop')) return 'props';
+  return 'spread';
+}
+
+function parlayCorrelationAnalysis(list = []) {
+  const groups = {};
+  (Array.isArray(list) ? list : []).forEach(l => {
+    const src = PICKS.find(p => p.id === l.id) || {};
+    const game = String(src.game || l.game || 'Game').trim();
+    const market = String(src.market || inferMarketTypeFromBetText(src.bet || l.bet || '')).toLowerCase();
+    if (!groups[game]) groups[game] = [];
+    groups[game].push({market, bet: String(src.bet || l.bet || ''), odds: String(src.odds || l.odds || '')});
+  });
+  const warnings = [];
+  Object.entries(groups).forEach(([game, rows]) => {
+    if (rows.length < 2) return;
+    const markets = new Set(rows.map(r => r.market));
+    if (markets.has('spread') && markets.has('total')) {
+      warnings.push(`"${game}": Spread + Total in same game can be correlated, reducing true payout EV at many books.`);
+    }
+    if (markets.has('moneyline') && markets.has('spread')) {
+      warnings.push(`"${game}": Moneyline + Spread often overlap on the same team outcome and can be priced inefficiently.`);
+    }
+    if (markets.has('props') && (markets.has('spread') || markets.has('total') || markets.has('moneyline'))) {
+      warnings.push(`"${game}": Player props with side/total are event-linked; correlation can spike variance and lower edge.`);
+    }
+    const totals = rows.filter(r => r.market === 'total');
+    if (totals.length >= 2) {
+      warnings.push(`"${game}": Multiple totals/pace-driven legs increase covariance; expected edge is weaker than listed payout.`);
+    }
+  });
+  return warnings;
+}
+
+function renderParlayCorrelationNote(list = legs) {
+  const note = document.getElementById('parlay-corr-note');
+  if (!note) return;
+  const warnings = parlayCorrelationAnalysis(list);
+  if (!warnings.length) {
+    note.textContent = 'No major same-game correlation detected in current legs.';
+    return;
+  }
+  note.innerHTML = `Correlation warning:<br/>${warnings.map(w => `- ${esc(w)}`).join('<br/>')}`;
+}
+
 function runParlayOptimizerLite() {
   const note = document.getElementById('premium-parlay-note');
   const list = legs.length ? legs : PICKS.slice(0, 3).map(p => ({id: p.id, bet: p.bet, odds: p.odds, game: p.game}));
@@ -3532,16 +3647,10 @@ function runParlayOptimizerLite() {
     if (note) note.textContent = 'No picks available for optimizer.';
     return;
   }
-  const games = {};
-  list.forEach(l => {
-    const src = PICKS.find(p => p.id === l.id);
-    const g = src?.game || l.game || 'game';
-    games[g] = (games[g] || 0) + 1;
-  });
-  const correlated = Object.entries(games).filter(([, v]) => v > 1);
+  const correlated = parlayCorrelationAnalysis(list);
   if (note) {
     note.innerHTML = correlated.length
-      ? `Correlation warning: ${correlated.map(([g, v]) => `${g} (${v} legs)`).join(', ')}`
+      ? `Correlation warning:<br/>${correlated.map(w => `- ${esc(w)}`).join('<br/>')}`
       : 'No major same-game correlation detected in current legs.';
   }
 }
@@ -5451,7 +5560,7 @@ function renderHomeModules() {
       loadHomeSportsNews(false);
     }
     if (HOME_SPORTS_NEWS_LOADING && !HOME_SPORTS_NEWS.length) {
-      newsEl.innerHTML = `<div class="news-item"><div class="news-title">Loading game-day intel...</div><div class="news-sub">Filtering to high-impact updates tied to your active board.</div></div>`;
+      newsEl.innerHTML = `<div class="news-item">${skeletonLines(['48%','92%','74%'], 10)}</div>`;
       return;
     }
     const LEAGUE_MAP = {
@@ -5688,7 +5797,7 @@ function updateTrialCard() {
     }
 
     if (!eligible) {
-      copy.innerHTML = `<strong>3-day trial already used</strong> on this account. Upgrade to Premium to unlock +EV plays, props, steam moves, and 5-minute refresh.`;
+      copy.innerHTML = `<strong>3-day trial already used</strong> on this account. Upgrade to Premium to unlock +EV plays, props, steam moves, and 2-minute auto refresh.`;
     } else {
       copy.innerHTML = registered
         ? `<strong>Try Premium free for 3 days.</strong> Card required at checkout. Cancel before day 3 to avoid charges.`
@@ -5997,14 +6106,71 @@ function fmtCountdown(totalSec) {
   return `${m}:${String(ss).padStart(2, '0')}`;
 }
 
+function scanPolicyDetails() {
+  const p = normalizePlan(currentPlan);
+  if (p === 'vip') {
+    return {
+      plan: p,
+      automated: true,
+      cadenceLabel: '~45-second cadence',
+      note: '<strong>VIP:</strong> Auto scans run about every 45 seconds and updates auto-deliver in app. Use Refresh Now anytime.',
+      readyPill: 'Auto updates active',
+      readyFeedback: 'VIP auto-updates are active.',
+      blockedFeedback: (left) => `VIP auto-sync runs continuously. Next sync in ${left}.`,
+      blockedToast: (left) => `Auto-sync active. Next VIP update in ${left}.`,
+      idleButtonLabel: 'Refresh Now',
+    };
+  }
+  if (p === 'premium') {
+    return {
+      plan: p,
+      automated: true,
+      cadenceLabel: '2-minute cadence',
+      note: '<strong>Premium:</strong> Auto scans run every 2 minutes and updates auto-deliver in app. Use Refresh Now anytime.',
+      readyPill: 'Auto updates active',
+      readyFeedback: 'Premium auto-updates are active.',
+      blockedFeedback: (left) => `Premium auto-sync runs continuously. Next sync in ${left}.`,
+      blockedToast: (left) => `Auto-sync active. Next Premium update in ${left}.`,
+      idleButtonLabel: 'Refresh Now',
+    };
+  }
+  return {
+    plan: 'free',
+    automated: false,
+    cadenceLabel: 'manual refresh',
+    note: '<strong>Free:</strong> Tap Scan Now to refresh. Premium/VIP run automated scans with in-app auto updates.',
+    readyPill: '',
+    readyFeedback: 'Free mode uses manual scans.',
+    blockedFeedback: (left) => `Free manual refresh unlocks in ${left}.`,
+    blockedToast: (left) => `Free manual refresh unlocks in ${left}.`,
+    idleButtonLabel: 'Scan Now',
+  };
+}
+
+function scanBtnMarkup(labelText) {
+  const label = labelText || 'Scan Now';
+  return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> ${label}`;
+}
+
 function updateScanCooldownUi() {
   const pill = document.getElementById('scan-cooldown');
   const btn = document.getElementById('scan-btn');
+  const note = document.getElementById('scan-policy-note');
   if (!pill || !btn) return;
+  const policy = scanPolicyDetails();
   const blocked = scanCooldownRemaining > 0 && !isScanning;
-  pill.textContent = `Next scan in ${fmtCountdown(scanCooldownRemaining)}`;
-  pill.classList.toggle('on', blocked);
-  btn.disabled = blocked;
+  const left = fmtCountdown(scanCooldownRemaining);
+  if (policy.automated) {
+    pill.textContent = blocked ? `Auto sync in ${left}` : policy.readyPill;
+    pill.classList.add('on', 'auto');
+  } else {
+    pill.textContent = `Next scan in ${left}`;
+    pill.classList.remove('auto');
+    pill.classList.toggle('on', blocked);
+  }
+  if (!isScanning) btn.innerHTML = scanBtnMarkup(policy.idleButtonLabel);
+  btn.disabled = policy.automated ? false : blocked;
+  if (note) note.innerHTML = `${policy.note} <span style="opacity:.8">(${policy.cadenceLabel})</span>`;
 }
 
 function setScanCooldown(seconds) {
@@ -6190,7 +6356,7 @@ async function setOddsRange(range) {
     return;
   }
   if (listEl) {
-    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading ${range === 'tomorrow' ? "tomorrow's" : 'weekly'} games...</div></div>`;
+    listEl.innerHTML = skeletonList(3);
   }
   await loadScheduleGames(range);
   renderOdds();
@@ -6371,7 +6537,7 @@ async function loadProps(force = false) {
   propsError = null;
   const listEl = document.getElementById('props-list');
   if (listEl) {
-    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading props...</div><div class="empty-sub">Keeping this endpoint budget-safe.</div></div>`;
+    listEl.innerHTML = skeletonList(3);
   }
   try {
     const res = await backendGet(`/api/props?sport=${encodeURIComponent(activePropsSport)}`);
@@ -6434,8 +6600,10 @@ async function doScan(silent = false) {
     return;
   }
   if (scanCooldownRemaining > 0) {
-    if (!silent) showToast(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`);
-    setHomeScanFeedback(`Next scan in ${fmtCountdown(scanCooldownRemaining)}`, 'loading');
+    const left = fmtCountdown(scanCooldownRemaining);
+    const policy = scanPolicyDetails();
+    if (!silent) showToast(policy.blockedToast(left));
+    setHomeScanFeedback(policy.blockedFeedback(left), 'loading');
     updateScanCooldownUi();
     return;
   }
@@ -6444,9 +6612,9 @@ async function doScan(silent = false) {
   const btn = document.getElementById('scan-btn');
   const loadBar = document.getElementById('load-bar');
   btn.classList.add('loading');
-  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning...';
+  btn.innerHTML = scanBtnMarkup('Scanning...');
   loadBar.classList.add('on');
-  setHomeScanFeedback('Scanning all 5 agents...', 'loading');
+  setHomeScanFeedback('Running 5-agent scan...', 'loading');
   setApiStatus('loading');
 
   // Keep cached picks visible while refreshing in background.
@@ -6587,7 +6755,6 @@ async function doScan(silent = false) {
   if (currentTab === 'history') loadHistory();
 
   btn.classList.remove('loading');
-  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scan Now';
   loadBar.classList.remove('on');
   isScanning = false;
   updateScanCooldownUi();
@@ -6792,6 +6959,10 @@ function renderPicks() {
     const edgeTier = edgeVal > 5 ? 'High' : edgeVal >= 2 ? 'Medium' : 'Low';
     const teaserMarket = freeMarketLabel(p);
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
+    const stakeMeta = suggestedStakeMeta(edgeVal);
+    const stakeLine = stakeMeta.dollars > 0
+      ? `Suggested stake: <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
+      : `Suggested stake: <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
     const rankBadge = showDetailed
       ? `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`
       : `<span class="tier-tag">Free Teaser</span>`;
@@ -6816,6 +6987,7 @@ function renderPicks() {
         ? `<div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
       <div class="pick-line" title="De-vigged market consensus price">Fair Value: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
+      <div class="pick-line">${stakeLine}</div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
         : `<div class="pick-line">Game shown. Actionable pick and lines are Premium.</div>`}
@@ -7186,8 +7358,10 @@ function updateParlay() {
     if (parlayOddsEl) parlayOddsEl.textContent = ao;
     if (parlayWinEl) parlayWinEl.textContent = `$${Math.round((tot-1)*100)}`;
     if (resEl) resEl.style.display = '';
+    renderParlayCorrelationNote(legs);
   } else {
     if (resEl) resEl.style.display = 'none';
+    renderParlayCorrelationNote([]);
   }
 }
 
@@ -7338,6 +7512,30 @@ function toggleMobileVip(e) {
   panel.classList.toggle('on');
 }
 
+function navHapticPulse() {
+  try {
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(10);
+  } catch (_) {}
+}
+
+function bindMobileNavFeedback() {
+  const SEL = '.mnav-btn, .mnav-more-item, .mnav-aff-link';
+  const addTap = (target) => {
+    const el = target?.closest?.(SEL);
+    if (!el) return;
+    el.classList.add('tap-feedback');
+    navHapticPulse();
+  };
+  const clearTap = (target) => {
+    const el = target?.closest?.(SEL);
+    if (!el) return;
+    setTimeout(() => el.classList.remove('tap-feedback'), 90);
+  };
+  document.addEventListener('pointerdown', (e) => addTap(e.target), {passive: true});
+  document.addEventListener('pointerup', (e) => clearTap(e.target), {passive: true});
+  document.addEventListener('pointercancel', (e) => clearTap(e.target), {passive: true});
+}
+
 function openTierFeature(tab, tier = 'free') {
   const needPremium = tier === 'premium';
   const needVip = tier === 'vip';
@@ -7465,11 +7663,23 @@ function setPickSort(v) {
 }
 
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
+function autoRefreshMsForPlan(plan = currentPlan) {
+  const p = normalizePlan(plan);
+  if (p === 'vip') return LOW_DATA_MODE ? 90000 : 45000;
+  if (p === 'premium') return LOW_DATA_MODE ? 4 * 60 * 1000 : 2 * 60 * 1000;
+  return 0;
+}
+
 function startAutoRefresh() {
-  // Refresh silently every 60s without timestamp labels.
-  setInterval(() => {
-    if (!liveOddsPaused && !isScanning && (currentTab === 'picks' || currentTab === 'home')) doScan(true);
-  }, 60000);
+  const tick = () => {
+    const delay = autoRefreshMsForPlan(currentPlan);
+    setTimeout(() => {
+      const onCoreBoard = currentTab === 'picks' || currentTab === 'home';
+      if (delay > 0 && !liveOddsPaused && !isScanning && onCoreBoard) doScan(true);
+      tick();
+    }, Math.max(5000, delay || 30000));
+  };
+  tick();
 }
 
 function bindUiAccessibility() {
@@ -7549,6 +7759,7 @@ applyAffiliateLinks();
 applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
+bindMobileNavFeedback();
 disableBrokenSettingsButtons();
 bindHomeTracking();
 updateDemoToggleUi();
