@@ -15,8 +15,8 @@
       <feDropShadow dx="0" dy="24" stdDeviation="16" flood-color="#030611" flood-opacity="0.62"/>
     </filter>
   </defs>
-  <rect x="36" y="36" width="952" height="952" rx="216" fill="url(#bg)"/>
-  <rect x="36" y="36" width="952" height="952" rx="216" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="url(#glow)"/>
   <!-- Exact provided mark, scaled for ~80% occupancy -->
   <g transform="translate(53 107) scale(1.978)" filter="url(#shadow)">
   <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->

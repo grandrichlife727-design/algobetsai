@@ -1869,7 +1869,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="install-ov" id="install-ov" onclick="closeInstallHelp(event)">
   <div class="install-modal">
-    <div class="install-title">Add Algobets to Home Screen</div>
+    <div class="install-title">Add AlgoBets Ai to Home Screen</div>
     <div class="install-sub">On iPhone Safari:</div>
     <div class="install-steps">
       <div class="install-step"><b>1.</b> Tap the <b>Share</b> icon (square with upward arrow).</div>
@@ -1878,6 +1878,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="install-step">If you do not see it: tap <b>Edit Actions</b> and enable <b>Add to Home Screen</b>.</div>
     </div>
     <div class="install-actions">
+      <button class="pf-btn" onclick="dismissInstallPrompt()">Don't show again</button>
       <button class="pf-btn" onclick="closeInstallHelp()">Close</button>
       <button class="paywall-cta" onclick="closeInstallHelp()">Got it</button>
     </div>
@@ -2112,6 +2113,7 @@ let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
+const INSTALL_STATE_KEY = 'algobets-installed-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
@@ -4799,6 +4801,20 @@ function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+function markInstalled(persist = true) {
+  if (!persist) return;
+  try { localStorage.setItem(INSTALL_STATE_KEY, '1'); } catch (_) {}
+}
+
+function isInstalledState() {
+  if (isInStandaloneMode()) return true;
+  try {
+    return localStorage.getItem(INSTALL_STATE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
 function hideInstallButton(persist = false) {
   const btn = document.getElementById('install-btn');
   if (btn) btn.style.display = 'none';
@@ -4808,7 +4824,7 @@ function hideInstallButton(persist = false) {
 }
 
 function showInstallButton() {
-  if (isInStandaloneMode()) return;
+  if (isInstalledState()) return;
   try {
     if (localStorage.getItem(INSTALL_CTA_HIDE_KEY) === '1') return;
   } catch (_) {}
@@ -4827,11 +4843,13 @@ function setupInstallPrompt() {
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
+    markInstalled(true);
     hideInstallButton(true);
     showToast('Added to Home Screen');
   });
 
   if (isInStandaloneMode()) {
+    markInstalled(true);
     hideInstallButton(true);
     return;
   }
@@ -4861,8 +4879,14 @@ function closeInstallHelp(e) {
   if (!e || e.target === ov) ov.classList.remove('on');
 }
 
+function dismissInstallPrompt() {
+  hideInstallButton(true);
+  closeInstallHelp();
+  showToast('Install prompt hidden');
+}
+
 async function installApp() {
-  if (isInStandaloneMode()) {
+  if (isInstalledState()) {
     showToast('App already installed');
     return;
   }
