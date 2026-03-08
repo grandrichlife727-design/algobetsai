@@ -257,6 +257,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .edge-badge.high{background:rgba(0,229,160,.16);color:var(--green);border:1px solid rgba(0,229,160,.28)}
 .edge-badge.mid{background:rgba(255,183,0,.15);color:var(--amber);border:1px solid rgba(255,183,0,.25)}
 .edge-badge.low{background:rgba(255,255,255,.08);color:var(--sub);border:1px solid var(--border)}
+.rank-badge{font-family:var(--mono);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.32);color:var(--cyan)}
 .confidence-wrap{margin:8px 0 6px}
 .confidence-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px}
 .confidence-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
@@ -798,7 +799,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
-          <div class="growth-title">Today's Edges</div>
+          <div class="growth-title">Today's Edges (Demo Data)</div>
           <div id="home-top-picks" class="growth-sub">Scanning market feed...</div>
           <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
@@ -810,7 +811,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
           <div class="growth-title">VIP Build</div>
           <div id="home-vip" class="growth-sub">VIP Build: 3-Leg Parlay (+641%)</div>
-          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-pod')">Open VIP</button></div>
+          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button></div>
         </div>
         <div class="growth-card" id="home-card-market" data-home-card="market_status">
           <div class="growth-title">Market Status</div>
@@ -898,7 +899,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
       <div class="sec-hdr">
-        <span class="sec-title" id="picks-count">Ready</span>
+        <span class="sec-title" id="picks-count">Today's Edges (Demo Data)</span>
         <span class="sec-meta" id="picks-refreshed"></span>
       </div>
       <div class="picks-list" id="picklist">
@@ -1056,7 +1057,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         </div>
         <div class="growth-card">
           <div class="growth-title">Open VIP Sections</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Core Edge</button><button class="pf-btn" onclick="go('vip-pod')">VIP Pick of Day</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Core Edge</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-execution')">Execution</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-portfolio')">Portfolio</button><button class="pf-btn" onclick="go('vip-alerts')">Alerts</button></div>
           <div class="rf-row"><button class="pf-btn" onclick="go('vip-discord')">VIP Discord</button><button class="pf-btn" onclick="go('vip-reports')">Reports</button></div>
@@ -1070,19 +1071,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">🔥</span>Core Edge</div>
           <div class="growth-sub" id="vip-early">Loading release timing...</div>
-          <div id="vip-pod" class="growth-sub">Loading Core Edge plays...</div>
+          <div id="vip-core-list" class="growth-sub">Loading Core Edge plays...</div>
           <div class="growth-note">Fewer, higher-conviction cards released before standard windows.</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="v-vip-pod" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP <span>Build Spotlight</span></div><div class="page-sub">Example build: 3-Leg Parlay (+641%) with execution notes.</div></div>
-      <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
-          <div class="growth-title vip-title"><span class="vip-ico">🏆</span>VIP Build: 3-Leg Parlay (+641%)</div>
-          <div class="growth-sub" id="vip-pod-best">Loading top-rated play...</div>
-          <div class="growth-note">Distinct from the main feed: build-focused execution idea.</div>
         </div>
       </div>
     </div>
@@ -1613,7 +1603,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="mnav-vip-panel" id="mnav-vip-panel" style="display:none">
       <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
       <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Core Edge</button>
-      <button class="mnav-more-item" onclick="go('vip-pod')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>VIP Pick of Day</button>
       <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
       <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
       <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
@@ -3246,8 +3235,7 @@ function renderVipTools() {
   const clvEl = document.getElementById('vip-clv');
   const earlyEl = document.getElementById('vip-early');
   const timingEl = document.getElementById('vip-timing');
-  const podEl = document.getElementById('vip-pod');
-  const podBestEl = document.getElementById('vip-pod-best');
+  const coreListEl = document.getElementById('vip-core-list');
   const discordEl = document.getElementById('vip-discord-status');
   const discordInputEl = document.getElementById('vip-discord-id');
   const discordNoteEl = document.getElementById('vip-discord-link-note');
@@ -3264,13 +3252,10 @@ function renderVipTools() {
   if (!vipOn) {
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
     if (earlyEl) earlyEl.textContent = 'Early release timing is locked for VIP.';
-    if (podEl) {
+    if (coreListEl) {
       const tease = getVipPodPicks().map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:1px solid var(--border)">
         <span>${esc(p.bet || 'Top pick')}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('');
-      podEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No plays yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock Core Edge</button></div></div>`;
-    }
-    if (podBestEl) {
-      podBestEl.innerHTML = `Top-rated play is locked for VIP. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Unlock VIP</button>`;
+      coreListEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none">${tease || '<div>No plays yet.</div>'}</div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock Core Edge</button></div></div>`;
     }
     if (discordEl) discordEl.textContent = 'VIP Discord is locked for VIP members.';
     if (discordInputEl) discordInputEl.value = '';
@@ -3297,22 +3282,14 @@ function renderVipTools() {
     const mins = PICKS.length ? Math.max(8, Math.min(35, Math.round(Number(PICKS[0].ev || 5) * 4))) : 15;
     earlyEl.innerHTML = `VIP release lead: <strong>${mins} minutes</strong> before Premium window.`;
   }
-  if (podEl) {
+  if (coreListEl) {
     const vipPicks = getVipPodPicks();
-    podEl.innerHTML = vipPicks.length
+    coreListEl.innerHTML = vipPicks.length
       ? vipPicks.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<vipPicks.length-1?'1px solid var(--border)':'none'}">
           <span><strong>${esc(p.bet)}</strong> ${esc(p.odds)}</span>
           <span style="font-family:var(--mono);color:var(--green)">+${Number(p.ev || 0).toFixed(1)}%</span>
         </div>`).join('')
       : 'Run scan to load Core Edge plays.';
-  }
-  if (podBestEl) {
-    const pod = getVipPickOfDay();
-    if (!pod) {
-      podBestEl.textContent = "Run scan to generate today's top-rated play.";
-    } else {
-      podBestEl.innerHTML = `<strong>${esc(pod.bet)}</strong> ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% EV · ${Number(pod.conf || 0).toFixed(0)}% conf`;
-    }
   }
   if (discordEl) {
     if (!DISCORD_ROLE_SYNC_ENABLED) {
@@ -5494,9 +5471,9 @@ function renderPicks() {
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
     return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
-  }).sort((a, b) => personalizedPickScore(b) - personalizedPickScore(a));
+  }).sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)));
 
-  document.getElementById('picks-count').textContent = `${pts.length} Edge${pts.length !== 1 ? 's' : ''} found`;
+  document.getElementById('picks-count').textContent = `Today's Edges (Demo Data)`;
   if (liveOddsPaused) {
     document.getElementById('picks-refreshed').textContent = 'Demo mode - live odds paused';
   } else if (lastRefresh) {
@@ -5541,11 +5518,13 @@ function renderPicks() {
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">DEMO DATA</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
+    const rankBadge = `<span class="rank-badge">#${i + 1} Edge</span>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
   ${sampleTag}
   <div class="pick-inner">
     <div class="pick-left">
       <div class="pick-sport-row">
+        ${rankBadge}
         <span class="sport-tag">${p.sport} · ${p.time}</span>
       </div>
       <div class="pick-bet">${p.bet}</div>
@@ -5996,7 +5975,7 @@ function closeModal(e) {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-pod','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
+const ALL_TABS = ['home','picks','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','more','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile','guide'];
 
 function closeMobileMore() {
