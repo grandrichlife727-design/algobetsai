@@ -305,6 +305,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .btn-share:hover{background:rgba(124,58,237,.16);border-color:rgba(124,58,237,.35);color:#e0d6ff}
 .btn-win{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.2);border-radius:6px;color:var(--green);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-win:hover{background:rgba(0,229,160,.15);border-color:rgba(0,229,160,.35)}
+.tool-btn-label{display:inline-flex;align-items:center;gap:7px}
+.tool-btn-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;opacity:.9;flex-shrink:0}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
 .explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
@@ -1258,16 +1260,16 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Core Tools</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">Parlay Builder <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('history')">Bet Tracker</button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('boost')">Payout Calculator</button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg><span>Parlay Builder</span></span> <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('history')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg><span>Bet Tracker</span></span></button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('boost')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg><span>Payout Calculator</span></span></button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Market Tools</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">Steam Moves <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">Public Fades <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')">Line Rush Alerts <span class="nav-badge">VIP</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')">Sharp Money Tracker <span class="nav-badge">VIP</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Steam Moves</span></span> <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>Public Fades</span></span> <span class="nav-badge">Premium</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/><path d="M10 20a2 2 0 004 0"/></svg><span>Line Rush Alerts</span></span> <span class="nav-badge">VIP</span></button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Sharp Money Tracker</span></span> <span class="nav-badge">VIP</span></button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Bankroll Planner</div>
@@ -1299,7 +1301,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Offers + Revenue</div>
           <div class="growth-sub">Open full sportsbook offers and monitor affiliate click performance.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('offers')">Open Offers</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('offers')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg><span>Open Offers</span></span></button></div>
           <div class="growth-note" id="tools-af-note">Loading affiliate performance...</div>
           <div class="growth-note" id="tools-af-detail">No click data yet.</div>
           <div class="growth-note">Disclosure: We may earn commissions from partner links.</div>
