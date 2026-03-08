@@ -6031,8 +6031,22 @@ function renderPicks() {
   const useFreeTease = false;
   const hiddenCount = isFreePlan ? Math.max(0, pts.length - freeVisibleLimit) : 0;
   const renderList = isFreePlan ? freeRenderSource.slice(0, freeVisibleLimit) : freeRenderSource;
+  let displayList = renderList;
+  if (isFreePlan && renderList.length < freeVisibleLimit) {
+    const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, 0);
+    const seen = new Set(renderList.map(p => `${String(p.game || '')}|${String(p.bet || '')}`));
+    const merged = renderList.slice();
+    for (const p of fillers) {
+      const key = `${String(p.game || '')}|${String(p.bet || '')}`;
+      if (seen.has(key)) continue;
+      merged.push(p);
+      seen.add(key);
+      if (merged.length >= freeVisibleLimit) break;
+    }
+    displayList = merged.slice(0, freeVisibleLimit);
+  }
 
-  el.innerHTML = renderList.map((p, i) => {
+  el.innerHTML = displayList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
     const isPrimaryLock = lockedTease && i === freeVisibleLimit;
     const showDetailed = !isFreePlan;
