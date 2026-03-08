@@ -179,6 +179,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .topbar-logo-name{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1.12;display:inline-flex;align-items:center;gap:3px}
 .agent-work-indicator{display:inline-flex;align-items:center;gap:4px;margin-left:9px}
 .agent-work-dot{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;font-size:8px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#7f8aa0;transition:all .16s ease}
+.agent-work-dot{cursor:pointer}
 .agent-work-dot.core{border-color:rgba(34,211,238,.35)}
 .agent-work-dot.cond{border-color:rgba(255,183,0,.35)}
 .agent-work-dot.on.core{background:rgba(34,211,238,.2);color:#b8f7ff;box-shadow:0 0 8px rgba(34,211,238,.3)}
@@ -191,6 +192,19 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-work-indicator.scanning .agent-work-dot:nth-child(4){animation-delay:210ms}
 .agent-work-indicator.scanning .agent-work-dot:nth-child(5){animation-delay:280ms}
 @keyframes agentPulseFlicker{0%,100%{transform:scale(.95);opacity:.58}40%{transform:scale(1.12);opacity:1}}
+.agent-status-pop{position:fixed;z-index:360;max-width:min(92vw,360px);background:rgba(10,12,20,.98);border:1px solid var(--border2);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.48);padding:10px 11px;display:none}
+.agent-status-pop.on{display:block}
+.agent-status-k{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.75px;color:var(--cyan);margin-bottom:6px}
+.agent-status-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.agent-status-title{font-size:12px;font-weight:800;color:var(--text)}
+.agent-status-pill{font-size:9px;font-family:var(--mono);font-weight:800;border:1px solid var(--border);border-radius:999px;padding:2px 7px}
+.agent-status-pill.green{color:var(--green);border-color:rgba(0,229,160,.34);background:rgba(0,229,160,.12)}
+.agent-status-pill.yellow{color:var(--amber);border-color:rgba(255,183,0,.34);background:rgba(255,183,0,.12)}
+.agent-status-pill.grey{color:var(--sub);border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.1)}
+.agent-status-pill.blue{color:var(--cyan);border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.12)}
+.agent-status-pill.red{color:#ffb4c0;border-color:rgba(255,77,106,.42);background:rgba(255,77,106,.16)}
+.agent-status-copy{font-size:12px;color:var(--sub);line-height:1.45}
+.agent-status-foot{margin-top:7px;font-size:10px;color:var(--muted);line-height:1.4}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -956,11 +970,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="topbar-logo" role="button" tabindex="0" aria-label="Go to Home" onclick="go('home')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('home')}">
       <span class="topbar-logo-name"><span class="brand-main">AlgoBets</span><span class="brand-ai">Ai</span></span>
       <span class="agent-work-indicator" id="agent-work-indicator" aria-label="5-Agent engine indicator" title="5-Agent engine status">
-        <span class="agent-work-dot core" id="agent-work-dot-1">1</span>
-        <span class="agent-work-dot core" id="agent-work-dot-2">2</span>
-        <span class="agent-work-dot cond" id="agent-work-dot-3">3</span>
-        <span class="agent-work-dot cond" id="agent-work-dot-4">4</span>
-        <span class="agent-work-dot cond" id="agent-work-dot-5">5</span>
+        <span class="agent-work-dot core" id="agent-work-dot-1" data-agent-dot="1">1</span>
+        <span class="agent-work-dot core" id="agent-work-dot-2" data-agent-dot="2">2</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-3" data-agent-dot="3">3</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-4" data-agent-dot="4">4</span>
+        <span class="agent-work-dot cond" id="agent-work-dot-5" data-agent-dot="5">5</span>
       </span>
     </div>
     <div class="topbar-right">
@@ -983,6 +997,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </button>
     </div>
   </div>
+  <div class="agent-status-pop" id="agent-status-pop" role="dialog" aria-live="polite"></div>
   <div class="loading-bar" id="load-bar"></div>
 
   <div class="content">
@@ -6324,6 +6339,192 @@ const AGENT_UI = {
   4: {abbr: 'A4', label: 'Public Fades', cls: 'cond'},
   5: {abbr: 'A5', label: 'Timing/CLV', cls: 'cond'},
 };
+let AGENT_STATUS_HIDE_TIMER = null;
+let AGENT_STATUS_OPEN_ID = 0;
+
+const SPORT_LABELS = {
+  basketball_nba: 'NBA',
+  basketball_ncaab: 'NCAAB',
+  americanfootball_nfl: 'NFL',
+  baseball_mlb: 'MLB',
+  icehockey_nhl: 'NHL',
+  soccer_epl: 'EPL',
+  soccer_uefa_champs_league: 'UCL',
+};
+
+function humanSportLabel(code) {
+  const key = String(code || '').trim().toLowerCase();
+  return SPORT_LABELS[key] || key.toUpperCase() || 'board';
+}
+
+function statusToneLabel(tone) {
+  const map = {
+    green: 'Optimal',
+    yellow: 'Watch',
+    grey: 'Idle',
+    blue: 'Recalibrating',
+    red: 'High Alert',
+  };
+  return map[String(tone || '').toLowerCase()] || 'Status';
+}
+
+function topLeagueName() {
+  const s = String(STEAMDATA?.[0]?.sport || PICKS?.[0]?.sk || PICKS?.[0]?.sportKey || PICKS?.[0]?.sport || '').trim();
+  return humanSportLabel(s || 'board');
+}
+
+function avgEdgeNow() {
+  const src = Array.isArray(PICKS) ? PICKS.slice(0, 12) : [];
+  if (!src.length) return 0;
+  return src.reduce((sum, p) => sum + Number(p?.ev || 0), 0) / Math.max(1, src.length);
+}
+
+function evVarianceNow() {
+  const src = Array.isArray(PICKS) ? PICKS.slice(0, 12).map(p => Number(p?.ev || 0)) : [];
+  if (src.length < 2) return 0;
+  const mean = src.reduce((a, b) => a + b, 0) / src.length;
+  const varc = src.reduce((a, b) => a + ((b - mean) ** 2), 0) / src.length;
+  return Math.sqrt(varc);
+}
+
+function agentStatusFor(agentId) {
+  const id = Number(agentId || 0);
+  const apiState = String(document.getElementById('api-dot')?.className || '');
+  const league = topLeagueName();
+  const avgEv = avgEdgeNow();
+  const variance = evVarianceNow();
+  const steamCt = Array.isArray(STEAMDATA) ? STEAMDATA.length : 0;
+  const fadesCt = Array.isArray(FADESDATA) ? FADESDATA.length : 0;
+  const fadeGame = String(FADESDATA?.[0]?.game || PICKS?.[0]?.game || 'top matchup');
+  const clvNow = Number(CLVDATA?.avg_clv_pct || 0);
+  const plan = normalizePlan(currentPlan);
+  const cond = AGENT_HEALTH?.conditional || {};
+  const steamHot = Boolean(cond?.steam_moves?.hot || cond?.steam?.hot);
+  const timingHot = Boolean(cond?.timing_clv?.hot || cond?.timing?.hot);
+  if (id === 1) {
+    if (avgEv >= 3.2 && PICKS.length) return {tone: 'green', mode: 'Optimal Status', body: `Scanning 40+ books. Currently identifying an average price discrepancy of +${avgEv.toFixed(1)}% across the board.`};
+    if (PICKS.length) return {tone: 'yellow', mode: 'Thin Market', body: 'Market lines are tight. Arbitrator is filtering for high-conviction price gaps only.'};
+    return {tone: 'grey', mode: 'Dormant', body: 'Waiting for fresh line openers to calculate fair-value variance.'};
+  }
+  if (id === 2) {
+    if (apiState.includes('loading')) return {tone: 'blue', mode: 'Recalibrating', body: 'Updating market weights based on recent sportsbook limit changes.'};
+    if (PICKS.length && variance <= 1.9) return {tone: 'green', mode: 'Optimal Status', body: 'Consensus reached. Market-implied probability is locked against Pinnacle/Circa baselines.'};
+    if (PICKS.length) return {tone: 'yellow', mode: 'Volatile', body: "High de-vig variance detected. Consensus is tightening filters to avoid stale 'trap' lines."};
+    return {tone: 'blue', mode: 'Recalibrating', body: 'Updating market weights based on recent sportsbook limit changes.'};
+  }
+  if (id === 3) {
+    if ((steamCt >= 5 && steamHot) || steamCt >= 7) return {tone: 'red', mode: 'High Alert', body: `Extreme Steam detected. Multiple sharp-books moving in unison on ${league}.`};
+    if (steamCt > 0) return {tone: 'green', mode: 'Active', body: `Following heavy sharp pressure. Detected ${steamCt} meaningful line moves in the last 60 minutes.`};
+    return {tone: 'grey', mode: 'Quiet', body: 'Monitoring global volume. No significant sharp divergence detected at this time.'};
+  }
+  if (id === 4) {
+    if (fadesCt > 0 && /vs|@/i.test(fadeGame)) return {tone: 'green', mode: 'Active', body: `Contrarian spots identified. Fading heavy public ticket counts in the ${fadeGame} matchup.`};
+    if (fadesCt > 0) return {tone: 'blue', mode: 'Caution', body: 'High public skew detected, but price action is matching. No fade recommended yet.'};
+    return {tone: 'yellow', mode: 'Stable', body: 'Public money is balanced. Agent 04 is currently in observation mode.'};
+  }
+  if (id === 5) {
+    if (plan === 'free') return {tone: 'grey', mode: 'Restricted', body: 'Restricted. Timing/CLV execution is VIP-only for free users.'};
+    if (plan === 'premium') return {tone: 'yellow', mode: '15m Delayed', body: '15m Delayed. Full Timing/CLV execution windows are unlocked in VIP.'};
+    if (timingHot || clvNow >= 1.0) return {tone: 'green', mode: 'Optimal', body: `Execution window open. Predicted CLV gain for current board is +${Math.max(0.3, clvNow).toFixed(1)}% before kickoff.`};
+    if (clvNow <= 0 || apiState.includes('err')) return {tone: 'red', mode: 'Urgent', body: 'Timing critical. Lines are moving against us - lock in current prices immediately.'};
+    return {tone: 'yellow', mode: 'Delayed', body: 'Holding execution. Timing agent suggests waiting for a more favorable entry point.'};
+  }
+  return {tone: 'grey', mode: 'Idle', body: 'No status available.'};
+}
+
+function renderAgentStatusCard(agentId) {
+  const id = Number(agentId || 0);
+  const pop = document.getElementById('agent-status-pop');
+  if (!pop || !id) return;
+  const meta = AGENT_UI[id] || {label: `Agent ${id}`};
+  const st = agentStatusFor(id);
+  pop.innerHTML = `
+    <div class="agent-status-k">Agent ${String(id).padStart(2, '0')}</div>
+    <div class="agent-status-row">
+      <div class="agent-status-title">${esc(meta.label)}</div>
+      <span class="agent-status-pill ${st.tone}">${esc(st.mode || statusToneLabel(st.tone))}</span>
+    </div>
+    <div class="agent-status-copy">${esc(st.body)}</div>
+    <div class="agent-status-foot">Context-aware status updates refresh as scans and market states change.</div>`;
+}
+
+function placeAgentStatusCard(anchorEl) {
+  const pop = document.getElementById('agent-status-pop');
+  if (!pop || !anchorEl) return;
+  const rect = anchorEl.getBoundingClientRect();
+  pop.style.visibility = 'hidden';
+  pop.classList.add('on');
+  const pw = pop.offsetWidth || 320;
+  const ph = pop.offsetHeight || 120;
+  const margin = 10;
+  let left = rect.left + rect.width / 2 - pw / 2;
+  left = Math.max(margin, Math.min(window.innerWidth - pw - margin, left));
+  let top = rect.bottom + 8;
+  if (top + ph > window.innerHeight - margin) top = rect.top - ph - 8;
+  pop.style.left = `${Math.round(left)}px`;
+  pop.style.top = `${Math.round(Math.max(margin, top))}px`;
+  pop.style.visibility = 'visible';
+}
+
+function openAgentStatusCard(agentId, anchorEl) {
+  clearTimeout(AGENT_STATUS_HIDE_TIMER);
+  AGENT_STATUS_HIDE_TIMER = null;
+  AGENT_STATUS_OPEN_ID = Number(agentId || 0);
+  renderAgentStatusCard(agentId);
+  placeAgentStatusCard(anchorEl);
+}
+
+function scheduleHideAgentStatusCard() {
+  clearTimeout(AGENT_STATUS_HIDE_TIMER);
+  AGENT_STATUS_HIDE_TIMER = setTimeout(() => closeAgentStatusCard(), 160);
+}
+
+function closeAgentStatusCard() {
+  const pop = document.getElementById('agent-status-pop');
+  if (!pop) return;
+  pop.classList.remove('on');
+  AGENT_STATUS_OPEN_ID = 0;
+}
+
+function refreshOpenAgentStatusCard() {
+  if (!AGENT_STATUS_OPEN_ID) return;
+  const dot = document.querySelector(`[data-agent-dot="${AGENT_STATUS_OPEN_ID}"]`);
+  if (!dot) {
+    closeAgentStatusCard();
+    return;
+  }
+  openAgentStatusCard(AGENT_STATUS_OPEN_ID, dot);
+}
+
+function bindAgentStatusCards() {
+  const pop = document.getElementById('agent-status-pop');
+  document.querySelectorAll('[data-agent-dot]').forEach((dot) => {
+    const id = Number(dot.getAttribute('data-agent-dot') || 0);
+    if (!id) return;
+    dot.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (AGENT_STATUS_OPEN_ID === id) closeAgentStatusCard();
+      else openAgentStatusCard(id, dot);
+    });
+    dot.addEventListener('mouseenter', (e) => {
+      if (window.matchMedia('(hover: hover)').matches) {
+        e.stopPropagation();
+        openAgentStatusCard(id, dot);
+      }
+    });
+    dot.addEventListener('mouseleave', () => {
+      if (window.matchMedia('(hover: hover)').matches) scheduleHideAgentStatusCard();
+    });
+  });
+  if (pop) {
+    pop.addEventListener('mouseenter', () => {
+      clearTimeout(AGENT_STATUS_HIDE_TIMER);
+      AGENT_STATUS_HIDE_TIMER = null;
+    });
+    pop.addEventListener('mouseleave', () => scheduleHideAgentStatusCard());
+  }
+}
 
 function parseActiveAgents(pick) {
   const fromArray = Array.isArray(pick?.active_agents) ? pick.active_agents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : [];
@@ -6391,6 +6592,7 @@ function updateAgentPulseIndicator(activeAgents = LAST_ACTIVE_AGENT_SET) {
       ? `Active: ${onLabel || 'A1 A2'} · HOT: ${hotLabel}`
       : `Active: ${onLabel || 'A1 A2'}`;
   }
+  refreshOpenAgentStatusCard();
 }
 
 function updateAgentHealthUi() {
@@ -8007,6 +8209,7 @@ function go(name) {
   closeMobileMore();
   closeMobileVip();
   closeMobileFab();
+  closeAgentStatusCard();
   ALL_TABS.forEach(t => {
     const v = document.getElementById(`v-${t}`); if (v) v.style.display = t === name ? '' : 'none';
     const mn = document.getElementById(`mn-${t}`); if (mn) mn.classList.toggle('active', t === name);
@@ -8146,6 +8349,9 @@ function bindUiAccessibility() {
     if (vipWrap && !vipWrap.contains(e.target)) closeMobileVip();
     const fabWrap = document.getElementById('mobile-fab');
     if (fabWrap && !fabWrap.contains(e.target)) closeMobileFab();
+    const statusPop = document.getElementById('agent-status-pop');
+    const inDot = e.target?.closest?.('[data-agent-dot]');
+    if (statusPop && !statusPop.contains(e.target) && !inDot) closeAgentStatusCard();
   });
 }
 
@@ -8190,6 +8396,7 @@ applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
 bindMobileNavFeedback();
+bindAgentStatusCards();
 disableBrokenSettingsButtons();
 bindHomeTracking();
 updateDemoToggleUi();
