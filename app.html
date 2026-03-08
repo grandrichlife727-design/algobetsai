@@ -6010,6 +6010,7 @@ function renderPicks() {
   el.innerHTML = renderList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
     const isPrimaryLock = lockedTease && i === freeVisibleLimit;
+    const showDetailed = !isFreePlan;
     const edgeVal = Number(p.ev || 0);
     const edgeClass = edgeVal > 5 ? 'high' : edgeVal >= 2 ? 'mid' : 'low';
     const conf = Math.max(50, Math.min(95, Number(p.conf || 50)));
@@ -6037,11 +6038,14 @@ function renderPicks() {
         <div class="confidence-row"><span title="Model certainty from 5-agent consensus">Confidence</span><span title="Model certainty from 5-agent consensus">${conf}%</span></div>
         <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%"></div></div>
       </div>
-      <div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
+      ${showDetailed
+        ? `<div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
       <div class="pick-line" title="De-vigged market consensus price">Fair Value: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
-      ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}
+      ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
+        : `<div class="pick-line">Best line and fair value are available in Premium.</div>
+      <div class="pick-line">5-Agent details unlock with Premium.</div>`}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
