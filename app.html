@@ -6395,11 +6395,20 @@ function renderPicks() {
   const renderList = isFreePlan ? freeRenderSource.slice(0, freePreviewLimit) : freeRenderSource;
   const vipOn = canUseVip();
   const vipPick = getVipPickOfDay();
+  const vipGameTease = vipPick
+    ? esc(
+      String(vipPick.game || 'Top matchup')
+        .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, '')
+        .replace(/\s[+-]\d+(\.\d+)?/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    )
+    : '';
   const vipTeaser = !vipOn ? `
     <div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,183,0,.35);background:linear-gradient(135deg,rgba(255,183,0,.08),rgba(139,92,246,.07))">
-      <div class="growth-title vip-title"><span class="vip-ico">👑</span>VIP Pick of the Day</div>
-      <div class="growth-sub">${vipPick ? `${esc(String(vipPick.game || 'Top game'))} · +${Number(vipPick.ev || 0).toFixed(1)}% edge` : 'Run scan to load today’s VIP pick.'}</div>
-      <div class="growth-note">Exact side, line, and timing are VIP only.</div>
+      <div class="growth-title vip-title"><span class="vip-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18h16l-2-9-6 4-6-4-2 9z"/><path d="M8 18h8"/></svg></span>VIP Pick of the Day</div>
+      <div class="growth-sub">${vipGameTease || 'Run scan to load today’s VIP matchup.'}</div>
+      <div class="growth-note">Bet type, side, line, odds, and timing are VIP only.</div>
       <div class="rf-row" style="margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Pick</button></div>
     </div>
   ` : '';
