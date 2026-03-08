@@ -164,7 +164,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .bill-link:hover{border-color:var(--border2);color:var(--text)}
 @media(max-width:520px){.bill-link{display:none}}
 .auth-btn{display:inline-flex}
-@media(max-width:520px){
+@media(max-width:900px){
   #install-btn{
     display:inline-flex;
     position:fixed;
@@ -2134,7 +2134,6 @@ let authNudgeState = {shown: false, skipped: false, completed: false};
 let postAuthAction = '';
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
-const INSTALL_STATE_KEY = 'algobets-installed-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
@@ -4836,32 +4835,23 @@ function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-function markInstalled(persist = true) {
-  if (!persist) return;
-  try { localStorage.setItem(INSTALL_STATE_KEY, '1'); } catch (_) {}
-}
-
-function isInstalledState() {
-  if (isInStandaloneMode()) return true;
-  try {
-    return localStorage.getItem(INSTALL_STATE_KEY) === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
 function hideInstallButton(persist = false) {
   const btn = document.getElementById('install-btn');
   if (btn) btn.style.display = 'none';
   if (persist) {
-    try { localStorage.setItem(INSTALL_CTA_HIDE_KEY, '1'); } catch (_) {}
+    try { localStorage.setItem(INSTALL_CTA_HIDE_KEY, String(Date.now())); } catch (_) {}
   }
 }
 
 function showInstallButton() {
-  if (isInstalledState()) return;
+  if (isInStandaloneMode()) return;
   try {
-    if (localStorage.getItem(INSTALL_CTA_HIDE_KEY) === '1') return;
+    const raw = String(localStorage.getItem(INSTALL_CTA_HIDE_KEY) || '').trim();
+    const ts = Number(raw);
+    if (Number.isFinite(ts) && ts > 0) {
+      const hiddenMs = Date.now() - ts;
+      if (hiddenMs < (72 * 60 * 60 * 1000)) return;
+    }
   } catch (_) {}
   const btn = document.getElementById('install-btn');
   if (btn) {
@@ -4879,13 +4869,11 @@ function setupInstallPrompt() {
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    markInstalled(true);
     hideInstallButton(true);
     showToast('Added to Home Screen');
   });
 
   if (isInStandaloneMode()) {
-    markInstalled(true);
     hideInstallButton(true);
     return;
   }
@@ -4922,7 +4910,7 @@ function dismissInstallPrompt() {
 }
 
 async function installApp() {
-  if (isInstalledState()) {
+  if (isInStandaloneMode()) {
     showToast('App already installed');
     return;
   }
