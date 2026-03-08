@@ -1803,7 +1803,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="auth-m auth-m-google on" id="am-google" onclick="selectAuthMethod('google')"><span class="auth-m-head"><span class="auth-g-icon">G</span><span class="auth-m-title">Continue with Google</span></span><span class="auth-m-sub">Fastest sign in with verified identity</span></button>
       <button class="auth-m" id="am-email" onclick="selectAuthMethod('email')"><span class="auth-m-head"><span class="auth-m-title">Email</span></span><span class="auth-m-sub">Use any email address</span></button>
       <button class="auth-m secondary" id="am-apple" onclick="selectAuthMethod('apple')"><span class="auth-m-head"><span class="auth-apple-icon"></span><span class="auth-m-title">Apple</span></span><span class="auth-m-sub">Sign in with Apple</span></button>
-      <button class="auth-m secondary" id="am-phone" onclick="selectAuthMethod('phone')"><span class="auth-m-head"><span class="auth-m-title">Phone</span></span><span class="auth-m-sub">Text-ready account</span></button>
     </div>
     <button class="auth-more-link" id="auth-more-link" onclick="toggleAuthMore()">More options</button>
     <div class="auth-divider" id="auth-divider"><span>or continue with</span></div>
@@ -1814,7 +1813,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="auth-field" id="auth-code-wrap" style="display:none">
       <div class="auth-lbl">Verification Code</div>
       <input class="auth-in" id="auth-code" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code"/>
-      <div class="auth-footnote" id="auth-code-note" style="margin-top:6px">We will text you a one-time code.</div>
+      <div class="auth-footnote" id="auth-code-note" style="margin-top:6px">We will email you a one-time code.</div>
     </div>
     <div class="google-auth-wrap" id="google-auth-wrap">
       <div id="google-signin-btn"></div>
@@ -1839,7 +1838,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="nudge-actions">
       <button class="nudge-btn primary" onclick="startNudgeAuth('google')">Continue with Google (Recommended)</button>
       <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
-      <button class="nudge-btn" onclick="startNudgeAuth('phone')">Continue with Phone</button>
       <button class="bill-link" style="justify-self:end" onclick="skipAuthNudge()">Skip for now</button>
     </div>
   </div>
@@ -2436,7 +2434,7 @@ function normalizeAuthMethod(method) {
   const m = String(method || '').toLowerCase();
   if (m === 'google' || m === 'gmail' || m === 'facebook') return 'google';
   if (m === 'apple') return 'apple';
-  if (m === 'email' || m === 'phone') return m;
+  if (m === 'email') return m;
   return 'guest';
 }
 
@@ -2445,7 +2443,6 @@ function authMethodLabel(method) {
   if (m === 'google') return 'Google';
   if (m === 'apple') return 'Apple';
   if (m === 'email') return 'Email';
-  if (m === 'phone') return 'Phone';
   return 'Guest';
 }
 
@@ -3971,24 +3968,6 @@ function selectAuthMethod(method) {
     if (appleWrap) appleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
     if (continueBtn) continueBtn.textContent = emailAuthState.pending ? 'Verify Code' : 'Send Code';
-  } else if (m === 'phone') {
-    emailAuthState.pending = false;
-    lbl.textContent = 'Phone Number';
-    input.placeholder = '+1 (555) 123-4567';
-    input.type = 'tel';
-    if (fieldWrap) fieldWrap.style.display = '';
-    if (codeWrap) codeWrap.style.display = '';
-    if (codeInput && !phoneAuthState.pending) codeInput.value = '';
-    if (codeNote) codeNote.textContent = phoneAuthState.pending
-      ? (phoneAuthState.demo
-          ? `SMS service not configured yet. Demo code: ${phoneAuthState.localCode}`
-          : `Code sent to ${phoneAuthState.phone || 'your phone'}. Enter it to continue.`)
-      : 'We will text you a one-time code.';
-    if (divider) divider.style.display = '';
-    if (googleWrap) googleWrap.classList.remove('on');
-    if (appleWrap) appleWrap.classList.remove('on');
-    if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = phoneAuthState.pending ? 'Verify Code' : 'Send Code';
   } else if (m === 'google') {
     phoneAuthState.pending = false;
     emailAuthState.pending = false;
@@ -4123,14 +4102,9 @@ function openAuthModal(preferredMethod = null) {
   requestAnimationFrame(() => {
     if (m !== 'google') input.focus();
   });
-  const phoneBtn = document.getElementById('am-phone');
   const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
-  const hasExpandedOptionSelected = m === 'phone' || m === 'apple';
-  if (phoneBtn) {
-    if (hasExpandedOptionSelected) phoneBtn.classList.remove('secondary');
-    else phoneBtn.classList.add('secondary');
-  }
+  const hasExpandedOptionSelected = m === 'apple';
   if (appleBtn) {
     if (hasExpandedOptionSelected) appleBtn.classList.remove('secondary');
     else appleBtn.classList.add('secondary');
@@ -4140,10 +4114,8 @@ function openAuthModal(preferredMethod = null) {
 }
 
 function toggleAuthMore() {
-  const phoneBtn = document.getElementById('am-phone');
   const appleBtn = document.getElementById('am-apple');
   const moreBtn = document.getElementById('auth-more-link');
-  if (phoneBtn) phoneBtn.classList.remove('secondary');
   if (appleBtn) appleBtn.classList.remove('secondary');
   if (moreBtn) moreBtn.style.display = 'none';
 }
@@ -4241,36 +4213,6 @@ async function submitAuthProfile() {
       return;
     }
   }
-  if (method === 'phone' && value.replace(/\D/g, '').length < 7) {
-    showToast('Enter a valid phone number');
-    return;
-  }
-  if (method === 'phone') {
-    const codeInput = document.getElementById('auth-code');
-    const codeNote = document.getElementById('auth-code-note');
-    if (!phoneAuthState.pending || phoneAuthState.phone !== value) {
-      const liveSms = await sendPhoneCode(value);
-      if (codeNote) {
-        codeNote.textContent = liveSms
-          ? `Code sent to ${value}. Enter it to continue.`
-          : `SMS service not configured yet. Demo code: ${phoneAuthState.localCode}`;
-      }
-      selectAuthMethod('phone');
-      showToast(liveSms ? 'Verification code sent' : 'Using demo verification code');
-      return;
-    }
-    const code = String(codeInput?.value || '').trim();
-    if (!/^\d{6}$/.test(code)) {
-      showToast('Enter the 6-digit code');
-      return;
-    }
-    const ok = await verifyPhoneCode(value, code);
-    if (!ok) {
-      showToast('Invalid verification code');
-      return;
-    }
-  }
-
   userProfile = {method, identifier: value, name: ''};
   saveProfile();
   await ensureAuthSession(true);
