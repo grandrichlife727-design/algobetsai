@@ -2087,8 +2087,8 @@ let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
-let phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
-let emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
+let phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
+let emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
@@ -3962,7 +3962,9 @@ function selectAuthMethod(method) {
     if (codeWrap) codeWrap.style.display = '';
     if (codeInput && !emailAuthState.pending) codeInput.value = '';
     if (codeNote) codeNote.textContent = emailAuthState.pending
-      ? `Code sent to ${emailAuthState.email || 'your email'}. Enter it to continue.`
+      ? (emailAuthState.demo
+          ? `Email service not configured yet. Demo code: ${emailAuthState.localCode}`
+          : `Code sent to ${emailAuthState.email || 'your email'}. Enter it to continue.`)
       : 'We will email you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
@@ -3978,7 +3980,9 @@ function selectAuthMethod(method) {
     if (codeWrap) codeWrap.style.display = '';
     if (codeInput && !phoneAuthState.pending) codeInput.value = '';
     if (codeNote) codeNote.textContent = phoneAuthState.pending
-      ? `Code sent to ${phoneAuthState.phone || 'your phone'}. Enter it to continue.`
+      ? (phoneAuthState.demo
+          ? `SMS service not configured yet. Demo code: ${phoneAuthState.localCode}`
+          : `Code sent to ${phoneAuthState.phone || 'your phone'}. Enter it to continue.`)
       : 'We will text you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
@@ -4030,11 +4034,11 @@ async function sendEmailCode(email) {
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    emailAuthState = {pending: true, email: normalized, localCode: '', sentAt: Date.now()};
+    emailAuthState = {pending: true, email: normalized, localCode: '', sentAt: Date.now(), demo: false};
     return true;
   } catch (_) {
     const demoCode = String(Math.floor(100000 + Math.random() * 900000));
-    emailAuthState = {pending: true, email: normalized, localCode: demoCode, sentAt: Date.now()};
+    emailAuthState = {pending: true, email: normalized, localCode: demoCode, sentAt: Date.now(), demo: true};
     return false;
   }
 }
@@ -4065,11 +4069,11 @@ async function sendPhoneCode(phone) {
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    phoneAuthState = {pending: true, phone: normalized, localCode: '', sentAt: Date.now()};
+    phoneAuthState = {pending: true, phone: normalized, localCode: '', sentAt: Date.now(), demo: false};
     return true;
   } catch (_) {
     const demoCode = String(Math.floor(100000 + Math.random() * 900000));
-    phoneAuthState = {pending: true, phone: normalized, localCode: demoCode, sentAt: Date.now()};
+    phoneAuthState = {pending: true, phone: normalized, localCode: demoCode, sentAt: Date.now(), demo: true};
     return false;
   }
 }
@@ -4094,8 +4098,8 @@ function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
-  emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
+  phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
+  emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   const titleEl = document.getElementById('auth-title');
   const subEl = document.getElementById('auth-sub');
@@ -4153,8 +4157,8 @@ function closeAuthModal(e) {
   if (!ov) return;
   if (!e || e.target === ov) {
     ov.classList.remove('on');
-    phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0};
-    emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0};
+    phoneAuthState = {pending: false, phone: '', localCode: '', sentAt: 0, demo: false};
+    emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   }
 }
 
@@ -4220,10 +4224,10 @@ async function submitAuthProfile() {
       if (codeNote) {
         codeNote.textContent = liveEmail
           ? `Code sent to ${normalizedEmail}. Enter it to continue.`
-          : `Code sent to ${normalizedEmail}. Demo code: ${emailAuthState.localCode}`;
+          : `Email service not configured yet. Demo code: ${emailAuthState.localCode}`;
       }
       selectAuthMethod('email');
-      showToast('Verification code sent');
+      showToast(liveEmail ? 'Verification code sent' : 'Using demo verification code');
       return;
     }
     const code = String(codeInput?.value || '').trim();
@@ -4249,10 +4253,10 @@ async function submitAuthProfile() {
       if (codeNote) {
         codeNote.textContent = liveSms
           ? `Code sent to ${value}. Enter it to continue.`
-          : `Code sent to ${value}. Demo code: ${phoneAuthState.localCode}`;
+          : `SMS service not configured yet. Demo code: ${phoneAuthState.localCode}`;
       }
       selectAuthMethod('phone');
-      showToast('Verification code sent');
+      showToast(liveSms ? 'Verification code sent' : 'Using demo verification code');
       return;
     }
     const code = String(codeInput?.value || '').trim();
