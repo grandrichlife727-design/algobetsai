@@ -576,6 +576,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .up-btn:hover{border-color:var(--border2)}
 .up-btn.current{cursor:default;opacity:.78}
 .up-btn.current:hover{border-color:var(--border)}
+.up-btn.disabled{cursor:not-allowed;opacity:.62}
+.up-btn.disabled:hover{border-color:var(--border)}
 .up-btn b{display:block;font-size:12px}
 .up-btn span{font-size:11px;color:var(--sub)}
 .up-badge{display:inline-flex;align-items:center;border:1px solid rgba(0,229,160,.3);background:rgba(0,229,160,.1);border-radius:999px;padding:2px 7px;font-size:9px;font-family:var(--mono);color:var(--green);margin-left:6px}
@@ -1906,6 +1908,7 @@ let scanCooldownTicker = null;
 let HISTORYDATA = [];
 let COMMUNITYDATA = [];
 let PRICING = {};
+let BILLING_ENABLED_UI = true;
 let themeMode = String(localStorage.getItem(THEME_KEY) || 'dark').toLowerCase() === 'light' ? 'light' : 'dark';
 let billingCycle = 'monthly';
 let trialStatusState = {eligible: false, claimed: false, trial_seconds_left: 0};
@@ -4565,6 +4568,16 @@ function annualConfiguredForTier(tier) {
   return !!PRICING?.[t]?.billing?.annual_configured;
 }
 
+function monthlyConfiguredForTier(tier) {
+  const t = normalizePlan(tier);
+  return !!PRICING?.[t]?.billing?.monthly_configured;
+}
+
+function tierCheckoutConfigured(tier, cycle = 'monthly') {
+  const c = cycle === 'annual' ? 'annual' : 'monthly';
+  return c === 'annual' ? annualConfiguredForTier(tier) : monthlyConfiguredForTier(tier);
+}
+
 function tierPriceLabel(tier, cycle = 'monthly') {
   const t = normalizePlan(tier);
   const c = cycle === 'annual' ? 'annual' : 'monthly';
@@ -4602,11 +4615,11 @@ function updatePlanUi() {
   const trialBtn = document.getElementById('trial-btn');
   if (up) {
     const nxt = nextTier(p);
-    up.style.display = nxt ? '' : 'none';
+    up.style.display = (nxt && BILLING_ENABLED_UI) ? '' : 'none';
     up.textContent = nxt ? 'Upgrade' : 'Upgraded';
   }
-  if (manage) manage.style.display = p === 'free' ? 'none' : '';
-  if (trialBtn) trialBtn.style.display = p === 'free' ? 'inline-flex' : 'none';
+  if (manage) manage.style.display = (!BILLING_ENABLED_UI || p === 'free') ? 'none' : '';
+  if (trialBtn) trialBtn.style.display = (BILLING_ENABLED_UI && p === 'free') ? 'inline-flex' : 'none';
   renderProfile();
   renderToolLocks();
   renderSettingsExtras();
@@ -5039,7 +5052,11 @@ function updatePaywallUi() {
 }
 
 function ensureBillingUser() {
-  return true;
+  if (!BILLING_ENABLED_UI) {
+    showToast('Billing is temporarily unavailable');
+    return false;
+  }
+  return ensureRegisteredUser();
 }
 
 async function fetchPlan() {
@@ -5066,9 +5083,12 @@ async function fetchPricing() {
   try {
     const res = await backendGet('/api/pricing');
     PRICING = res?.tiers || {};
+    BILLING_ENABLED_UI = res?.billing_enabled !== false;
   } catch (err) {
     PRICING = {};
+    BILLING_ENABLED_UI = true;
   }
+  updatePlanUi();
 }
 
 async function loadTrialStatus() {
@@ -5176,6 +5196,15 @@ async function startCheckout(tier, cycle = billingCycle) {
   if (!desired) return;
   if (!ensureBillingUser()) return;
   let finalCycle = cycle === 'annual' ? 'annual' : 'monthly';
+  if (!tierCheckoutConfigured(desired, finalCycle)) {
+    if (finalCycle === 'annual' && tierCheckoutConfigured(desired, 'monthly')) {
+      finalCycle = 'monthly';
+      showToast('Annual not configured yet. Switched to monthly.');
+    } else {
+      showToast('Checkout is not configured for this plan');
+      return;
+    }
+  }
   try {
     trackEvent('checkout_started', {tier: desired, billing_cycle: finalCycle});
     const origin = window.location.origin + window.location.pathname;
@@ -5201,7 +5230,10 @@ async function startCheckout(tier, cycle = billingCycle) {
   } catch (err) {
     console.error(err);
     const msg = String(err?.detail || err?.message || '');
-    if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
+    if (/billing is temporarily disabled/i.test(msg)) showToast('Billing is temporarily disabled');
+    else if (/stripe is not configured/i.test(msg)) showToast('Stripe is not configured on backend');
+    else if (/authenticated user required/i.test(msg)) showToast('Please create a free account first');
+    else if (/annual/i.test(msg)) showToast('Annual checkout is not configured yet for this plan');
     else if (/subscription item/i.test(msg)) showToast('Could not upgrade subscription item');
     else showToast('Checkout unavailable');
   }
@@ -5215,6 +5247,10 @@ function closeUpgradePicker(e) {
 
 function openUpgradePicker() {
   trackEvent('upgrade_picker_opened', {plan: currentPlan, tab: currentTab});
+  if (!BILLING_ENABLED_UI) {
+    showToast('Billing is temporarily unavailable');
+    return;
+  }
   const p = normalizePlan(currentPlan);
   const grid = document.getElementById('up-grid');
   const sub = document.getElementById('up-sub');
@@ -5241,6 +5277,8 @@ function openUpgradePicker() {
     : 'Monthly selected. Switch to annual to save.';
   grid.innerHTML = opts.map(o => {
     const annualOn = annualConfiguredForTier(o.tier);
+    const monthlyOn = monthlyConfiguredForTier(o.tier);
+    const cycleOn = billingCycle === 'annual' ? annualOn : monthlyOn;
     const badge = annualOn ? '<span class="up-badge">ANNUAL LIVE</span>' : '';
     const monthlyLabel = tierPriceLabel(o.tier, 'monthly');
     const annualLabel = tierPriceLabel(o.tier, 'annual');
@@ -5249,7 +5287,12 @@ function openUpgradePicker() {
     const cycleHint = billingCycle === 'annual'
       ? (annualOn ? 'Annual billing at checkout' : 'Annual selected (requires annual price ID in backend)')
       : 'Monthly billing at checkout';
-    return `<button class="up-btn" onclick="startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
+    const disabledAttr = cycleOn ? '' : 'disabled';
+    const disabledCls = cycleOn ? '' : ' disabled';
+    const clickAction = cycleOn
+      ? `startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()`
+      : `showToast('Checkout not configured for this option')`;
+    return `<button class="up-btn${disabledCls}" ${disabledAttr} onclick="${clickAction}"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');
   document.getElementById('up-ov').classList.add('on');
 }

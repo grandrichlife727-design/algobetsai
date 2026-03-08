@@ -2858,6 +2858,7 @@ async def admin_backup_restore(request: Request):
 @app.get("/api/pricing")
 async def pricing():
     return {
+        "billing_enabled": BILLING_ENABLED,
         "tiers": {
             PLAN_FREE: {
                 **TIER_CONFIG[PLAN_FREE],
