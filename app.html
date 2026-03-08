@@ -1839,11 +1839,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="auth-lbl" id="auth-lbl">Email Address</div>
       <input class="auth-in" id="auth-input" type="text" placeholder="you@example.com"/>
     </div>
-    <div class="auth-field" id="auth-code-wrap" style="display:none">
-      <div class="auth-lbl">Verification Code</div>
-      <input class="auth-in" id="auth-code" type="text" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code"/>
-      <div class="auth-footnote" id="auth-code-note" style="margin-top:6px">We will email you a one-time code.</div>
-    </div>
     <div class="google-auth-wrap" id="google-auth-wrap">
       <div id="google-signin-btn"></div>
       <div class="google-auth-note"><span class="auth-g-icon">G</span>Google sign-in uses secure OAuth and verified email identity.</div>
@@ -2115,7 +2110,6 @@ let GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
 let googleAuthLoaded = false;
 let googleScriptPromise = null;
 let authNudgeState = {shown: false, skipped: false, completed: false};
-let emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
 let deferredInstallPrompt = null;
 const INSTALL_CTA_HIDE_KEY = 'algobets-install-cta-hidden-v1';
 let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
@@ -4050,9 +4044,6 @@ function selectAuthMethod(method) {
   const divider = document.getElementById('auth-divider');
   const googleWrap = document.getElementById('google-auth-wrap');
   const continueBtn = document.getElementById('auth-continue');
-  const codeWrap = document.getElementById('auth-code-wrap');
-  const codeInput = document.getElementById('auth-code');
-  const codeNote = document.getElementById('auth-code-note');
   const hasIdentity = normalizeAuthMethod(userProfile.method) !== 'guest' && String(userProfile.identifier || '').trim().length > 0;
   if (!lbl || !input) return;
 
@@ -4061,32 +4052,21 @@ function selectAuthMethod(method) {
     input.placeholder = 'you@example.com';
     input.type = 'email';
     if (fieldWrap) fieldWrap.style.display = '';
-    if (codeWrap) codeWrap.style.display = '';
-    if (codeInput && !emailAuthState.pending) codeInput.value = '';
-    if (codeNote) codeNote.textContent = emailAuthState.pending
-      ? (emailAuthState.demo
-          ? `Email service not configured yet. Demo code: ${emailAuthState.localCode}`
-          : `Code sent to ${emailAuthState.email || 'your email'}. Enter it to continue.`)
-      : 'We will email you a one-time code.';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
-    if (continueBtn) continueBtn.textContent = emailAuthState.pending ? 'Verify Code' : 'Send Code';
+    if (continueBtn) continueBtn.textContent = hasIdentity ? 'Continue' : 'Create Account';
   } else if (m === 'google') {
-    emailAuthState.pending = false;
     if (fieldWrap) fieldWrap.style.display = 'none';
-    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = 'none';
     if (googleWrap) googleWrap.classList.add('on');
     if (continueBtn) continueBtn.style.display = 'none';
     renderGoogleAuthButton();
   } else {
-    emailAuthState.pending = false;
     lbl.textContent = 'Account';
     input.placeholder = 'your account';
     input.type = 'text';
     if (fieldWrap) fieldWrap.style.display = '';
-    if (codeWrap) codeWrap.style.display = 'none';
     if (divider) divider.style.display = '';
     if (googleWrap) googleWrap.classList.remove('on');
     if (continueBtn) continueBtn.style.display = '';
@@ -4094,46 +4074,10 @@ function selectAuthMethod(method) {
   }
 }
 
-async function sendEmailCode(email) {
-  const normalized = String(email || '').trim().toLowerCase();
-  const payload = {email: normalized};
-  try {
-    const res = await fetch(`${BACKEND}/api/auth/email/send`, {
-      method: 'POST',
-      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    emailAuthState = {pending: true, email: normalized, localCode: '', sentAt: Date.now(), demo: false};
-    return true;
-  } catch (_) {
-    const demoCode = String(Math.floor(100000 + Math.random() * 900000));
-    emailAuthState = {pending: true, email: normalized, localCode: demoCode, sentAt: Date.now(), demo: true};
-    return false;
-  }
-}
-
-async function verifyEmailCode(email, code) {
-  const normalized = String(email || '').trim().toLowerCase();
-  const otp = String(code || '').trim();
-  try {
-    const res = await fetch(`${BACKEND}/api/auth/email/verify`, {
-      method: 'POST',
-      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
-      body: JSON.stringify({email: normalized, code: otp}),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return true;
-  } catch (_) {
-    return !!(emailAuthState.localCode && emailAuthState.email === normalized && emailAuthState.localCode === otp);
-  }
-}
-
 function openAuthModal(preferredMethod = null) {
   const ov = document.getElementById('auth-ov');
   const input = document.getElementById('auth-input');
   if (!ov || !input) return;
-  emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   const m = normalizeAuthMethod(preferredMethod || (userProfile.method === 'guest' ? 'google' : userProfile.method));
   const titleEl = document.getElementById('auth-title');
   const subEl = document.getElementById('auth-sub');
@@ -4172,7 +4116,6 @@ function closeAuthModal(e) {
   if (!ov) return;
   if (!e || e.target === ov) {
     ov.classList.remove('on');
-    emailAuthState = {pending: false, email: '', localCode: '', sentAt: 0, demo: false};
   }
 }
 
@@ -4224,32 +4167,6 @@ async function submitAuthProfile() {
   if (method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     showToast('Enter a valid email');
     return;
-  }
-  if (method === 'email') {
-    const normalizedEmail = value.toLowerCase();
-    const codeInput = document.getElementById('auth-code');
-    const codeNote = document.getElementById('auth-code-note');
-    if (!emailAuthState.pending || emailAuthState.email !== normalizedEmail) {
-      const liveEmail = await sendEmailCode(normalizedEmail);
-      if (codeNote) {
-        codeNote.textContent = liveEmail
-          ? `Code sent to ${normalizedEmail}. Enter it to continue.`
-          : `Email service not configured yet. Demo code: ${emailAuthState.localCode}`;
-      }
-      selectAuthMethod('email');
-      showToast(liveEmail ? 'Verification code sent' : 'Using demo verification code');
-      return;
-    }
-    const code = String(codeInput?.value || '').trim();
-    if (!/^\d{6}$/.test(code)) {
-      showToast('Enter the 6-digit code');
-      return;
-    }
-    const ok = await verifyEmailCode(normalizedEmail, code);
-    if (!ok) {
-      showToast('Invalid verification code');
-      return;
-    }
   }
   userProfile = {method, identifier: value, name: '', avatar: ''};
   saveProfile();
