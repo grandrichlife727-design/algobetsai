@@ -17,12 +17,12 @@
   <rect width="512" height="512" rx="112" fill="#060913"/>
   <rect x="40" y="40" width="432" height="432" rx="96" fill="url(#panel)" stroke="#263658" stroke-width="6"/>
 
-  <circle cx="256" cy="256" r="118" fill="none" stroke="url(#ring)" stroke-opacity="0.82" stroke-width="16" stroke-linecap="round" stroke-dasharray="620 190" transform="rotate(-18 256 256)"/>
+  <circle cx="256" cy="256" r="166" fill="none" stroke="url(#ring)" stroke-opacity="0.82" stroke-width="20" stroke-linecap="round" stroke-dasharray="860 250" transform="rotate(-18 256 256)"/>
 
-  <path d="M194 352 L256 222 L318 352" fill="none" stroke="#F3F4F6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M220 294 H292" stroke="#F3F4F6" stroke-width="22" stroke-linecap="round"/>
+  <path d="M160 392 L256 190 L352 392" fill="none" stroke="#F3F4F6" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M200 304 H312" stroke="#F3F4F6" stroke-width="24" stroke-linecap="round"/>
 
-  <path d="M132 338 L216 268 L254 298 L382 162" fill="none" stroke="url(#line)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="132" cy="338" r="15" fill="#34D399"/>
-  <circle cx="382" cy="162" r="15" fill="#86EFAC"/>
+  <path d="M86 390 L210 286 L262 334 L430 150" fill="none" stroke="url(#line)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="86" cy="390" r="16" fill="#34D399"/>
+  <circle cx="430" cy="150" r="16" fill="#86EFAC"/>
 </svg>
