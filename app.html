@@ -356,6 +356,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .confidence-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
 .confidence-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:99px}
 .pick-line{font-size:11px;color:var(--sub);line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+.agent-fired{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0 4px}
+.agent-fired-label{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.agent-fire-chip{display:inline-flex;align-items:center;justify-content:center;min-width:28px;padding:2px 7px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-size:10px;font-weight:700;color:var(--sub);font-family:var(--mono)}
+.agent-fire-chip.core{border-color:rgba(34,211,238,.28);background:rgba(34,211,238,.09);color:var(--cyan)}
+.agent-fire-chip.cond{border-color:rgba(255,183,0,.35);background:rgba(255,183,0,.1);color:var(--amber)}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
 .sample-corner{position:absolute;top:8px;right:8px;z-index:2}
 
@@ -826,6 +831,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .api-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .api-dot.ok{background:var(--green)}.api-dot.err{background:var(--red)}.api-dot.loading{background:var(--amber);animation:pulse 1s infinite}
 .api-lbl{font-size:10px;color:var(--muted)}
+.api-hot{display:none;align-items:center;padding:1px 6px;border-radius:999px;border:1px solid rgba(0,229,160,.35);background:rgba(0,229,160,.12);color:var(--green);font-size:9px;font-family:var(--mono);font-weight:800;letter-spacing:.3px;white-space:nowrap}
+.api-hot.on{display:inline-flex}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -904,6 +911,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="api-status">
         <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
+        <span class="api-hot" id="api-hot"></span>
       </div>
       <div class="cooldown-pill" id="scan-cooldown">Next scan in 00:00</div>
       <button class="bill-link" id="manage-btn" style="display:none" onclick="openBillingPortal()">Manage</button>
@@ -2174,6 +2182,7 @@ let VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
 let vipLiveTicker = null;
 let CLVDATA = null;
 let AGENTWEIGHTS = null;
+let AGENT_HEALTH = null;
 let ALERTPACKS = null;
 if (FORCE_DEMO_MODE && MOCK_PLAN_QP) currentPlan = MOCK_PLAN_QP;
 let AFFILIATE = null;
@@ -3102,6 +3111,16 @@ async function loadAgentWeights() {
   } catch (err) {
     if (note) note.textContent = 'Using default weights.';
   }
+}
+
+async function loadAgentHealth() {
+  try {
+    const res = await backendGet('/api/agents/health');
+    if (res?.health && typeof res.health === 'object') {
+      AGENT_HEALTH = res.health;
+      updateAgentHealthUi();
+    }
+  } catch (_) {}
 }
 
 async function saveAgentWeights() {
@@ -6097,6 +6116,60 @@ function setApiStatus(state) {
   dot.className = 'api-dot ' + state;
   lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Paused' : 'Syncing';
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
+  updateAgentHealthUi();
+}
+
+const AGENT_UI = {
+  1: {abbr: 'A1', label: 'Best-Line EV', cls: 'core'},
+  2: {abbr: 'A2', label: 'De-vig Consensus', cls: 'core'},
+  3: {abbr: 'A3', label: 'Steam Moves', cls: 'cond'},
+  4: {abbr: 'A4', label: 'Public Fades', cls: 'cond'},
+  5: {abbr: 'A5', label: 'Timing/CLV', cls: 'cond'},
+};
+
+function parseActiveAgents(pick) {
+  const fromArray = Array.isArray(pick?.active_agents) ? pick.active_agents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : [];
+  if (fromArray.length) return [...new Set(fromArray)].sort((a, b) => a - b);
+  const mask = Number(pick?.active_agents_mask || 0);
+  if (Number.isFinite(mask) && mask > 0) {
+    const out = [];
+    for (let i = 1; i <= 5; i += 1) if (mask & (1 << (i - 1))) out.push(i);
+    if (out.length) return out;
+  }
+  const fired = Array.isArray(pick?.agents_fired) ? pick.agents_fired.map(v => String(v || '').toLowerCase()) : [];
+  const out = [];
+  if (fired.some(s => s.includes('best_line') || s.includes('fallback'))) out.push(1);
+  if (fired.some(s => s.includes('consensus') || s.includes('devig') || s.includes('bayesian'))) out.push(2);
+  if (fired.some(s => s.includes('steam'))) out.push(3);
+  if (fired.some(s => s.includes('fade') || s.includes('public'))) out.push(4);
+  if (fired.some(s => s.includes('timing') || s.includes('kelly') || s.includes('clv') || s.includes('confidence'))) out.push(5);
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
+function renderActiveAgentPills(activeAgents = []) {
+  const vals = Array.isArray(activeAgents) ? activeAgents : [];
+  if (!vals.length) return '';
+  return `<div class="agent-fired"><span class="agent-fired-label">Agents Fired</span>${vals.map(id => {
+    const meta = AGENT_UI[id] || {abbr: `A${id}`, label: `Agent ${id}`, cls: 'cond'};
+    return `<span class="agent-fire-chip ${meta.cls}" title="${esc(meta.label)}">${meta.abbr}</span>`;
+  }).join('')}</div>`;
+}
+
+function updateAgentHealthUi() {
+  const el = document.getElementById('api-hot');
+  if (!el) return;
+  const cond = AGENT_HEALTH?.conditional || {};
+  const hot = Object.values(cond).filter(v => v && v.hot).sort((a, b) => Number(a.agent_id || 0) - Number(b.agent_id || 0));
+  if (!hot.length) {
+    el.classList.remove('on');
+    el.textContent = '';
+    el.removeAttribute('title');
+    return;
+  }
+  const labels = hot.map(v => `A${Number(v.agent_id || 0)}`).join(' ');
+  el.textContent = `${labels} HOT`;
+  el.title = hot.map(v => `${v.label}: ${Number(v.accuracy_pct || 0).toFixed(1)}% (${Number(v.sample_size || 0)} picks, 48h)`).join(' | ');
+  el.classList.add('on');
 }
 
 function fmtCountdown(totalSec) {
@@ -6227,6 +6300,24 @@ function normalizePick(p, idx) {
     || (betRaw.includes('over') || betRaw.includes('under') ? 'total'
       : (betRaw.includes(' ml') || betRaw.includes('moneyline') ? 'moneyline'
       : (betRaw.includes('points') || betRaw.includes('rebounds') || betRaw.includes('assists') ? 'props' : 'spread')));
+  const activeAgents = parseActiveAgents(p);
+  const stakeSuggestion = (p?.stake_suggestion && typeof p.stake_suggestion === 'object')
+    ? {
+      sourceAgent: Number(p.stake_suggestion.source_agent || 5),
+      sourceLabel: String(p.stake_suggestion.source_label || 'Timing/CLV'),
+      pct: Number(p.stake_suggestion.recommended_stake_pct || p.recommended_stake_pct || 0),
+      timingModel: Number(p.stake_suggestion.timing_model || p.model_v2?.timing_model || 0),
+      clvExp: Number(p.stake_suggestion.clv_expectation || p.clv_expectation || 0),
+      entryQuality: String(p.stake_suggestion.entry_quality || '').toLowerCase(),
+    }
+    : {
+      sourceAgent: 5,
+      sourceLabel: 'Timing/CLV',
+      pct: Number(p.recommended_stake_pct || 0),
+      timingModel: Number(p.model_v2?.timing_model || 0),
+      clvExp: Number(p.clv_expectation || 0),
+      entryQuality: '',
+    };
 
   return {
     id:   idx + 1,
@@ -6242,6 +6333,8 @@ function normalizePick(p, idx) {
     conf: Math.round(conf),
     clvExp: Number(p.clv_expectation || 0),
     fairLine: p.fair_line || p.fairLine || '',
+    activeAgents,
+    stakeSuggestion,
     agents: Array.isArray(p.agents) ? p.agents : [],
     demoData: !!p.demo_data,
     mScore: Number(p.model_v2?.ensemble_score || p.agent_score || 0),
@@ -6636,6 +6729,10 @@ async function doScan(silent = false) {
       const arr = Array.isArray(raw) ? raw : (raw.consensus_picks || raw.picks || raw.data || []);
       if (!Array.isArray(raw)) {
         currentPlan = normalizePlan(raw.plan || currentPlan);
+        if (raw?.agent_health && typeof raw.agent_health === 'object') {
+          AGENT_HEALTH = raw.agent_health;
+          updateAgentHealthUi();
+        }
         if (raw.fallback_mode) showToast('Showing best available picks while market edges are thin');
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
         ODDSGAMES = normalizeOddsGames(raw.games || []);
@@ -6959,10 +7056,19 @@ function renderPicks() {
     const edgeTier = edgeVal > 5 ? 'High' : edgeVal >= 2 ? 'Medium' : 'Low';
     const teaserMarket = freeMarketLabel(p);
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
-    const stakeMeta = suggestedStakeMeta(edgeVal);
+    const activeAgentPills = renderActiveAgentPills(p.activeAgents);
+    const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
+    const stakeMeta = rawStakePct > 0 ? (() => {
+      const bankroll = Number(profileSettings?.bankroll_amount || 0);
+      const dollars = bankroll >= 50 ? Math.max(1, Math.round((bankroll * rawStakePct) / 100)) : 0;
+      return {pct: rawStakePct, dollars};
+    })() : suggestedStakeMeta(edgeVal);
+    const entryLabel = String(p.stakeSuggestion?.entryQuality || '').toUpperCase();
+    const timingModel = Number(p.stakeSuggestion?.timingModel || 0);
     const stakeLine = stakeMeta.dollars > 0
-      ? `Suggested stake: <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
-      : `Suggested stake: <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
+      ? `Stake suggestion (Agent 5 Timing/CLV): <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
+      : `Stake suggestion (Agent 5 Timing/CLV): <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
+    const stakeDetail = `Entry quality: <strong>${entryLabel || 'STANDARD'}</strong>${timingModel > 0 ? ` · Timing model ${timingModel.toFixed(1)}` : ''}`;
     const rankBadge = showDetailed
       ? `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`
       : `<span class="tier-tag">Free Teaser</span>`;
@@ -6987,7 +7093,9 @@ function renderPicks() {
         ? `<div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
       <div class="pick-line" title="De-vigged market consensus price">Fair Value: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
+      ${activeAgentPills}
       <div class="pick-line">${stakeLine}</div>
+      <div class="pick-line">${stakeDetail}</div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
         : `<div class="pick-line">Game shown. Actionable pick and lines are Premium.</div>`}
@@ -7786,6 +7894,7 @@ try {
 } catch (_) {}
 loadProfileSettings();
 loadHomeSportsNews();
+loadAgentHealth();
 fetchPlan();
 fetchPricing();
 loadTrialStatus();

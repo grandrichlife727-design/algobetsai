@@ -233,6 +233,189 @@ _PLAN_CACHE_TTL = 300
 _scan_state: dict = {}
 _SCAN_STATE_TTL = 3600 * 24
 _tier_scan_cache: dict = {}
+_agent_health_cache: dict[str, Any] = {
+    "updated_at": 0,
+    "window_hours": 48,
+    "conditional": {},
+    "hot_agents": [],
+}
+_agent_health_task: Optional[asyncio.Task] = None
+_AGENT_HEALTH_WINDOW_SECONDS = int(os.getenv("AGENT_HEALTH_WINDOW_SECONDS", str(48 * 3600)) or (48 * 3600))
+_AGENT_HEALTH_REFRESH_SECONDS = int(os.getenv("AGENT_HEALTH_REFRESH_SECONDS", "300") or 300)
+
+_AGENT_LABELS = {
+    1: "Best-Line EV",
+    2: "De-vig Consensus",
+    3: "Steam Moves",
+    4: "Public Fades",
+    5: "Timing/CLV",
+}
+
+
+def _normalize_active_agents(raw: Any) -> list[int]:
+    if isinstance(raw, int):
+        vals = [i for i in range(1, 6) if raw & (1 << (i - 1))]
+        return sorted(vals)
+    if not isinstance(raw, list):
+        return []
+    out: list[int] = []
+    for v in raw:
+        try:
+            i = int(v)
+        except Exception:
+            continue
+        if 1 <= i <= 5 and i not in out:
+            out.append(i)
+    return sorted(out)
+
+
+def _active_agents_mask(active_agents: list[int]) -> int:
+    mask = 0
+    for i in _normalize_active_agents(active_agents):
+        mask |= (1 << (i - 1))
+    return int(mask)
+
+
+def _derive_active_agents_for_pick(pick: dict[str, Any]) -> list[int]:
+    fired = {str(x).strip().lower() for x in (pick.get("agents_fired") or []) if str(x).strip()}
+    active: set[int] = set()
+    if any(k in fired for k in {"best_line_ev", "fallback_ranker"}):
+        active.add(1)
+    if any(k in fired for k in {"market_consensus", "devig", "bayesian_posterior", "fallback_ranker"}):
+        active.add(2)
+    if any(("steam" in k) for k in fired) or abs(float(pick.get("line_movement", 0.0) or 0.0)) >= 0.9:
+        active.add(3)
+    if any(("fade" in k or "public" in k) for k in fired) or float(pick.get("public_pct", 0.0) or 0.0) >= 62.0:
+        active.add(4)
+    if (
+        any(k in fired for k in {"timing_model", "kelly_sizing", "confidence_calibration"})
+        or float(pick.get("clv_expectation", 0.0) or 0.0) >= MODEL_MIN_CLV_GAP_PCT
+    ):
+        active.add(5)
+    if not active and float(pick.get("ev", pick.get("edge", 0.0)) or 0.0) != 0.0:
+        active.update({1, 2})
+    return sorted(active)
+
+
+def _stake_quality_bucket(timing_model: float, clv_expectation: float) -> str:
+    score = float(timing_model or 0.0)
+    clv = float(clv_expectation or 0.0)
+    if score >= 72.0 or clv >= 1.0:
+        return "high"
+    if score >= 60.0 or clv >= 0.55:
+        return "medium"
+    return "low"
+
+
+def _apply_pick_agent_metadata(pick: dict[str, Any]) -> dict[str, Any]:
+    active = _normalize_active_agents(pick.get("active_agents"))
+    if not active:
+        active = _derive_active_agents_for_pick(pick)
+
+    stake_pct = float(pick.get("recommended_stake_pct", 0.0) or 0.0)
+    timing_model = float(((pick.get("model_v2") or {}).get("timing_model", 0.0) if isinstance(pick.get("model_v2"), dict) else 0.0) or 0.0)
+    clv_expectation = float(pick.get("clv_expectation", 0.0) or 0.0)
+    if stake_pct > 0 and 5 not in active:
+        active.append(5)
+        active = sorted(set(active))
+
+    entry_quality = _stake_quality_bucket(timing_model, clv_expectation)
+    pick["active_agents"] = active
+    pick["active_agents_mask"] = _active_agents_mask(active)
+    pick["stake_suggestion"] = {
+        "source_agent": 5,
+        "source_label": _AGENT_LABELS[5],
+        "recommended_stake_pct": round(stake_pct, 2),
+        "timing_model": round(timing_model, 2),
+        "clv_expectation": round(clv_expectation, 2),
+        "entry_quality": entry_quality,
+        "reason": f"Stake size tied to Agent 5 ({_AGENT_LABELS[5]}) entry quality.",
+    }
+    return pick
+
+
+def _compute_agent_health_snapshot() -> dict[str, Any]:
+    now = int(time.time())
+    cutoff = now - max(60, _AGENT_HEALTH_WINDOW_SECONDS)
+    metrics: dict[int, dict[str, int]] = {3: {"wins": 0, "losses": 0, "pushes": 0}, 4: {"wins": 0, "losses": 0, "pushes": 0}, 5: {"wins": 0, "losses": 0, "pushes": 0}}
+    users = _growth_db.get("users", {})
+    if isinstance(users, dict):
+        for rec in users.values():
+            if not isinstance(rec, dict):
+                continue
+            rows = rec.get("tracked_picks", [])
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                status = str(row.get("status", "")).lower()
+                if status not in {"win", "loss", "push"}:
+                    continue
+                ts = int(row.get("settled_ts") or row.get("ts") or 0)
+                if ts < cutoff:
+                    continue
+                active = _normalize_active_agents(row.get("active_agents"))
+                if not active:
+                    continue
+                for aid in (3, 4, 5):
+                    if aid not in active:
+                        continue
+                    if status == "win":
+                        metrics[aid]["wins"] += 1
+                    elif status == "loss":
+                        metrics[aid]["losses"] += 1
+                    else:
+                        metrics[aid]["pushes"] += 1
+
+    conditional: dict[str, Any] = {}
+    hot_agents: list[int] = []
+    for aid, m in metrics.items():
+        graded = int(m["wins"] + m["losses"])
+        accuracy = round((m["wins"] / graded) * 100.0, 1) if graded > 0 else 0.0
+        hot = graded >= 5 and accuracy >= 58.0 and m["wins"] >= (m["losses"] + 2)
+        if hot:
+            hot_agents.append(aid)
+        conditional[str(aid)] = {
+            "agent_id": aid,
+            "label": _AGENT_LABELS.get(aid, f"Agent {aid}"),
+            "wins": int(m["wins"]),
+            "losses": int(m["losses"]),
+            "pushes": int(m["pushes"]),
+            "sample_size": graded,
+            "accuracy_pct": accuracy,
+            "hot": hot,
+            "window_hours": int(round(_AGENT_HEALTH_WINDOW_SECONDS / 3600)),
+        }
+    return {
+        "updated_at": now,
+        "window_hours": int(round(_AGENT_HEALTH_WINDOW_SECONDS / 3600)),
+        "conditional": conditional,
+        "hot_agents": hot_agents,
+    }
+
+
+def _refresh_agent_health_cache() -> dict[str, Any]:
+    global _agent_health_cache
+    _agent_health_cache = _compute_agent_health_snapshot()
+    return dict(_agent_health_cache)
+
+
+def _agent_health_snapshot() -> dict[str, Any]:
+    now = int(time.time())
+    updated_at = int(_agent_health_cache.get("updated_at", 0) or 0)
+    if updated_at <= 0 or (now - updated_at) > max(60, _AGENT_HEALTH_REFRESH_SECONDS * 2):
+        return _refresh_agent_health_cache()
+    return dict(_agent_health_cache)
+
+
+async def _agent_health_worker():
+    while True:
+        try:
+            _refresh_agent_health_cache()
+        except Exception:
+            pass
+        await asyncio.sleep(max(60, _AGENT_HEALTH_REFRESH_SECONDS))
 
 def _get_billing_entitlement(user_id: str) -> str:
     if not user_id:
@@ -482,6 +665,7 @@ def _is_sensitive_path(path: str) -> bool:
         "/api/props",
         "/api/plan",
         "/scan",
+        "/picks",
     }:
         return True
     return False
@@ -549,6 +733,14 @@ async def security_middleware(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
     return response
+
+
+@app.on_event("startup")
+async def start_background_services():
+    global _agent_health_task
+    _refresh_agent_health_cache()
+    if _agent_health_task is None or _agent_health_task.done():
+        _agent_health_task = asyncio.create_task(_agent_health_worker())
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -4148,6 +4340,11 @@ async def agent_weights_get(request: Request):
     return {"weights": rec.get("agent_weights", {})}
 
 
+@app.get("/api/agents/health")
+async def agent_health_get():
+    return {"health": _agent_health_snapshot()}
+
+
 @app.post("/api/agents/weights")
 @limiter.limit("30/hour")
 async def agent_weights_set(body: AgentWeightsRequest, request: Request):
@@ -4251,11 +4448,15 @@ async def scan(request: Request):
         cached_tier_payload = _tier_scan_cache.get(tier_cache_key)
         if isinstance(cached_tier_payload, dict):
             payload = dict(cached_tier_payload)
+            for p in list(payload.get("picks") or []):
+                if isinstance(p, dict):
+                    _apply_pick_agent_metadata(p)
             scan_policy = dict(payload.get("scan_policy") or {})
             scan_policy["served_from_cache"] = True
             scan_policy["cache_key"] = tier_cache_key
             scan_policy["cache_ttl_seconds"] = tier_cache_ttl
             payload["scan_policy"] = scan_policy
+            payload["agent_health"] = _agent_health_snapshot()
             return payload
 
     # Enforce tier-based refresh cadence. If called too soon and cached payload exists,
@@ -4269,21 +4470,29 @@ async def scan(request: Request):
         cached_payload = state.get("last_payload")
         if isinstance(cached_payload, dict):
             payload = dict(cached_payload)
+            for p in list(payload.get("picks") or []):
+                if isinstance(p, dict):
+                    _apply_pick_agent_metadata(p)
             payload["scan_policy"] = {
                 "min_interval_seconds": min_interval,
                 "cooldown_remaining_seconds": cooldown_remaining,
                 "served_from_cache": True,
             }
+            payload["agent_health"] = _agent_health_snapshot()
             return payload
         if not force_refresh:
             fallback_payload = _latest_cached_scan_payload(user_id)
             if isinstance(fallback_payload, dict):
                 payload = dict(fallback_payload)
+                for p in list(payload.get("picks") or []):
+                    if isinstance(p, dict):
+                        _apply_pick_agent_metadata(p)
                 payload["scan_policy"] = {
                     "min_interval_seconds": min_interval,
                     "cooldown_remaining_seconds": cooldown_remaining,
                     "served_from_cache": True,
                 }
+                payload["agent_health"] = _agent_health_snapshot()
                 return payload
         raise HTTPException(
             status_code=429,
@@ -4295,12 +4504,16 @@ async def scan(request: Request):
         cached_payload = _latest_cached_scan_payload(user_id)
         if isinstance(cached_payload, dict):
             payload = dict(cached_payload)
+            for p in list(payload.get("picks") or []):
+                if isinstance(p, dict):
+                    _apply_pick_agent_metadata(p)
             scan_policy = dict(payload.get("scan_policy") or {})
             scan_policy["served_from_cache"] = True
             scan_policy["quota_soft_limited"] = True
             payload["scan_policy"] = scan_policy
             payload["quota_remaining"] = _quota_remaining
             payload["quota_soft_limited"] = True
+            payload["agent_health"] = _agent_health_snapshot()
             return payload
     
     all_picks = []
@@ -4340,6 +4553,7 @@ async def scan(request: Request):
     
     # Sort by personalized agent-weighted score.
     for p in all_picks:
+        _apply_pick_agent_metadata(p)
         p["agent_score"] = round(_agent_weighted_pick_score(p, agent_weights), 3)
         p["betslip_url"] = _build_betslip_url(p.get("book"), p.get("game"), p.get("bet"), p.get("odds"))
     all_picks.sort(key=lambda x: x.get("agent_score", x.get("edge", 0)), reverse=True)
@@ -4347,6 +4561,8 @@ async def scan(request: Request):
     if not all_picks and all_games:
         fallback_mode = True
         all_picks = _fallback_picks_from_games(all_games, max_count=max(8, int(tier.get("scan_pick_limit", 3) or 3)))
+        for p in all_picks:
+            _apply_pick_agent_metadata(p)
     
     # Sort games by time
     all_games.sort(key=lambda x: x.get("commence_time", ""))
@@ -4377,6 +4593,7 @@ async def scan(request: Request):
             "cache_key": tier_cache_key,
             "cache_ttl_seconds": tier_cache_ttl,
         },
+        "agent_health": _agent_health_snapshot(),
     }
 
     # Persist a lightweight history row for retention/proof screens.
@@ -4423,6 +4640,7 @@ async def scan(request: Request):
             "status": "open",
             "units": 0.0,
             "game_time": p.get("game_time"),
+            "active_agents": _normalize_active_agents(p.get("active_agents")),
         }
         if tp["key"] not in existing_keys:
             tracked.append(tp)
@@ -4467,6 +4685,23 @@ async def scan(request: Request):
         for k in expired_keys:
             _scan_state.pop(k, None)
     return response_payload
+
+
+@app.get("/picks")
+@limiter.limit("90/hour")
+async def picks(request: Request):
+    payload = await scan(request)
+    picks_rows = list((payload or {}).get("picks") or [])
+    for p in picks_rows:
+        if isinstance(p, dict):
+            _apply_pick_agent_metadata(p)
+    return {
+        "plan": payload.get("plan"),
+        "picks": picks_rows,
+        "picks_total": int(payload.get("picks_total", len(picks_rows)) or len(picks_rows)),
+        "scan_policy": payload.get("scan_policy", {}),
+        "agent_health": payload.get("agent_health") or _agent_health_snapshot(),
+    }
 
 
 @app.get("/share/pick/{pick_id}", response_class=HTMLResponse)
