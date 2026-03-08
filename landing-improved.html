@@ -91,21 +91,10 @@
       gap: 10px;
       text-decoration: none;
     }
-    .nav-logo-icon {
-      width: 34px; height: 34px;
-      border-radius: 10px;
-      background: var(--grad);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 20px rgba(8,145,178,0.4);
-    }
-    .nav-logo-text {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--cyan), var(--violet));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .nav-logo-img {
+      width: min(210px, 46vw);
+      height: auto;
+      display: block;
     }
 
     .nav-links {
@@ -352,13 +341,10 @@
       align-items: center;
     }
 
-    .phone-logo {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--cyan), var(--violet));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .phone-logo-img {
+      width: 130px;
+      height: auto;
+      display: block;
     }
 
     .phone-live {
@@ -843,7 +829,7 @@
       width: 100%;
     }
     footer > * { width: 100%; }
-    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .footer-logo-img { width: 190px; height: auto; display: block; }
     .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
     .footer-links a { text-decoration: none; font-size: 13px; color: var(--muted); transition: color 0.2s; }
     .footer-links a:hover { color: var(--text); }
@@ -902,8 +888,7 @@
   <!-- ─── NAV ─────────────────────────────────────────── -->
   <nav>
     <a class="nav-logo" href="#">
-      <div class="nav-logo-icon">⚡</div>
-      <span class="nav-logo-text">Algobets Ai</span>
+      <img class="nav-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
     </a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
@@ -987,7 +972,7 @@
         <div class="phone-screen">
           <div class="phone-header">
             <div>
-              <div class="phone-logo">Algobets Ai</div>
+              <img class="phone-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
               <div style="font-size:8px;color:var(--muted);margin-top:1px;">7-Agent System</div>
             </div>
             <div class="phone-live">
@@ -1574,7 +1559,7 @@
 
   <!-- ─── FOOTER ────────────────────────────────────────── -->
   <footer>
-    <div class="footer-logo">Algobets Ai</div>
+    <img class="footer-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
 
     <div class="footer-links">
       <a href="https://algobetsai.onrender.com/api/legal/privacy" target="_blank" rel="noopener">Privacy Policy</a>

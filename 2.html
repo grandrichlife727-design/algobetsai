@@ -64,9 +64,8 @@ html, body {
 /* SIDEBAR */
 .sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
 @media(max-width:900px){.sidebar{display:none}}
-.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
-.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;box-shadow:0 0 20px rgba(8,145,178,.35)}
-.logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo{display:flex;align-items:center;padding:4px 8px 24px}
+.logo-img{width:160px;height:auto;display:block}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
 .nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -88,9 +87,11 @@ html, body {
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:24px;letter-spacing:1px;white-space:nowrap;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.topbar-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#0891b2,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 14px rgba(8,145,178,.3);-webkit-text-fill-color:initial;color:#fff}
+.topbar-logo{display:flex;align-items:center;white-space:nowrap}
+.topbar-logo-img{width:200px;height:auto;display:block}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+@media(max-width:560px){.topbar-logo-img{width:165px}}
+@media(max-width:420px){.topbar-logo-img{width:150px}}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .scan-btn{background:var(--cyan);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap}
@@ -461,8 +462,7 @@ html, body {
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-mark">⚡</div>
-    <div class="logo-text">Algobets Ai</div>
+    <img class="logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
   </div>
   <span class="nav-section">Picks</span>
   <button class="nav-item active" onclick="go('picks')">
@@ -539,8 +539,7 @@ html, body {
 <main class="main">
   <div class="topbar">
     <div class="topbar-logo">
-      <span class="topbar-mark">⚡</span>
-      Algobets Ai
+      <img class="topbar-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
