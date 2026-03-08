@@ -42,7 +42,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -231,6 +231,7 @@ _plan_cache: dict = {}
 _PLAN_CACHE_TTL = 300
 _scan_state: dict = {}
 _SCAN_STATE_TTL = 3600 * 24
+_tier_scan_cache: dict = {}
 
 def _get_billing_entitlement(user_id: str) -> str:
     if not user_id:
@@ -762,6 +763,27 @@ def _latest_cached_scan_payload(user_id: str = "") -> Optional[dict[str, Any]]:
             latest_ts = ts
             latest_payload = payload
     return latest_payload
+
+
+def _scan_tier_ttl_seconds(plan: str) -> int:
+    p = normalize_plan_name(plan)
+    if p == PLAN_VIP:
+        return 60
+    if p == PLAN_PREMIUM:
+        return 300
+    return 1200
+
+
+def _scan_cache_bucket(ts: float, ttl: int) -> int:
+    ttl_s = max(1, int(ttl or 1))
+    return int(float(ts or time.time()) // ttl_s)
+
+
+def _scan_cache_key_for_plan(plan: str, sport: str = "all", ts: Optional[float] = None) -> str:
+    p = normalize_plan_name(plan)
+    ttl = _scan_tier_ttl_seconds(p)
+    bucket = _scan_cache_bucket(float(ts or time.time()), ttl)
+    return f"picks:{sport}:{p}:{bucket}"
 
 
 def _is_registered_user_id(user_id: str) -> bool:
@@ -1316,6 +1338,13 @@ def _settle_user_tracked_picks(
             elif side == str(line.get("away_team")):
                 closing_line = line.get("away_ml")
             tp["closing_line"] = closing_line
+            try:
+                open_odds = float(tp.get("line_at_pick"))
+                close_odds = float(closing_line)
+                if close_odds != 0:
+                    tp["clv_achieved"] = round((open_odds - close_odds) / close_odds, 4)
+            except Exception:
+                pass
         winner = outcome.get("winner")
         if not winner:
             tp["status"] = "push"
@@ -4007,6 +4036,19 @@ async def scan(request: Request):
     agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
     force_refresh = str(request.query_params.get("refresh", "false")).lower() == "true"
+    tier_cache_ttl = _scan_tier_ttl_seconds(user_plan)
+    tier_cache_key = _scan_cache_key_for_plan(user_plan, sport="all", ts=now_ts)
+
+    if not force_refresh:
+        cached_tier_payload = _tier_scan_cache.get(tier_cache_key)
+        if isinstance(cached_tier_payload, dict):
+            payload = dict(cached_tier_payload)
+            scan_policy = dict(payload.get("scan_policy") or {})
+            scan_policy["served_from_cache"] = True
+            scan_policy["cache_key"] = tier_cache_key
+            scan_policy["cache_ttl_seconds"] = tier_cache_ttl
+            payload["scan_policy"] = scan_policy
+            return payload
 
     # Enforce tier-based refresh cadence. If called too soon and cached payload exists,
     # serve cached results and include cooldown metadata instead of hard failing.
@@ -4124,6 +4166,8 @@ async def scan(request: Request):
             "min_interval_seconds": min_interval,
             "cooldown_remaining_seconds": 0,
             "served_from_cache": False,
+            "cache_key": tier_cache_key,
+            "cache_ttl_seconds": tier_cache_ttl,
         },
     }
 
@@ -4203,11 +4247,77 @@ async def scan(request: Request):
         "last_payload": response_payload,
         "expires": now_ts + _SCAN_STATE_TTL,
     }
+    _tier_scan_cache[tier_cache_key] = dict(response_payload)
+    if len(_tier_scan_cache) > 2000:
+        # Keep only recent cache buckets.
+        newest = sorted(_tier_scan_cache.keys())[-1000:]
+        keep = {k: _tier_scan_cache[k] for k in newest}
+        _tier_scan_cache.clear()
+        _tier_scan_cache.update(keep)
     if len(_scan_state) > 5000:
         expired_keys = [k for k, v in _scan_state.items() if float(v.get("expires", 0)) < now_ts]
         for k in expired_keys:
             _scan_state.pop(k, None)
     return response_payload
+
+
+@app.get("/share/pick/{pick_id}", response_class=HTMLResponse)
+async def share_pick_card(pick_id: str):
+    payload = _latest_cached_scan_payload()
+    picks = list((payload or {}).get("picks") or [])
+    picked = None
+    for p in picks:
+        if str(p.get("id")) == str(pick_id):
+            picked = p
+            break
+    if not picked and picks:
+        picked = picks[0]
+    if not picked:
+        raise HTTPException(status_code=404, detail="Pick not found.")
+
+    def _esc(v: Any) -> str:
+        return str(v or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+    title = f"{picked.get('bet', 'Algobets AI Pick')} | Algobets AI"
+    desc = f"Edge {float(picked.get('ev', 0.0) or 0.0):+.1f}% · {picked.get('odds', '')} · {picked.get('game', '')}"
+    og_url = f"{FRONTEND_URL.rstrip('/')}/share/pick/{urllib.parse.quote(str(pick_id))}"
+    app_url = f"{FRONTEND_URL.rstrip('/')}/app.html"
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{_esc(title)}</title>
+  <meta name="description" content="{_esc(desc)}" />
+  <meta property="og:title" content="{_esc(title)}" />
+  <meta property="og:description" content="{_esc(desc)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{_esc(og_url)}" />
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="{_esc(title)}" />
+  <meta property="twitter:description" content="{_esc(desc)}" />
+  <style>
+    body{{font-family:system-ui,-apple-system,sans-serif;background:#0b0f16;color:#f3f7ff;margin:0;display:grid;place-items:center;min-height:100vh}}
+    .c{{width:min(1200px,95vw);aspect-ratio:1200/630;background:linear-gradient(135deg,#071329,#111827 50%,#07231f);border:1px solid #1f2a3c;border-radius:18px;padding:42px;box-sizing:border-box}}
+    .k{{font-size:14px;letter-spacing:.08em;color:#22d3ee;text-transform:uppercase;font-weight:700}}
+    .b{{font-size:56px;line-height:1.05;font-weight:800;margin:12px 0 16px}}
+    .m{{font-size:28px;color:#cbd5e1}}
+    .e{{display:inline-block;margin-top:20px;font-size:28px;font-weight:800;color:#00e5a0;background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);padding:8px 16px;border-radius:999px}}
+    .f{{position:absolute;right:42px;bottom:28px;font-size:22px;color:#8aa4c6}}
+  </style>
+</head>
+<body>
+  <div class="c">
+    <div class="k">Algobets AI Pick</div>
+    <div class="b">{_esc(picked.get('bet'))}</div>
+    <div class="m">{_esc(picked.get('game'))} · {_esc(picked.get('odds'))}</div>
+    <div class="e">Edge {float(picked.get('ev', 0.0) or 0.0):+.1f}%</div>
+    <div style="margin-top:24px"><a href="{_esc(app_url)}" style="color:#22d3ee;text-decoration:none;font-weight:700">Open in Algobets AI</a></div>
+    <div class="f">algobets.ai</div>
+  </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
 
 
 @app.get("/api/quota")
