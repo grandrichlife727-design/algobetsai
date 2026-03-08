@@ -70,6 +70,9 @@ DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "").strip()
 DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID", "").strip()
 DISCORD_PREMIUM_ROLE_ID = os.getenv("DISCORD_PREMIUM_ROLE_ID", "").strip()
 DISCORD_VIP_ROLE_ID = os.getenv("DISCORD_VIP_ROLE_ID", "").strip()
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "").strip()
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -108,6 +111,7 @@ COMMUNITY_ENABLED = _bool_env("COMMUNITY_ENABLED", "true")
 LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
+SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
@@ -363,6 +367,9 @@ MODEL_MAX_PICKS_PER_SPORT = int(os.getenv("MODEL_MAX_PICKS_PER_SPORT", "40") or 
 MODEL_MIN_ENSEMBLE_SCORE = float(os.getenv("MODEL_MIN_ENSEMBLE_SCORE", "56.0") or 56.0)
 MODEL_MAX_DISAGREEMENT_PCT = float(os.getenv("MODEL_MAX_DISAGREEMENT_PCT", "4.0") or 4.0)
 MODEL_MIN_CLV_GAP_PCT = float(os.getenv("MODEL_MIN_CLV_GAP_PCT", "0.35") or 0.35)
+MODEL_MIN_CONSERVATIVE_EDGE_EV = float(os.getenv("MODEL_MIN_CONSERVATIVE_EDGE_EV", "0.35") or 0.35)
+MODEL_KELLY_FRACTION = float(os.getenv("MODEL_KELLY_FRACTION", "0.25") or 0.25)
+MODEL_MAX_STAKE_PCT = float(os.getenv("MODEL_MAX_STAKE_PCT", "2.0") or 2.0)
 
 ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
 PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
@@ -670,6 +677,21 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     rec.setdefault("history", [])
     rec.setdefault("tracked_picks", [])
     rec.setdefault("streak_rewards_claimed", 0)
+    rec.setdefault(
+        "premium_alerts",
+        {
+            "enabled": False,
+            "channel": "email",
+            "target": "",
+            "min_ev": 2.0,
+            "sports": ["basketball_nba", "americanfootball_nfl", "baseball_mlb", "icehockey_nhl"],
+            "sms_status": "not_configured",
+            "last_sms_sent_ts": 0,
+            "last_sms_sig": "",
+            "last_sms_error": "",
+            "updated_at": 0,
+        },
+    )
     rec.setdefault("digest", {"enabled": False, "channel": "email", "target": "", "hour_local": 9})
     rec.setdefault("profile", {"state": "auto", "bankroll_mode": "standard"})
     rec.setdefault("journal", [])
@@ -747,6 +769,69 @@ def _is_registered_user_id(user_id: str) -> bool:
     if not uid or uid.startswith("guest_"):
         return False
     return True
+
+
+def _normalize_phone_e164(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    cleaned = re.sub(r"[^\d+]", "", raw)
+    if cleaned.startswith("00"):
+        cleaned = f"+{cleaned[2:]}"
+    if cleaned.startswith("+"):
+        digits = re.sub(r"\D", "", cleaned)
+        if 10 <= len(digits) <= 15:
+            return f"+{digits}"
+        return ""
+    digits = re.sub(r"\D", "", cleaned)
+    if len(digits) == 10:
+        return f"+1{digits}"
+    if 11 <= len(digits) <= 15:
+        return f"+{digits}"
+    return ""
+
+
+def _sms_provider_ready() -> bool:
+    return SMS_ALERTS_ENABLED and bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER)
+
+
+async def _send_sms_twilio(to_number: str, message: str) -> dict[str, Any]:
+    if not _sms_provider_ready():
+        raise ValueError("SMS provider is not configured.")
+    to_e164 = _normalize_phone_e164(to_number)
+    from_e164 = _normalize_phone_e164(TWILIO_FROM_NUMBER)
+    if not to_e164:
+        raise ValueError("Destination phone must be valid E.164.")
+    if not from_e164:
+        raise ValueError("TWILIO_FROM_NUMBER must be valid E.164.")
+    body = (message or "").strip()
+    if not body:
+        raise ValueError("SMS message body is required.")
+    body = body[:1600]
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
+    async with httpx.AsyncClient(timeout=12) as client:
+        r = await client.post(
+            url,
+            auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
+            data={"From": from_e164, "To": to_e164, "Body": body},
+        )
+    if r.status_code >= 400:
+        detail = f"Twilio HTTP {r.status_code}"
+        try:
+            payload = r.json()
+            if isinstance(payload, dict) and payload.get("message"):
+                detail = str(payload.get("message"))
+        except Exception:
+            pass
+        raise RuntimeError(detail)
+    payload = r.json() if r.text else {}
+    if not isinstance(payload, dict):
+        payload = {}
+    return {
+        "sid": str(payload.get("sid", "")),
+        "status": str(payload.get("status", "queued")),
+        "to": to_e164,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1412,6 +1497,79 @@ def _timeline_for_pick(entry: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+async def _maybe_send_premium_sms_alert(
+    user_rec: dict[str, Any],
+    user_plan: str,
+    picks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if plan_rank(user_plan) < plan_rank(PLAN_PREMIUM):
+        return {"sent": False, "reason": "plan"}
+    cfg = user_rec.get("premium_alerts", {})
+    if not isinstance(cfg, dict):
+        return {"sent": False, "reason": "config"}
+    if not bool(cfg.get("enabled", False)):
+        return {"sent": False, "reason": "disabled"}
+    if str(cfg.get("channel", "email")).strip().lower() != "sms":
+        return {"sent": False, "reason": "channel"}
+    if not _sms_provider_ready():
+        cfg["sms_status"] = "not_configured"
+        cfg["last_sms_error"] = "provider_not_configured"
+        user_rec["premium_alerts"] = cfg
+        return {"sent": False, "reason": "provider"}
+    target = _normalize_phone_e164(str(cfg.get("target", "")))
+    if not target:
+        cfg["sms_status"] = "invalid_target"
+        cfg["last_sms_error"] = "invalid_phone"
+        user_rec["premium_alerts"] = cfg
+        return {"sent": False, "reason": "target"}
+
+    min_ev = max(0.5, min(25.0, float(cfg.get("min_ev", 2.0) or 2.0)))
+    allowed_sports = {s for s in (cfg.get("sports") or []) if s in SPORTS}
+    if not allowed_sports:
+        allowed_sports = {"basketball_nba", "americanfootball_nfl", "baseball_mlb", "icehockey_nhl"}
+    candidates = []
+    for p in picks:
+        sport_key = str(p.get("sport", "")).strip()
+        if sport_key not in allowed_sports:
+            continue
+        ev = float(p.get("ev", 0.0) or 0.0)
+        if ev < min_ev:
+            continue
+        candidates.append(p)
+    if not candidates:
+        return {"sent": False, "reason": "no_candidates"}
+
+    candidates.sort(key=lambda x: float(x.get("ev", 0.0) or 0.0), reverse=True)
+    top = candidates[:2]
+    key_parts = [str(t.get("key") or t.get("id") or t.get("bet")) for t in top]
+    sig = hashlib.md5("|".join(key_parts).encode("utf-8")).hexdigest()[:16]
+    now_ts = int(time.time())
+    last_ts = int(cfg.get("last_sms_sent_ts", 0) or 0)
+    if str(cfg.get("last_sms_sig", "")) == sig and (now_ts - last_ts) < 900:
+        return {"sent": False, "reason": "dedup"}
+
+    lines = []
+    for t in top:
+        label = str(t.get("label") or t.get("sport") or "SPORT")
+        lines.append(
+            f"{label}: {str(t.get('bet') or '')} {str(t.get('odds') or '')} EV+{float(t.get('ev', 0.0) or 0.0):.1f}%"
+        )
+    msg = "Algobets AI Premium Alert\n" + "\n".join(lines) + f"\n{FRONTEND_URL.rstrip('/')}/1.html"
+    try:
+        out = await _send_sms_twilio(target, msg)
+        cfg["sms_status"] = "live"
+        cfg["last_sms_error"] = ""
+        cfg["last_sms_sent_ts"] = now_ts
+        cfg["last_sms_sig"] = sig
+        user_rec["premium_alerts"] = cfg
+        return {"sent": True, "sid": out.get("sid", "")}
+    except Exception as e:
+        cfg["sms_status"] = "provider_error"
+        cfg["last_sms_error"] = str(e)[:180]
+        user_rec["premium_alerts"] = cfg
+        return {"sent": False, "reason": "provider_error"}
+
+
 def _market_from_bet_text(bet: str, explicit: Optional[str] = None) -> str:
     if explicit:
         return str(explicit).strip().lower()
@@ -1569,14 +1727,29 @@ def _fallback_picks_from_games(games: list[dict[str, Any]], max_count: int = 12)
             implied_prob = calculate_implied_probability(int(odds)) * 100.0
             fair_pct = fair_prob * 100.0
             line_gap_pct = max(0.0, fair_pct - implied_prob)
+            home_low = float(diag.get("home_posterior_low", consensus_home))
+            home_high = float(diag.get("home_posterior_high", consensus_home))
+            side_low_prob = home_low if side == g.get("home_team", "") else max(0.01, 1.0 - home_high)
+            conservative_ev = expected_value_pct(int(odds), side_low_prob)
+            ci_width_pct = max(0.0, (home_high - home_low) * 100.0)
             conf = _calibrated_confidence_pct(
                 edge_ev=ev,
+                conservative_edge_ev=conservative_ev,
                 books_count=int(diag.get("books_count", 1) or 1),
                 disagreement_pct=float(diag.get("home_prob_spread", 0.0) or 0.0) * 100.0,
                 line_gap_pct=line_gap_pct,
+                ci_width_pct=ci_width_pct,
             )
             sport_key = str(g.get("sport") or g.get("sport_key") or "")
             meta = SPORT_META.get(sport_key, {"label": sport_key or "Game", "emoji": "🎯"})
+            model_v2 = _build_model_v2_components(
+                edge_ev=ev,
+                conservative_edge_ev=conservative_ev,
+                books_count=int(diag.get("books_count", 1) or 1),
+                disagreement_pct=float(diag.get("home_prob_spread", 0.0) or 0.0) * 100.0,
+                line_gap_pct=line_gap_pct,
+                ci_width_pct=ci_width_pct,
+            )
             out.append(
                 {
                     "id": f"fallback_{sport_key}_{g.get('home_team')}_{g.get('away_team')}_{time.time_ns()}",
@@ -1591,19 +1764,25 @@ def _fallback_picks_from_games(games: list[dict[str, Any]], max_count: int = 12)
                     "bet_type": "moneyline",
                     "odds": odds,
                     "edge": round(ev, 2),
+                    "conservative_edge": round(conservative_ev, 2),
                     "ev": round(ev, 2),
                     "confidence": int(round(conf)),
                     "confidence_calibrated": round(conf, 1),
                     "fair_prob": round(fair_pct, 1),
+                    "conservative_prob": round(side_low_prob * 100.0, 1),
                     "implied_prob": round(implied_prob, 1),
+                    "book": best_book or "DraftKings",
                     "best_book": best_book or "DraftKings",
                     "books_compared": int(diag.get("books_count", 1) or 1),
                     "market_disagreement": round(float(diag.get("home_prob_spread", 0.0) or 0.0) * 100.0, 2),
                     "clv_expectation": round(line_gap_pct, 2),
+                    "prob_ci_width": round(ci_width_pct, 2),
+                    "recommended_stake_pct": _kelly_stake_pct(int(odds), side_low_prob),
+                    "model_v2": model_v2,
                     "model_breakdown": {
                         "pinnacle_clv": f"Fallback mode: showing best available edges while strict filters are quiet.",
-                        "sharp_money": f"{int(diag.get('books_count', 1) or 1)} books compared.",
-                        "confirms": "Fallback ranking by EV + calibrated confidence",
+                        "sharp_money": f"{int(diag.get('books_count', 1) or 1)} books compared, CI width {ci_width_pct:.2f} pts.",
+                        "confirms": "Fallback ranking by EV + conservative EV + uncertainty-aware confidence",
                     },
                     "agents_fired": ["fallback_ranker"],
                     "data_source": "odds_api",
@@ -1721,8 +1900,7 @@ def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
         # Fallback from best lines only.
         return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
 
-    weighted_home = []
-    weighted_away = []
+    weighted_rows: list[tuple[float, float]] = []
     for book, lines in by_book.items():
         home_o = lines.get("home")
         away_o = lines.get("away")
@@ -1730,21 +1908,42 @@ def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
             continue
         h, a = devig_two_way_probabilities(home_o, away_o)
         w = sharp_weight_for_book(book)
-        weighted_home.extend([h] * max(1, int(round(w * 10))))
-        weighted_away.extend([a] * max(1, int(round(w * 10))))
+        weighted_rows.append((h, w))
 
-    if not weighted_home:
+    if not weighted_rows:
         return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
 
-    home_prob = statistics.median(weighted_home)
+    total_w = sum(w for _, w in weighted_rows)
+    if total_w <= 0:
+        return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
+    weighted_home = [(h, w) for h, w in weighted_rows]
+    home_prob = sum(h * w for h, w in weighted_home) / total_w
     away_prob = 1.0 - home_prob
+
+    var_num = sum(w * (h - home_prob) ** 2 for h, w in weighted_home)
+    home_prob_std = math.sqrt(var_num / max(total_w, 1e-9))
+    # Approximate effective sample from independent books (conservative cap).
+    eff_n = max(4.0, min(25.0, total_w * 2.5))
+    alpha = 1.0 + home_prob * eff_n
+    beta = 1.0 + (1.0 - home_prob) * eff_n
+    posterior_mean = alpha / (alpha + beta)
+    posterior_std = math.sqrt((alpha * beta) / (((alpha + beta) ** 2) * (alpha + beta + 1.0)))
+    ci_half = min(0.22, 1.96 * posterior_std)
+    home_lower = max(0.01, posterior_mean - ci_half)
+    home_upper = min(0.99, posterior_mean + ci_half)
+
     diagnostics = {
         "books_count": len(by_book),
-        "home_prob_min": round(min(weighted_home), 4),
-        "home_prob_max": round(max(weighted_home), 4),
-        "home_prob_spread": round(max(weighted_home) - min(weighted_home), 4),
+        "home_prob_min": round(min(h for h, _ in weighted_home), 4),
+        "home_prob_max": round(max(h for h, _ in weighted_home), 4),
+        "home_prob_spread": round(max(h for h, _ in weighted_home) - min(h for h, _ in weighted_home), 4),
+        "home_prob_mean": round(home_prob, 4),
+        "home_prob_std": round(home_prob_std, 4),
+        "home_posterior_mean": round(posterior_mean, 4),
+        "home_posterior_low": round(home_lower, 4),
+        "home_posterior_high": round(home_upper, 4),
     }
-    return home_prob, away_prob, diagnostics
+    return posterior_mean, (1.0 - posterior_mean), diagnostics
 
 
 def best_two_way_lines(game: dict) -> dict:
@@ -1795,40 +1994,75 @@ def calculate_edge(home_odds: int, away_odds: int) -> dict:
     }
 
 
-def _calibrated_confidence_pct(edge_ev: float, books_count: int, disagreement_pct: float, line_gap_pct: float) -> float:
-    # Logistic-style calibration: penalize noisy markets and low-book coverage.
+def _calibrated_confidence_pct(
+    edge_ev: float,
+    conservative_edge_ev: float,
+    books_count: int,
+    disagreement_pct: float,
+    line_gap_pct: float,
+    ci_width_pct: float,
+) -> float:
+    # Logistic-style calibration with explicit uncertainty and liquidity penalties.
     z = (
         -1.25
-        + 0.34 * float(edge_ev or 0.0)
-        + 0.10 * max(0, int(books_count or 1) - 1)
+        + 0.21 * float(edge_ev or 0.0)
+        + 0.28 * float(conservative_edge_ev or 0.0)
+        + 0.12 * max(0, int(books_count or 1) - 1)
         - 0.07 * max(0.0, float(disagreement_pct or 0.0))
+        - 0.10 * max(0.0, float(ci_width_pct or 0.0))
         + 0.05 * max(0.0, float(line_gap_pct or 0.0))
     )
     p = 1.0 / (1.0 + math.exp(-z))
-    return max(50.0, min(95.0, p * 100.0))
+    return max(50.0, min(96.0, p * 100.0))
 
 
-def _build_model_v2_components(edge_ev: float, books_count: int, disagreement_pct: float, line_gap_pct: float) -> dict[str, float]:
-    # Component scores are intentionally simple and bounded; they can later be replaced by learned models.
-    market_score = max(0.0, min(100.0, 52.0 + edge_ev * 4.2))
+def _kelly_stake_pct(odds: int, win_prob: float, fraction: float = MODEL_KELLY_FRACTION, max_stake_pct: float = MODEL_MAX_STAKE_PCT) -> float:
+    dec = american_to_decimal(odds)
+    b = max(0.0001, dec - 1.0)
+    p = max(0.001, min(0.999, float(win_prob or 0.5)))
+    q = 1.0 - p
+    kelly = ((b * p) - q) / b
+    stake = max(0.0, kelly) * max(0.0, float(fraction or 0.0))
+    return round(min(float(max_stake_pct or 2.0), stake * 100.0), 2)
+
+
+def _build_model_v2_components(
+    edge_ev: float,
+    conservative_edge_ev: float,
+    books_count: int,
+    disagreement_pct: float,
+    line_gap_pct: float,
+    ci_width_pct: float,
+) -> dict[str, float]:
+    # Bounded component models blended into a single ensemble quality score.
+    market_score = max(0.0, min(100.0, 45.0 + conservative_edge_ev * 6.0))
+    value_score = max(0.0, min(100.0, 45.0 + edge_ev * 4.0))
     liquidity_score = max(0.0, min(100.0, 35.0 + books_count * 8.0))
-    stability_score = max(0.0, min(100.0, 88.0 - disagreement_pct * 2.2))
+    stability_score = max(0.0, min(100.0, 92.0 - disagreement_pct * 2.4))
+    uncertainty_score = max(0.0, min(100.0, 95.0 - ci_width_pct * 8.0))
     timing_score = max(0.0, min(100.0, 50.0 + line_gap_pct * 4.0))
     ensemble = round(
-        market_score * 0.44 + liquidity_score * 0.22 + stability_score * 0.22 + timing_score * 0.12,
+        market_score * 0.28
+        + value_score * 0.20
+        + liquidity_score * 0.16
+        + stability_score * 0.16
+        + uncertainty_score * 0.12
+        + timing_score * 0.08,
         2,
     )
     return {
-        "market_model": round(market_score, 2),
+        "market_model": round(market_score, 2),  # conservative edge focus
+        "value_model": round(value_score, 2),  # point-estimate EV
         "liquidity_model": round(liquidity_score, 2),
         "stability_model": round(stability_score, 2),
+        "uncertainty_model": round(uncertainty_score, 2),
         "timing_model": round(timing_score, 2),
         "ensemble_score": ensemble,
     }
 
 
 async def generate_picks_for_sport(sport_key: str, games: list) -> list:
-    """Generate picks using a consensus fair-probability and best-line EV model."""
+    """Generate picks using Bayesian market consensus, conservative EV gates, and risk-aware sizing."""
     picks = []
     
     if not games:
@@ -1858,33 +2092,47 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             edge = home_ev
             fair_prob = consensus_home
             best_book = game.get("best_home_book")
+            side_low_prob = float(diag.get("home_posterior_low", consensus_home))
+            side_high_prob = float(diag.get("home_posterior_high", consensus_home))
         else:
             bet_side = away_team
             bet_odds = away_ml
             edge = away_ev
             fair_prob = consensus_away
             best_book = game.get("best_away_book")
+            home_high = float(diag.get("home_posterior_high", consensus_home))
+            home_low = float(diag.get("home_posterior_low", consensus_home))
+            side_low_prob = max(0.01, 1.0 - home_high)
+            side_high_prob = min(0.99, 1.0 - home_low)
 
         disagreement = float(diag.get("home_prob_spread", 0.0) or 0.0)
         books_count = int(diag.get("books_count", 1) or 1)
         disagreement_pct = disagreement * 100.0
         implied_prob_pct = calculate_implied_probability(bet_odds) * 100.0
         fair_pct = fair_prob * 100.0
+        conservative_prob_pct = side_low_prob * 100.0
+        conservative_edge = expected_value_pct(bet_odds, side_low_prob)
         line_gap_pct = max(0.0, fair_pct - implied_prob_pct)
+        ci_width_pct = max(0.0, (side_high_prob - side_low_prob) * 100.0)
         if disagreement_pct > MODEL_MAX_DISAGREEMENT_PCT:
             continue
         if line_gap_pct < MODEL_MIN_CLV_GAP_PCT:
             continue
+        if conservative_edge < MODEL_MIN_CONSERVATIVE_EDGE_EV:
+            continue
         reliability_penalty = max(0.0, disagreement_pct - 1.5) * 0.35
         liquidity_bonus = min(1.0, max(0, books_count - MODEL_MIN_BOOKS) * 0.2)
-        adjusted_edge = float(edge) - reliability_penalty + liquidity_bonus
+        uncertainty_penalty = max(0.0, ci_width_pct - 4.0) * 0.22
+        adjusted_edge = float(edge) - reliability_penalty - uncertainty_penalty + liquidity_bonus
         if adjusted_edge < MODEL_MIN_EDGE_EV:
             continue
         confidence_raw = _calibrated_confidence_pct(
             edge_ev=adjusted_edge,
+            conservative_edge_ev=conservative_edge,
             books_count=books_count,
             disagreement_pct=disagreement_pct,
             line_gap_pct=line_gap_pct,
+            ci_width_pct=ci_width_pct,
         )
         confidence = confidence_raw
         if books_count < MODEL_MIN_BOOKS:
@@ -1893,9 +2141,11 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             continue
         model_v2 = _build_model_v2_components(
             edge_ev=adjusted_edge,
+            conservative_edge_ev=conservative_edge,
             books_count=books_count,
             disagreement_pct=disagreement_pct,
             line_gap_pct=line_gap_pct,
+            ci_width_pct=ci_width_pct,
         )
         if float(model_v2.get("ensemble_score", 0.0) or 0.0) < MODEL_MIN_ENSEMBLE_SCORE:
             continue
@@ -1916,24 +2166,29 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "bet_type": "moneyline",
             "odds": bet_odds,
             "edge": round(edge, 2),
+            "conservative_edge": round(conservative_edge, 2),
             "adjusted_edge": round(adjusted_edge, 2),
             "ev": round(adjusted_edge, 2),
             "confidence_raw": round(confidence_raw, 1),
             "confidence": int(round(confidence)),
             "confidence_calibrated": round(confidence_raw, 1),
             "fair_prob": round(fair_pct, 1),
+            "conservative_prob": round(conservative_prob_pct, 1),
             "implied_prob": round(implied_pct, 1),
+            "book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
             "best_book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
             "books_compared": books_count,
             "market_disagreement": round(disagreement_pct, 2),
             "clv_expectation": round(line_gap_pct, 2),
+            "prob_ci_width": round(ci_width_pct, 2),
+            "recommended_stake_pct": _kelly_stake_pct(int(bet_odds), side_low_prob),
             "model_v2": model_v2,
             "model_breakdown": {
-                "pinnacle_clv": f"Consensus fair {fair_pct:.1f}% vs implied {implied_pct:.1f}% (raw {edge:+.2f}% / adj {adjusted_edge:+.2f}% EV).",
-                "sharp_money": f"Compared across {books_count} books; disagreement {disagreement_pct:.2f} pts.",
-                "confirms": "Best-line EV, de-vig consensus, disagreement gate, CLV gap gate, calibrated confidence",
+                "pinnacle_clv": f"Posterior mean {fair_pct:.1f}% vs implied {implied_pct:.1f}% (cons EV {conservative_edge:+.2f}% / adj {adjusted_edge:+.2f}%).",
+                "sharp_money": f"{books_count} books, disagreement {disagreement_pct:.2f} pts, CI width {ci_width_pct:.2f} pts.",
+                "confirms": "Bayesian de-vig consensus, conservative EV gate, uncertainty penalty, CLV gate, calibrated confidence",
             },
-            "agents_fired": ["best_line_ev", "market_consensus", "devig", "confidence_calibration"],
+            "agents_fired": ["best_line_ev", "market_consensus", "bayesian_posterior", "confidence_calibration", "kelly_sizing"],
             "data_source": "odds_api",
         }
         picks.append(pick)
@@ -2101,6 +2356,14 @@ class DigestSubscribeRequest(BaseModel):
     channel: Optional[str] = "email"
     target: Optional[str] = ""
     hour_local: Optional[int] = 9
+
+
+class PremiumAlertSettingsRequest(BaseModel):
+    enabled: Optional[bool] = False
+    channel: Optional[str] = "email"
+    target: Optional[str] = ""
+    min_ev: Optional[float] = 2.0
+    sports: Optional[list[str]] = None
 
 
 class WaitlistJoinRequest(BaseModel):
@@ -2586,11 +2849,12 @@ async def current_plan(plan: str = Depends(get_user_plan)):
 async def model_report():
     return {
         "model": {
-            "name": "algobets_ensemble_v2",
+            "name": "algobets_bayesian_ensemble_v3",
             "objective": "maximize_ev_and_clv",
-            "components": ["market_model", "liquidity_model", "stability_model", "timing_model"],
+            "components": ["market_model", "value_model", "liquidity_model", "stability_model", "uncertainty_model", "timing_model"],
             "selection_gates": {
                 "min_edge_ev": MODEL_MIN_EDGE_EV,
+                "min_conservative_edge_ev": MODEL_MIN_CONSERVATIVE_EDGE_EV,
                 "min_books": MODEL_MIN_BOOKS,
                 "min_confidence": MODEL_MIN_CONFIDENCE,
                 "min_ensemble_score": MODEL_MIN_ENSEMBLE_SCORE,
@@ -2598,7 +2862,11 @@ async def model_report():
                 "min_clv_gap_pct": MODEL_MIN_CLV_GAP_PCT,
                 "max_picks_per_sport": MODEL_MAX_PICKS_PER_SPORT,
             },
-            "notes": "Calibrated confidence with disagreement penalties and CLV-gap quality gates.",
+            "risk": {
+                "kelly_fraction": MODEL_KELLY_FRACTION,
+                "max_stake_pct": MODEL_MAX_STAKE_PCT,
+            },
+            "notes": "Bayesian posterior probabilities with conservative-EV gating, uncertainty-aware confidence, and capped fractional Kelly sizing.",
         }
     }
 
@@ -2846,6 +3114,85 @@ async def alerts_subscribe(body: AlertSubscribeRequest, request: Request):
     rec["alerts"] = alerts[-25:]
     _save_growth_db()
     return {"ok": True, "subscription": updated, "count": len(rec["alerts"])}
+
+
+@app.get("/api/premium/alerts/settings")
+async def premium_alert_settings_get(request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    rec = _ensure_growth_user(user_id)
+    row = rec.get("premium_alerts", {})
+    if not isinstance(row, dict):
+        row = {}
+    out = {
+        "enabled": bool(row.get("enabled", False)),
+        "channel": str(row.get("channel", "email")),
+        "target": str(row.get("target", "")),
+        "min_ev": float(row.get("min_ev", 2.0) or 2.0),
+        "sports": [s for s in (row.get("sports") or []) if s in SPORTS] or ["basketball_nba", "americanfootball_nfl", "baseball_mlb", "icehockey_nhl"],
+        "sms_status": str(row.get("sms_status", "not_configured")),
+        "updated_at": int(row.get("updated_at", 0) or 0),
+    }
+    return {"settings": out}
+
+
+@app.post("/api/premium/alerts/settings")
+@limiter.limit("30/hour")
+async def premium_alert_settings_set(body: PremiumAlertSettingsRequest, request: Request):
+    user_id = _request_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="x-user-id is required.")
+    if not _is_registered_user_id(user_id):
+        raise HTTPException(status_code=403, detail="Sign in is required to save premium alerts.")
+
+    enabled = bool(body.enabled)
+    channel = str(body.channel or "email").strip().lower()
+    if channel not in {"email", "sms"}:
+        raise HTTPException(status_code=400, detail="channel must be 'email' or 'sms'.")
+    target = str(body.target or "").strip()
+    if enabled and not target:
+        raise HTTPException(status_code=400, detail="target is required when alerts are enabled.")
+    if channel == "sms" and target:
+        target = _normalize_phone_e164(target)
+        if not target:
+            raise HTTPException(status_code=400, detail="SMS target must be a valid phone number.")
+    min_ev = max(0.5, min(25.0, float(body.min_ev if body.min_ev is not None else 2.0)))
+    sports = [s for s in (body.sports or []) if s in SPORTS]
+    if not sports:
+        sports = ["basketball_nba", "americanfootball_nfl", "baseball_mlb", "icehockey_nhl"]
+
+    sms_status = "not_configured"
+    last_sms_error = ""
+    if channel == "sms" and enabled:
+        if not _sms_provider_ready():
+            raise HTTPException(status_code=503, detail="SMS provider is not configured on server.")
+        try:
+            await _send_sms_twilio(
+                target,
+                "Algobets AI: Premium SMS alerts are now active for your account.",
+            )
+            sms_status = "live"
+        except Exception as e:
+            last_sms_error = str(e)[:180]
+            raise HTTPException(status_code=502, detail=f"SMS provider error: {last_sms_error}")
+
+    row = {
+        "enabled": enabled,
+        "channel": channel,
+        "target": target,
+        "min_ev": round(min_ev, 2),
+        "sports": sports,
+        "sms_status": sms_status,
+        "last_sms_sent_ts": 0,
+        "last_sms_sig": "",
+        "last_sms_error": last_sms_error,
+        "updated_at": int(time.time()),
+    }
+    rec = _ensure_growth_user(user_id)
+    rec["premium_alerts"] = row
+    _save_growth_db()
+    return {"ok": True, "settings": row, "delivery_mode": "stub"}
 
 
 @app.get("/api/community/posts")
@@ -3843,6 +4190,11 @@ async def scan(request: Request):
     # Attach live performance + streak for richer UI.
     response_payload["performance"] = _performance_summary(user_growth)
     response_payload["streak"] = _scan_streak_status(user_growth)
+    try:
+        sms_delivery = await _maybe_send_premium_sms_alert(user_growth, user_plan, all_picks)
+    except Exception:
+        sms_delivery = {"sent": False, "reason": "internal_error"}
+    response_payload["premium_alert_delivery"] = sms_delivery
 
     _save_growth_db()
 
