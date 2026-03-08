@@ -101,9 +101,18 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 22px;
       letter-spacing: 1px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .brand-main {
       background: linear-gradient(90deg, var(--cyan), var(--violet));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+    .brand-ai {
+      color: #f8fafc;
+      -webkit-text-fill-color: #f8fafc;
     }
 
     .nav-links {
@@ -898,7 +907,7 @@
   <nav>
     <a class="nav-logo" href="#">
       <img class="nav-logo-img" src="Logo/algobets-monogram-a1-minimal.svg" alt="Algobets AI logo">
-      <span class="nav-logo-text">AlgoBets AI</span>
+      <span class="nav-logo-text"><span class="brand-main">AlgoBets</span><span class="brand-ai">AI</span></span>
     </a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
