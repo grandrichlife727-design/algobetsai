@@ -1438,7 +1438,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-profile" style="display:none">
-      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage account, billing, and notification preferences.</div></div>
+      <div class="page-hdr"><div class="page-title">Your <span>Profile</span></div><div class="page-sub">Manage account, billing, and app preferences.</div></div>
       <div class="profile-card">
         <div class="pf-row"><div class="pf-k">Account</div><div class="pf-v" id="pf-account">Guest</div></div>
         <div class="pf-row"><div class="pf-k">Method</div><div class="pf-v" id="pf-method">Guest</div></div>
@@ -1469,9 +1469,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
           <div class="growth-note" id="pf-note">Using default settings.</div>
         </div>
-        <div class="growth-card">
+        <div class="growth-card" id="settings-notifications-card">
           <div class="growth-title">Notifications</div>
-          <div class="growth-sub">Configure alerts, digest delivery, and quick alert packs.</div>
+          <div class="growth-sub" id="settings-notifications-sub">Configure alerts, digest delivery, and quick alert packs.</div>
+          <div id="settings-notifications-content">
           <div class="rf-row">
             <select class="auth-in" id="al-channel" style="font-family:var(--sans)">
               <option value="email">Email</option>
@@ -1505,6 +1506,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <button class="paywall-cta" onclick="saveAlertPack()">Save Pack</button>
           </div>
           <div class="growth-note" id="ap-note">No pack enabled.</div>
+          </div>
+          <div class="growth-note" id="settings-notifications-locked" style="display:none">Premium feature. Upgrade to enable alert destinations, digest delivery, and alert packs.</div>
+          <div class="rf-row" id="settings-notifications-upgrade" style="display:none;margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to Premium</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">API Keys (VIP)</div>
@@ -2666,6 +2670,10 @@ async function saveAgentWeights() {
 
 async function loadAlertPacks() {
   const note = document.getElementById('ap-note');
+  if (!canUsePremium()) {
+    if (note) note.textContent = 'Premium feature. Upgrade to enable packs.';
+    return;
+  }
   try {
     const res = await backendGet('/api/alerts/packs');
     ALERTPACKS = res;
@@ -2677,6 +2685,11 @@ async function loadAlertPacks() {
 }
 
 async function saveAlertPack() {
+  if (!canUsePremium()) {
+    showToast('Premium feature');
+    openUpgradePicker();
+    return;
+  }
   const pack = String(document.getElementById('ap-pack')?.value || 'a_grade_ev4');
   const note = document.getElementById('ap-note');
   try {
@@ -4153,6 +4166,10 @@ async function redeemReferral() {
 async function loadAlertSubscriptions() {
   const noteEl = document.getElementById('al-note');
   if (!noteEl) return;
+  if (!canUsePremium()) {
+    noteEl.textContent = 'Premium feature. Upgrade to enable alert destinations.';
+    return;
+  }
   if (!ensureRegisteredUser(false)) {
     noteEl.textContent = 'Sign in to save alert destinations.';
     return;
@@ -4174,6 +4191,10 @@ async function loadAlertSubscriptions() {
 async function loadDigestSubscription() {
   const note = document.getElementById('dg-note');
   if (!note) return;
+  if (!canUsePremium()) {
+    note.textContent = 'Premium feature. Upgrade to enable digest.';
+    return;
+  }
   if (!ensureRegisteredUser(false)) {
     note.textContent = 'Sign in to configure daily digest.';
     return;
@@ -4195,6 +4216,11 @@ async function loadDigestSubscription() {
 }
 
 async function saveDigestSubscription() {
+  if (!canUsePremium()) {
+    showToast('Premium feature');
+    openUpgradePicker();
+    return;
+  }
   if (!ensureRegisteredUser()) return;
   const channel = document.getElementById('dg-channel')?.value || 'email';
   const target = String(document.getElementById('dg-target')?.value || '').trim();
@@ -4242,6 +4268,11 @@ async function claimStreakReward() {
 }
 
 async function saveAlertSubscription() {
+  if (!canUsePremium()) {
+    showToast('Premium feature');
+    openUpgradePicker();
+    return;
+  }
   if (!ensureRegisteredUser()) return;
   const channel = document.getElementById('al-channel')?.value || 'email';
   const target = String(document.getElementById('al-target')?.value || '').trim();
@@ -4558,9 +4589,22 @@ function renderToolLocks() {
 }
 
 function renderSettingsExtras() {
+  const premiumOn = canUsePremium();
   const vipOn = canUseVip();
   const apiInput = document.getElementById('vip-api-key');
   const apiBtn = document.getElementById('vip-api-key-btn');
+  const notifCard = document.getElementById('settings-notifications-card');
+  const notifSub = document.getElementById('settings-notifications-sub');
+  const notifContent = document.getElementById('settings-notifications-content');
+  const notifLocked = document.getElementById('settings-notifications-locked');
+  const notifUpgrade = document.getElementById('settings-notifications-upgrade');
+  if (notifCard) notifCard.classList.toggle('tool-lock', !premiumOn);
+  if (notifSub) notifSub.textContent = premiumOn
+    ? 'Configure alerts, digest delivery, and quick alert packs.'
+    : 'Premium/VIP only.';
+  if (notifContent) notifContent.style.display = premiumOn ? '' : 'none';
+  if (notifLocked) notifLocked.style.display = premiumOn ? 'none' : '';
+  if (notifUpgrade) notifUpgrade.style.display = premiumOn ? 'none' : '';
   if (apiInput) apiInput.disabled = !vipOn;
   if (apiBtn) {
     apiBtn.textContent = vipOn ? 'Save Key' : 'Unlock VIP';
