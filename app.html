@@ -726,6 +726,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .nudge-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:left}
 .nudge-btn:hover{border-color:rgba(0,212,255,.3)}
 .nudge-btn.primary{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.25);color:var(--cyan)}
+.install-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:740;padding:16px}
+.install-ov.on{display:flex}
+.install-modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.install-title{font-size:18px;font-weight:900}
+.install-sub{font-size:12px;color:var(--sub);margin:6px 0 12px}
+.install-steps{display:grid;gap:7px}
+.install-step{font-size:13px;color:var(--text);line-height:1.45}
+.install-step b{color:var(--cyan)}
+.install-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -1796,6 +1805,23 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <button class="nudge-btn" onclick="startNudgeAuth('email')">Continue with Email</button>
       <button class="nudge-btn" onclick="startNudgeAuth('phone')">Continue with Phone</button>
       <button class="bill-link" style="justify-self:end" onclick="skipAuthNudge()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<div class="install-ov" id="install-ov" onclick="closeInstallHelp(event)">
+  <div class="install-modal">
+    <div class="install-title">Add Algobets to Home Screen</div>
+    <div class="install-sub">On iPhone Safari:</div>
+    <div class="install-steps">
+      <div class="install-step"><b>1.</b> Tap the <b>Share</b> icon (square with upward arrow).</div>
+      <div class="install-step"><b>2.</b> Scroll down and tap <b>Add to Home Screen</b>.</div>
+      <div class="install-step"><b>3.</b> Tap <b>Add</b> in the top-right corner.</div>
+      <div class="install-step">If you do not see it: tap <b>Edit Actions</b> and enable <b>Add to Home Screen</b>.</div>
+    </div>
+    <div class="install-actions">
+      <button class="pf-btn" onclick="closeInstallHelp()">Close</button>
+      <button class="paywall-cta" onclick="closeInstallHelp()">Got it</button>
     </div>
   </div>
 </div>
@@ -4679,6 +4705,18 @@ function setupInstallPrompt() {
   }
 }
 
+function openInstallHelp() {
+  const ov = document.getElementById('install-ov');
+  if (!ov) return;
+  ov.classList.add('on');
+}
+
+function closeInstallHelp(e) {
+  const ov = document.getElementById('install-ov');
+  if (!ov) return;
+  if (!e || e.target === ov) ov.classList.remove('on');
+}
+
 async function installApp() {
   if (isInStandaloneMode()) {
     showToast('App already installed');
@@ -4694,8 +4732,7 @@ async function installApp() {
     return;
   }
   if (isIosDevice()) {
-    showToast('On iPhone: Share -> Add to Home Screen');
-    hideInstallButton(true);
+    openInstallHelp();
     return;
   }
   showToast('Use browser menu -> Add to Home Screen');
