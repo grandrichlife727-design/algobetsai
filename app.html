@@ -5428,7 +5428,7 @@ async function startCheckout(tier, cycle = billingCycle) {
   try {
     trackEvent('checkout_started', {tier: desired, billing_cycle: finalCycle});
     const origin = window.location.origin + window.location.pathname;
-    const backendReturn = `${BACKEND.replace(/\/+$/,'')}/app`;
+    const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
     let res = await backendPost('/api/billing/checkout', {
       tier: desired,
       billing_cycle: finalCycle,
@@ -5456,7 +5456,7 @@ async function startCheckout(tier, cycle = billingCycle) {
     const msg = String(err?.detail || err?.message || '');
     if (/invalid checkout redirect url/i.test(msg)) {
       try {
-        const backendReturn = `${BACKEND.replace(/\/+$/,'')}/app`;
+        const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
         const retry = await backendPost('/api/billing/checkout', {
           tier: desired,
           billing_cycle: finalCycle,
@@ -5576,7 +5576,7 @@ async function openBillingPortal() {
     const msg = String(err?.detail || err?.message || '');
     if (/invalid portal return url/i.test(msg)) {
       try {
-        const backendReturn = `${BACKEND.replace(/\/+$/,'')}/app`;
+        const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
         const retry = await backendPost('/api/billing/portal', {return_url: backendReturn});
         if (retry?.portal_url) {
           window.open(retry.portal_url, '_blank', 'noopener');
