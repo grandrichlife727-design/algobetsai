@@ -22,7 +22,7 @@
   <path d="M194 352 L256 222 L318 352" fill="none" stroke="#F3F4F6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M220 294 H292" stroke="#F3F4F6" stroke-width="22" stroke-linecap="round"/>
 
-  <path d="M108 348 L208 264 L254 302 L404 154" fill="none" stroke="url(#line)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="108" cy="348" r="15" fill="#34D399"/>
-  <circle cx="404" cy="154" r="15" fill="#86EFAC"/>
+  <path d="M132 338 L216 268 L254 298 L382 162" fill="none" stroke="url(#line)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="132" cy="338" r="15" fill="#34D399"/>
+  <circle cx="382" cy="162" r="15" fill="#86EFAC"/>
 </svg>

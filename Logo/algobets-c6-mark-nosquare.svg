@@ -15,7 +15,7 @@
   <path d="M84 150 L110 96 L136 150" fill="none" stroke="#F3F4F6" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M96 126 H124" stroke="#F3F4F6" stroke-width="10" stroke-linecap="round"/>
 
-  <path d="M50 148 L86 118 L104 132 L164 74" fill="none" stroke="url(#line)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="50" cy="148" r="7" fill="#34D399"/>
-  <circle cx="164" cy="74" r="7" fill="#86EFAC"/>
+  <path d="M60 144 L90 119 L106 131 L154 80" fill="none" stroke="url(#line)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="60" cy="144" r="7" fill="#34D399"/>
+  <circle cx="154" cy="80" r="7" fill="#86EFAC"/>
 </svg>
