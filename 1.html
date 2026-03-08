@@ -1360,6 +1360,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">API Budget Dashboard</div>
           <div class="growth-sub">Track usage and keep monthly API spend under control.</div>
           <div class="growth-note" id="quota-note">Loading quota...</div>
+          <div class="rf-row">
+            <button class="pf-btn" id="low-data-btn" onclick="toggleLowDataMode()">Low Data Mode: On</button>
+          </div>
+          <div class="growth-note" id="low-data-note">Low Data Mode reduces refresh frequency and API usage.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Personal Settings</div>
@@ -1697,6 +1701,7 @@ const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
 const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
+const LOW_DATA_MODE_KEY = 'algobets-low-data-mode-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
@@ -1821,6 +1826,7 @@ let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let quotaExhausted = false;
+let LOW_DATA_MODE = localStorage.getItem(LOW_DATA_MODE_KEY) !== '0';
 let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
@@ -1852,6 +1858,15 @@ let scanCount = Number(localStorage.getItem(SCAN_COUNT_KEY) || 0);
 let WALKDATA = null;
 let WALK_WEEKS = 12;
 let TOMORROW_GAMES = [];
+
+function liveTtlMs() { return LOW_DATA_MODE ? 15 * 60 * 1000 : LIVE_TTL_MS; }
+function tomorrowTtlMs() { return LOW_DATA_MODE ? 6 * 60 * 60 * 1000 : TOMORROW_TTL_MS; }
+function newsImpactTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : NEWS_IMPACT_TTL_MS; }
+function perfTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : PERF_TTL_MS; }
+function propsTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : 20 * 60 * 1000; }
+function vipLiveCacheMs() { return LOW_DATA_MODE ? 5 * 60 * 1000 : VIP_LIVE_CACHE_MS; }
+function vipLiveDailyCap() { return LOW_DATA_MODE ? 40 : VIP_LIVE_DAILY_CALL_CAP; }
+function vipLivePollMs() { return LOW_DATA_MODE ? 8 * 60 * 1000 : VIP_LIVE_POLL_MS; }
 const PAYWALL_VARIANT = (localStorage.getItem('algobets-paywall-ab') || ((Math.random() < 0.5) ? 'A' : 'B'));
 localStorage.setItem('algobets-paywall-ab', PAYWALL_VARIANT);
 const HOME_EXP_KEY = 'algobets-home-exp-v1';
@@ -2165,6 +2180,7 @@ async function loadProfileSettings() {
   if (bk) bk.value = profileSettings.bankroll_mode || 'standard';
   if (note) note.textContent = `State: ${(profileSettings.state || 'auto').toUpperCase()} · Bankroll: ${profileSettings.bankroll_mode || 'standard'}`;
   applyStateBookOrdering();
+  updateLowDataUi();
 }
 
 async function saveProfileSettings() {
@@ -2188,17 +2204,46 @@ async function saveProfileSettings() {
 
 async function loadQuotaDashboard() {
   const note = document.getElementById('quota-note');
+  const lowNote = document.getElementById('low-data-note');
   if (!note) return;
   try {
     quotaData = await backendGet('/api/quota');
     const rem = Number(quotaData?.quota_remaining || 0);
     const used = Number(quotaData?.quota_used_last || 0);
+    const oddsCap = Number(quotaData?.odds_monthly_credit_cap || 0);
+    const oddsPct = Number(quotaData?.odds_budget_used_pct || 0);
     const cap = Number(quotaData?.props_monthly_credit_cap || 0);
     const pct = Number(quotaData?.props_budget_used_pct || 0);
-    note.textContent = `Used: ${used} · Remaining: ${rem} · Props cap: ${cap} (${pct}%)`;
+    note.textContent = `Used: ${used} · Remaining: ${rem} · Odds cap: ${oddsCap} (${oddsPct}%) · Props cap: ${cap} (${pct}%)`;
+    if (lowNote) lowNote.textContent = LOW_DATA_MODE
+      ? 'Low Data Mode is ON: slower refresh, tighter props/live calls, lower API spend.'
+      : 'Low Data Mode is OFF: faster refresh and higher API usage.';
   } catch (err) {
     note.textContent = 'Could not load quota dashboard.';
   }
+}
+
+function updateLowDataUi() {
+  const btn = document.getElementById('low-data-btn');
+  const note = document.getElementById('low-data-note');
+  if (btn) btn.textContent = `Low Data Mode: ${LOW_DATA_MODE ? 'On' : 'Off'}`;
+  if (note) {
+    note.textContent = LOW_DATA_MODE
+      ? 'Low Data Mode is ON: slower refresh, tighter props/live calls, lower API spend.'
+      : 'Low Data Mode is OFF: faster refresh and higher API usage.';
+  }
+}
+
+function toggleLowDataMode() {
+  LOW_DATA_MODE = !LOW_DATA_MODE;
+  localStorage.setItem(LOW_DATA_MODE_KEY, LOW_DATA_MODE ? '1' : '0');
+  updateLowDataUi();
+  if (vipLiveTicker) {
+    clearInterval(vipLiveTicker);
+    vipLiveTicker = null;
+    startVipLiveTicker();
+  }
+  showToast(LOW_DATA_MODE ? 'Low Data Mode enabled' : 'Low Data Mode disabled');
 }
 
 function openBetSlip(id) {
@@ -2237,7 +2282,7 @@ async function loadLive() {
     renderLive();
     return;
   }
-  if (LIVEDATA.length && (Date.now() - liveFetchedAt) < LIVE_TTL_MS) {
+  if (LIVEDATA.length && (Date.now() - liveFetchedAt) < liveTtlMs()) {
     renderLive();
     return;
   }
@@ -2307,7 +2352,7 @@ function renderVipLivePlays() {
     VIP_LIVE_STATE.calls = 0;
     saveVipLiveState();
   }
-  const callsLeft = Math.max(0, VIP_LIVE_DAILY_CALL_CAP - Number(VIP_LIVE_STATE.calls || 0));
+  const callsLeft = Math.max(0, vipLiveDailyCap() - Number(VIP_LIVE_STATE.calls || 0));
   noteEl.textContent = rows.length
     ? `Live algorithm active · ${rows.length} games · ${callsLeft} calls left today`
     : `No live windows yet · ${callsLeft} calls left today`;
@@ -2332,11 +2377,11 @@ async function refreshVipLivePlays(force = false) {
     VIP_LIVE_STATE.calls = 0;
   }
   const now = Date.now();
-  const fresh = (now - Number(VIP_LIVE_STATE.last_fetch_ts || 0)) < VIP_LIVE_CACHE_MS;
+  const fresh = (now - Number(VIP_LIVE_STATE.last_fetch_ts || 0)) < vipLiveCacheMs();
   if (!force && fresh && Array.isArray(VIP_LIVE_STATE.cached) && VIP_LIVE_STATE.cached.length) {
     return renderVipLivePlays();
   }
-  if (Number(VIP_LIVE_STATE.calls || 0) >= VIP_LIVE_DAILY_CALL_CAP) {
+  if (Number(VIP_LIVE_STATE.calls || 0) >= vipLiveDailyCap()) {
     return renderVipLivePlays();
   }
   try {
@@ -2354,11 +2399,11 @@ function startVipLiveTicker() {
   if (vipLiveTicker) return;
   vipLiveTicker = setInterval(() => {
     if (currentTab === 'vip-execution') refreshVipLivePlays(false);
-  }, VIP_LIVE_POLL_MS);
+  }, vipLivePollMs());
 }
 
 async function loadTomorrowGames() {
-  if (TOMORROW_GAMES.length && (Date.now() - tomorrowFetchedAt) < TOMORROW_TTL_MS) return;
+  if (TOMORROW_GAMES.length && (Date.now() - tomorrowFetchedAt) < tomorrowTtlMs()) return;
   try {
     const res = await backendGet('/api/games?day_offset=1&limit=14');
     TOMORROW_GAMES = Array.isArray(res.games) ? res.games : [];
@@ -2785,7 +2830,7 @@ async function linkDiscordAccount() {
 
 async function loadNewsImpact() {
   const note = document.getElementById('ni-note');
-  if (NEWSIMPACT.length && (Date.now() - newsImpactFetchedAt) < NEWS_IMPACT_TTL_MS) {
+  if (NEWSIMPACT.length && (Date.now() - newsImpactFetchedAt) < newsImpactTtlMs()) {
     if (note) note.textContent = NEWSIMPACT.length ? NEWSIMPACT.slice(0, 2).map(x => `${x.game} (${x.impact_score})`).join(' · ') : 'No major impact shifts right now.';
     return;
   }
@@ -5057,7 +5102,7 @@ async function loadProps(force = false) {
     renderProps();
     return;
   }
-  const ttlMs = 20 * 60 * 1000;
+  const ttlMs = propsTtlMs();
   if (!force && PROPSDATA.length && (Date.now() - propsFetchedAt) < ttlMs) {
     renderProps();
     return;
@@ -5645,7 +5690,7 @@ async function loadPerformance() {
     renderPerf();
     return;
   }
-  if (PERFDATA && (Date.now() - perfFetchedAt) < PERF_TTL_MS) {
+  if (PERFDATA && (Date.now() - perfFetchedAt) < perfTtlMs()) {
     renderPerf();
     return;
   }
@@ -5973,6 +6018,7 @@ loadVipSettings();
 loadVipLiveState();
 loadTrialUiState();
 loadProfile();
+updateLowDataUi();
 loadAffiliateLocalState();
 loadHomeFlags();
 hydrateAffiliateInputs();
