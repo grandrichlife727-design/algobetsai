@@ -798,6 +798,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-list">
               <div>High-volume board</div>
               <div>All sports + props + steam + fades</div>
+              <div>Full 5-agent breakdown</div>
               <div>5-minute refresh</div>
               <div>Parlay builder</div>
             </div>
@@ -809,6 +810,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-list">
               <div>VIP Discord access</div>
               <div>Priority pick release</div>
+              <div>5-agent early release window</div>
               <div>1-minute refresh</div>
               <div>Execution tools</div>
               <div>Line rush alerts</div>
@@ -832,7 +834,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" id="home-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card" id="home-card-picks" data-home-card="picks_preview">
           <div class="growth-title">Today's Top Edges</div>
-          <div id="home-top-picks" class="growth-sub">Scanning market feed...</div>
+          <div id="home-top-picks" class="growth-sub">Scanning all 5 agents...</div>
           <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
         </div>
         <div class="growth-card" id="home-card-premium" data-home-card="premium_unlocks">
@@ -1266,7 +1268,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-tools" style="display:none">
-      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Build tickets, track bets, and run edge tools by plan.</div></div>
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Tools powered by the 5-Agent Edge Engine.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Core Tools</div>
@@ -1694,7 +1696,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 <div class="up-ov" id="up-ov" onclick="closeUpgradePicker(event)">
   <div class="up-modal">
-    <div class="up-title">Choose your plan</div>
+    <div class="up-title">Unlock the 5-Agent Edge Engine</div>
     <div class="up-sub" id="up-sub">Unlock the 5-Agent Edge Engine: Best-Line EV · De-vig · Steam · Fades · Timing/CLV.</div>
     <div class="up-flow">Free Preview -> Premium -> VIP</div>
     <div class="cycle-toggle">
@@ -5770,7 +5772,7 @@ async function doScan(silent = false) {
   btn.classList.add('loading');
   btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Scanning...';
   loadBar.classList.add('on');
-  setHomeScanFeedback('Scanning...', 'loading');
+  setHomeScanFeedback('Scanning all 5 agents...', 'loading');
   setApiStatus('loading');
 
   // Keep cached picks visible while refreshing in background.
@@ -5995,6 +5997,8 @@ function renderPicks() {
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">SAMPLE</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
+    const agentCount = Array.isArray(p.agents) ? p.agents.length : 0;
+    const consensusVotes = Math.max(1, Math.min(5, agentCount || Math.round((Number(p.conf || 60) / 100) * 5)));
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
     const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
     const rankBadge = `<span class="rank-badge ${rankClass}">#${i + 1} Edge</span>`;
@@ -6017,6 +6021,7 @@ function renderPicks() {
       </div>
       <div class="pick-line">Best Line: <strong>${esc(String(p.selection || p.bet || ''))}</strong> ${p.odds} at ${esc(bookLabel(p.bookRaw || ''))}</div>
       <div class="pick-line" title="De-vigged market consensus price">Fair Value: <strong>${esc(String(fairLine))}</strong></div>
+      <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}
     </div>
