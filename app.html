@@ -5459,8 +5459,8 @@ async function startCheckout(tier, cycle = billingCycle) {
         `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
         'https://grandrichlife727-design.github.io/algobetsai/1.html'
       ];
-      try {
-        for (const ret of fallbackReturns) {
+      for (const ret of fallbackReturns) {
+        try {
           const retry = await backendPost('/api/billing/checkout', {
             tier: desired,
             billing_cycle: finalCycle,
@@ -5472,8 +5472,8 @@ async function startCheckout(tier, cycle = billingCycle) {
             window.location.href = retry.checkout_url;
             return;
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
       showToast('Checkout blocked: add this site to BILLING_RETURN_ORIGINS on backend');
       return;
     }
@@ -5584,15 +5584,15 @@ async function openBillingPortal() {
         `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`,
         'https://grandrichlife727-design.github.io/algobetsai/1.html'
       ];
-      try {
-        for (const ret of fallbackReturns) {
+      for (const ret of fallbackReturns) {
+        try {
           const retry = await backendPost('/api/billing/portal', {return_url: ret});
           if (retry?.portal_url) {
             window.open(retry.portal_url, '_blank', 'noopener');
             return;
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
       showToast('Billing return URL is not allowed in backend config');
       return;
     }
