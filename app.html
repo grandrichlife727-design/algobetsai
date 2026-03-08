@@ -6098,7 +6098,8 @@ function renderPicks() {
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
         : `<div class="pick-line">Game shown. Actionable pick and lines are Premium.</div>`}
-      ${showDetailed ? '' : `<div class="pick-line">Market: <strong>${teaserMarket}</strong> · Edge tier: <strong>${edgeTier}</strong> · Signal: <strong>${consensusVotes}/5</strong></div>`}
+      ${showDetailed ? '' : `<div class="pick-line">Market: <strong>${teaserMarket}</strong> · Edge tier: <strong>${edgeTier}</strong> · Signal: <strong>${consensusVotes}/5</strong></div>
+      <div class="pick-line">Agents: <strong>${esc(Array.isArray(p.agents) && p.agents.length ? p.agents.join(' · ') : '5-agent model')}</strong></div>`}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
