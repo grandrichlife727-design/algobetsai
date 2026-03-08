@@ -697,6 +697,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
     Tools
   </button>
+  <button class="nav-item" onclick="go('offers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
+    Offers
+  </button>
   <button class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     History
@@ -1689,6 +1693,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
     <span class="mnav-label">History</span>
   </button>
+  <button class="mnav-btn" id="mn-offers" onclick="go('offers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
+    <span class="mnav-label">Offers</span>
+  </button>
   <div class="mnav-vip-wrap">
     <button class="mnav-btn vip-nav" id="mn-settings" onclick="go('profile')" title="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z"/><path d="M8 19h8"/></svg>
@@ -1707,10 +1715,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <button class="mnav-btn" id="mn-odds" onclick="go('odds')" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="mnav-label">Odds</span>
-  </button>
-  <button class="mnav-btn" id="mn-offers" onclick="go('offers')" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
-    <span class="mnav-label">Offers</span>
   </button>
   <div class="mnav-more-wrap" style="display:none">
     <button class="mnav-btn" id="mn-more" onclick="toggleMobileMore(event)">
