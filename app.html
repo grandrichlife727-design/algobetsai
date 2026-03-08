@@ -2476,6 +2476,48 @@ function suggestedStakeText(ev) {
   return `${pct.toFixed(2)}% bankroll`;
 }
 
+function bankrollMode() {
+  const raw = String(profileSettings?.bankroll_mode || 'standard').toLowerCase();
+  return raw === 'conservative' || raw === 'aggressive' ? raw : 'standard';
+}
+
+function bankrollModeMinConf(mode = bankrollMode()) {
+  if (mode === 'conservative') return 68;
+  if (mode === 'aggressive') return 50;
+  return 58;
+}
+
+function bankrollPickScore(p, mode = bankrollMode()) {
+  const ev = Number(p?.ev || 0);
+  const conf = Number(p?.conf || 50);
+  const market = String(p?.market || '').toLowerCase();
+  const move = Math.abs(Number(p?.lm || 0));
+  if (mode === 'conservative') {
+    const marketPenalty = market === 'props' ? 0.8 : 0;
+    const lowConfPenalty = conf < 65 ? 1.2 : 0;
+    return (ev * 0.55) + ((conf - 50) * 0.16) - marketPenalty - lowConfPenalty;
+  }
+  if (mode === 'aggressive') {
+    const volatilityBonus = Math.min(1.4, move * 0.2);
+    return (ev * 0.88) + ((conf - 50) * 0.08) + volatilityBonus;
+  }
+  return (ev * 0.72) + ((conf - 50) * 0.12);
+}
+
+function bankrollRankPicks(rows) {
+  const mode = bankrollMode();
+  const ranked = (Array.isArray(rows) ? rows.slice() : []).sort((a, b) => {
+    const sa = bankrollPickScore(a, mode);
+    const sb = bankrollPickScore(b, mode);
+    if (sb !== sa) return sb - sa;
+    return (Number(b?.ev || 0) - Number(a?.ev || 0)) || (Number(b?.conf || 0) - Number(a?.conf || 0));
+  });
+  if (mode !== 'conservative') return ranked;
+  const minConf = bankrollModeMinConf(mode);
+  const safer = ranked.filter(p => Number(p?.conf || 0) >= minConf);
+  return safer.length >= 3 ? safer.concat(ranked.filter(p => Number(p?.conf || 0) < minConf)) : ranked;
+}
+
 function updateAuthUi() {
   const btn = document.getElementById('auth-btn');
   if (!btn) return;
@@ -3350,7 +3392,7 @@ function runParlayOptimizerLite() {
 }
 
 function rankPicksForVip() {
-  return PICKS.slice().sort((a, b) => (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0)));
+  return bankrollRankPicks(PICKS);
 }
 
 function getVipPodPicks() {
@@ -5080,6 +5122,7 @@ function renderHomeModules() {
   const homeSource = applyFreeDelay
     ? (Array.isArray(freeRelease.rows) ? freeRelease.rows.map((p, i) => normalizePick(p, i)) : [])
     : PICKS;
+  const rankedHome = bankrollRankPicks(homeSource);
 
   if (topEl) {
     if (!homeSource.length) {
@@ -5090,7 +5133,7 @@ function renderHomeModules() {
       }
     } else {
       const premiumOn = canUsePremium();
-      const rows = homeSource.slice().sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0)).slice(0, 3).map((p, i) =>
+      const rows = rankedHome.slice(0, 3).map((p, i) =>
         `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;gap:8px">
             <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
@@ -5102,9 +5145,8 @@ function renderHomeModules() {
       if (premiumOn) {
         topEl.innerHTML = rows;
       } else {
-        const previewRows = homeSource
+        const previewRows = rankedHome
           .slice()
-          .sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0))
           .slice(0, 3)
           .map((p, i) => {
             const locked = i > 0;
@@ -6307,10 +6349,13 @@ function renderPicks() {
     : PICKS;
   const usingDemoData = demoMode || liveOddsPaused || sourcePicks.some(p => p.demoData);
   if (picksRefreshedEl) {
+    const modeLabel = bankrollMode();
     picksRefreshedEl.textContent = usingDemoData
       ? 'Live odds paused'
-      : (lastRefresh ? `Updated ${timeAgo(lastRefresh)}` : '');
+      : (lastRefresh ? `Updated ${timeAgo(lastRefresh)} · Mode: ${modeLabel}` : `Mode: ${modeLabel}`);
   }
+  const modeMinConf = bankrollModeMinConf();
+  const effectiveMinConf = Math.max(Number(pickMinConf || 0), Number(modeMinConf || 0));
   const pts = sourcePicks.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'a') return p.grade === 'a';
@@ -6319,12 +6364,15 @@ function renderPicks() {
   }).filter(p => {
     if (pickMarket !== 'all' && String(p.market || '') !== pickMarket) return false;
     if (Number(p.ev || 0) < pickMinEdge) return false;
-    if (Number(p.conf || 0) < pickMinConf) return false;
+    if (Number(p.conf || 0) < effectiveMinConf) return false;
     return true;
   }).sort((a, b) => {
     if (pickSort === 'edge_asc') return Number(a.ev || 0) - Number(b.ev || 0);
     if (pickSort === 'conf_desc') return Number(b.conf || 0) - Number(a.conf || 0);
     if (pickSort === 'time_asc') return String(a.time || '').localeCompare(String(b.time || ''));
+    const sa = bankrollPickScore(a);
+    const sb = bankrollPickScore(b);
+    if (sb !== sa) return sb - sa;
     return (Number(b.ev || 0) - Number(a.ev || 0)) || (Number(b.conf || 0) - Number(a.conf || 0));
   });
 
