@@ -360,6 +360,9 @@ MODEL_MIN_EDGE_EV = float(os.getenv("MODEL_MIN_EDGE_EV", "1.0") or 1.0)
 MODEL_MIN_BOOKS = int(os.getenv("MODEL_MIN_BOOKS", "3") or 3)
 MODEL_MIN_CONFIDENCE = int(os.getenv("MODEL_MIN_CONFIDENCE", "58") or 58)
 MODEL_MAX_PICKS_PER_SPORT = int(os.getenv("MODEL_MAX_PICKS_PER_SPORT", "40") or 40)
+MODEL_MIN_ENSEMBLE_SCORE = float(os.getenv("MODEL_MIN_ENSEMBLE_SCORE", "56.0") or 56.0)
+MODEL_MAX_DISAGREEMENT_PCT = float(os.getenv("MODEL_MAX_DISAGREEMENT_PCT", "4.0") or 4.0)
+MODEL_MIN_CLV_GAP_PCT = float(os.getenv("MODEL_MIN_CLV_GAP_PCT", "0.35") or 0.35)
 
 ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
 PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
@@ -1368,15 +1371,26 @@ def _clv_report(user_rec: dict[str, Any]) -> dict[str, Any]:
 
 
 def _agent_weighted_pick_score(pick: dict[str, Any], weights: dict[str, Any]) -> float:
-    ev = float(pick.get("edge", 0.0) or 0.0)
+    ev = float(pick.get("adjusted_edge", pick.get("edge", 0.0)) or 0.0)
+    clv_gap = float(pick.get("clv_expectation", 0.0) or 0.0)
+    disagreement = float(pick.get("market_disagreement", 0.0) or 0.0)
+    confidence = float(pick.get("confidence_calibrated", pick.get("confidence", 50.0)) or 50.0)
+    books = max(1.0, float(pick.get("books_compared", 1.0) or 1.0))
+    ensemble = float(((pick.get("model_v2") or {}).get("ensemble_score", 0.0) if isinstance(pick.get("model_v2"), dict) else 0.0) or 0.0)
     steam = 1.0 if float(pick.get("line_movement", 0.0) or 0.0) > 0 else 0.0
     fades = 1.0 if float(pick.get("public_pct", 0.0) or 0.0) >= 60 else 0.0
+    reliability = max(0.0, min(1.0, (confidence - 50.0) / 45.0))
+    disagreement_penalty = max(0.0, disagreement - 2.0) * 0.6
+    liquidity_bonus = min(1.4, (books - 2.0) * 0.25)
     return (
         ev * float(weights.get("best_line_ev", 1.0) or 1.0)
-        + ev * 0.5 * float(weights.get("market_consensus", 1.0) or 1.0)
-        + ev * 0.35 * float(weights.get("devig", 1.0) or 1.0)
+        + clv_gap * 0.55 * float(weights.get("market_consensus", 1.0) or 1.0)
+        + reliability * 2.1 * float(weights.get("devig", 1.0) or 1.0)
+        + (ensemble / 100.0) * 1.7
+        + liquidity_bonus
         + steam * float(weights.get("steam", 1.0) or 1.0)
         + fades * float(weights.get("fades", 1.0) or 1.0)
+        - disagreement_penalty
     )
 
 
@@ -1853,13 +1867,23 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
 
         disagreement = float(diag.get("home_prob_spread", 0.0) or 0.0)
         books_count = int(diag.get("books_count", 1) or 1)
+        disagreement_pct = disagreement * 100.0
         implied_prob_pct = calculate_implied_probability(bet_odds) * 100.0
         fair_pct = fair_prob * 100.0
         line_gap_pct = max(0.0, fair_pct - implied_prob_pct)
+        if disagreement_pct > MODEL_MAX_DISAGREEMENT_PCT:
+            continue
+        if line_gap_pct < MODEL_MIN_CLV_GAP_PCT:
+            continue
+        reliability_penalty = max(0.0, disagreement_pct - 1.5) * 0.35
+        liquidity_bonus = min(1.0, max(0, books_count - MODEL_MIN_BOOKS) * 0.2)
+        adjusted_edge = float(edge) - reliability_penalty + liquidity_bonus
+        if adjusted_edge < MODEL_MIN_EDGE_EV:
+            continue
         confidence_raw = _calibrated_confidence_pct(
-            edge_ev=float(edge or 0.0),
+            edge_ev=adjusted_edge,
             books_count=books_count,
-            disagreement_pct=disagreement * 100.0,
+            disagreement_pct=disagreement_pct,
             line_gap_pct=line_gap_pct,
         )
         confidence = confidence_raw
@@ -1868,11 +1892,13 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         if confidence < MODEL_MIN_CONFIDENCE:
             continue
         model_v2 = _build_model_v2_components(
-            edge_ev=float(edge or 0.0),
+            edge_ev=adjusted_edge,
             books_count=books_count,
-            disagreement_pct=disagreement * 100.0,
+            disagreement_pct=disagreement_pct,
             line_gap_pct=line_gap_pct,
         )
+        if float(model_v2.get("ensemble_score", 0.0) or 0.0) < MODEL_MIN_ENSEMBLE_SCORE:
+            continue
 
         game_time = game.get("commence_time", "")
         implied_pct = implied_prob_pct
@@ -1890,7 +1916,8 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "bet_type": "moneyline",
             "odds": bet_odds,
             "edge": round(edge, 2),
-            "ev": round(edge, 2),
+            "adjusted_edge": round(adjusted_edge, 2),
+            "ev": round(adjusted_edge, 2),
             "confidence_raw": round(confidence_raw, 1),
             "confidence": int(round(confidence)),
             "confidence_calibrated": round(confidence_raw, 1),
@@ -1898,20 +1925,20 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             "implied_prob": round(implied_pct, 1),
             "best_book": best_book or (game.get("bookmakers", ["DraftKings"])[0] if game.get("bookmakers") else "DraftKings"),
             "books_compared": books_count,
-            "market_disagreement": round(disagreement * 100.0, 2),
+            "market_disagreement": round(disagreement_pct, 2),
             "clv_expectation": round(line_gap_pct, 2),
             "model_v2": model_v2,
             "model_breakdown": {
-                "pinnacle_clv": f"Consensus fair {fair_pct:.1f}% vs implied {implied_pct:.1f}% ({edge:+.2f}% EV).",
-                "sharp_money": f"Compared across {books_count} books; disagreement {disagreement*100.0:.2f} pts.",
-                "confirms": "Best-line EV, de-vig consensus, book quality weighting, calibrated confidence",
+                "pinnacle_clv": f"Consensus fair {fair_pct:.1f}% vs implied {implied_pct:.1f}% (raw {edge:+.2f}% / adj {adjusted_edge:+.2f}% EV).",
+                "sharp_money": f"Compared across {books_count} books; disagreement {disagreement_pct:.2f} pts.",
+                "confirms": "Best-line EV, de-vig consensus, disagreement gate, CLV gap gate, calibrated confidence",
             },
             "agents_fired": ["best_line_ev", "market_consensus", "devig", "confidence_calibration"],
             "data_source": "odds_api",
         }
         picks.append(pick)
 
-    picks.sort(key=lambda x: (float(x.get("model_v2", {}).get("ensemble_score", 0.0)), float(x.get("edge", 0.0))), reverse=True)
+    picks.sort(key=lambda x: (float(x.get("model_v2", {}).get("ensemble_score", 0.0)), float(x.get("adjusted_edge", x.get("edge", 0.0)) or 0.0)), reverse=True)
     return picks[: max(1, MODEL_MAX_PICKS_PER_SPORT)]
 
 
@@ -2566,9 +2593,12 @@ async def model_report():
                 "min_edge_ev": MODEL_MIN_EDGE_EV,
                 "min_books": MODEL_MIN_BOOKS,
                 "min_confidence": MODEL_MIN_CONFIDENCE,
+                "min_ensemble_score": MODEL_MIN_ENSEMBLE_SCORE,
+                "max_market_disagreement_pct": MODEL_MAX_DISAGREEMENT_PCT,
+                "min_clv_gap_pct": MODEL_MIN_CLV_GAP_PCT,
                 "max_picks_per_sport": MODEL_MAX_PICKS_PER_SPORT,
             },
-            "notes": "Calibrated confidence with liquidity and disagreement penalties.",
+            "notes": "Calibrated confidence with disagreement penalties and CLV-gap quality gates.",
         }
     }
 
