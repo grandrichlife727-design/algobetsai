@@ -96,9 +96,9 @@
       text-decoration: none;
     }
     .nav-logo-img {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
       display: block;
       object-fit: cover;
     }
@@ -157,9 +157,10 @@
 
     @media (max-width: 640px) {
       .nav-links { display: none; }
-      .nav-logo-img { width: 20px; height: 20px; border-radius: 5px; }
+      .nav-logo-img { width: 26px; height: 26px; border-radius: 7px; }
       .nav-logo-text { font-size: 23px; }
       .nav-logo { gap: 6px; }
+      .hero-login { font-size: 12px; }
     }
 
     /* ─── HERO ──────────────────────────────────────── */
@@ -261,6 +262,22 @@
       flex-wrap: wrap;
       justify-content: center;
       animation: fadeUp 0.7s 0.3s ease both;
+    }
+    .hero-login {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      animation: fadeUp 0.7s 0.34s ease both;
+    }
+    .hero-login a {
+      color: var(--cyan);
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(34,211,238,.35);
+    }
+    .hero-login a:hover {
+      color: #9ff3ff;
+      border-bottom-color: rgba(34,211,238,.7);
     }
 
     .btn-primary {
@@ -919,6 +936,7 @@
       <li><a href="#features">Features</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#faq">FAQ</a></li>
+      <li><a href="app.html?auth=login&src=landing_nav_login">Log In</a></li>
       <!-- ➡️  Replace # with your actual app URL -->
       <li><a class="nav-cta" href="app.html">Launch App →</a></li>
     </ul>
@@ -960,7 +978,7 @@
     <div class="hero-actions">
       <a href="#email-gate" class="btn-primary" onclick="openEmailGate(event)">
         ⚡ Start for Free
-        <span style="font-size:12px; opacity:0.75; font-weight:500">1 daily top edge</span>
+        <span style="font-size:12px; opacity:0.75; font-weight:500">3 daily preview cards</span>
       </a>
       <a href="app.html?upgrade=premium&src=landing_trial_hero" class="btn-ghost" onclick="startPremiumTrialLanding(event)">
         Start 3-Day Trial (Card Required)
@@ -968,6 +986,9 @@
       <a href="#how" class="btn-ghost">
         See how it works ↓
       </a>
+    </div>
+    <div class="hero-login">
+      Already registered? <a href="app.html?auth=login&src=landing_hero_login">Log in to your account</a>
     </div>
 
     <div class="hero-trust">
@@ -1278,7 +1299,7 @@
       <strong style="color:#fff;" id="avail-count">6</strong> A-rated plays available now —
       <strong style="color:var(--amber);" id="countdown-display">refreshing in 4h 22m</strong>
     </span>
-    <a href="#email-gate" onclick="openEmailGate(event)" style="background:var(--grad);color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;letter-spacing:.3px;white-space:nowrap;">Claim Free Picks →</a>
+    <a href="#email-gate" onclick="openEmailGate(event)" style="background:var(--grad);color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;letter-spacing:.3px;white-space:nowrap;">Claim Free Preview →</a>
   </div>
 
   <!-- ─── PRICING ───────────────────────────────────────── -->
@@ -1292,14 +1313,14 @@
       <div class="pricing-card reveal">
         <div class="price-plan-name">Free</div>
         <div class="price-amount"><span>$</span>0</div>
-        <div class="price-period">Forever free · preview mode with one unlocked daily edge</div>
+        <div class="price-period">Forever free · 3 preview cards daily (matchup context only)</div>
         <ul class="price-features">
-          <li class="price-feature"><span class="price-check">✓</span> 1 fully revealed top edge per day</li>
-          <li class="price-feature"><span class="price-check">✓</span> 3-4 teaser cards (matchup preview only)</li>
+          <li class="price-feature"><span class="price-check">✓</span> 3 daily preview cards</li>
+          <li class="price-feature"><span class="price-check">✓</span> Matchup + confidence context</li>
           <li class="price-feature"><span class="price-check">✓</span> 20-minute delayed board updates</li>
           <li class="price-feature"><span class="price-check">✓</span> Parlay builder</li>
           <li class="price-feature"><span class="price-check">✓</span> Shareable pick cards</li>
-          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">No full side/line/odds on locked teasers</span></li>
+          <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">No bet type, side, line, or odds on free previews</span></li>
           <li class="price-feature"><span class="price-x" style="opacity:0.3">—</span> <span style="opacity:0.4">No Props Edge, +EV, Steam, Fades, or VIP tools</span></li>
         </ul>
         <a href="#email-gate" onclick="openEmailGate(event)" class="price-btn price-btn-ghost">Create Free Account</a>
@@ -1371,7 +1392,7 @@
           What exactly do Free users get each day?
           <span class="faq-chevron">⌄</span>
         </div>
-        <div class="faq-a">Free includes one fully revealed top edge daily, plus teaser cards that show matchup context while full bet details stay locked. The free board runs on delayed refresh. Premium and VIP unlock full real-time details and expanded tools.</div>
+        <div class="faq-a">Free includes 3 preview cards per day with matchup context only. Bet details (bet type, side, line, and odds) stay locked on free. Premium and VIP unlock full pick details and real-time tool access.</div>
       </div>
 
       <div class="faq-item">
@@ -1493,7 +1514,7 @@
       </div>
 
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,38px);letter-spacing:1px;color:#fff;line-height:1;margin-bottom:10px;">Get Your Free<br><span style="background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Daily Edges.</span></h2>
-      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;">Create a free account to unlock 1 daily top edge and teaser previews. Upgrade anytime for full picks.</p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;">Create a free account for 3 daily preview cards. Upgrade to unlock full picks with bet type, side, line, and odds.</p>
 
       <form onsubmit="submitEmailGate(event)" style="display:flex;flex-direction:column;gap:12px;">
         <input type="email" id="gate-email" placeholder="your@email.com" required
