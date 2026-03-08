@@ -88,13 +88,22 @@
     .nav-logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
     }
     .nav-logo-img {
-      width: min(210px, 46vw);
-      height: auto;
+      width: 40px;
+      height: 40px;
       display: block;
+      object-fit: contain;
+    }
+    .nav-logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .nav-links {
@@ -342,7 +351,7 @@
     }
 
     .phone-logo-img {
-      width: 130px;
+      width: 82px;
       height: auto;
       display: block;
     }
@@ -829,7 +838,7 @@
       width: 100%;
     }
     footer > * { width: 100%; }
-    .footer-logo-img { width: 190px; height: auto; display: block; }
+    .footer-logo-img { width: 110px; height: auto; display: block; }
     .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
     .footer-links a { text-decoration: none; font-size: 13px; color: var(--muted); transition: color 0.2s; }
     .footer-links a:hover { color: var(--text); }
@@ -889,6 +898,7 @@
   <nav>
     <a class="nav-logo" href="#">
       <img class="nav-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
+      <span class="nav-logo-text">AlgoBets AI</span>
     </a>
     <ul class="nav-links">
       <li><a href="#how">How It Works</a></li>
@@ -1645,7 +1655,8 @@
         const u = new URL(window.location.origin);
         const isHttp = ['http:', 'https:'].includes(u.protocol);
         const isGithubPages = u.hostname.endsWith('github.io');
-        if (!isHttp || isGithubPages) return 'https://algobetsai.onrender.com';
+        const isCloudflarePages = u.hostname.endsWith('pages.dev');
+        if (!isHttp || isGithubPages || isCloudflarePages) return 'https://algobetsai.onrender.com';
         return String(window.location.origin).replace(/\/+$/, '');
       } catch (_) {
         return 'https://algobetsai.onrender.com';
@@ -1787,8 +1798,40 @@
           headers: {'content-type': 'application/json'},
           body: JSON.stringify({id_token: idToken}),
         });
-        if (!res.ok) return;
-        const data = await res.json();
+        let data = null;
+        if (res.ok) {
+          try {
+            data = await res.json();
+          } catch (_) {
+            data = null;
+          }
+        }
+        if (!data?.token || !data?.user_id) {
+          const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+          const verifyRes = await fetch(verifyUrl, {method: 'GET'});
+          if (!verifyRes.ok) return;
+          const claims = await verifyRes.json();
+          const aud = String(claims?.aud || '').trim();
+          if (GOOGLE_CLIENT_ID && aud && aud !== GOOGLE_CLIENT_ID) return;
+          const exp = parseInt(String(claims?.exp || '0'), 10);
+          if (!Number.isFinite(exp) || exp <= Math.floor(Date.now() / 1000)) return;
+          const sub = String(claims?.sub || '').trim();
+          const email = String(claims?.email || '').trim().toLowerCase();
+          const emailVerified = String(claims?.email_verified || '').toLowerCase() === 'true';
+          if (!sub || !email || !emailVerified) return;
+          const sessionRes = await fetch(`${BACKEND}/api/auth/session`, {
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({user_id: `g_${sub}`, method: 'google', identifier: email}),
+          });
+          if (!sessionRes.ok) return;
+          const session = await sessionRes.json();
+          data = {
+            token: String(session?.token || '').trim(),
+            user_id: String(session?.user_id || '').trim().toLowerCase(),
+            profile: {identifier: email},
+          };
+        }
         const token = String(data?.token || '').trim();
         const userId = String(data?.user_id || '').trim().toLowerCase();
         const identifier = String(data?.profile?.identifier || '').trim();

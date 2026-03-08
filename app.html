@@ -80,8 +80,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 /* SIDEBAR */
 .sidebar{border-right:1px solid var(--border);padding:18px 10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
 @media(max-width:900px){.sidebar{display:none}}
-.logo{display:flex;align-items:center;padding:4px 8px 24px}
-.logo-img{width:160px;height:auto;display:block}
+.logo{display:flex;align-items:center;gap:6px;padding:4px 8px 24px}
+.logo-img{width:40px;height:40px;display:block;object-fit:contain}
+.logo-name{font-family:var(--display);font-size:22px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
 .nav-item:focus-visible,.scan-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -130,8 +131,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,6,10,.78);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;min-height:50px}
-.topbar-logo{display:flex;align-items:center;white-space:nowrap}
-.topbar-logo-img{width:200px;height:auto;display:block}
+.topbar-logo{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.topbar-logo-img{width:30px;height:30px;display:block;object-fit:contain}
+.topbar-logo-name{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .topbar-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 @media(max-width:380px){.api-status{display:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
@@ -154,7 +156,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:520px){#demo-btn{display:inline-flex}}
 @media(max-width:900px){
   .topbar{padding:6px 10px;min-height:auto;flex-wrap:wrap;row-gap:6px}
-  .topbar-logo-img{width:180px}
+  .topbar-logo-img{width:30px;height:30px}
+  .topbar-logo-name{font-size:22px}
   .topbar-right{
     width:100%;
     margin-left:0;
@@ -194,12 +197,14 @@ img,svg,video,canvas{max-width:100%;height:auto}
   .paywall-cta,.pf-btn{font-size:13px;padding:8px 12px}
 }
 @media(max-width:560px){
-  .topbar-logo-img{width:165px}
+  .topbar-logo-img{width:30px;height:30px}
+  .topbar-logo-name{font-size:20px}
   .plan-pill{display:none}
   .cooldown-pill{display:none !important}
 }
 @media(max-width:420px){
-  .topbar-logo-img{width:150px}
+  .topbar-logo-img{width:30px;height:30px}
+  .topbar-logo-name{font-size:18px}
 }
 .loading-bar{height:2px;background:linear-gradient(90deg,transparent,var(--cyan) 50%,transparent);background-size:300%;animation:loading-sweep 1s infinite;display:none}
 .loading-bar.on{display:block}
@@ -688,6 +693,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 <aside class="sidebar">
   <div class="logo">
     <img class="logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
+    <span class="logo-name">AlgoBets AI</span>
   </div>
   <span class="nav-section">Navigation</span>
   <button class="nav-item active" onclick="go('home')">
@@ -744,6 +750,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="topbar">
     <div class="topbar-logo">
       <img class="topbar-logo-img" src="Logo/algobetsailogo.svg" alt="Algobets AI logo">
+      <span class="topbar-logo-name">AlgoBets AI</span>
     </div>
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
@@ -1741,7 +1748,8 @@ const CURRENT_ORIGIN_BACKEND = (() => {
     const u = new URL(window.location.origin);
     const isHttp = ['http:', 'https:'].includes(u.protocol);
     const isGithubPages = u.hostname.endsWith('github.io');
-    if (!isHttp || isGithubPages) return '';
+    const isCloudflarePages = u.hostname.endsWith('pages.dev');
+    if (!isHttp || isGithubPages || isCloudflarePages) return '';
     return String(window.location.origin).replace(/\/+$/, '');
   } catch (_) {
     return '';
@@ -3673,21 +3681,52 @@ async function handleGoogleCredential(response) {
     showToast('Google sign-in failed');
     return;
   }
+  const createSessionFromGoogleClaims = async (claims) => {
+    const sub = String(claims?.sub || '').trim();
+    const email = String(claims?.email || '').trim().toLowerCase();
+    const emailVerified = String(claims?.email_verified || '').toLowerCase() === 'true';
+    if (!sub || !email || !emailVerified) throw new Error('Invalid Google identity');
+    const sessionRes = await fetch(`${BACKEND}/api/auth/session`, {
+      method: 'POST',
+      headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
+      body: JSON.stringify({user_id: `g_${sub}`, method: 'google', identifier: email}),
+    });
+    if (!sessionRes.ok) throw new Error(`HTTP ${sessionRes.status}`);
+    const session = await sessionRes.json();
+    return {
+      token: String(session?.token || '').trim(),
+      user_id: String(session?.user_id || '').trim().toLowerCase(),
+      profile: {identifier: email},
+    };
+  };
+  const verifyViaGoogleTokenInfo = async () => {
+    const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`;
+    const verifyRes = await fetch(verifyUrl, {method: 'GET'});
+    if (!verifyRes.ok) throw new Error(`Google token verify failed (${verifyRes.status})`);
+    const claims = await verifyRes.json();
+    const aud = String(claims?.aud || '').trim();
+    if (GOOGLE_CLIENT_ID && aud && aud !== GOOGLE_CLIENT_ID) throw new Error('Google audience mismatch');
+    const exp = parseInt(String(claims?.exp || '0'), 10);
+    if (!Number.isFinite(exp) || exp <= Math.floor(Date.now() / 1000)) throw new Error('Google token expired');
+    return createSessionFromGoogleClaims(claims);
+  };
   try {
     const res = await fetch(`${BACKEND}/api/auth/google`, {
       method: 'POST',
       headers: Object.assign({'content-type': 'application/json'}, BACKEND_KEY ? {'x-api-key': BACKEND_KEY} : {}),
       body: JSON.stringify({id_token: credential}),
     });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
+    let data = null;
+    if (res.ok) {
       try {
-        const payload = await res.json();
-        if (payload?.detail) msg = String(payload.detail);
-      } catch (_) {}
-      throw new Error(msg);
+        data = await res.json();
+      } catch (_) {
+        data = null;
+      }
     }
-    const data = await res.json();
+    if (!data?.token || !data?.user_id) {
+      data = await verifyViaGoogleTokenInfo();
+    }
     AUTH_TOKEN = String(data.token || '').trim();
     if (AUTH_TOKEN) localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
     const uid = String(data.user_id || '').trim().toLowerCase();
