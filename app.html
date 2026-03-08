@@ -895,7 +895,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="hero-stats">
         <div class="stat s-green"><div class="stat-val" id="s-edge" style="color:var(--green)">—</div><div class="stat-label">Avg edge today</div></div>
         <div class="stat s-cyan"><div class="stat-val" id="s-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
-        <div class="stat s-violet"><div class="stat-val" id="s-winrate" style="color:var(--violet)">847</div><div class="stat-label">users scanning now</div></div>
       </div>
       <div class="error-banner" id="err-banner" role="status" aria-live="polite"></div>
       <div class="trial-card" id="trial-card">
@@ -5833,12 +5832,10 @@ async function doScan(silent = false) {
       document.getElementById('s-edge').textContent = '+' + avgEV + '%';
       document.getElementById('s-count').textContent = PICKS.length;
       document.getElementById('nb-picks').textContent = PICKS.length;
-      document.getElementById('s-winrate').textContent = String(820 + Math.floor(Math.random() * 60));
     } else {
       document.getElementById('s-edge').textContent = '—';
       document.getElementById('s-count').textContent = '0';
       document.getElementById('nb-picks').textContent = '0';
-      document.getElementById('s-winrate').textContent = String(800 + Math.floor(Math.random() * 40));
     }
 
     if (PICKS.length === 0 && EVDATA.length === 0) {
