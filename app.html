@@ -6005,6 +6005,44 @@ function renderPicks() {
     : `Today's Edges (Live)`;
   updatePaywallUi();
 
+  if (isFreePlan) {
+    const total = Math.max(0, pts.length || Number(document.getElementById('s-count')?.textContent || 0));
+    el.innerHTML = `<div class="feature-lock" style="margin-top:0">
+      <div class="blur-wrap" style="filter:blur(8px)">
+        <div class="pick grade-a">
+          <div class="pick-inner">
+            <div class="pick-left">
+              <div class="pick-sport-row"><span class="tier-tag">Premium Board</span><span class="sport-tag">Live Edges</span></div>
+              <div class="pick-bet">NBA Spread Edge</div>
+              <div class="pick-meta-row"><span class="edge-badge high">+8.4%</span></div>
+              <div class="pick-line">Actionable side and line hidden</div>
+            </div>
+            <div class="pick-right">${evRing(8.4)}</div>
+          </div>
+        </div>
+        <div class="pick grade-b" style="margin-top:8px">
+          <div class="pick-inner">
+            <div class="pick-left">
+              <div class="pick-sport-row"><span class="tier-tag">Premium Board</span><span class="sport-tag">Live Edges</span></div>
+              <div class="pick-bet">NHL Total Edge</div>
+              <div class="pick-meta-row"><span class="edge-badge mid">+4.9%</span></div>
+              <div class="pick-line">Best line and fair value hidden</div>
+            </div>
+            <div class="pick-right">${evRing(4.9)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">Premium picks are locked on Free</div>
+          <div class="lock-sub">${total || 15} live picks available now. Upgrade to unlock full board, lines, and 5-agent details.</div>
+          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button>
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
+
   if (!pts.length) {
     const lastScan = applyFreeDelay && freeRelease.remainingMs > 0
       ? `Next free release in ${fmtCountdown(Math.ceil(freeRelease.remainingMs / 1000))}`
