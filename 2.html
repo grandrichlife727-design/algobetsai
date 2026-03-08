@@ -871,21 +871,8 @@ html, body {
 const _qp = new URLSearchParams(window.location.search);
 const _backendFromQp = (_qp.get('backend') || '').trim();
 if (_backendFromQp) localStorage.setItem('algobets-backend', _backendFromQp.replace(/\/+$/,''));
-const _defaultBackend = (() => {
-  try {
-    const u = new URL(window.location.origin);
-    const isHttp = ['http:', 'https:'].includes(u.protocol);
-    const isGithubPages = u.hostname.endsWith('github.io');
-    if (!isHttp || isGithubPages) return 'https://algobetsai.onrender.com';
-    return String(window.location.origin).replace(/\/+$/,'');
-  } catch (_) {
-    return 'https://algobetsai.onrender.com';
-  }
-})();
-const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || _defaultBackend).replace(/\/+$/,'');
-const _backendKeyFromQp = String(_qp.get('backend_key') || '').trim();
-if (_backendKeyFromQp) localStorage.setItem('algobets-backend-key', _backendKeyFromQp);
-const BACKEND_KEY = String(localStorage.getItem('algobets-backend-key') || '').trim();
+const BACKEND = (_backendFromQp || localStorage.getItem('algobets-backend') || 'https://algobetsai.onrender.com').replace(/\/+$/,'');
+const BACKEND_KEY = 'c615f66b941b3d97837cc7e61ac85afb2aaae62b860d49e5b988daa37623e69b';
 const PROFILE_KEY = 'algobets-profile-v1';
 const STATE_KEY = 'algobets-ui-state-v1';
 const TRIAL_UI_KEY = 'algobets-trial-ui-v1';
