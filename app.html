@@ -522,19 +522,20 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .hps-sub{font-size:11px;color:var(--sub);margin-top:3px;max-width:540px;line-height:1.45}
 .hps-pill{font-size:10px;font-family:var(--mono);font-weight:700;color:var(--cyan);border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.08);border-radius:999px;padding:4px 8px}
 .hps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.hps-col{border:1px solid var(--border);border-radius:10px;background:rgba(6,6,10,.58);padding:7px;display:flex;flex-direction:column;gap:5px}
+.hps-col{border:1px solid var(--border);border-radius:10px;background:rgba(6,6,10,.58);padding:10px;display:flex;flex-direction:column;gap:7px}
 .hps-col.free{border-color:rgba(255,183,0,.25)}
-.hps-col.premium{border-color:rgba(0,212,255,.35);box-shadow:0 0 18px rgba(0,212,255,.15)}
+.hps-col.premium{border-color:rgba(0,212,255,.55);box-shadow:0 0 18px rgba(0,212,255,.2);background:rgba(0,212,255,.06)}
 .hps-col.vip{border-color:rgba(0,229,160,.25)}
 .hps-k{font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.7px}
 .hps-col.free .hps-k{color:var(--amber)}
 .hps-col.premium .hps-k{color:var(--cyan)}
 .hps-col.vip .hps-k{color:var(--green)}
-.hps-v{font-size:11px;font-weight:700;line-height:1.25}
-.hps-list{font-size:10px;color:var(--sub);line-height:1.3;display:flex;flex-direction:column;gap:3px}
+.hps-v{font-size:12px;font-weight:700;line-height:1.3}
+.hps-price{font-size:18px;font-weight:900;color:var(--text);letter-spacing:-.3px}
+.hps-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:var(--mono);font-weight:800;color:#001722;background:rgba(0,212,255,.9);padding:2px 6px;border-radius:999px;width:max-content}
+.hps-list{font-size:11px;color:var(--sub);line-height:1.4;display:flex;flex-direction:column;gap:4px}
 .hps-cta{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
 .hps-cta .pf-btn,.hps-cta .paywall-cta{font-size:11px;padding:6px 9px}
-.home-plan-showcase.compact .hps-grid{display:none}
 @media(max-width:900px){.hps-grid{grid-template-columns:1fr}}
 .up-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:700;padding:16px}
 .up-ov.on{display:flex}
@@ -742,44 +743,49 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-cyan"><div class="stat-val" id="home-count" style="color:var(--cyan)">—</div><div class="stat-label">Live picks</div></div>
         <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
       </div>
-      <div class="home-plan-showcase compact" id="home-plan-showcase">
+      <div class="home-plan-showcase" id="home-plan-showcase">
         <div class="hps-top">
           <div>
             <div class="hps-title">Plan Levels: Free, Premium, VIP</div>
             <div class="hps-sub">Free: Test the edges · Premium: Daily volume · VIP: Real-time speed</div>
           </div>
-          <button class="hps-pill" id="hps-toggle" onclick="togglePlanCards()">Show Plans</button>
+          <div class="hps-pill">Choose your plan</div>
         </div>
         <div class="hps-grid">
           <div class="hps-col free">
             <div class="hps-k">FREE</div>
-            <div class="hps-v">Test the edges</div>
+            <div class="hps-price">$0</div>
             <div class="hps-list">
               <div>2 picks per scan</div>
-              <div>NBA + NHL access</div>
-              <div>Refresh every 20 minutes</div>
+              <div>NBA + NHL only</div>
+              <div>20-minute refresh</div>
             </div>
-            <div class="hps-cta"><button class="pf-btn" onclick="go('picks')">View Picks</button></div>
+            <div class="hps-cta"><button class="pf-btn" id="hps-free-cta" onclick="go('picks')">Get Started</button></div>
           </div>
           <div class="hps-col premium">
             <div class="hps-k">PREMIUM</div>
-            <div class="hps-v">Daily volume</div>
+            <div class="hps-badge">Most Popular</div>
+            <div class="hps-price">$19.99/mo</div>
             <div class="hps-list">
-              <div>15 picks per scan</div>
-              <div>Includes Props, +EV filter, Steam moves, Public fades, Parlay builder</div>
-              <div>Refresh every 5 minutes</div>
+              <div>Unlimited picks</div>
+              <div>All sports + props</div>
+              <div>5-minute refresh</div>
+              <div>Full 5-agent breakdown</div>
+              <div>Steam moves + public fades</div>
             </div>
-            <div class="hps-cta"><button class="paywall-cta" onclick="go('premium')">Open Premium</button></div>
+            <div class="hps-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
           </div>
           <div class="hps-col vip">
             <div class="hps-k">VIP</div>
-            <div class="hps-v">Real-time speed</div>
+            <div class="hps-price">$39.99/mo</div>
             <div class="hps-list">
-              <div>50 picks per scan</div>
-              <div>Execution layer + VIP tools + Discord</div>
-              <div>Refresh every 1 minute</div>
+              <div>Unlimited picks</div>
+              <div>1-minute refresh</div>
+              <div>Line rush alerts</div>
+              <div>Discord access</div>
+              <div>Priority support</div>
             </div>
-            <div class="hps-cta"><button class="paywall-cta" onclick="go('vip')">Open VIP</button></div>
+            <div class="hps-cta"><button class="paywall-cta" onclick="startCheckout('vip','monthly')">Upgrade to VIP</button></div>
           </div>
         </div>
       </div>
