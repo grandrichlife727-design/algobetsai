@@ -238,9 +238,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
-.pick-controls{display:grid;grid-template-columns:1.2fr repeat(4,minmax(0,1fr));gap:8px;margin:-6px 0 12px}
+.pick-controls{display:grid;gap:8px;margin:-6px 0 12px}
 .pick-controls input,.pick-controls select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--sans)}
-@media(max-width:900px){.pick-controls{grid-template-columns:1fr 1fr}}
+.pick-search-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.pick-search-toggle:hover{color:var(--text);border-color:var(--border2)}
+.pick-search-input{display:none}
+@media(min-width:901px){
+  .pick-controls{grid-template-columns:auto repeat(4,minmax(0,1fr))}
+  .pick-controls.search-on{grid-template-columns:auto minmax(180px,1.15fr) repeat(4,minmax(0,1fr))}
+  .pick-controls.search-on .pick-search-input{display:block}
+}
+@media(max-width:900px){
+  .pick-controls{grid-template-columns:1fr 1fr}
+  .pick-search-toggle{grid-column:1 / 2}
+  .pick-controls.search-on .pick-search-input{display:block;grid-column:1 / -1}
+}
 .tool-lock{opacity:.72;border-style:dashed}
 .tool-lock:hover{opacity:1}
 
@@ -608,6 +620,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .home-secondary{margin-top:12px}
 .home-secondary-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:0 0 8px 2px}
 .pick-why{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.35}
+.market-compact{padding:10px}
+.market-kpis{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.market-kpi{font-size:10px;font-family:var(--mono);color:var(--sub);border:1px solid var(--border);border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.02)}
 .h-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
 .h-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .h-time{font-size:11px;color:var(--muted)}
@@ -843,9 +858,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div id="home-vip" class="growth-sub">Loading VIP pick preview...</div>
           <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button> <span class="vip-chip">VIP Discord</span></div>
         </div>
-        <div class="growth-card" id="home-card-market" data-home-card="market_status">
+        <div class="growth-card market-compact" id="home-card-market" data-home-card="market_status">
           <div class="growth-title">Market Status</div>
-          <div id="home-glance" class="growth-sub">3 games · 2 books · 3 edges found</div>
+          <div id="home-market-kpis" class="market-kpis">
+            <span class="market-kpi">3 games</span>
+            <span class="market-kpi">2 books</span>
+            <span class="market-kpi">3 edges</span>
+          </div>
           <div class="rf-row"><button class="pf-btn primary" onclick="doScan()">Run Scan</button></div>
           <div class="growth-note scan-feedback" id="home-scan-feedback">Last scan: never</div>
         </div>
@@ -935,8 +954,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
-      <div class="pick-controls">
-        <input id="picks-search" type="search" placeholder="Search team, player, market..." oninput="setPickQuery(this.value)"/>
+      <div class="pick-controls" id="pick-controls">
+        <button class="pick-search-toggle" id="picks-search-toggle" type="button" aria-expanded="false" onclick="togglePicksSearch()">🔎 Search</button>
+        <input id="picks-search" class="pick-search-input" type="search" placeholder="Search team, player, market..." oninput="setPickQuery(this.value)"/>
         <select id="picks-market" onchange="setPickMarket(this.value)">
           <option value="all">All markets</option>
           <option value="spread">Spread</option>
@@ -4822,7 +4842,7 @@ function renderHomeModules() {
   const topEl = document.getElementById('home-top-picks');
   const premiumEl = document.getElementById('home-premium');
   const vipEl = document.getElementById('home-vip');
-  const glanceEl = document.getElementById('home-glance');
+  const glanceEl = document.getElementById('home-market-kpis');
   const trendEl = document.getElementById('home-trending');
   const resultEl = document.getElementById('home-results');
   const tomorrowEl = document.getElementById('home-tomorrow');
@@ -4911,7 +4931,7 @@ function renderHomeModules() {
   setHomeCardVisible('home-card-vip', !!homeFlags.show_vip_snapshot);
 
   if (glanceEl) {
-    glanceEl.innerHTML = `3 games · 2 books · 3 edges found`;
+    glanceEl.innerHTML = `<span class="market-kpi">3 games</span><span class="market-kpi">2 books</span><span class="market-kpi">3 edges</span>`;
   }
   setHomeCardVisible('home-card-market', !!homeFlags.show_market_status);
 
@@ -5993,7 +6013,6 @@ function renderPicks() {
     const edgeVal = Number(p.ev || 0);
     const edgeClass = edgeVal > 5 ? 'high' : edgeVal >= 2 ? 'mid' : 'low';
     const conf = Math.max(50, Math.min(95, Number(p.conf || 50)));
-    const socialViewers = 1 + ((Number(p.id || i) + Math.floor(Date.now() / 60000)) % 5);
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">SAMPLE</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
@@ -6013,7 +6032,6 @@ function renderPicks() {
       <div class="pick-bet">${p.bet}</div>
       <div class="pick-meta-row">
         <span class="edge-badge ${edgeClass}" title="Advantage over fair market price">+${edgeVal.toFixed(1)}%</span>
-        <span style="font-size:10px;color:var(--muted)">${socialViewers} people viewing</span>
       </div>
       <div class="confidence-wrap">
         <div class="confidence-row"><span title="Model certainty from 5-agent consensus">Confidence</span><span title="Model certainty from 5-agent consensus">${conf}%</span></div>
@@ -6617,6 +6635,24 @@ function setFilter(el, k) {
 function setPickQuery(v) {
   pickQuery = String(v || '').trim().toLowerCase();
   renderPicks();
+}
+
+function togglePicksSearch(forceOpen = null) {
+  const controls = document.getElementById('pick-controls');
+  const input = document.getElementById('picks-search');
+  const btn = document.getElementById('picks-search-toggle');
+  if (!controls || !input || !btn) return;
+  const isOpen = controls.classList.contains('search-on');
+  const nextOpen = forceOpen === null ? !isOpen : !!forceOpen;
+  controls.classList.toggle('search-on', nextOpen);
+  btn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+  btn.textContent = nextOpen ? '✕ Close' : '🔎 Search';
+  if (nextOpen) {
+    setTimeout(() => input.focus(), 0);
+    return;
+  }
+  input.value = '';
+  setPickQuery('');
 }
 
 function setPickMarket(v) {
