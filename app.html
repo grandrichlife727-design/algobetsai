@@ -6393,6 +6393,16 @@ function renderPicks() {
   const useFreeTease = isFreePlan && freeRenderSource.length > freeVisibleLimit;
   const hiddenCount = isFreePlan ? Math.max(0, pts.length - freePreviewLimit) : 0;
   const renderList = isFreePlan ? freeRenderSource.slice(0, freePreviewLimit) : freeRenderSource;
+  const vipOn = canUseVip();
+  const vipPick = getVipPickOfDay();
+  const vipTeaser = !vipOn ? `
+    <div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,183,0,.35);background:linear-gradient(135deg,rgba(255,183,0,.08),rgba(139,92,246,.07))">
+      <div class="growth-title vip-title"><span class="vip-ico">👑</span>VIP Pick of the Day</div>
+      <div class="growth-sub">${vipPick ? `${esc(String(vipPick.game || 'Top game'))} · +${Number(vipPick.ev || 0).toFixed(1)}% edge` : 'Run scan to load today’s VIP pick.'}</div>
+      <div class="growth-note">Exact side, line, and timing are VIP only.</div>
+      <div class="rf-row" style="margin-top:8px"><button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Pick</button></div>
+    </div>
+  ` : '';
   let displayList = renderList;
   const canBackfillTeasers = filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
   if (isFreePlan && canBackfillTeasers && renderList.length < freePreviewLimit) {
@@ -6409,7 +6419,7 @@ function renderPicks() {
     displayList = merged.slice(0, freePreviewLimit);
   }
 
-  el.innerHTML = displayList.map((p, i) => {
+  el.innerHTML = vipTeaser + displayList.map((p, i) => {
     const lockedTease = useFreeTease && i >= freeVisibleLimit;
     const showDetailed = !isFreePlan;
     const edgeVal = Number(p.ev || 0);
