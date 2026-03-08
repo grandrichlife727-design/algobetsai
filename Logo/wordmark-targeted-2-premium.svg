@@ -1,0 +1,6 @@
+<svg width="1200" height="260" viewBox="0 0 1200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AlgoBets Ai targeted 2">
+  <defs><linearGradient id="g2" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#38BDF8"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+  <text x="20" y="170" fill="url(#g2)" font-size="118" font-weight="800" font-family="'Trebuchet MS','Segoe UI',sans-serif" letter-spacing="0.6">AlgoBets</text>
+  <text x="818" y="170" fill="#E2E8F0" font-size="96" font-weight="800" font-family="'Trebuchet MS','Segoe UI',sans-serif">Ai</text>
+  <path d="M792 72 A22 22 0 1 1 791.9 72" fill="none" stroke="url(#g2)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="98 30"/>
+</svg>
