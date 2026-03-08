@@ -4705,6 +4705,14 @@ function setupInstallPrompt() {
   }
 }
 
+function preferredBillingReturnBase() {
+  const origin = String(window.location.origin || '').toLowerCase();
+  if (origin.includes('algobetsai.pages.dev') || origin.includes('algobetsai.onrender.com')) {
+    return 'https://grandrichlife727-design.github.io/algobetsai/1.html';
+  }
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
 function openInstallHelp() {
   const ov = document.getElementById('install-ov');
   if (!ov) return;
@@ -5427,7 +5435,7 @@ async function startCheckout(tier, cycle = billingCycle) {
   }
   try {
     trackEvent('checkout_started', {tier: desired, billing_cycle: finalCycle});
-    const origin = window.location.origin + window.location.pathname;
+    const origin = preferredBillingReturnBase();
     const backendReturn = `${DEFAULT_RENDER_BACKEND.replace(/\/+$/,'')}/app`;
     let res = await backendPost('/api/billing/checkout', {
       tier: desired,
@@ -5570,7 +5578,7 @@ async function openBillingPortal() {
     return;
   }
   try {
-    const origin = window.location.origin + window.location.pathname;
+    const origin = preferredBillingReturnBase();
     let res = await backendPost('/api/billing/portal', {return_url: origin});
     if (!res?.portal_url) {
       throw new Error('Billing portal unavailable');
