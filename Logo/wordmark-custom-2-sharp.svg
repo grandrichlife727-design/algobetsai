@@ -1,0 +1,12 @@
+<svg width="1200" height="260" viewBox="0 0 1200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AlgoBets Ai custom wordmark 2">
+  <defs><linearGradient id="g2" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+  <g transform="translate(18,30)">
+    <path d="M44 176 L86 52 L126 176" stroke="#DDE3F1" stroke-width="15" fill="none" stroke-linecap="round"/>
+    <path d="M63 126 H107" stroke="url(#g2)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M24 162 L58 136 L80 146 L128 98" stroke="url(#g2)" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="24" cy="162" r="5.5" fill="#34D399"/>
+    <circle cx="128" cy="98" r="5.5" fill="#86EFAC"/>
+  </g>
+  <text x="190" y="165" fill="url(#g2)" font-size="126" font-weight="800" letter-spacing="0.6" font-family="'Trebuchet MS', 'Segoe UI', sans-serif">AlgoBets</text>
+  <text x="935" y="165" fill="#DDE3F1" font-size="104" font-weight="800" letter-spacing="0.4" font-family="'Trebuchet MS', 'Segoe UI', sans-serif">Ai</text>
+</svg>

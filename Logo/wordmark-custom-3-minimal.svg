@@ -1,0 +1,9 @@
+<svg width="1200" height="260" viewBox="0 0 1200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AlgoBets Ai custom wordmark 3">
+  <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#6366F1"/></linearGradient></defs>
+  <g transform="translate(22,40)">
+    <path d="M38 166 L78 56 L118 166" stroke="url(#g3)" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M58 120 H98" stroke="#DDE3F1" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <text x="188" y="164" fill="url(#g3)" font-size="120" font-weight="700" letter-spacing="0.4" font-family="'Helvetica Neue', 'Arial', sans-serif">AlgoBets</text>
+  <text x="904" y="164" fill="#DDE3F1" font-size="98" font-weight="700" letter-spacing="0.3" font-family="'Helvetica Neue', 'Arial', sans-serif">Ai</text>
+</svg>
