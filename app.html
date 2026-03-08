@@ -85,7 +85,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .logo-text{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-section{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--sub);border:none;background:none;width:100%;text-align:left;transition:all .12s}
-.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.nav-item:focus-visible,.scan-btn:focus-visible,.mode-btn:focus-visible,.filter:focus-visible,.btn-how:focus-visible,.btn-parlay:focus-visible,.btn-share:focus-visible,.btn-win:focus-visible,.btn-more:focus-visible,.explain-toggle:focus-visible,.parlay-clear:focus-visible,.ex-btn:focus-visible,.mnav-btn:focus-visible,.modal-close:focus-visible,.pl-rm:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
 .nav-item.active{background:rgba(0,212,255,.07);color:var(--cyan)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.5}.nav-item.active svg{opacity:1}
@@ -322,6 +322,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .btn-share:hover{background:rgba(124,58,237,.16);border-color:rgba(124,58,237,.35);color:#e0d6ff}
 .btn-win{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.2);border-radius:6px;color:var(--green);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-win:hover{background:rgba(0,229,160,.15);border-color:rgba(0,229,160,.35)}
+.btn-more{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-more:hover{background:rgba(255,255,255,.08);color:var(--text)}
 .tool-btn-label{display:inline-flex;align-items:center;gap:7px}
 .tool-btn-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;opacity:.9;flex-shrink:0}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
@@ -6059,8 +6061,7 @@ function renderPicks() {
       <div class="pick-line">5-Agent consensus: <strong>${consensusVotes}/5 bullish</strong></div>
       <div class="pick-line" style="color:var(--green)">${clvCopy}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
-        : `<div class="pick-line">Actionable sides, lines, and fair value are locked on Free.</div>
-      <div class="pick-line">Upgrade to Premium to unlock full pick details.</div>`}
+        : `<div class="pick-line">Game shown. Actionable pick and lines are Premium.</div>`}
     </div>
     <div class="pick-right">${evRing(p.ev)}</div>
   </div>
@@ -6068,8 +6069,8 @@ function renderPicks() {
     ${showDetailed
       ? `<button class="btn-parlay" onclick="addParlay(${p.id})">Add to Parlay</button>
     <button class="btn-share" onclick="savePickToTracker(${p.id})">Save</button>
-    <button class="btn-share" onclick="sharePick(${p.id},'pick')">Share</button>
-    <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>`
+    <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>
+    <button class="btn-more" onclick="showPickMore(${p.id})">More</button>`
       : `<button class="paywall-cta" onclick="openUpgradePicker()">Unlock Premium Picks</button>`}
   </div>
 </div>`;
@@ -6488,6 +6489,25 @@ function showAction(id) {
     <div class="act-step"><div class="act-num">3</div><div class="act-text">Confirm odds show <strong>${p.odds}</strong> or better. If they've moved against you, the edge may be gone.</div></div>
     <div class="act-step"><div class="act-num">4</div><div class="act-text">Stake ${size}. Suggested size from your profile: <strong>${suggested}</strong>. This is a <strong>${p.grade.toUpperCase()}-grade</strong> pick with +${p.ev}% EV.</div></div>
     <div class="act-note">⏱ <strong>Game: ${p.time}</strong> — lines can move fast. Lock this in before the edge closes.</div>`;
+  const ov = document.getElementById('act-overlay');
+  const md = document.getElementById('act-modal');
+  ov.classList.add('on');
+  requestAnimationFrame(() => md.classList.add('on'));
+}
+
+function showPickMore(id) {
+  const p = PICKS.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('act-content').innerHTML = `
+    <div class="modal-title">More Actions</div>
+    <div class="modal-sub">${esc(p.bet)} · ${esc(p.odds)} · ${esc(p.sport)}</div>
+    <div class="rf-row" style="margin-top:0">
+      <button class="pf-btn" onclick="sharePick(${Number(p.id)},'pick')">Copy Pick</button>
+      <button class="pf-btn" onclick="sharePickToX(${Number(p.id)})">Share to X</button>
+    </div>
+    <div class="rf-row">
+      <button class="pf-btn" onclick="showAction(${Number(p.id)})">How to Bet</button>
+    </div>`;
   const ov = document.getElementById('act-overlay');
   const md = document.getElementById('act-modal');
   ov.classList.add('on');
