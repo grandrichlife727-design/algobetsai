@@ -1360,10 +1360,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">API Budget Dashboard</div>
           <div class="growth-sub">Track usage and keep monthly API spend under control.</div>
           <div class="growth-note" id="quota-note">Loading quota...</div>
-          <div class="rf-row">
-            <button class="pf-btn" id="low-data-btn" onclick="toggleLowDataMode()">Low Data Mode: On</button>
-          </div>
-          <div class="growth-note" id="low-data-note">Low Data Mode reduces refresh frequency and API usage.</div>
+          <div class="growth-note" id="low-data-note">Global data mode is managed by backend settings.</div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Personal Settings</div>
@@ -1701,7 +1698,6 @@ const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
 const PREMIUM_SETTINGS_KEY = 'algobets-premium-settings-v1';
 const VIP_LIVE_STATE_KEY = 'algobets-vip-live-state-v1';
-const LOW_DATA_MODE_KEY = 'algobets-low-data-mode-v1';
 const AFFILIATE_LINKS_KEY = 'algobets-affiliate-links-v1';
 const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
@@ -1826,7 +1822,7 @@ let growthNudges = {steamLocks: 0, fadeLocks: 0};
 let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let quotaExhausted = false;
-let LOW_DATA_MODE = localStorage.getItem(LOW_DATA_MODE_KEY) !== '0';
+let LOW_DATA_MODE = true;
 let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
 let profileSettings = {state: 'auto', bankroll_mode: 'standard'};
 let LIVEDATA = [];
@@ -2224,26 +2220,12 @@ async function loadQuotaDashboard() {
 }
 
 function updateLowDataUi() {
-  const btn = document.getElementById('low-data-btn');
   const note = document.getElementById('low-data-note');
-  if (btn) btn.textContent = `Low Data Mode: ${LOW_DATA_MODE ? 'On' : 'Off'}`;
   if (note) {
     note.textContent = LOW_DATA_MODE
-      ? 'Low Data Mode is ON: slower refresh, tighter props/live calls, lower API spend.'
-      : 'Low Data Mode is OFF: faster refresh and higher API usage.';
+      ? 'Global Low Data Mode is ON (server-controlled): slower refresh, tighter props/live calls, lower API spend.'
+      : 'Global Low Data Mode is OFF (server-controlled): faster refresh and higher API usage.';
   }
-}
-
-function toggleLowDataMode() {
-  LOW_DATA_MODE = !LOW_DATA_MODE;
-  localStorage.setItem(LOW_DATA_MODE_KEY, LOW_DATA_MODE ? '1' : '0');
-  updateLowDataUi();
-  if (vipLiveTicker) {
-    clearInterval(vipLiveTicker);
-    vipLiveTicker = null;
-    startVipLiveTicker();
-  }
-  showToast(LOW_DATA_MODE ? 'Low Data Mode enabled' : 'Low Data Mode disabled');
 }
 
 function openBetSlip(id) {
@@ -2775,12 +2757,21 @@ async function loadPublicConfig() {
     VIP_DISCORD_URL = invite;
     GOOGLE_CLIENT_ID = String(res?.google_client_id || '').trim() || GOOGLE_CLIENT_ID_FALLBACK;
     DISCORD_ROLE_SYNC_ENABLED = !!res?.discord_role_sync_enabled;
+    LOW_DATA_MODE = res?.low_data_mode_global !== false;
+    if (vipLiveTicker) {
+      clearInterval(vipLiveTicker);
+      vipLiveTicker = null;
+      startVipLiveTicker();
+    }
     const authModalOpen = document.getElementById('auth-ov')?.classList.contains('on');
     if (authModalOpen) renderGoogleAuthButton();
+    updateLowDataUi();
   } catch (_) {
     VIP_DISCORD_URL = '';
     GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_FALLBACK;
     DISCORD_ROLE_SYNC_ENABLED = false;
+    LOW_DATA_MODE = true;
+    updateLowDataUi();
   }
 }
 

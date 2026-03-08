@@ -105,6 +105,7 @@ DEBUG_ENDPOINTS_PUBLIC = _bool_env("DEBUG_ENDPOINTS_PUBLIC", "false")
 WEBHOOK_EVENT_TTL_SECONDS = int(os.getenv("WEBHOOK_EVENT_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 REQUIRE_AUTH_TOKEN = _bool_env("REQUIRE_AUTH_TOKEN", "true")
 COMMUNITY_ENABLED = _bool_env("COMMUNITY_ENABLED", "true")
+LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
@@ -2330,6 +2331,7 @@ async def public_config():
         "billing_enabled": BILLING_ENABLED,
         "auth_required": REQUIRE_AUTH_TOKEN,
         "discord_role_sync_enabled": _discord_config_ready(),
+        "low_data_mode_global": LOW_DATA_MODE_GLOBAL,
     }
 
 
@@ -3375,7 +3377,10 @@ async def live_mode(request: Request):
                 }
             )
     rows.sort(key=lambda x: abs(int(x.get("minutes_since_start", 0))))
-    max_rows = 20 if plan_rank(user_plan) >= plan_rank(PLAN_PREMIUM) else 6
+    if LOW_DATA_MODE_GLOBAL:
+        max_rows = 10 if plan_rank(user_plan) >= plan_rank(PLAN_PREMIUM) else 4
+    else:
+        max_rows = 20 if plan_rank(user_plan) >= plan_rank(PLAN_PREMIUM) else 6
     return {"live": rows[:max_rows], "count": len(rows)}
 
 
@@ -3836,6 +3841,7 @@ async def get_quota():
         "quota_used_last": _quota_used_last,
         "data_source": "The Odds API" if ODDS_API_KEY else "Not configured",
         "cache_ttl_seconds": CACHE_TTL,
+        "low_data_mode_global": LOW_DATA_MODE_GLOBAL,
         "odds_monthly_credit_cap": odds_cap,
         "odds_budget_used_pct": odds_pct,
         "odds_budget_within_limit": _odds_budget_ok(),
@@ -3996,9 +4002,10 @@ async def props_lite(
         raise HTTPException(status_code=400, detail="Props currently supported for NBA and NFL.")
     if not _props_budget_ok():
         raise HTTPException(status_code=402, detail="Props budget limit reached for this month.")
+    effective_max_events = min(PROPS_MAX_EVENTS_PER_SPORT, 1) if LOW_DATA_MODE_GLOBAL else PROPS_MAX_EVENTS_PER_SPORT
     rows = await fetch_props_lite_for_sport(
         sport_key=sport,
-        max_events=PROPS_MAX_EVENTS_PER_SPORT,
+        max_events=effective_max_events,
         markets=PROPS_MARKETS_BY_SPORT.get(sport, []),
     )
     return {
