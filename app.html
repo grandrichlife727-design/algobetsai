@@ -2255,6 +2255,8 @@ const VIP_LIVE_POLL_MS = 45000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
 const VIP_LIVE_DAILY_CALL_CAP = 180;
+const HEARTBEAT_ACTIVITY_TTL_MS = 15 * 60 * 1000;
+const HEARTBEAT_ALLOWED_TABS = new Set(['picks', 'vip-execution']);
 const LIVE_TTL_MS = 5 * 60 * 1000;
 const TOMORROW_TTL_MS = 2 * 60 * 60 * 1000;
 const NEWS_IMPACT_TTL_MS = 30 * 60 * 1000;
@@ -2409,10 +2411,27 @@ let TOMORROW_GAMES = [];
 let liveOddsPaused = false;
 let picksCacheAgeMinutes = 0;
 let FREE_DELAY_STATE = {release_at: 0, pending: [], released: []};
+let lastUserActivityTs = Date.now();
 const FREE_DELAY_MS = 20 * 60 * 1000;
 
 function liveTtlMs() { return LOW_DATA_MODE ? 15 * 60 * 1000 : LIVE_TTL_MS; }
 function tomorrowTtlMs() { return LOW_DATA_MODE ? 6 * 60 * 60 * 1000 : TOMORROW_TTL_MS; }
+function markUserActivity() { lastUserActivityTs = Date.now(); }
+function hasRecentHeartbeatActivity() { return (Date.now() - Number(lastUserActivityTs || 0)) <= HEARTBEAT_ACTIVITY_TTL_MS; }
+function isHeartbeatTab(tab = currentTab) { return HEARTBEAT_ALLOWED_TABS.has(String(tab || '').toLowerCase()); }
+function canRunLiveHeartbeat() {
+  return isHeartbeatTab(currentTab) && hasRecentHeartbeatActivity() && document.visibilityState !== 'hidden';
+}
+
+function bindHeartbeatActivityTracking() {
+  const mark = () => markUserActivity();
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach((evt) => {
+    window.addEventListener(evt, mark, {passive: true});
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') markUserActivity();
+  });
+}
 
 function loadFreeDelayState() {
   try {
@@ -3284,6 +3303,9 @@ async function refreshVipLivePlays(force = false) {
   if (!force && fresh && Array.isArray(VIP_LIVE_STATE.cached) && VIP_LIVE_STATE.cached.length) {
     return renderVipLivePlays();
   }
+  if (!force && !hasRecentHeartbeatActivity()) {
+    return renderVipLivePlays();
+  }
   if (Number(VIP_LIVE_STATE.calls || 0) >= vipLiveDailyCap()) {
     return renderVipLivePlays();
   }
@@ -3301,7 +3323,7 @@ async function refreshVipLivePlays(force = false) {
 function startVipLiveTicker() {
   if (vipLiveTicker) return;
   vipLiveTicker = setInterval(() => {
-    if (currentTab === 'vip-execution') refreshVipLivePlays(false);
+    if (currentTab === 'vip-execution' && hasRecentHeartbeatActivity()) refreshVipLivePlays(false);
   }, vipLivePollMs());
 }
 
@@ -5979,9 +6001,6 @@ function renderHomeModules() {
   }
 
   if (newsEl) {
-    if (!HOME_SPORTS_NEWS.length && !HOME_SPORTS_NEWS_LOADING) {
-      loadHomeSportsNews(false);
-    }
     if (HOME_SPORTS_NEWS_LOADING && !HOME_SPORTS_NEWS.length) {
       newsEl.innerHTML = `<div class="news-item">${skeletonLines(['48%','92%','74%'], 10)}</div>`;
       return;
@@ -7346,6 +7365,9 @@ async function runFreeScanRevealFlow() {
 // ─── SCAN ─────────────────────────────────────────────────────────────────────
 async function doScan(silent = false) {
   if (isScanning) return;
+  if (silent && !canRunLiveHeartbeat()) {
+    return;
+  }
   if (demoMode) {
     applyDemoDataset(false);
     lastRefresh = Date.now();
@@ -8506,6 +8528,7 @@ function openTierFeature(tab, tier = 'free') {
 }
 
 function go(name) {
+  markUserActivity();
   name = normalizePrimaryRoute(name);
   if (name === 'more') name = 'tools';
   if (!STRICT_ROUTE_SET.has(name)) name = 'tools';
@@ -8631,8 +8654,8 @@ function startAutoRefresh() {
   const tick = () => {
     const delay = autoRefreshMsForPlan(currentPlan);
     setTimeout(() => {
-      const onCoreBoard = currentTab === 'picks' || currentTab === 'home';
-      if (delay > 0 && !liveOddsPaused && !isScanning && onCoreBoard) doScan(true);
+      const onHeartbeatBoard = isHeartbeatTab(currentTab);
+      if (delay > 0 && !liveOddsPaused && !isScanning && onHeartbeatBoard && hasRecentHeartbeatActivity()) doScan(true);
       tick();
     }, Math.max(5000, delay || 30000));
   };
@@ -8721,6 +8744,7 @@ applyAffiliateLinks();
 applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
+bindHeartbeatActivityTracking();
 bindMobileNavFeedback();
 bindAgentStatusCards();
 disableBrokenSettingsButtons();
@@ -8749,7 +8773,6 @@ try {
   }
 } catch (_) {}
 loadProfileSettings();
-loadHomeSportsNews();
 loadAgentHealth();
 fetchPlan();
 fetchPricing();
