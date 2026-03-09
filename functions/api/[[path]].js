@@ -1,4 +1,5 @@
 import { evFinderRows, getScanPayload } from "../_lib/odds-engine.js";
+import { importTicketSplits, loadTicketSplits } from "../_lib/ticket-splits.js";
 
 const UPSTREAM = "https://algobetsai.onrender.com";
 const STRIPE_BASE = "https://api.stripe.com";
@@ -268,6 +269,31 @@ export async function onRequest(context) {
     } catch (err) {
       return json({ detail: String(err?.message || err || "EV finder unavailable"), results: [], count: 0 }, 503, "cloudflare-ev-finder");
     }
+  }
+
+  if (method === "GET" && cleanPath === "splits/status") {
+    const rows = await loadTicketSplits(env);
+    return json(
+      {
+        configured: !!String(env?.TICKET_SPLITS_FEED_URL || "").trim(),
+        feed_url_set: !!String(env?.TICKET_SPLITS_FEED_URL || "").trim(),
+        rows_loaded: Array.isArray(rows) ? rows.length : 0,
+      },
+      200,
+      "cloudflare-splits",
+    );
+  }
+
+  if (method === "POST" && cleanPath === "splits/import") {
+    const adminToken = String(env?.ADMIN_API_TOKEN || "").trim();
+    const provided = String(request.headers.get("x-admin-token") || "").trim();
+    if (!adminToken || provided !== adminToken) {
+      return json({ detail: "Admin token required." }, 401, "cloudflare-splits");
+    }
+    const body = await request.json().catch(() => ({}));
+    const rows = Array.isArray(body?.rows) ? body.rows : [];
+    const out = importTicketSplits(rows);
+    return json({ ok: true, ...out }, 200, "cloudflare-splits");
   }
 
   if (method === "GET" && cleanPath === "config/public") {

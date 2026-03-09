@@ -1,4 +1,5 @@
 import { getScanPayload } from "./_lib/odds-engine.js";
+import { attachSplitsToPicks, loadTicketSplits } from "./_lib/ticket-splits.js";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -16,6 +17,8 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     const force = String(url.searchParams.get("refresh") || "").toLowerCase() === "true";
     const payload = await getScanPayload(context.env, { force });
+    const splits = await loadTicketSplits(context.env);
+    payload.picks = attachSplitsToPicks(payload.picks, splits);
     return json(payload, 200);
   } catch (err) {
     return json(
