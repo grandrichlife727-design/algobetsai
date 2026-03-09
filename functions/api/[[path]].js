@@ -125,6 +125,66 @@ function planFromPriceId(cfg, priceId) {
   return PLAN_FREE;
 }
 
+function hexToBytes(hex) {
+  const clean = String(hex || "").trim();
+  if (!clean || clean.length % 2 !== 0) return new Uint8Array();
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < clean.length; i += 2) out[i / 2] = parseInt(clean.slice(i, i + 2), 16);
+  return out;
+}
+
+function bytesToHex(buf) {
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function hmacSha256Hex(secret, payload) {
+  const enc = new TextEncoder();
+  const keyData = enc.encode(String(secret || ""));
+  const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(payload));
+  return bytesToHex(sig);
+}
+
+function timingSafeEqualHex(a, b) {
+  const ba = hexToBytes(a);
+  const bb = hexToBytes(b);
+  if (!ba.length || ba.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ba.length; i += 1) diff |= ba[i] ^ bb[i];
+  return diff === 0;
+}
+
+function normalizeUserId(value) {
+  const v = String(value || "").trim().toLowerCase();
+  return /^[a-z0-9:_-]{6,64}$/.test(v) ? v : "";
+}
+
+async function verifyStripeWebhookSignature(env, request, rawBody) {
+  const secret = String(env?.STRIPE_WEBHOOK_SECRET || "").trim();
+  if (!secret) return { ok: false, detail: "Webhook secret is not configured." };
+  const sigHeader = String(request.headers.get("stripe-signature") || "").trim();
+  if (!sigHeader) return { ok: false, detail: "Missing Stripe signature header." };
+
+  const parts = sigHeader.split(",").map((p) => p.trim());
+  let timestamp = "";
+  const v1 = [];
+  for (const p of parts) {
+    if (p.startsWith("t=")) timestamp = p.slice(2);
+    else if (p.startsWith("v1=")) v1.push(p.slice(3));
+  }
+  if (!timestamp || !v1.length) return { ok: false, detail: "Invalid Stripe signature format." };
+
+  const now = Math.floor(Date.now() / 1000);
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts) || Math.abs(now - ts) > 300) return { ok: false, detail: "Stripe signature timestamp outside tolerance." };
+
+  const expected = await hmacSha256Hex(secret, `${timestamp}.${rawBody}`);
+  const matched = v1.some((sig) => timingSafeEqualHex(sig, expected));
+  return matched ? { ok: true } : { ok: false, detail: "Stripe signature mismatch." };
+}
+
 async function stripeRequest(env, path, method = "GET", form = null) {
   const cfg = stripeConfigured(env);
   if (!cfg.secret) throw new Error("Stripe secret is not configured.");
@@ -360,6 +420,67 @@ export async function onRequest(context) {
       return json({ checkout_url: session?.url || "", session_id: session?.id || "", billing_cycle: cycle, tier }, 200, "cloudflare-billing");
     } catch (err) {
       return json({ detail: String(err?.message || "Checkout unavailable") }, Number(err?.status || 500), "cloudflare-billing");
+    }
+  }
+
+  if (method === "POST" && cleanPath === "billing/webhook") {
+    try {
+      const rawBody = await request.text();
+      const verified = await verifyStripeWebhookSignature(env, request, rawBody);
+      if (!verified.ok) return json({ detail: verified.detail }, 400, "cloudflare-billing");
+      const event = JSON.parse(rawBody || "{}");
+      const eventType = String(event?.type || "");
+      const obj = event?.data?.object || {};
+      let userIdFromEvent = normalizeUserId(obj?.metadata?.userId || obj?.metadata?.user_id || "");
+
+      if (!userIdFromEvent && obj?.customer) {
+        try {
+          const customer = await stripeRequest(env, `/v1/customers/${encodeURIComponent(String(obj.customer))}`, "GET");
+          userIdFromEvent = normalizeUserId(customer?.metadata?.userId || "");
+        } catch (_) {}
+      }
+
+      if (userIdFromEvent) {
+        const existing = userState.get(userIdFromEvent) || { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false };
+
+        if (eventType.startsWith("customer.subscription.")) {
+          const status = String(obj?.status || "").toLowerCase();
+          const nextPlan = ACTIVE_SUB_STATUSES.has(status) ? subscriptionPlan(billing, obj) : PLAN_FREE;
+          const trialEnd = Number(obj?.trial_end || 0);
+          userState.set(userIdFromEvent, {
+            ...existing,
+            plan: nextPlan,
+            trialUntil: trialEnd > nowSec ? trialEnd : existing.trialUntil,
+            trialClaimed: existing.trialClaimed || trialEnd > 0,
+          });
+        }
+
+        if (eventType === "checkout.session.completed") {
+          const subId = String(obj?.subscription || "").trim();
+          let nextPlan = existing.plan;
+          let trialEnd = existing.trialUntil;
+          if (subId) {
+            try {
+              const sub = await stripeRequest(env, `/v1/subscriptions/${encodeURIComponent(subId)}`, "GET");
+              nextPlan = subscriptionPlan(billing, sub);
+              const te = Number(sub?.trial_end || 0);
+              if (te > nowSec) trialEnd = te;
+            } catch (_) {}
+          } else {
+            nextPlan = normalizePlan(obj?.metadata?.tier || PLAN_PREMIUM);
+          }
+          userState.set(userIdFromEvent, {
+            ...existing,
+            plan: nextPlan,
+            trialUntil: trialEnd,
+            trialClaimed: existing.trialClaimed || trialEnd > 0,
+          });
+        }
+      }
+
+      return json({ received: true }, 200, "cloudflare-billing");
+    } catch (err) {
+      return json({ detail: String(err?.message || "Webhook processing failed.") }, 400, "cloudflare-billing");
     }
   }
 
