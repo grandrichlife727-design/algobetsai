@@ -67,49 +67,56 @@ function buildGameAndPicksFromEvent(sportKey, event) {
   const moneylineByBook = {};
   const homeOddsByBook = [];
   const awayOddsByBook = [];
-  const drawOddsByBook = [];
   let bestHome = { odds: null, book: "" };
   let bestAway = { odds: null, book: "" };
+  const totalsByPoint = new Map();
 
   for (const bookmaker of Array.isArray(event?.bookmakers) ? event.bookmakers : []) {
     const bookKey = normalizeBookKey(bookmaker?.key);
     if (!bookKey) continue;
-    const h2h = (Array.isArray(bookmaker?.markets) ? bookmaker.markets : []).find((m) => m?.key === "h2h");
-    if (!h2h || !Array.isArray(h2h.outcomes)) continue;
-    const homeOutcome = h2h.outcomes.find((o) => o?.name === homeTeam);
-    const awayOutcome = h2h.outcomes.find((o) => o?.name === awayTeam);
-    const drawOutcome = h2h.outcomes.find((o) => /draw|tie/i.test(String(o?.name || "").trim()));
-    const homeOdds = Number(homeOutcome?.price);
-    const awayOdds = Number(awayOutcome?.price);
-    const drawOdds = Number(drawOutcome?.price);
-    if (!Number.isFinite(homeOdds) || !Number.isFinite(awayOdds)) continue;
-
-    moneylineByBook[bookKey] = { home: homeOdds, away: awayOdds };
-    homeOddsByBook.push(homeOdds);
-    awayOddsByBook.push(awayOdds);
-    if (Number.isFinite(drawOdds)) {
-      moneylineByBook[bookKey].draw = drawOdds;
-      drawOddsByBook.push(drawOdds);
+    const markets = Array.isArray(bookmaker?.markets) ? bookmaker.markets : [];
+    const h2h = markets.find((m) => m?.key === "h2h");
+    if (h2h && Array.isArray(h2h.outcomes)) {
+      const homeOutcome = h2h.outcomes.find((o) => o?.name === homeTeam);
+      const awayOutcome = h2h.outcomes.find((o) => o?.name === awayTeam);
+      const homeOdds = Number(homeOutcome?.price);
+      const awayOdds = Number(awayOutcome?.price);
+      if (Number.isFinite(homeOdds) && Number.isFinite(awayOdds)) {
+        moneylineByBook[bookKey] = { home: homeOdds, away: awayOdds };
+        homeOddsByBook.push(homeOdds);
+        awayOddsByBook.push(awayOdds);
+        if (pickBetterLine(bestHome.odds, homeOdds)) bestHome = { odds: homeOdds, book: bookKey };
+        if (pickBetterLine(bestAway.odds, awayOdds)) bestAway = { odds: awayOdds, book: bookKey };
+      }
     }
-
-    if (pickBetterLine(bestHome.odds, homeOdds)) bestHome = { odds: homeOdds, book: bookKey };
-    if (pickBetterLine(bestAway.odds, awayOdds)) bestAway = { odds: awayOdds, book: bookKey };
+    if (isSoccer) {
+      const totals = markets.find((m) => m?.key === "totals");
+      if (!totals || !Array.isArray(totals.outcomes)) continue;
+      const over = totals.outcomes.find((o) => /over/i.test(String(o?.name || "")));
+      const under = totals.outcomes.find((o) => /under/i.test(String(o?.name || "")));
+      const point = Number(over?.point ?? under?.point);
+      const overOdds = Number(over?.price);
+      const underOdds = Number(under?.price);
+      if (!Number.isFinite(point) || !Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
+      const key = point.toFixed(1);
+      if (!totalsByPoint.has(key)) {
+        totalsByPoint.set(key, {
+          point,
+          overOddsByBook: [],
+          underOddsByBook: [],
+          bestOver: { odds: null, book: "" },
+          bestUnder: { odds: null, book: "" },
+        });
+      }
+      const row = totalsByPoint.get(key);
+      row.overOddsByBook.push(overOdds);
+      row.underOddsByBook.push(underOdds);
+      if (pickBetterLine(row.bestOver.odds, overOdds)) row.bestOver = { odds: overOdds, book: bookKey };
+      if (pickBetterLine(row.bestUnder.odds, underOdds)) row.bestUnder = { odds: underOdds, book: bookKey };
+    }
   }
 
-  if (!Object.keys(moneylineByBook).length) return { game: null, picks: [] };
-
-  const homeMedian = median(homeOddsByBook);
-  const awayMedian = median(awayOddsByBook);
-  const drawMedian = median(drawOddsByBook);
-  const pHomeRaw = impliedProbability(homeMedian);
-  const pAwayRaw = impliedProbability(awayMedian);
-  const pDrawRaw = impliedProbability(drawMedian);
-  const total = (pHomeRaw || 0) + (pAwayRaw || 0) + (isSoccer ? (pDrawRaw || 0) : 0);
-  const fairHome = total > 0 ? (pHomeRaw / total) : null;
-  const fairAway = total > 0 ? (pAwayRaw / total) : null;
-  const drawRiskPenalty = isSoccer && Number.isFinite(pDrawRaw)
-    ? Math.max(0, Math.min(4.0, (pDrawRaw - 0.22) * 30))
-    : 0;
+  if (!Object.keys(moneylineByBook).length && (!isSoccer || !totalsByPoint.size)) return { game: null, picks: [] };
 
   const game = {
     id: String(event?.id || `${sportKey}_${awayTeam}_${homeTeam}_${commenceTime}`),
@@ -125,45 +132,97 @@ function buildGameAndPicksFromEvent(sportKey, event) {
   };
 
   const picks = [];
-  const candidates = [
-    { team: homeTeam, side: "home", best: bestHome, fair: fairHome },
-    { team: awayTeam, side: "away", best: bestAway, fair: fairAway },
-  ];
-
-  for (const c of candidates) {
-    if (!Number.isFinite(c.best.odds) || !Number.isFinite(c.fair)) continue;
-    if (isSoccer && Number(c.best.odds) < -180) continue;
-    const rawEv = expectedValuePct(c.best.odds, c.fair);
-    const ev = isSoccer ? (rawEv - drawRiskPenalty) : rawEv;
-    if (!Number.isFinite(ev) || ev <= 0) continue;
-    const confidence = Math.max(51, Math.min(89, Math.round(54 + ev * 1.6)));
-    picks.push({
-      sport: sportKey,
-      label: meta.label,
-      emoji: meta.emoji,
-      game: gameLabel,
-      game_time: commenceTime,
-      bet: `${c.team} ML`,
-      odds: String(c.best.odds > 0 ? `+${c.best.odds}` : c.best.odds),
-      edge: Number(ev.toFixed(2)),
-      ev: Number(ev.toFixed(2)),
-      confidence_calibrated: confidence,
-      best_book: c.best.book,
-      book: c.best.book,
-      data_source: "odds_api",
-      model_v2: {
-        ensemble_score: Number(ev.toFixed(2)),
-        timing_model: Number((ev / 10).toFixed(2)),
-      },
-      clv_expectation: Number((Math.max(0.1, ev * 0.18)).toFixed(2)),
-      recommended_stake_pct: Number(Math.max(0.4, Math.min(2.5, ev * 0.18)).toFixed(2)),
-      agents: ["Best-Line EV", "Consensus De-vig", "Market Timing"],
-      active_agents: [1, 2, 5],
-      ...(isSoccer ? {
-        draw_risk_penalty: Number(drawRiskPenalty.toFixed(2)),
-        draw_prob_estimate: Number((Number.isFinite(pDrawRaw) ? pDrawRaw * 100 : 0).toFixed(1)),
-      } : {}),
-    });
+  if (isSoccer) {
+    let targetTotals = null;
+    for (const row of totalsByPoint.values()) {
+      const cnt = Math.min(row.overOddsByBook.length, row.underOddsByBook.length);
+      if (!targetTotals || cnt > targetTotals.cnt) targetTotals = { ...row, cnt };
+    }
+    if (targetTotals) {
+      const overMedian = median(targetTotals.overOddsByBook);
+      const underMedian = median(targetTotals.underOddsByBook);
+      const pOverRaw = impliedProbability(overMedian);
+      const pUnderRaw = impliedProbability(underMedian);
+      const pSum = (pOverRaw || 0) + (pUnderRaw || 0);
+      const fairOver = pSum > 0 ? pOverRaw / pSum : null;
+      const fairUnder = pSum > 0 ? pUnderRaw / pSum : null;
+      const candidates = [
+        { side: "Over", best: targetTotals.bestOver, fair: fairOver },
+        { side: "Under", best: targetTotals.bestUnder, fair: fairUnder },
+      ];
+      for (const c of candidates) {
+        if (!Number.isFinite(c.best.odds) || !Number.isFinite(c.fair)) continue;
+        if (Number(c.best.odds) < -180) continue;
+        const ev = expectedValuePct(c.best.odds, c.fair);
+        if (!Number.isFinite(ev) || ev <= 0) continue;
+        const confidence = Math.max(51, Math.min(89, Math.round(54 + ev * 1.6)));
+        picks.push({
+          sport: sportKey,
+          label: meta.label,
+          emoji: meta.emoji,
+          game: gameLabel,
+          game_time: commenceTime,
+          bet: `${c.side} ${Number(targetTotals.point).toFixed(1)}`,
+          market: "total",
+          odds: String(c.best.odds > 0 ? `+${c.best.odds}` : c.best.odds),
+          edge: Number(ev.toFixed(2)),
+          ev: Number(ev.toFixed(2)),
+          confidence_calibrated: confidence,
+          best_book: c.best.book,
+          book: c.best.book,
+          data_source: "odds_api",
+          model_v2: {
+            ensemble_score: Number(ev.toFixed(2)),
+            timing_model: Number((ev / 10).toFixed(2)),
+          },
+          clv_expectation: Number((Math.max(0.1, ev * 0.18)).toFixed(2)),
+          recommended_stake_pct: Number(Math.max(0.4, Math.min(2.5, ev * 0.18)).toFixed(2)),
+          agents: ["Best-Line EV", "Consensus De-vig", "Market Timing"],
+          active_agents: [1, 2, 5],
+        });
+      }
+    }
+  } else {
+    const homeMedian = median(homeOddsByBook);
+    const awayMedian = median(awayOddsByBook);
+    const pHomeRaw = impliedProbability(homeMedian);
+    const pAwayRaw = impliedProbability(awayMedian);
+    const total = (pHomeRaw || 0) + (pAwayRaw || 0);
+    const fairHome = total > 0 ? (pHomeRaw / total) : null;
+    const fairAway = total > 0 ? (pAwayRaw / total) : null;
+    const candidates = [
+      { team: homeTeam, best: bestHome, fair: fairHome },
+      { team: awayTeam, best: bestAway, fair: fairAway },
+    ];
+    for (const c of candidates) {
+      if (!Number.isFinite(c.best.odds) || !Number.isFinite(c.fair)) continue;
+      const ev = expectedValuePct(c.best.odds, c.fair);
+      if (!Number.isFinite(ev) || ev <= 0) continue;
+      const confidence = Math.max(51, Math.min(89, Math.round(54 + ev * 1.6)));
+      picks.push({
+        sport: sportKey,
+        label: meta.label,
+        emoji: meta.emoji,
+        game: gameLabel,
+        game_time: commenceTime,
+        bet: `${c.team} ML`,
+        odds: String(c.best.odds > 0 ? `+${c.best.odds}` : c.best.odds),
+        edge: Number(ev.toFixed(2)),
+        ev: Number(ev.toFixed(2)),
+        confidence_calibrated: confidence,
+        best_book: c.best.book,
+        book: c.best.book,
+        data_source: "odds_api",
+        model_v2: {
+          ensemble_score: Number(ev.toFixed(2)),
+          timing_model: Number((ev / 10).toFixed(2)),
+        },
+        clv_expectation: Number((Math.max(0.1, ev * 0.18)).toFixed(2)),
+        recommended_stake_pct: Number(Math.max(0.4, Math.min(2.5, ev * 0.18)).toFixed(2)),
+        agents: ["Best-Line EV", "Consensus De-vig", "Market Timing"],
+        active_agents: [1, 2, 5],
+      });
+    }
   }
 
   return { game, picks };
@@ -177,7 +236,8 @@ async function fetchSportOdds(env, sportKey) {
   const u = new URL(`https://api.the-odds-api.com/v4/sports/${encodeURIComponent(sportKey)}/odds`);
   u.searchParams.set("apiKey", apiKey);
   u.searchParams.set("regions", "us");
-  u.searchParams.set("markets", "h2h");
+  const isSoccer = String(sportKey || "").toLowerCase().startsWith("soccer_");
+  u.searchParams.set("markets", isSoccer ? "h2h,totals" : "h2h");
   u.searchParams.set("oddsFormat", "american");
   u.searchParams.set("bookmakers", bookCsv);
 
