@@ -451,11 +451,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-dot.active.neon{color:#d9fff7;border-color:rgba(0,229,160,.55);background:rgba(0,229,160,.25);box-shadow:0 0 0 1px rgba(0,229,160,.25),0 0 12px rgba(0,229,160,.45)}
 .agent-dot.locked{cursor:pointer;opacity:.62;border-style:dashed;color:#8a90a1;background:rgba(255,255,255,.02)}
 .agent-dot.locked::after{content:'\1F512';position:absolute;top:-6px;right:-5px;font-size:8px;line-height:1;background:#0c1018;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:1px}
-.agent-icon-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0 4px}
-.agent-icon-pill{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);font-size:9px;font-family:var(--mono);font-weight:800;letter-spacing:.2px;color:var(--text)}
-.agent-icon-pill.core{border-color:rgba(34,211,238,.34);color:#b8f7ff;background:rgba(34,211,238,.12)}
-.agent-icon-pill.cond{border-color:rgba(255,183,0,.34);color:#ffe7b7;background:rgba(255,183,0,.12)}
-.agent-icon-glyph{font-size:10px;line-height:1}
 .system-slam{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(0,229,160,.42);background:linear-gradient(135deg,rgba(0,229,160,.22),rgba(34,211,238,.18));color:#d8fff2;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.45px;text-transform:uppercase;box-shadow:0 0 12px rgba(0,229,160,.24)}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
 .sample-corner{position:static}
@@ -7348,18 +7343,6 @@ function renderAgentSignalBadges(activeAgents = []) {
   }).join('')}</div>`;
 }
 
-function renderPickAgentIcons(activeAgents = []) {
-  const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
-  const glyphs = {1: '↗', 2: '≈', 3: '⇄', 4: '◐', 5: '⏱'};
-  const pills = [...active].sort((a, b) => a - b).map((id) => {
-    const meta = AGENT_UI[id] || {abbr: `A${id}`, cls: id <= 2 ? 'core' : 'cond', label: `Agent ${id}`};
-    const tierCls = meta.cls === 'core' ? 'core' : 'cond';
-    return `<span class="agent-icon-pill ${tierCls}" title="${esc(meta.label)}"><span class="agent-icon-glyph">${glyphs[id] || '•'}</span><span>${esc(meta.abbr)}</span></span>`;
-  }).join('');
-  const content = pills || `<span class="agent-icon-pill core"><span class="agent-icon-glyph">↗</span><span>A1</span></span><span class="agent-icon-pill core"><span class="agent-icon-glyph">≈</span><span>A2</span></span>`;
-  return `<div class="agent-icon-row"><span style="font-size:10px;color:var(--muted);font-family:var(--mono)">Agents</span>${content}</div>`;
-}
-
 function hotAgentSet() {
   const cond = AGENT_HEALTH?.conditional || {};
   return new Set(Object.values(cond)
@@ -8339,7 +8322,6 @@ function renderPicks() {
     const cornerBadges = `<div class="pick-corner"><span class="corner-conf" title="Model confidence">Confidence ${conf}%</span></div>`;
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentSignalBadges = renderAgentSignalBadges(p.activeAgents);
-    const agentDots = renderPickAgentIcons(p.activeAgents);
     const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
     const stakeMeta = rawStakePct > 0 ? (() => {
       const bankroll = Number(profileSettings?.bankroll_amount || 0);
@@ -8395,7 +8377,6 @@ function renderPicks() {
         <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
       ${agentSignalBadges}
-      ${agentDots}
       <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
