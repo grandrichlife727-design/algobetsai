@@ -404,6 +404,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-line{font-size:11px;color:var(--sub);line-height:1.45;white-space:normal;overflow-wrap:anywhere}
 .pick-game{font-size:16px;font-weight:800;letter-spacing:-.2px;color:var(--text);margin-bottom:6px}
 .pick-primary-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
+.pick-primary-metrics{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .pick-main{font-size:14px;font-weight:700;color:var(--text);line-height:1.35}
 .pick-sub-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--sub);margin-bottom:7px}
 .pick-sub-book{white-space:normal;overflow:visible;text-overflow:clip;max-width:100%;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -7811,7 +7812,10 @@ function renderPicks() {
       <div class="pick-game">${esc(matchupLabel)}</div>
       <div class="pick-primary-row">
         <div class="pick-main">${esc(betLabel)}</div>
-        <span class="edge-badge ${edgeClass} edge-main" title="Advantage over fair market price">+${edgeVal.toFixed(1)}%</span>
+        <div class="pick-primary-metrics">
+          <span class="edge-badge ${edgeClass} edge-main" title="Advantage over fair market price">+${edgeVal.toFixed(1)}% Edge</span>
+          <span class="pick-sub-conf" title="Model confidence">Conf ${conf}%</span>
+        </div>
       </div>
       <div class="pick-sub-row">
         <span class="pick-sub-book">${pickBookHtml}</span>
