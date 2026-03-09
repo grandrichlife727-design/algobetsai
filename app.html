@@ -8344,15 +8344,12 @@ function closeEngineModal(e) {
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile'];
-const STRICT_ROUTE_SET = new Set(['picks','tools','perf','profile','history','ev','steam','fades','parlay','boost','odds','props']);
+const STRICT_ROUTE_SET = new Set([...ALL_TABS, 'more']);
 
 function normalizePrimaryRoute(name) {
   const n = String(name || '').toLowerCase();
-  if (n === 'home') return 'picks';
-  if (n === 'history') return 'perf';
-  if (n === 'offers' || n === 'community' || n === 'guide' || n === 'live') return 'tools';
-  if (n === 'premium') return 'tools';
-  if (n.startsWith('vip')) return 'tools';
+  if (n === 'home') return 'home';
+  if (n === 'scan') return 'picks';
   return n;
 }
 
