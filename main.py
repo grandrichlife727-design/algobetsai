@@ -125,6 +125,7 @@ ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "false")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
 STARTED_GAME_GRACE_MINUTES = int(os.getenv("STARTED_GAME_GRACE_MINUTES", "2") or 2)
+MAX_UPCOMING_GAME_DAYS = int(os.getenv("MAX_UPCOMING_GAME_DAYS", "7") or 7)
 TRACKED_PICK_FUTURE_DAYS = int(os.getenv("TRACKED_PICK_FUTURE_DAYS", "7") or 7)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
@@ -1290,8 +1291,9 @@ def _is_scan_eligible_game(game: dict[str, Any]) -> bool:
     mins = _minutes_until_game_start(game)
     if mins is None:
         return False
-    # We do not surface live/finished games on the main scan board.
-    return mins >= -float(STARTED_GAME_GRACE_MINUTES)
+    # We do not surface live/finished games or far-future games on the main scan board.
+    max_ahead_minutes = max(1, int(MAX_UPCOMING_GAME_DAYS or 7)) * 24 * 60
+    return mins >= -float(STARTED_GAME_GRACE_MINUTES) and mins <= float(max_ahead_minutes)
 
 
 def _filter_scan_eligible_games(games: list[dict[str, Any]]) -> list[dict[str, Any]]:
