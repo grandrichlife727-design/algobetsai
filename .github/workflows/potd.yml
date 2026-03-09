@@ -1,0 +1,40 @@
+name: Generate Pick of the Day
+
+on:
+  schedule:
+    # 2pm ET / 6pm UTC
+    - cron: "0 18 * * *"
+    # 10am ET / 2pm UTC
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+jobs:
+  generate-potd:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate POTD
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python potd_generator.py
+
+      - name: Commit and push potd.json
+        run: |
+          git config user.name "AlgoBets Bot"
+          git config user.email "bot@algobetsai.com"
+          git add potd.json
+          git diff --cached --quiet || git commit -m "Update POTD $(date -u +%Y-%m-%d)"
+          git push

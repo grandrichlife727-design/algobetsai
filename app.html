@@ -1121,6 +1121,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
       </div>
       <div class="scan-policy-note" id="scan-policy-note"></div>
+      <div id="potd-dashboard"></div>
       <div class="home-plan-showcase" id="home-plan-showcase">
         <div class="hps-top">
           <div>
@@ -1281,6 +1282,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-tag vip"><strong>VIP</strong>: VIP pick of the day, ~45-second auto refresh, better-line timing, alerts/recap, and Discord.</div>
       </div>
       </div>
+      <div id="potd-picks"></div>
       <div class="filters-wrap">
         <button class="filters-nav" type="button" aria-label="Scroll sports left" onclick="scrollPicksFilters(-1)">‹</button>
       <div class="filters" id="picks-filters">
@@ -2407,7 +2409,7 @@ const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
 const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
-const APP_BUILD = '2026-03-08-vip-welcome-email-1';
+const APP_BUILD = '2026-03-08-potd-static-1';
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
@@ -2511,6 +2513,7 @@ let AGENTWEIGHTS = null;
 let AGENT_HEALTH = null;
 let LAST_ACTIVE_AGENT_SET = [1, 2];
 let ALERTPACKS = null;
+let POTD_DATA = null;
 if (FORCE_DEMO_MODE && MOCK_PLAN_QP) currentPlan = MOCK_PLAN_QP;
 let AFFILIATE = null;
 let affiliateLinks = {...DEFAULT_AFFILIATE_LINKS};
@@ -4135,12 +4138,85 @@ function rankPicksForVip() {
   return bankrollRankPicks(PICKS);
 }
 
+function normalizePotdPick(pick) {
+  if (!pick || typeof pick !== 'object') return null;
+  const edge = Number(pick.edge || 0);
+  const conf = Number(pick.confidence || 0);
+  const oddsRaw = Number(pick.odds_raw || 0);
+  const odds = String(pick.odds || (Number.isFinite(oddsRaw) && oddsRaw !== 0 ? (oddsRaw > 0 ? `+${oddsRaw}` : `${oddsRaw}`) : ''));
+  return {
+    id: `potd-${String(pick.date || POTD_DATA?.date || '').replace(/[^\d]/g, '') || 'today'}`,
+    sport: String(pick.sport_key || ''),
+    game: String(pick.game || ''),
+    bet: String(pick.bet || ''),
+    odds,
+    ev: edge,
+    conf,
+    book: String(pick.book || ''),
+    grade: String(pick.grade || ''),
+    agents_fired: Number(pick.agents_fired || 0),
+    clv_urgency: String(pick.clv_urgency || ''),
+    __potd: true,
+  };
+}
+
+function renderPotdCard(pick) {
+  if (!pick) return '';
+  const urgency = String(pick.clv_urgency || '').toLowerCase();
+  const urgencyBadge = urgency === 'high' ? 'Bet Now' : (urgency === 'medium' ? 'Watch Line' : 'Stable');
+  const grade = String(pick.grade || '').toUpperCase();
+  return `<div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,209,102,.26);background:linear-gradient(160deg,rgba(255,209,102,.08),rgba(34,211,238,.04))">
+    <div class="growth-title">⚡ Pick of the Day</div>
+    <div class="growth-sub"><strong>${esc(pick.bet || 'No pick')}</strong>${pick.odds ? ` ${esc(pick.odds)}` : ''}</div>
+    <div class="growth-note">${esc(pick.game || '')}</div>
+    <div class="rf-row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+      <span class="tier-tag vip">Edge +${Number(pick.edge || 0).toFixed(1)}%</span>
+      <span class="tier-tag premium">Conf ${Math.max(0, Math.round(Number(pick.confidence || 0)))}%</span>
+      <span class="tier-tag">${esc(grade || 'POTD')}</span>
+      <span class="tier-tag">${esc(urgencyBadge)}</span>
+      <span class="tier-tag">${Math.max(0, Number(pick.agents_fired || 0))}/5 agents</span>
+      ${pick.book ? `<span class="tier-tag">${esc(pick.book)}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderPOTD(pick) {
+  if (!pick) return;
+  const html = renderPotdCard(pick);
+  const dashEl = document.getElementById('potd-dashboard');
+  const picksEl = document.getElementById('potd-picks');
+  if (dashEl) dashEl.innerHTML = html;
+  if (picksEl) picksEl.innerHTML = html;
+}
+
+async function loadPOTD() {
+  try {
+    const resp = await fetch(`./potd.json?t=${Date.now()}`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const date = String(data?.date || '').trim();
+    const pick = data?.pick && typeof data.pick === 'object' ? data.pick : null;
+    if (!date || !pick) return;
+    POTD_DATA = {date, generated_at: String(data?.generated_at || ''), pick};
+    renderPOTD(pick);
+    if (currentTab === 'home') renderHomeModules();
+    if (currentTab === 'vip' || String(currentTab).startsWith('vip-')) renderVipTools();
+  } catch (e) {
+    console.log('POTD not available:', e?.message || e);
+  }
+}
+
 function getVipPodPicks() {
-  return rankPicksForVip().slice(0, 3);
+  const ranked = rankPicksForVip();
+  const potd = POTD_DATA?.pick ? normalizePotdPick(POTD_DATA.pick) : null;
+  if (!potd) return ranked.slice(0, 3);
+  const combined = [potd, ...ranked.filter((p) => String(p.bet || '').trim().toLowerCase() !== String(potd.bet || '').trim().toLowerCase())];
+  return combined.slice(0, 3);
 }
 
 function getVipPickOfDay() {
-  return rankPicksForVip()[0] || null;
+  const potd = POTD_DATA?.pick ? normalizePotdPick(POTD_DATA.pick) : null;
+  return potd || rankPicksForVip()[0] || null;
 }
 
 function getPremiumBestBetCards() {
@@ -9084,6 +9160,7 @@ setupInstallPrompt();
 registerServiceWorker();
 if (demoMode) applyDemoDataset();
 loadCachedPicksFirstPaint();
+loadPOTD();
 applySavedSelections();
 setTimeout(() => startCoachTour(), 400);
 updateFabQuickActions();
