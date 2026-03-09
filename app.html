@@ -972,6 +972,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M10 2h4v4h-4z"/></svg>
     Tools
   </button>
+  <button class="nav-item" onclick="go('vip-execution')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 10-13h-7z"/></svg>
+    VIP Execution <span class="nav-badge" style="background:var(--amber);color:#201600">VIP</span>
+  </button>
   <button class="nav-item" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Results
@@ -1583,24 +1587,26 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">
           <span class="tool-badge premium">Premium</span>
           <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <div class="tool-tile-title">Market Intel</div>
-          <div class="tool-tile-sub">+EV, Steam, and Fades in one workspace.</div>
+          <div class="tool-tile-title">+EV Finder</div>
+          <div class="tool-tile-sub">High-value pricing gaps and fair-value edges.</div>
         </button>
-        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">
+        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">
+          <span class="tool-badge premium">Premium</span>
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l3-8 4 16 2-8h2"/></svg>
+          <div class="tool-tile-title">Steam Moves</div>
+          <div class="tool-tile-sub">Sharp pressure and fast line movement alerts.</div>
+        </button>
+        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">
           <span class="tool-badge premium">Premium</span>
           <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-          <div class="tool-tile-title">Bet Construction</div>
-          <div class="tool-tile-sub">Parlay builder + payout logic in one flow.</div>
+          <div class="tool-tile-title">Public Fades</div>
+          <div class="tool-tile-sub">Contrarian entries when the crowd is heavy.</div>
         </button>
-        <button class="tool-tile" onclick="go('perf')">
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          <div class="tool-tile-title">Results</div>
-          <div class="tool-tile-sub">History + track record in one place.</div>
-        </button>
-        <button class="tool-tile" onclick="go('offers')">
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h8"/><circle cx="18" cy="12" r="3"/></svg>
-          <div class="tool-tile-title">Affiliates & Offers</div>
-          <div class="tool-tile-sub">Best books and promo links in one tab.</div>
+        <button class="tool-tile tool-gated" data-tier="vip" onclick="go('vip-execution')">
+          <span class="tool-badge vip">VIP</span>
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 10-13h-7z"/></svg>
+          <div class="tool-tile-title">VIP Execution</div>
+          <div class="tool-tile-sub">Timing, CLV tracking, and market-depth workflow.</div>
         </button>
       </div>
     </div>
@@ -3162,8 +3168,39 @@ function renderVipLivePlays() {
   const noteEl = document.getElementById('vip-live-note');
   if (!listEl || !noteEl) return;
   if (!canUseVip()) {
-    noteEl.innerHTML = `VIP-only live algorithm. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
-    listEl.innerHTML = '';
+    const previewRows = normalizeVipLiveRows(
+      (Array.isArray(VIP_LIVE_STATE.cached) && VIP_LIVE_STATE.cached.length ? VIP_LIVE_STATE.cached : LIVEDATA).slice(0, 3)
+    );
+    noteEl.innerHTML = `VIP-only live algorithm. Preview shown below. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>`;
+    if (!previewRows.length) {
+      listEl.innerHTML = `<div class="feature-lock" style="margin-top:0">
+        <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
+          <div class="lock-card">
+            <div class="lock-title">VIP Execution Locked</div>
+            <div class="lock-sub">Live sharp windows and timing signals appear here for VIP members.</div>
+            <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>
+          </div>
+        </div>
+      </div>`;
+      return;
+    }
+    const cards = previewRows.map(r => `
+      <div class="live-card">
+        <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
+        <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
+        <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+      </div>
+    `).join('');
+    listEl.innerHTML = `<div class="feature-lock" style="margin-top:0">
+      <div class="blur-wrap" style="filter:blur(5px)">${cards}</div>
+      <div class="lock-overlay">
+        <div class="lock-card">
+          <div class="lock-title">VIP Execution Locked</div>
+          <div class="lock-sub">See live sharp moves, timing windows, and CLV-first execution prompts.</div>
+          <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>
+        </div>
+      </div>
+    </div>`;
     return;
   }
   const rows = normalizeVipLiveRows(VIP_LIVE_STATE.cached);
@@ -7707,7 +7744,8 @@ function renderPicks() {
     const a4 = agentStatusFor(4).body;
     const a5 = agentStatusFor(5).body;
     const analysisHtml = showDetailed
-      ? `<div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
+      ? `${activeAgentPills}
+      <div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">Public betting skew: <strong>${publicPct}%</strong> on listed side</div>
       <div class="pick-line">Simulation projected score: <strong>${simAway}-${simHome}</strong></div>
@@ -7718,7 +7756,8 @@ function renderPicks() {
       <div class="pick-line">${stakeLine}</div>
       <div class="pick-line">${stakeDetail}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
-      : `<div class="pick-line">Upgrade to reveal de-vig price, public %, CLV forecast, and full agent intelligence.</div>`;
+      : `${activeAgentPills}
+      <div class="pick-line">Upgrade to reveal de-vig price, public %, CLV forecast, and full agent intelligence.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${sampleTag}
   <div class="pick-inner">
@@ -7735,7 +7774,6 @@ function renderPicks() {
       <div class="pick-sub-row">
         <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
-      ${activeAgentPills}
       <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
