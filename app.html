@@ -533,6 +533,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-book-logo:hover{border-color:rgba(34,211,238,.4);color:var(--cyan)}
 .pick-book-cta{font-size:10px;margin-left:6px;color:var(--green);text-decoration:none;border:1px solid rgba(0,229,160,.25);padding:1px 6px;border-radius:999px;background:rgba(0,229,160,.08)}
 .pick-book-cta:hover{background:rgba(0,229,160,.14);border-color:rgba(0,229,160,.4)}
+.pick-book-action{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:2px 6px;border-radius:9px;border:1px solid var(--border2);background:rgba(255,255,255,.04);text-decoration:none;color:var(--text)}
+.pick-book-action:hover{border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08)}
+.pick-book-odds{font-size:10px;font-family:var(--mono);font-weight:800;color:var(--text)}
+.pick-book-action .pick-book-cta{margin-left:0}
 .props-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
 .props-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
 .props-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
@@ -815,6 +819,24 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .rf-row{display:flex;gap:8px;margin-top:9px;align-items:center}
 .rf-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);padding:9px 10px;border:1px dashed rgba(0,212,255,.35);border-radius:8px;background:rgba(0,212,255,.05);flex:1}
 .growth-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.home-edge-cards{display:grid;gap:8px}
+.home-edge-card{position:relative;border:1px solid var(--border);border-radius:10px;padding:10px 11px;background:rgba(255,255,255,.02);overflow:hidden}
+.home-edge-card-top{display:flex;justify-content:space-between;gap:8px}
+.home-edge-card-title{font-size:12px;font-weight:800;color:var(--text)}
+.home-edge-card-edge{font-size:11px;font-family:var(--mono);font-weight:800;color:var(--cyan)}
+.home-edge-card-why{margin-top:6px;font-size:11px;color:var(--sub);line-height:1.45}
+.home-edge-card.locked{cursor:pointer}
+.home-edge-card.locked .home-edge-card-blur{filter:blur(3px);opacity:.92;user-select:none;pointer-events:none}
+.home-edge-card-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,6,10,.12),rgba(6,6,10,.75))}
+.home-edge-card-lock-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.35px;text-transform:uppercase;border:1px solid rgba(255,183,0,.35);color:var(--amber);background:rgba(6,6,10,.9)}
+.vip-preview-shot{margin:8px 0 10px;border:1px solid rgba(34,211,238,.25);border-radius:10px;padding:9px;background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(124,58,237,.12));text-align:left}
+.vip-preview-shot-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+.vip-preview-shot-title{font-size:10px;font-family:var(--mono);font-weight:900;color:#d9f7ff;letter-spacing:.5px;text-transform:uppercase}
+.vip-preview-shot-sub{font-size:10px;color:#9cc5d8}
+.vip-preview-shot-row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.vip-preview-shot-row:last-child{border-bottom:none}
+.vip-preview-shot-left{font-size:11px;color:var(--text)}
+.vip-preview-shot-right{font-size:11px;font-family:var(--mono);font-weight:800;color:var(--green)}
 .timing-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,183,0,.34);background:rgba(255,183,0,.14);color:var(--amber);font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.35px}
 .clv-ticker{margin-top:8px;border:1px solid rgba(0,212,255,.22);border-radius:10px;background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(124,58,237,.06));padding:9px}
 .clv-ticker-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
@@ -1500,6 +1522,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
           <div class="lock-card">
             <div class="lock-title">VIP Execution - VIP Only</div>
+            <div class="vip-preview-shot" aria-hidden="true">
+              <div class="vip-preview-shot-head">
+                <div class="vip-preview-shot-title">Live Desk Preview</div>
+                <div class="vip-preview-shot-sub">CLV + Line Rush</div>
+              </div>
+              <div class="vip-preview-shot-row"><span class="vip-preview-shot-left">Knicks @ Celtics · Entry Window</span><span class="vip-preview-shot-right">BET NOW</span></div>
+              <div class="vip-preview-shot-row"><span class="vip-preview-shot-left">Chiefs @ Bills · Line Rush</span><span class="vip-preview-shot-right">+1.5 pts</span></div>
+              <div class="vip-preview-shot-row"><span class="vip-preview-shot-left">Dodgers @ Padres · CLV Signal</span><span class="vip-preview-shot-right">+1.2%</span></div>
+            </div>
             <div class="lock-sub">Live trading-floor view: line holding, line dropping (bet now), and rebound timing windows.</div>
             <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>
           </div>
@@ -3231,6 +3262,9 @@ function renderVipLivePlays() {
   const listEl = document.getElementById('vip-live-list');
   const noteEl = document.getElementById('vip-live-note');
   if (!listEl || !noteEl) return;
+  const execBook = preferredExecutionBook();
+  const execBookCode = esc(bookShortCode(execBook));
+  const execBookLabel = esc(bookLabel(execBook));
   if (!canUseVip()) {
     const previewRows = normalizeVipLiveRows(
       (Array.isArray(VIP_LIVE_STATE.cached) && VIP_LIVE_STATE.cached.length ? VIP_LIVE_STATE.cached : LIVEDATA).slice(0, 3)
@@ -3253,6 +3287,15 @@ function renderVipLivePlays() {
         <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
         <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
         <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+        <div class="pick-sub-row" style="margin-top:8px">
+          <span class="pick-sub-book">
+            <a class="pick-book-action" data-book="${execBook}" data-sport="${esc(String(r.sport || ''))}" data-game="${esc(String(r.game || ''))}" data-pick="VIP Execution Window" data-team="${esc(String(r.home_team || ''))}" href="#" target="_blank" onclick="event.stopPropagation()" title="${execBookLabel}">
+              <span class="pick-book-logo">${execBookCode}</span>
+              <span class="pick-book-odds">${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} / ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</span>
+              <span class="pick-book-cta">Bet Window</span>
+            </a>
+          </span>
+        </div>
       </div>
     `).join('');
     listEl.innerHTML = `<div class="feature-lock" style="margin-top:0">
@@ -3287,6 +3330,15 @@ function renderVipLivePlays() {
       <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
       <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
       <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+      <div class="pick-sub-row" style="margin-top:8px">
+        <span class="pick-sub-book">
+          <a class="pick-book-action" data-book="${execBook}" data-sport="${esc(String(r.sport || ''))}" data-game="${esc(String(r.game || ''))}" data-pick="VIP Execution Window" data-team="${esc(String(r.home_team || ''))}" href="#" target="_blank" onclick="event.stopPropagation()" title="${execBookLabel}">
+            <span class="pick-book-logo">${execBookCode}</span>
+            <span class="pick-book-odds">${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} / ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</span>
+            <span class="pick-book-cta">Bet Window</span>
+          </a>
+        </span>
+      </div>
     </div>
   `).join('');
 }
@@ -3622,6 +3674,15 @@ function affiliateBookScore(book) {
   const convPct = Math.max(0, Number(AFFILIATE?.estimated_conversion_pct || 2.5));
   const epc = Number(AFFILIATE_EPC_EST[book] || 50);
   return (clicks + 1) * (convPct / 100) * epc;
+}
+
+function preferredExecutionBook() {
+  const candidates = AFFILIATE_BOOKS
+    .map((b) => normalizeBookKey(b))
+    .filter((b) => String(affiliateLinks[b] || DEFAULT_AFFILIATE_LINKS[b] || '').trim());
+  if (!candidates.length) return 'draftkings';
+  candidates.sort((a, b) => affiliateBookScore(b) - affiliateBookScore(a));
+  return candidates[0] || 'draftkings';
 }
 
 function reorderOfferLinks() {
@@ -5861,46 +5922,44 @@ function renderHomeModules() {
       }
     } else {
       const premiumOn = canUsePremium();
-      const rows = rankedHome.slice(0, 3).map((p, i) =>
-        `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
+      const rows = rankedHome.slice(0, 3).map((p, i) => {
+        const why = esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal');
+        return `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;gap:8px">
             <div style="font-weight:700;color:var(--text)">#${i + 1} ${esc(p.bet)}</div>
             <div style="color:var(--cyan);font-family:var(--mono)">+${Number(p.ev || 0).toFixed(1)}%</div>
           </div>
-          <div class="pick-why">Why this pick: ${esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal')}</div>
-        </div>`
-      ).join('');
+          <div class="pick-why">Why this pick: ${why}</div>
+        </div>`;
+      }).join('');
       if (premiumOn) {
         topEl.innerHTML = rows;
       } else {
-        const previewRows = rankedHome
-          .slice()
-          .slice(0, 3)
-          .map((p, i) => {
-            const locked = i > 0;
-            const matchup = esc(
-              String(p.game || p.matchup || p.event || 'Top Edge')
-                .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, '')
-                .replace(/\s[+-]\d+(\.\d+)?/g, '')
-                .replace(/\s{2,}/g, ' ')
-                .trim()
-            );
-            const label = locked ? `#${i + 1} Premium/VIP Locked` : `#${i + 1} ${matchup}`;
-            const evLabel = locked ? 'LOCKED' : `+${Number(p.ev || 0).toFixed(1)}%`;
-            const why = locked
-              ? 'Upgrade to reveal pick details, edge score, and timing.'
-              : `Top edge identified by: ${esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal')}. Bet details unlock in Premium/VIP.`;
-            return `<div style="padding:${i ? '8px' : '0'} 0;border-bottom:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;gap:8px">
-                <div style="font-weight:700;color:var(--text)">${label}</div>
-                <div style="color:${locked ? 'var(--amber)' : 'var(--cyan)'};font-family:var(--mono)">${evLabel}</div>
+        const previewRows = rankedHome.slice(0, 3).map((p, i) => {
+          const locked = i > 0;
+          const matchup = esc(
+            String(p.game || p.matchup || p.event || 'Top Edge')
+              .replace(/\b(under|over)\s*\d+(\.\d+)?/ig, '')
+              .replace(/\s[+-]\d+(\.\d+)?/g, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim()
+          );
+          const why = esc(Array.isArray(p.agents) && p.agents.length ? p.agents.slice(0, 2).join(' + ') : '5-agent consensus signal');
+          const lockTier = i === 1 ? 'premium' : 'vip';
+          const lockLabel = i === 1 ? '🔒 Premium' : '🔒 VIP';
+          return `<div class="home-edge-card${locked ? ' locked' : ''}" ${locked ? `role="button" tabindex="0" onclick="openUpgradePicker(false,'${lockTier}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openUpgradePicker(false,'${lockTier}');}"` : ''}>
+            <div class="home-edge-card-blur">
+              <div class="home-edge-card-top">
+                <div class="home-edge-card-title">#${i + 1} ${locked ? 'Premium/VIP Edge' : matchup}</div>
+                <div class="home-edge-card-edge">${locked ? 'LOCKED' : `+${Number(p.ev || 0).toFixed(1)}%`}</div>
               </div>
-              <div class="pick-why">${why}</div>
-            </div>`;
-          })
-          .join('');
+              <div class="home-edge-card-why">${locked ? 'Upgrade to reveal full side, line, and timing guidance.' : `Top edge identified by ${why}.`}</div>
+            </div>
+            ${locked ? `<div class="home-edge-card-lock"><span class="home-edge-card-lock-pill">${lockLabel}</span></div>` : ''}
+          </div>`;
+        }).join('');
         topEl.innerHTML = `
-          ${previewRows}
+          <div class="home-edge-cards">${previewRows}</div>
           <div class="growth-note">Free includes 1 daily top edge. Upgrade to unlock full live picks.</div>`;
       }
     }
@@ -7814,15 +7873,15 @@ function renderPicks() {
     const bookKey = normalizeBookKey(p.bookKey || p.bookRaw || p.book || '');
     const bookLabelText = esc(bookLabel(bookKey || p.bookRaw || p.book || ''));
     const hasAffiliateBook = AFFILIATE_BOOKS.includes(bookKey);
-    const lockEdgeLabel = `Lock in +${edgeVal.toFixed(1)}% Edge`;
+    const lockEdgeLabel = 'Bet Now';
     const affSport = esc(String(p.sk || p.sport || ''));
     const affGame = esc(String(matchupLabel || p.game || ''));
     const affPick = esc(String(p.bet || ''));
     const primaryTeam = esc(String(matchupLabel || '').split(' vs ')[0] || '');
     const bookCode = esc(bookShortCode(bookKey));
     const pickBookHtml = hasAffiliateBook
-      ? `<a class="pick-book-logo" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}">${bookCode}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
-      : `<span class="pick-book-logo" title="${bookLabelText}">${bookCode}</span>`;
+      ? `<a class="pick-book-action" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}"><span class="pick-book-logo">${bookCode}</span><span class="pick-book-odds">${esc(String(p.odds || ''))}</span><span class="pick-book-cta">${lockEdgeLabel}</span></a>`
+      : `<span class="pick-book-action" title="${bookLabelText}"><span class="pick-book-logo">${bookCode}</span><span class="pick-book-odds">${esc(String(p.odds || ''))}</span></span>`;
     const analysisHtml = showDetailed
       ? `<div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
