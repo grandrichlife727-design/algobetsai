@@ -357,6 +357,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filters-nav:hover{border-color:var(--border2);color:var(--text)}
 .filters-more{display:none;align-items:center;justify-content:center;height:28px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--sub);font-size:11px;font-weight:700;padding:0 10px;cursor:pointer;flex-shrink:0;font-family:var(--mono)}
 .filters-more:hover{border-color:var(--border2);color:var(--text)}
+.filters-overflow-hint{display:none;margin:-10px 2px 10px;font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:.35px;align-items:center;gap:5px}
+.filters-overflow-hint.on{display:inline-flex}
+.filters-overflow-hint .hint-arrow{display:inline-block;animation:hintNudge 1.2s ease-in-out infinite}
+@keyframes hintNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
@@ -1296,6 +1300,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <button class="filters-nav" type="button" aria-label="Scroll sports right" onclick="scrollPicksFilters(1)">›</button>
         <button class="filters-more" type="button" id="picks-filters-toggle" aria-expanded="false" aria-label="Show more sports filters" onclick="toggleSportsFilters()">More</button>
       </div>
+      <div class="filters-overflow-hint" id="picks-filters-hint"><span class="hint-text">Swipe for more sports</span><span class="hint-arrow">→</span></div>
       <div class="pick-controls">
         <select id="picks-market" onchange="setPickMarket(this.value)">
           <option value="all">All markets</option>
@@ -9236,6 +9241,7 @@ function toggleSportsFilters() {
   if (!rail) return;
   const collapsed = rail.classList.contains('mobile-collapsed');
   setSportsFiltersExpanded(collapsed);
+  updateSportsOverflowHint();
 }
 
 function syncSportsFiltersForViewport() {
@@ -9254,6 +9260,38 @@ function syncSportsFiltersForViewport() {
   const activeEl = document.querySelector('.filter.active');
   const needsExpand = !!activeEl?.classList?.contains('extra-sport');
   setSportsFiltersExpanded(needsExpand);
+  updateSportsOverflowHint();
+}
+
+function updateSportsOverflowHint() {
+  const rail = document.getElementById('picks-filters');
+  const hint = document.getElementById('picks-filters-hint');
+  if (!rail || !hint) return;
+  const mobile = window.matchMedia('(max-width:900px)').matches;
+  if (!mobile) {
+    hint.classList.remove('on');
+    return;
+  }
+  const hasOverflow = rail.scrollWidth > (rail.clientWidth + 10);
+  if (!hasOverflow) {
+    hint.classList.remove('on');
+    return;
+  }
+  const maxLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+  const left = Math.max(0, rail.scrollLeft);
+  if (left < 8) {
+    hint.querySelector('.hint-text').textContent = 'Swipe for more sports';
+    hint.querySelector('.hint-arrow').textContent = '→';
+    hint.classList.add('on');
+    return;
+  }
+  if (left >= (maxLeft - 8)) {
+    hint.querySelector('.hint-text').textContent = 'More sports to the left';
+    hint.querySelector('.hint-arrow').textContent = '←';
+    hint.classList.add('on');
+    return;
+  }
+  hint.classList.remove('on');
 }
 
 function scrollPicksFilters(direction) {
@@ -9366,6 +9404,12 @@ function applySavedSelections() {
   const activeFilter = savedFilterEl ? filter : 'all';
   if (filterEl) setFilter(filterEl, activeFilter);
   syncSportsFiltersForViewport();
+  const rail = document.getElementById('picks-filters');
+  if (rail && !rail.dataset.hintBound) {
+    rail.addEventListener('scroll', updateSportsOverflowHint, {passive: true});
+    rail.dataset.hintBound = '1';
+  }
+  setTimeout(updateSportsOverflowHint, 120);
   go(currentTab);
   updateParlay();
 }
