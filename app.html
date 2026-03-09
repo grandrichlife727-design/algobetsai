@@ -7897,12 +7897,10 @@ function renderPicks() {
       const dollars = bankroll >= 50 ? Math.max(1, Math.round((bankroll * rawStakePct) / 100)) : 0;
       return {pct: rawStakePct, dollars};
     })() : suggestedStakeMeta(edgeVal);
-    const entryLabel = String(p.stakeSuggestion?.entryQuality || '').toUpperCase();
-    const timingModel = Number(p.stakeSuggestion?.timingModel || 0);
+    const activeAgentsCount = parseActiveAgents(p).length;
     const stakeLine = stakeMeta.dollars > 0
       ? `Stake suggestion (Agent 5 Timing/CLV): <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
       : `Stake suggestion (Agent 5 Timing/CLV): <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
-    const stakeDetail = `Entry quality: <strong>${entryLabel || 'STANDARD'}</strong>${timingModel > 0 ? ` · Timing model ${timingModel.toFixed(1)}` : ''}`;
     const matchupLabel = cleanMatchupLabel(p.game || p.bet);
     const betLabel = showDetailed ? `${p.bet} ${p.odds}` : freeTeaserBetLabel(p);
     const bookKey = normalizeBookKey(p.bookKey || p.bookRaw || p.book || '');
@@ -7921,8 +7919,7 @@ function renderPicks() {
       ? `<div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">CLV forecast: <strong>${esc(clvCopy)}</strong></div>
-      <div class="pick-line">${stakeLine}</div>
-      <div class="pick-line">${stakeDetail}</div>`
+      <div class="pick-line">${stakeLine}</div>`
       : `<div class="pick-line">Upgrade to reveal fair price, CLV forecast, and exact stake guidance.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${cornerBadges}
@@ -7946,7 +7943,7 @@ function renderPicks() {
         <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
       ${agentSignalBadges}
-      <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
+      <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button> <span style="margin-left:6px">Agents active: <strong>${activeAgentsCount}/5</strong></span></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
         <div class="pick-analysis-body">${analysisHtml}</div>
