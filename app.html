@@ -305,7 +305,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:560px){
   .topbar-logo{gap:0}
   .topbar-logo-name{font-size:22px}
-  .system-status{padding:3px 7px}
+  .system-status{display:none}
   .system-status-label{display:none}
   .agent-work-indicator{margin-left:7px}
   .agent-work-dot{width:13px;height:13px;font-size:7px}
@@ -6921,12 +6921,12 @@ function scanPolicyDetails() {
       plan: p,
       automated: true,
       cadenceLabel: '~45-second cadence',
-      note: '<strong>VIP:</strong> Auto scans run about every 45 seconds and updates auto-deliver in app. Use Refresh Now anytime.',
+      note: '<strong>VIP:</strong> Auto scans run about every 45 seconds and updates auto-deliver in app. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'VIP auto-updates are active.',
       blockedFeedback: (left) => `VIP auto-sync runs continuously. Next sync in ${left}.`,
       blockedToast: (left) => `Auto-sync active. Next VIP update in ${left}.`,
-      idleButtonLabel: 'Refresh Now',
+      idleButtonLabel: 'Scan Now',
     };
   }
   if (p === 'premium') {
@@ -6934,12 +6934,12 @@ function scanPolicyDetails() {
       plan: p,
       automated: true,
       cadenceLabel: '2-minute cadence',
-      note: '<strong>Premium:</strong> Auto scans run every 2 minutes and updates auto-deliver in app. Use Refresh Now anytime.',
+      note: '<strong>Premium:</strong> Auto scans run every 2 minutes and updates auto-deliver in app. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'Premium auto-updates are active.',
       blockedFeedback: (left) => `Premium auto-sync runs continuously. Next sync in ${left}.`,
       blockedToast: (left) => `Auto-sync active. Next Premium update in ${left}.`,
-      idleButtonLabel: 'Refresh Now',
+      idleButtonLabel: 'Scan Now',
     };
   }
   return {
