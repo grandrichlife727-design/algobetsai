@@ -8416,20 +8416,49 @@ function renderSteam() {
 }
 
 function computePublicFadesFromPicks(picks) {
-  return (Array.isArray(picks) ? picks : [])
-    .filter(p => Number(p.pu || 0) >= 65 && Number(p.ev || 0) >= 1.5)
-    .map(p => ({
-      sport: p.sport || '',
-      game: p.game || '',
-      bet: p.bet || '',
-      odds: p.odds || '',
-      publicPct: Number(p.pu || 0),
-      sharpPct: Number(p.sh || 0),
-      ev: Number(p.ev || 0),
-      note: Number(p.sh || 0) >= 55
-        ? 'Public heavy on opposite side while sharp money leans this way.'
-        : 'Crowded ticket split with favorable price for contrarian entry.',
-    }))
+  const rows = Array.isArray(picks) ? picks : [];
+  const hasRealSplits = rows.some(p => Number(p.pu || 0) > 0 || Number(p.sh || 0) > 0);
+  if (hasRealSplits) {
+    return rows
+      .filter(p => Number(p.pu || 0) >= 65 && Number(p.ev || 0) >= 1.5)
+      .map(p => ({
+        sport: p.sport || '',
+        game: p.game || '',
+        bet: p.bet || '',
+        odds: p.odds || '',
+        publicPct: Number(p.pu || 0),
+        sharpPct: Number(p.sh || 0),
+        ev: Number(p.ev || 0),
+        note: Number(p.sh || 0) >= 55
+          ? 'Public heavy on opposite side while sharp money leans this way.'
+          : 'Crowded ticket split with favorable price for contrarian entry.',
+      }))
+      .sort((a, b) => (b.publicPct - a.publicPct) || (b.ev - a.ev))
+      .slice(0, 30);
+  }
+  // Fallback proxy: when ticket-split feeds are unavailable, infer crowd bias from pricing profile.
+  return rows
+    .map(p => {
+      const ev = Number(p.ev || 0);
+      const oddsRaw = Number(String(p.odds || '').replace('+', ''));
+      if (!Number.isFinite(ev) || !Number.isFinite(oddsRaw)) return null;
+      const isUnderdog = oddsRaw > 0;
+      const impliedFavPublic = Math.max(65, Math.min(83, Math.round(66 + Math.min(10, Math.abs(oddsRaw) / 60) + Math.min(7, ev / 4))));
+      const publicPct = isUnderdog ? impliedFavPublic : Math.max(66, Math.min(82, Math.round(64 + Math.min(6, ev / 3))));
+      const sharpPct = Math.max(54, Math.min(67, Math.round(52 + Math.min(8, ev / 2.5))));
+      if (publicPct < 66 || ev < 1.5) return null;
+      return {
+        sport: p.sport || '',
+        game: p.game || '',
+        bet: p.bet || '',
+        odds: p.odds || '',
+        publicPct,
+        sharpPct,
+        ev,
+        note: 'Proxy signal: inferred crowd skew from market pricing (ticket-split feed unavailable).',
+      };
+    })
+    .filter(Boolean)
     .sort((a, b) => (b.publicPct - a.publicPct) || (b.ev - a.ev))
     .slice(0, 30);
 }
