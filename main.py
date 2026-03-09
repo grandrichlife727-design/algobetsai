@@ -126,7 +126,6 @@ SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "false")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
 STARTED_GAME_GRACE_MINUTES = int(os.getenv("STARTED_GAME_GRACE_MINUTES", "2") or 2)
 MAX_UPCOMING_GAME_DAYS = int(os.getenv("MAX_UPCOMING_GAME_DAYS", "7") or 7)
-TRACKED_PICK_FUTURE_DAYS = int(os.getenv("TRACKED_PICK_FUTURE_DAYS", "7") or 7)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
@@ -1943,41 +1942,6 @@ def _score_days_from_for_open_picks(user_rec: dict[str, Any], default: int = 3) 
         oldest_ts = min(oldest_ts, ts_val)
     age_days = int(math.ceil(max(0.0, now - oldest_ts) / 86400.0))
     return max(3, min(7, age_days + 1))
-
-
-def _tracked_row_reference_ts(row: dict[str, Any]) -> float:
-    if not isinstance(row, dict):
-        return 0.0
-    game_time = str(row.get("game_time") or "").strip()
-    if game_time:
-        try:
-            return datetime.fromisoformat(game_time.replace("Z", "+00:00")).timestamp()
-        except Exception:
-            pass
-    settled_ts = float(row.get("settled_ts") or 0.0)
-    if settled_ts > 0:
-        return settled_ts
-    ts = float(row.get("ts") or 0.0)
-    return ts if ts > 0 else 0.0
-
-
-def _prune_tracked_picks_window(user_rec: dict[str, Any], days: int = TRACKED_PICK_FUTURE_DAYS) -> list[dict[str, Any]]:
-    rows = list(user_rec.get("tracked_picks", []))
-    if not rows:
-        user_rec["tracked_picks"] = []
-        return []
-    keep_days = max(1, min(int(days or TRACKED_PICK_FUTURE_DAYS), 30))
-    window_sec = keep_days * 86400
-    now = time.time()
-    pruned = []
-    for r in rows:
-        ts_ref = _tracked_row_reference_ts(r)
-        if ts_ref <= 0:
-            continue
-        if now <= ts_ref <= (now + window_sec):
-            pruned.append(r)
-    user_rec["tracked_picks"] = pruned[-700:]
-    return user_rec["tracked_picks"]
 
 
 def _performance_summary(user_rec: dict[str, Any]) -> dict[str, Any]:
@@ -5288,7 +5252,7 @@ async def scan(request: Request):
         user_growth["history"] = history[-120:]
 
     # Track visible picks for grading/ROI.
-    tracked = _prune_tracked_picks_window(user_growth)
+    tracked = user_growth.setdefault("tracked_picks", [])
     existing_keys = {tp.get("key") for tp in tracked}
     for p in visible_picks:
         bet_text = str(p.get("bet") or "")
@@ -5641,7 +5605,6 @@ async def performance(request: Request, settle: bool = True):
     if not user_id:
         raise HTTPException(status_code=400, detail="x-user-id is required.")
     rec = _ensure_growth_user(user_id)
-    _prune_tracked_picks_window(rec)
     if settle:
         scores_rows: list[dict[str, Any]] = []
         days_from = _score_days_from_for_open_picks(rec, default=3)
