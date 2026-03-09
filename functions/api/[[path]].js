@@ -1,3 +1,4 @@
+import { evFinderRows, getScanPayload } from "../_lib/odds-engine.js";
 const UPSTREAM = "https://algobetsai.onrender.com";
 
 function toUpstreamUrl(requestUrl, pathParam) {
@@ -30,6 +31,35 @@ export async function onRequest(context) {
   const { request, params, env } = context;
   const method = request.method.toUpperCase();
   const rawPath = (Array.isArray(params.path) ? params.path.join("/") : String(params.path || "")).replace(/,/g, "/");
+  const cleanPath = rawPath.replace(/^\/+/, "");
+
+  if (method === "GET" && cleanPath === "ev-finder") {
+    try {
+      const payload = await getScanPayload(env, { force: false });
+      const rows = evFinderRows(payload);
+      return new Response(JSON.stringify({ results: rows, count: rows.length, data_source: "odds_api" }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "x-algobets-origin": "cloudflare-ev-finder",
+        },
+      });
+    } catch (err) {
+      return new Response(
+        JSON.stringify({ detail: String(err?.message || err || "EV finder unavailable"), results: [], count: 0 }),
+        {
+          status: 503,
+          headers: {
+            "content-type": "application/json; charset=utf-8",
+            "cache-control": "no-store",
+            "x-algobets-origin": "cloudflare-ev-finder",
+          },
+        },
+      );
+    }
+  }
+
   const url = toUpstreamUrl(request.url, rawPath);
   const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
   const init = {

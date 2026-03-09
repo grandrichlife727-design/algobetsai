@@ -2271,9 +2271,19 @@ function isTrustedBackendUrl(v) {
 const _backendFromQp = normalizeBackendUrl(_qp.get('backend') || '');
 if (_backendFromQp && isTrustedBackendUrl(_backendFromQp)) localStorage.setItem('algobets-backend', _backendFromQp);
 const _backendStored = normalizeBackendUrl(localStorage.getItem('algobets-backend') || '');
-const BACKEND = isTrustedBackendUrl(_backendFromQp)
-  ? _backendFromQp
-  : (isTrustedBackendUrl(_backendStored) ? _backendStored : (CURRENT_ORIGIN_BACKEND || DEFAULT_RENDER_BACKEND));
+const USE_PAGES_ORIGIN_BACKEND = (() => {
+  try {
+    const h = String(window.location.hostname || '').toLowerCase();
+    return h.endsWith('.pages.dev');
+  } catch (_) {
+    return false;
+  }
+})();
+const BACKEND = USE_PAGES_ORIGIN_BACKEND
+  ? (CURRENT_ORIGIN_BACKEND || DEFAULT_RENDER_BACKEND)
+  : (isTrustedBackendUrl(_backendFromQp)
+    ? _backendFromQp
+    : (isTrustedBackendUrl(_backendStored) ? _backendStored : (CURRENT_ORIGIN_BACKEND || DEFAULT_RENDER_BACKEND)));
 const _backendKeyFromQp = String(_qp.get('backend_key') || '').trim();
 if (_backendKeyFromQp) localStorage.setItem('algobets-backend-key', _backendKeyFromQp);
 const BACKEND_KEY = String(localStorage.getItem('algobets-backend-key') || '').trim();
