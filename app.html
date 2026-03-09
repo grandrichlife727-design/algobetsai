@@ -1282,7 +1282,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-tag vip"><strong>VIP</strong>: VIP pick of the day, ~45-second auto refresh, better-line timing, alerts/recap, and Discord.</div>
       </div>
       </div>
-      <div id="potd-picks"></div>
       <div class="filters-wrap">
         <button class="filters-nav" type="button" aria-label="Scroll sports left" onclick="scrollPicksFilters(-1)">‹</button>
       <div class="filters" id="picks-filters">
@@ -4196,12 +4195,7 @@ function renderPOTD(pick) {
   if (!pick) return;
   const html = renderPotdCard(pick);
   const dashEl = document.getElementById('potd-dashboard');
-  const picksEl = document.getElementById('potd-picks');
-  const topPick = rankPicksForVip()[0] || null;
-  const duplicateTop = isSamePickSignature(pick, topPick);
-  const hideDuplicateForVip = duplicateTop && canUseVip();
   if (dashEl) dashEl.innerHTML = html;
-  if (picksEl) picksEl.innerHTML = hideDuplicateForVip ? '' : html;
 }
 
 async function loadPOTD() {
@@ -8208,8 +8202,6 @@ function renderPicks() {
   const vipDuplicateTop = vipOn && vipPick && topVisiblePick && isSamePickSignature(vipPick, topVisiblePick);
   if (vipDuplicateTop) {
     vipTeaser = `<div class="growth-note" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,183,0,.05)">VIP Pick of the Day aligns with today’s #1 edge. No duplicate card shown.</div>`;
-    const picksPotdEl = document.getElementById('potd-picks');
-    if (picksPotdEl) picksPotdEl.innerHTML = '';
   }
 
   el.innerHTML = vipTeaser + displayList.map((p, i) => {
