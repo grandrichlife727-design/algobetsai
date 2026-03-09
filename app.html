@@ -177,6 +177,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .topbar-logo{display:flex;align-items:center;gap:0;white-space:nowrap;cursor:pointer}
 .topbar-logo-img{display:none}
 .topbar-logo-name{font-family:var(--display);font-size:24px;letter-spacing:1px;line-height:1.12;display:inline-flex;align-items:center;gap:3px}
+.system-status{display:inline-flex;align-items:center;gap:7px;margin-left:8px;padding:4px 8px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.03);cursor:pointer}
+.system-status-label{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
 .agent-work-indicator{display:inline-flex;align-items:center;gap:4px;margin-left:9px}
 .agent-work-dot{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;font-size:8px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#7f8aa0;transition:all .16s ease}
 .agent-work-dot{cursor:pointer}
@@ -303,6 +305,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 @media(max-width:560px){
   .topbar-logo{gap:0}
   .topbar-logo-name{font-size:22px}
+  .system-status{padding:3px 7px}
+  .system-status-label{display:none}
   .agent-work-indicator{margin-left:7px}
   .agent-work-dot{width:13px;height:13px;font-size:7px}
   .plan-pill{display:none}
@@ -405,12 +409,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-sub-book{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
 .pick-sub-conf{font-family:var(--mono);font-weight:800;color:var(--cyan);white-space:nowrap}
 .edge-badge.edge-main{font-size:16px;padding:5px 10px;line-height:1;font-weight:900}
+.edge-badge.edge-main{background:rgba(0,229,160,.16)!important;color:var(--green)!important;border:1px solid rgba(0,229,160,.28)!important}
 .pick-analysis{margin-top:8px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.02);overflow:hidden}
-.pick-analysis>summary{list-style:none;cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--cyan);display:flex;align-items:center;justify-content:space-between}
-.pick-analysis>summary::-webkit-details-marker{display:none}
-.pick-analysis>summary::after{content:"∨";font-size:11px;color:var(--sub)}
-.pick-analysis[open]>summary::after{content:"∧"}
-.pick-analysis-body{padding:0 10px 9px}
+.pick-analysis>summary{display:none}
+.pick-analysis-body{display:none;padding:8px 10px 9px}
+.pick-analysis[open] .pick-analysis-body{display:block}
 .agent-fired{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:7px 0 4px}
 .agent-microdots{display:inline-flex;align-items:center;gap:5px}
 .agent-dot{width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;font-size:9px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);color:#7d889b;transition:all .14s ease}
@@ -449,6 +452,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .btn-more:hover{background:rgba(255,255,255,.08);color:var(--text)}
 .tool-btn-label{display:inline-flex;align-items:center;gap:7px}
 .tool-btn-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;opacity:.9;flex-shrink:0}
+.tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tool-tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;min-height:128px}
+.tool-tile:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
+.tool-tile-ico{width:30px;height:30px;color:var(--cyan)}
+.tool-tile-title{font-size:14px;font-weight:800;color:var(--text)}
+.tool-tile-sub{font-size:11px;color:var(--sub);line-height:1.35}
+@media(max-width:520px){.tools-grid{gap:8px}.tool-tile{padding:12px;min-height:116px}.tool-tile-title{font-size:13px}.tool-tile-sub{font-size:10px}}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
 .explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
@@ -948,7 +958,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   </button>
   <button class="nav-item" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Performance
+    Results
   </button>
   <button class="nav-item" id="settings-btn" onclick="go('profile')" title="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -986,6 +996,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="topbar">
     <div class="topbar-logo" role="button" tabindex="0" aria-label="Go to Home" onclick="go('home')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('home')}">
       <span class="topbar-logo-name"><span class="brand-main">AlgoBets</span><span class="brand-ai">Ai</span></span>
+    </div>
+    <div class="system-status" role="button" tabindex="0" aria-label="Open system status details" onclick="openEngineModal(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEngineModal(event)}">
+      <span class="system-status-label">System Status</span>
       <span class="agent-work-indicator" id="agent-work-indicator" aria-label="5-Agent engine indicator" title="5-Agent engine status">
         <span class="agent-work-dot core" id="agent-work-dot-1" data-agent-dot="1">1</span>
         <span class="agent-work-dot core" id="agent-work-dot-2" data-agent-dot="2">2</span>
@@ -1544,26 +1557,28 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-tools" style="display:none">
-      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Action-first layout: three buckets, less navigation clutter.</div></div>
-      <div class="growth-grid" style="margin-top:0;max-width:100%">
-        <div class="growth-card">
-          <div class="growth-title">Market Intelligence</div>
-          <div class="growth-sub">Merged flow for +EV, Steam, and Public Fades.</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">+EV Finder</button><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">Steam</button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">Public Fades</button><button class="pf-btn" onclick="go('odds')">Live Odds</button></div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Bet Construction</div>
-          <div class="growth-sub">Parlay Builder + Boost Checker in one construction bucket.</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">Parlay Builder</button><button class="pf-btn" onclick="go('boost')">Boost Checker</button></div>
-          <div class="growth-note">Standalone payout calculator removed from nav. Use Parlay Builder for payout + correlation context.</div>
-        </div>
-        <div class="growth-card">
-          <div class="growth-title">Bet Tracker</div>
-          <div class="growth-sub">History + journal in one tracking flow.</div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('history')">Open Bet History</button><button class="pf-btn" onclick="go('perf')">Track Record</button></div>
-          <div class="growth-note">Performance view focuses on long-run ROI and edge realized.</div>
-        </div>
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Tap a tile to open a focused workflow.</div></div>
+      <div class="tools-grid">
+        <button class="tool-tile" onclick="openTierFeature('ev','premium')">
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <div class="tool-tile-title">Market Intelligence</div>
+          <div class="tool-tile-sub">+EV, Steam, and Fades in one analysis path.</div>
+        </button>
+        <button class="tool-tile" onclick="openTierFeature('parlay','premium')">
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+          <div class="tool-tile-title">Bet Construction</div>
+          <div class="tool-tile-sub">Parlay Builder plus Boost Checker logic.</div>
+        </button>
+        <button class="tool-tile" onclick="go('perf')">
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <div class="tool-tile-title">Results</div>
+          <div class="tool-tile-sub">Track record + bet history in one place.</div>
+        </button>
+        <button class="tool-tile" onclick="go('profile')">
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
+          <div class="tool-tile-title">Profile & Billing</div>
+          <div class="tool-tile-sub">Settings, plans, and account controls.</div>
+        </button>
       </div>
     </div>
 
@@ -1638,7 +1653,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-perf" style="display:none">
-      <div class="page-hdr"><div class="page-title">Track <span>Record</span></div><div class="page-sub">CLV-verified results — measured against Pinnacle's closing line</div></div>
+      <div class="page-hdr"><div class="page-title">Your <span>Results</span></div><div class="page-sub">Track record + outcomes in one consolidated view.</div></div>
       <div class="perf-grid">
         <div class="stat s-green"><div class="stat-val" id="pf-win" style="color:var(--green)">—</div><div class="stat-label" id="pf-win-lbl">All-time win rate</div></div>
         <div class="stat s-cyan"><div class="stat-val" id="pf-units" style="color:var(--cyan)">—</div><div class="stat-label">Total units won</div></div>
@@ -1937,7 +1952,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   </button>
   <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-    <span class="mnav-label">Performance</span>
+    <span class="mnav-label">Results</span>
   </button>
   <button class="mnav-btn" id="mn-settings" onclick="go('profile')" title="Profile">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -1965,6 +1980,22 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="fab-agent-v" id="fab-agent-name">Agent 01 - Best-Line EV</div>
       <div class="fab-agent-sub" id="fab-agent-sub">Based on current board signal frequency.</div>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="engine-ov" onclick="closeEngineModal(event)">
+  <div class="modal" id="engine-modal">
+    <div class="modal-title">How The 5-Agent Engine Works</div>
+    <div class="modal-sub">System Status: tap LEDs for live state, use this view for full context.</div>
+    <div class="agent-flow">
+      <div class="agent-step"><div class="agent-step-top"><div class="agent-step-k">Agent 01</div></div><div class="agent-step-v">Best-Line EV: finds book-to-book price gaps.</div></div>
+      <div class="agent-step"><div class="agent-step-top"><div class="agent-step-k">Agent 02</div></div><div class="agent-step-v">De-vig Consensus: builds fair baseline probability.</div></div>
+      <div class="agent-step"><div class="agent-step-top"><div class="agent-step-k">Agent 03</div></div><div class="agent-step-v">Steam Moves: tracks sharp market movement.</div></div>
+      <div class="agent-step"><div class="agent-step-top"><div class="agent-step-k">Agent 04</div></div><div class="agent-step-v">Public Fades: identifies contrarian opportunities.</div></div>
+      <div class="agent-step"><div class="agent-step-top"><div class="agent-step-k">Agent 05</div></div><div class="agent-step-v">Timing/CLV: improves entry quality and stake sizing.</div></div>
+    </div>
+    <div class="act-note" style="margin-top:10px">Live picks can fire 2-5 agents depending on market conditions.</div>
+    <button class="modal-close" onclick="closeEngineModal()">Close</button>
   </div>
 </div>
 
@@ -7578,7 +7609,7 @@ function renderPicks() {
       <div class="pick-line">${stakeDetail}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
       : `<div class="pick-line">Upgrade to reveal de-vig price, public %, CLV forecast, and full agent intelligence.</div>`;
-    const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s">
+    const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${sampleTag}
   <div class="pick-inner">
     <div class="pick-left">
@@ -7593,24 +7624,23 @@ function renderPicks() {
       </div>
       <div class="pick-sub-row">
         <span class="pick-sub-book">Book: <strong>${bookLabelText}</strong></span>
-        <span class="pick-sub-conf">CONF: ${conf}%</span>
+        <span class="pick-sub-conf">${conf}%</span>
       </div>
       ${activeAgentPills}
+      <div class="pick-line" style="font-size:10px;color:var(--muted)">Tap card to view intelligence</div>
       <details class="pick-analysis" id="ana-${p.id}">
-        <summary>View Analysis</summary>
+        <summary>Analysis</summary>
         <div class="pick-analysis-body">${analysisHtml}</div>
       </details>
     </div>
   </div>
   <div class="pick-actions">
     ${showDetailed
-      ? `<button class="btn-how" onclick="togglePickAnalysis(${p.id})">View Analysis</button>
-    <button class="btn-parlay" onclick="addParlay(${p.id})">+ Parlay</button>
-    <button class="btn-share" onclick="savePickToTracker(${p.id})">Save</button>
-    <button class="btn-win" onclick="postPickToCommunity(${p.id},'pick')">Track</button>
-    <button class="btn-more" onclick="showPickMore(${p.id})">More</button>`
-      : `<button class="btn-how" onclick="togglePickAnalysis(${p.id})">View Analysis</button>
-    <button class="paywall-cta" onclick="openUpgradePicker()">Unlock Premium Picks</button>`}
+      ? `<button class="btn-parlay" onclick="event.stopPropagation();addParlay(${p.id})">+ Parlay</button>
+    <button class="btn-share" onclick="event.stopPropagation();savePickToTracker(${p.id})">Save</button>
+    <button class="btn-win" onclick="event.stopPropagation();postPickToCommunity(${p.id},'pick')">Track</button>
+    <button class="btn-more" onclick="event.stopPropagation();showPickMore(${p.id})">More</button>`
+      : `<button class="paywall-cta" onclick="event.stopPropagation();openUpgradePicker()">Unlock Premium Picks</button>`}
   </div>
 </div>`;
     if (!lockedTease) return card;
@@ -8085,6 +8115,25 @@ function closeModal(e) {
   }
 }
 
+function openEngineModal(e) {
+  if (e) e.stopPropagation();
+  closeAgentStatusCard();
+  const ov = document.getElementById('engine-ov');
+  const md = document.getElementById('engine-modal');
+  if (!ov || !md) return;
+  ov.classList.add('on');
+  requestAnimationFrame(() => md.classList.add('on'));
+}
+
+function closeEngineModal(e) {
+  if (e && e.target !== document.getElementById('engine-ov')) return;
+  const ov = document.getElementById('engine-ov');
+  const md = document.getElementById('engine-modal');
+  if (!ov || !md) return;
+  ov.classList.remove('on');
+  md.classList.remove('on');
+}
+
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile'];
@@ -8093,6 +8142,7 @@ const STRICT_ROUTE_SET = new Set(['picks','tools','perf','profile','history','ev
 function normalizePrimaryRoute(name) {
   const n = String(name || '').toLowerCase();
   if (n === 'home') return 'picks';
+  if (n === 'history') return 'perf';
   if (n === 'offers' || n === 'community' || n === 'guide' || n === 'live') return 'tools';
   if (n === 'premium') return 'tools';
   if (n.startsWith('vip')) return 'tools';
