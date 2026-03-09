@@ -7908,7 +7908,6 @@ function renderPicks() {
       : `<span class="pick-book-action" title="${bookLabelText}"><span class="pick-book-logo">${bookCode}</span><span class="pick-book-odds">${esc(String(p.odds || ''))}</span></span>`;
     const analysisHtml = showDetailed
       ? `<div class="pick-line">Agents active: <strong>${activeAgentsCount}/5</strong></div>
-      <div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">CLV forecast: <strong>${esc(clvCopy)}</strong></div>
       <div class="pick-line">${stakeLine}</div>`
