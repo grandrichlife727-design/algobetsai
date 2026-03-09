@@ -1275,8 +1275,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
-        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
-        <div class="filter extra-sport" role="button" tabindex="0" onclick="setFilter(this,'soccer_spain_la_liga')">⚽ La Liga</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer')">⚽ Soccer</div>
         <div class="filter extra-sport" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
       </div>
         <button class="filters-nav" type="button" aria-label="Scroll sports right" onclick="scrollPicksFilters(1)">›</button>
@@ -2863,7 +2862,10 @@ function loadState() {
       return;
     }
     const st = JSON.parse(raw);
-    if (typeof st.filter === 'string') filter = st.filter;
+    if (typeof st.filter === 'string') {
+      const savedFilter = String(st.filter || '').trim().toLowerCase();
+      filter = (savedFilter === 'soccer_epl' || savedFilter === 'soccer_spain_la_liga') ? 'soccer' : savedFilter;
+    }
     if (typeof st.currentTab === 'string') currentTab = st.currentTab === 'picks' ? 'home' : st.currentTab;
     if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
     if (Array.isArray(st.legs)) {
@@ -8087,6 +8089,7 @@ function renderPicks() {
   const effectiveMinConf = Math.max(Number(pickMinConf || 0), Number(modeMinConf || 0));
   const pts = sourcePicks.filter(p => {
     if (filter === 'all') return true;
+    if (filter === 'soccer') return String(p.sk || '').includes('soccer_');
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
     return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
