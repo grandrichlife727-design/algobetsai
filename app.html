@@ -3397,6 +3397,14 @@ function saveVipLiveState() {
   try { localStorage.setItem(VIP_LIVE_STATE_KEY, JSON.stringify(VIP_LIVE_STATE)); } catch (_) {}
 }
 
+function clearLiveStateWhenDisabled() {
+  if (LIVE_PICKS_ENABLED) return;
+  LIVEDATA = [];
+  liveFetchedAt = 0;
+  VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
+  saveVipLiveState();
+}
+
 function currentUtcDay() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -9335,6 +9343,7 @@ loadPickPrefs();
 loadPremiumSettings();
 loadVipSettings();
 loadVipLiveState();
+clearLiveStateWhenDisabled();
 loadFreeDelayState();
 loadTrialUiState();
 loadCoachState();

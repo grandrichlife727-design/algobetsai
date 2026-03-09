@@ -1,4 +1,4 @@
-const CACHE_NAME = 'algobets-pwa-v6';
+const CACHE_NAME = 'algobets-pwa-v7';
 const CORE_ASSETS = [
   './',
   'app.html',
