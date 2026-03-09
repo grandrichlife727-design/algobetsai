@@ -480,6 +480,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .tools-topline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 10px}
 .tools-count{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.35px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(34,211,238,.32);background:rgba(34,211,238,.1)}
+.tools-clip{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border2);background:rgba(255,255,255,.05);font-size:12px;line-height:1;vertical-align:middle;margin-left:6px}
 .tools-section{margin-top:10px}
 .tools-section-title{font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
 .tool-tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;min-height:128px}
@@ -1672,7 +1673,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-tools" style="display:none">
-      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Use focused workflows for edge finding, execution timing, and sizing decisions.</div></div>
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span><span class="tools-clip" aria-hidden="true">📋</span></div><div class="page-sub">Use focused workflows for edge finding, execution timing, and sizing decisions.</div></div>
       <div class="tools-topline">
         <div class="growth-note" id="tools-af-note">Tracking tool usage...</div>
         <span class="tools-count" id="tools-feature-count">12 Features Active</span>
