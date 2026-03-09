@@ -5,6 +5,8 @@ const SPORT_META = {
   basketball_ncaab: { label: "NCAAB", emoji: "🎓" },
   baseball_mlb: { label: "MLB", emoji: "⚾" },
   soccer_epl: { label: "EPL", emoji: "⚽" },
+  soccer_spain_la_liga: { label: "La Liga", emoji: "⚽" },
+  mma_mixed_martial_arts: { label: "MMA", emoji: "🥊" },
 };
 
 const DEFAULT_SPORTS = Object.keys(SPORT_META);
