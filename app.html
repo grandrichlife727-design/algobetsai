@@ -6209,8 +6209,9 @@ function closeUpgradePicker(e) {
   if (!e || e.target === ov) ov.classList.remove('on');
 }
 
-function openUpgradePicker(force = false) {
-  trackEvent('upgrade_picker_opened', {plan: currentPlan, tab: currentTab});
+function openUpgradePicker(force = false, preferredTier = '') {
+  const preferred = normalizePlan(preferredTier || '');
+  trackEvent('upgrade_picker_opened', {plan: currentPlan, tab: currentTab, preferred_tier: preferred || 'auto'});
   if (!BILLING_ENABLED_UI) {
     showToast('Billing is temporarily unavailable');
     return;
@@ -6231,7 +6232,7 @@ function openUpgradePicker(force = false) {
     showToast('You already have VIP');
     return;
   }
-  const opts = p === 'free'
+  let opts = p === 'free'
     ? [
         {tier: 'premium', title: 'Premium', desc: 'Props Edge, EV board, Steam, Fade, and premium picks'},
         {tier: 'vip', title: 'VIP', desc: 'Everything in Premium + VIP Pick, live plays, alerts, and VIP Discord'},
@@ -6239,6 +6240,9 @@ function openUpgradePicker(force = false) {
     : [
         {tier: 'vip', title: 'VIP', desc: 'Everything in Premium + VIP Pick, live plays, alerts, and VIP Discord'},
       ];
+  if (preferred && opts.some(o => o.tier === preferred)) {
+    opts = opts.slice().sort((a, b) => (a.tier === preferred ? -1 : b.tier === preferred ? 1 : 0));
+  }
   sub.textContent = p === 'free'
     ? 'Choose one plan. You can upgrade anytime.'
     : 'Move from Premium to VIP for highest-conviction and live execution tools.';
@@ -6262,7 +6266,8 @@ function openUpgradePicker(force = false) {
     const clickAction = cycleOn
       ? `startCheckout('${o.tier}','${billingCycle}');closeUpgradePicker()`
       : `showToast('Checkout not configured for this option')`;
-    return `<button class="up-btn${disabledCls}" ${disabledAttr} onclick="${clickAction}"><b>${o.title}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
+    const focusBadge = o.tier === preferred ? '<span class="up-badge">RECOMMENDED</span>' : '';
+    return `<button class="up-btn${disabledCls}" ${disabledAttr} onclick="${clickAction}"><b>${o.title}${focusBadge}${badge}</b><span>${priceLine}</span><span>${o.desc} · ${cycleHint}</span></button>`;
   }).join('');
   document.getElementById('up-ov').classList.add('on');
 }
@@ -6618,7 +6623,8 @@ function renderActiveAgentPills(activeAgents = []) {
     const locked = freeTier && id >= 3;
     const neon = on && (id === 3 || id === 4) ? 'neon' : '';
     if (locked) {
-      return `<span role="button" tabindex="0" class="agent-dot ${meta.cls} locked inactive" title="${esc(meta.label)} (VIP locked)" onclick="event.stopPropagation();openUpgradePicker()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openUpgradePicker();}">${id}</span>`;
+      const targetTier = id === 5 ? 'vip' : 'premium';
+      return `<span role="button" tabindex="0" class="agent-dot ${meta.cls} locked inactive" title="${esc(meta.label)} (${targetTier.toUpperCase()} locked)" onclick="event.stopPropagation();openUpgradePicker(false,'${targetTier}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openUpgradePicker(false,'${targetTier}');}">${id}</span>`;
     }
     return `<span class="agent-dot ${meta.cls} ${on ? 'active' : 'inactive'} ${neon}" title="${esc(meta.label)}">${id}</span>`;
   }).join('')}</span></div>`;
@@ -8346,12 +8352,12 @@ function openTierFeature(tab, tier = 'free') {
   const needVip = tier === 'vip';
   if (needVip && !canUseVip()) {
     showToast('VIP feature');
-    openUpgradePicker();
+    openUpgradePicker(false, 'vip');
     return;
   }
   if (needPremium && !canUsePremium()) {
     showToast('Premium feature');
-    openUpgradePicker();
+    openUpgradePicker(false, 'premium');
     return;
   }
   go(tab);
