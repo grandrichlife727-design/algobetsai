@@ -8298,7 +8298,6 @@ function renderPicks() {
       <div class="empty-sub" style="margin-top:4px">${stats || 14} edges found in last scan</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="paywall-cta" style="background:var(--green);color:#032114" onclick="${liveOddsPaused ? '' : 'doScan()'}" ${liveOddsPaused ? 'disabled title="Live API unavailable"' : ''}>${liveOddsPaused ? 'Unavailable - try later' : 'Run Scan'}</button>
-        <button class="pf-btn" onclick="go('perf')">View Results</button>
       </div>
       ${renderTomorrowGamesBlock()}
     </div>`;
