@@ -4,8 +4,6 @@ on:
   schedule:
     # 2pm ET / 6pm UTC
     - cron: "0 18 * * *"
-    # 10am ET / 2pm UTC
-    - cron: "0 14 * * *"
   workflow_dispatch:
 
 jobs:

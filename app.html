@@ -4379,7 +4379,7 @@ function getVipPodPicks() {
 
 function getVipPickOfDay() {
   const potd = POTD_DATA?.pick ? normalizePotdPick(POTD_DATA.pick) : null;
-  return potd || rankPicksForVip()[0] || null;
+  return potd || null;
 }
 
 function getPremiumBestBetCards() {
