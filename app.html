@@ -287,6 +287,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
   .stat-val{font-size:24px}
   .stat-label{font-size:12px}
   .filters-nav{display:inline-flex}
+  .filters-more{display:inline-flex}
+  .filters.mobile-collapsed .extra-sport{display:none}
   .filter{font-size:14px;padding:7px 14px}
   .pick-bet{font-size:17px}
   .pick-odds{font-size:16px}
@@ -353,6 +355,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filters::-webkit-scrollbar{display:none}
 .filters-nav{display:none;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--sub);font-size:16px;line-height:1;cursor:pointer;flex-shrink:0}
 .filters-nav:hover{border-color:var(--border2);color:var(--text)}
+.filters-more{display:none;align-items:center;justify-content:center;height:28px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--sub);font-size:11px;font-weight:700;padding:0 10px;cursor:pointer;flex-shrink:0;font-family:var(--mono)}
+.filters-more:hover{border-color:var(--border2);color:var(--text)}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
@@ -1265,18 +1269,19 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="filters-wrap">
         <button class="filters-nav" type="button" aria-label="Scroll sports left" onclick="scrollPicksFilters(-1)">‹</button>
-      <div class="filters" id="picks-filters">
+      <div class="filters mobile-collapsed" id="picks-filters">
         <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
-        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_spain_la_liga')">⚽ La Liga</div>
-        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
+        <div class="filter extra-sport" role="button" tabindex="0" onclick="setFilter(this,'soccer_spain_la_liga')">⚽ La Liga</div>
+        <div class="filter extra-sport" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
         <button class="filters-nav" type="button" aria-label="Scroll sports right" onclick="scrollPicksFilters(1)">›</button>
+        <button class="filters-more" type="button" id="picks-filters-toggle" aria-expanded="false" aria-label="Show more sports filters" onclick="toggleSportsFilters()">More</button>
       </div>
       <div class="pick-controls">
         <select id="picks-market" onchange="setPickMarket(this.value)">
@@ -9131,6 +9136,9 @@ function go(name) {
 }
 
 function setFilter(el, k) {
+  if (window.matchMedia('(max-width:900px)').matches && el?.classList?.contains('extra-sport')) {
+    setSportsFiltersExpanded(true);
+  }
   document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
   if (el && typeof el.scrollIntoView === 'function') {
@@ -9139,6 +9147,41 @@ function setFilter(el, k) {
   filter = k;
   saveState();
   renderPicks();
+}
+
+function setSportsFiltersExpanded(expanded) {
+  const rail = document.getElementById('picks-filters');
+  const btn = document.getElementById('picks-filters-toggle');
+  if (!rail || !btn) return;
+  const on = !!expanded;
+  rail.classList.toggle('mobile-collapsed', !on);
+  btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+  btn.textContent = on ? 'Less' : 'More';
+}
+
+function toggleSportsFilters() {
+  const rail = document.getElementById('picks-filters');
+  if (!rail) return;
+  const collapsed = rail.classList.contains('mobile-collapsed');
+  setSportsFiltersExpanded(collapsed);
+}
+
+function syncSportsFiltersForViewport() {
+  const mobile = window.matchMedia('(max-width:900px)').matches;
+  const rail = document.getElementById('picks-filters');
+  const btn = document.getElementById('picks-filters-toggle');
+  if (!rail) return;
+  if (!mobile) {
+    rail.classList.remove('mobile-collapsed');
+    if (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = 'More';
+    }
+    return;
+  }
+  const activeEl = document.querySelector('.filter.active');
+  const needsExpand = !!activeEl?.classList?.contains('extra-sport');
+  setSportsFiltersExpanded(needsExpand);
 }
 
 function scrollPicksFilters(direction) {
@@ -9250,6 +9293,7 @@ function applySavedSelections() {
   const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
   const activeFilter = savedFilterEl ? filter : 'all';
   if (filterEl) setFilter(filterEl, activeFilter);
+  syncSportsFiltersForViewport();
   go(currentTab);
   updateParlay();
 }
@@ -9278,6 +9322,7 @@ bindHeartbeatActivityTracking();
 bindMobileNavFeedback();
 bindAgentStatusCards();
 disableBrokenSettingsButtons();
+window.addEventListener('resize', syncSportsFiltersForViewport, {passive: true});
 bindHomeTracking();
 updateDemoToggleUi();
 applyThemeMode();
