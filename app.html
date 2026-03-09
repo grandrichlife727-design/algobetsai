@@ -2379,11 +2379,10 @@ window.setAlgobetsUserId = function(uid) {
 };
 const _emailUidFromQp = String(_qp.get('uid') || '').trim().toLowerCase();
 const _emailAuthFromQp = String(_qp.get('eauth') || '').trim();
-if (/^[a-z0-9:_-]{6,64}$/.test(_emailUidFromQp)) {
+const _emailSessionPair = /^[a-z0-9:_-]{6,64}$/.test(_emailUidFromQp) && _emailAuthFromQp.length > 20;
+if (_emailSessionPair) {
   USER_ID = _emailUidFromQp;
   localStorage.setItem('algobets-user-id', USER_ID);
-}
-if (_emailAuthFromQp) {
   AUTH_TOKEN = _emailAuthFromQp;
   localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
 }
