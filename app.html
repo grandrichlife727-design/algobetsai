@@ -1114,7 +1114,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
           <div class="growth-title">VIP Pick of the Day</div>
           <div id="home-vip" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:56%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:78%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:44%"></span></div>
-          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('vip-core')">Open VIP</button> <span class="vip-chip">VIP Discord</span></div>
+          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('tools')">Open Tools</button> <span class="vip-chip">VIP Discord</span></div>
         </div>
       </div>
       <div class="home-secondary">
@@ -1382,7 +1382,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub"><strong>Execution:</strong> CLV dashboard, timing engine, and market depth.</div>
           <div class="growth-sub"><strong>Automation:</strong> webhook alerts, watchlists, and weekly reports.</div>
           <div class="growth-sub"><strong>Community:</strong> private VIP Discord with live drops and discussion.</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><span class="vip-chip">VIP Discord</span><button class="pf-btn" onclick="go('vip')">Open VIP Tools</button></div>
+          <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><span class="vip-chip">VIP Discord</span><button class="pf-btn" onclick="go('tools')">Open Tools</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
@@ -1743,7 +1743,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
         </div>
         <div class="rf-row" style="margin-top:10px">
-          <button class="pf-btn" onclick="go('home')">Dashboard</button>
+          <button class="pf-btn" onclick="go('picks')">Feed</button>
           <button class="pf-btn" onclick="go('picks')">Picks</button>
           <button class="pf-btn" onclick="go('history')">History</button>
         </div>
@@ -8088,6 +8088,16 @@ function closeModal(e) {
 // ─── NAV ──────────────────────────────────────────────────────────────────────
 const ALL_TABS = ['home','picks','tools','premium','vip','vip-core','vip-execution','vip-portfolio','vip-alerts','vip-discord','vip-reports','odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide'];
 const MOBILE_MORE_TABS = ['more','live','parlay','boost','perf','history','community','profile'];
+const STRICT_ROUTE_SET = new Set(['picks','tools','perf','profile','history','ev','steam','fades','parlay','boost','odds','props']);
+
+function normalizePrimaryRoute(name) {
+  const n = String(name || '').toLowerCase();
+  if (n === 'home') return 'picks';
+  if (n === 'offers' || n === 'community' || n === 'guide' || n === 'live') return 'tools';
+  if (n === 'premium') return 'tools';
+  if (n.startsWith('vip')) return 'tools';
+  return n;
+}
 
 function closeMobileMore() {
   const panel = document.getElementById('mnav-more-panel');
@@ -8243,8 +8253,9 @@ function openTierFeature(tab, tier = 'free') {
 }
 
 function go(name) {
-  if (name === 'home') name = 'picks';
+  name = normalizePrimaryRoute(name);
   if (name === 'more') name = 'tools';
+  if (!STRICT_ROUTE_SET.has(name)) name = 'tools';
   if (!ALL_TABS.includes(name)) return;
   if (name === 'vip-discord' && !canUseVip()) {
     showToast('VIP Discord is VIP-only');
