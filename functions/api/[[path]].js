@@ -17,6 +17,13 @@ function normalizePlan(plan) {
   return PLAN_FREE;
 }
 
+function planRank(plan) {
+  const p = normalizePlan(plan);
+  if (p === PLAN_VIP) return 2;
+  if (p === PLAN_PREMIUM) return 1;
+  return 0;
+}
+
 function splitCsvEnv(value) {
   return String(value || "")
     .split(",")
@@ -251,6 +258,20 @@ async function stripePlanForUser(env, userId) {
   return subscriptionPlan(cfg, sub);
 }
 
+async function resolveEffectivePlanForUser(env, userId, userRec, nowSec) {
+  const storedPlan = normalizePlan(userRec?.plan || PLAN_FREE);
+  let stripePlan = PLAN_FREE;
+  try {
+    stripePlan = userId ? await stripePlanForUser(env, userId) : PLAN_FREE;
+  } catch (_) {
+    stripePlan = PLAN_FREE;
+  }
+  let plan = planRank(stripePlan) >= planRank(storedPlan) ? stripePlan : storedPlan;
+  const trialActive = Number(userRec?.trialUntil || 0) > nowSec;
+  if (trialActive && plan === PLAN_FREE) plan = PLAN_PREMIUM;
+  return normalizePlan(plan);
+}
+
 export async function onRequest(context) {
   const { request, params, env } = context;
   const method = request.method.toUpperCase();
@@ -332,14 +353,7 @@ export async function onRequest(context) {
   }
 
   if (method === "GET" && cleanPath === "plan") {
-    let plan = PLAN_FREE;
-    try {
-      plan = userId ? await stripePlanForUser(env, userId) : PLAN_FREE;
-    } catch (_) {
-      plan = PLAN_FREE;
-    }
-    const trialActive = Number(user.trialUntil || 0) > nowSec;
-    if (trialActive && plan === PLAN_FREE) plan = PLAN_PREMIUM;
+    const plan = await resolveEffectivePlanForUser(env, userId, user, nowSec);
     const tier = plan === PLAN_VIP
       ? { name: "VIP", scan_pick_limit: 50, max_picks: 50, min_scan_interval_seconds: 15 }
       : plan === PLAN_PREMIUM
@@ -559,16 +573,7 @@ export async function onRequest(context) {
 
   const url = toUpstreamUrl(request.url, rawPath);
   const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
-  let resolvedUserPlan = PLAN_FREE;
-  if (userId) {
-    try {
-      resolvedUserPlan = await stripePlanForUser(env, userId);
-    } catch (_) {
-      resolvedUserPlan = PLAN_FREE;
-    }
-    const trialActive = Number(user.trialUntil || 0) > nowSec;
-    if (trialActive && resolvedUserPlan === PLAN_FREE) resolvedUserPlan = PLAN_PREMIUM;
-  }
+  const resolvedUserPlan = await resolveEffectivePlanForUser(env, userId, user, nowSec);
   const init = {
     method,
     headers: forwardHeaders(request),
