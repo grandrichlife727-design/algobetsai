@@ -1770,6 +1770,51 @@ def _pick_tracking_key(p: dict[str, Any]) -> str:
     ).hexdigest()[:20]
 
 
+def _normalize_team_label(value: Any) -> str:
+    s = str(value or "").strip().lower()
+    if not s:
+        return ""
+    s = re.sub(r"[^a-z0-9\s]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    tokens = [t for t in s.split(" ") if t not in {"fc", "cf", "sc", "club"}]
+    return " ".join(tokens)
+
+
+def _team_aliases(value: Any) -> set[str]:
+    base = _normalize_team_label(value)
+    if not base:
+        return set()
+    toks = base.split(" ")
+    out = {base}
+    if toks:
+        out.add(toks[-1])  # mascot/short form fallback
+    if len(toks) >= 2:
+        out.add(" ".join(toks[-2:]))  # last two words
+    return {x for x in out if x}
+
+
+def _game_key_variants(away: Any, home: Any) -> set[str]:
+    variants: set[str] = set()
+    away_aliases = _team_aliases(away)
+    home_aliases = _team_aliases(home)
+    for a in away_aliases:
+        for h in home_aliases:
+            variants.add(f"{a} @ {h}")
+    return variants
+
+
+def _split_game_teams(game: Any) -> tuple[str, str]:
+    raw = str(game or "")
+    if "@" in raw:
+        left, right = raw.split("@", 1)
+        return left.strip(), right.strip()
+    if "vs" in raw.lower():
+        parts = re.split(r"\bvs\.?\b", raw, maxsplit=1, flags=re.IGNORECASE)
+        if len(parts) == 2:
+            return parts[0].strip(), parts[1].strip()
+    return raw.strip(), ""
+
+
 def _american_profit_units(odds: Any) -> float:
     try:
         o = int(odds)
@@ -1818,15 +1863,23 @@ def _settle_user_tracked_picks(
     for row in scores_rows:
         if not isinstance(row, dict):
             continue
-        game_key = f"{row.get('away_team','')} @ {row.get('home_team','')}"
         winner, completed = _extract_winner_from_score_row(row)
-        score_map[game_key] = {"winner": winner, "completed": completed}
+        payload = {"winner": winner, "completed": completed}
+        away_team = row.get("away_team", "")
+        home_team = row.get("home_team", "")
+        for key in _game_key_variants(away_team, home_team):
+            score_map[key] = payload
     updated = 0
     for tp in tracked:
         if tp.get("status") != "open":
             continue
-        game = tp.get("game")
-        outcome = score_map.get(game)
+        game = str(tp.get("game") or "")
+        away_guess, home_guess = _split_game_teams(game)
+        outcome = None
+        for key in _game_key_variants(away_guess, home_guess):
+            if key in score_map:
+                outcome = score_map.get(key)
+                break
         if not outcome or not outcome.get("completed"):
             continue
         line = (line_lookup or {}).get(game) or {}
@@ -1865,6 +1918,28 @@ def _settle_user_tracked_picks(
     if len(tracked) > 700:
         user_rec["tracked_picks"] = tracked[-700:]
     return updated
+
+
+def _score_days_from_for_open_picks(user_rec: dict[str, Any], default: int = 3) -> int:
+    rows = list(user_rec.get("tracked_picks", []))
+    open_rows = [r for r in rows if str(r.get("status", "open")).lower() == "open"]
+    if not open_rows:
+        return max(1, min(int(default or 3), 7))
+    now = time.time()
+    oldest_ts = now
+    for r in open_rows:
+        gt_raw = r.get("game_time")
+        ts_val = None
+        if gt_raw:
+            try:
+                ts_val = datetime.fromisoformat(str(gt_raw).replace("Z", "+00:00")).timestamp()
+            except Exception:
+                ts_val = None
+        if ts_val is None:
+            ts_val = float(r.get("ts") or now)
+        oldest_ts = min(oldest_ts, ts_val)
+    age_days = int(math.ceil(max(0.0, now - oldest_ts) / 86400.0))
+    return max(3, min(7, age_days + 1))
 
 
 def _performance_summary(user_rec: dict[str, Any]) -> dict[str, Any]:
@@ -5205,9 +5280,10 @@ async def scan(request: Request):
 
     # Auto-settle completed picks using recent scores.
     scores_rows: list[dict[str, Any]] = []
+    days_from = _score_days_from_for_open_picks(user_growth, default=3)
     for sport in set(allowed_sports):
         try:
-            scores_rows.extend(await fetch_odds_api_scores(sport, days_from=3))
+            scores_rows.extend(await fetch_odds_api_scores(sport, days_from=days_from))
         except Exception:
             continue
     _settle_user_tracked_picks(user_growth, scores_rows, line_lookup=line_lookup)
@@ -5529,10 +5605,11 @@ async def performance(request: Request, settle: bool = True):
     rec = _ensure_growth_user(user_id)
     if settle:
         scores_rows: list[dict[str, Any]] = []
+        days_from = _score_days_from_for_open_picks(rec, default=3)
         latest_line_lookup: dict[str, dict[str, Any]] = {}
         for sport in SPORTS:
             try:
-                scores_rows.extend(await fetch_odds_api_scores(sport, days_from=3))
+                scores_rows.extend(await fetch_odds_api_scores(sport, days_from=days_from))
                 games = await fetch_odds_api_games(sport)
                 latest_line_lookup.update(_current_line_lookup(games))
             except Exception:
