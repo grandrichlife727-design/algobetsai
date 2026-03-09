@@ -7867,7 +7867,7 @@ function renderProps() {
   ];
   sportsEl.innerHTML = options.map(o => `<button class="props-sport ${o.key === activePropsSport ? 'active' : ''}" onclick="setPropsSport('${o.key}')">${o.label}</button>`).join('');
 
-  if (!canUsePremium()) {
+  if (!canUsePremium() && !PROPSDATA.length && !propsError) {
     listEl.innerHTML = `<div class="feature-lock">
       <div class="blur-wrap">
         <div class="props-card"><div class="props-top"><div class="props-player">Jayson Tatum</div><div class="props-badge">Points</div></div><div class="props-meta">Over 27.5 · -110 · FanDuel</div><div class="props-meta">Celtics @ Knicks</div></div>
@@ -7910,10 +7910,6 @@ function renderProps() {
 }
 
 async function loadProps(force = false) {
-  if (!canUsePremium()) {
-    renderProps();
-    return;
-  }
   const ttlMs = propsTtlMs();
   if (!force && PROPSDATA.length && (Date.now() - propsFetchedAt) < ttlMs) {
     renderProps();
@@ -9149,11 +9145,6 @@ function go(name) {
     return;
   }
   if (name === 'fades' && !canUsePremium()) {
-    showToast('Premium feature - Start 3-day trial');
-    openUpgradePicker(false, 'premium');
-    return;
-  }
-  if (name === 'props' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
     openUpgradePicker(false, 'premium');
     return;
