@@ -512,6 +512,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .odds-line{color:var(--green)}
 .pick-book-link{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(34,211,238,.35)}
 .pick-book-link:hover{color:#7ae9ff;border-bottom-color:rgba(34,211,238,.55)}
+.pick-book-logo{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 7px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid var(--border2);font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.4px;color:var(--text);text-decoration:none}
+.pick-book-logo:hover{border-color:rgba(34,211,238,.4);color:var(--cyan)}
 .pick-book-cta{font-size:10px;margin-left:6px;color:var(--green);text-decoration:none;border:1px solid rgba(0,229,160,.25);padding:1px 6px;border-radius:999px;background:rgba(0,229,160,.08)}
 .pick-book-cta:hover{background:rgba(0,229,160,.14);border-color:rgba(0,229,160,.4)}
 .props-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
@@ -2622,6 +2624,20 @@ function normalizeBookKey(raw) {
   if (v === 'pointsbet') return 'pointsbet';
   if (v === 'bet365') return 'bet365';
   return v;
+}
+
+function bookShortCode(raw) {
+  const key = normalizeBookKey(raw);
+  const map = {
+    draftkings: 'DK',
+    fanduel: 'FD',
+    betmgm: 'MGM',
+    caesars: 'CZR',
+    pinnacle: 'PIN',
+    pointsbet: 'PB',
+    bet365: '365',
+  };
+  return map[key] || String(bookLabel(key || raw || 'BOOK')).slice(0, 4).toUpperCase();
 }
 
 function loadState() {
@@ -7585,7 +7601,7 @@ function renderPicks() {
       <div class="empty-sub" style="margin-top:4px">${stats || 14} edges found in last scan</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="paywall-cta" style="background:var(--green);color:#032114" onclick="${liveOddsPaused ? '' : 'doScan()'}" ${liveOddsPaused ? 'disabled title="Live API unavailable"' : ''}>${liveOddsPaused ? 'Unavailable - try later' : 'Run Scan'}</button>
-        <button class="pf-btn" onclick="go('history')">View Previous Results</button>
+        <button class="pf-btn" onclick="go('perf')">View Results</button>
       </div>
       ${renderTomorrowGamesBlock()}
     </div>`;
@@ -7680,9 +7696,10 @@ function renderPicks() {
     const affGame = esc(String(matchupLabel || p.game || ''));
     const affPick = esc(String(p.bet || ''));
     const primaryTeam = esc(String(matchupLabel || '').split(' vs ')[0] || '');
+    const bookCode = esc(bookShortCode(bookKey));
     const pickBookHtml = hasAffiliateBook
-      ? `<a class="pick-book-link" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
-      : `<strong>${bookLabelText}</strong>`;
+      ? `<a class="pick-book-logo" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}">${bookCode}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
+      : `<span class="pick-book-logo" title="${bookLabelText}">${bookCode}</span>`;
     const publicPct = inferredPublicPct(p);
     const simHome = Math.round(102 + edgeVal + (conf - 55) * 0.22);
     const simAway = Math.round(99 + (100 - conf) * 0.18);
@@ -7690,7 +7707,8 @@ function renderPicks() {
     const a4 = agentStatusFor(4).body;
     const a5 = agentStatusFor(5).body;
     const analysisHtml = showDetailed
-      ? `<div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
+      ? `<div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
+      <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">Public betting skew: <strong>${publicPct}%</strong> on listed side</div>
       <div class="pick-line">Simulation projected score: <strong>${simAway}-${simHome}</strong></div>
       <div class="pick-line">CLV forecast: <strong>${esc(clvCopy)}</strong></div>
@@ -7711,12 +7729,11 @@ function renderPicks() {
       </div>
       <div class="pick-game">${esc(matchupLabel)}</div>
       <div class="pick-primary-row">
-        <div class="pick-main">${esc(betLabel)}${showDetailed ? ` @ ${bookLabelText}` : ''}</div>
+        <div class="pick-main">${esc(betLabel)}</div>
         <span class="edge-badge ${edgeClass} edge-main" title="Advantage over fair market price">+${edgeVal.toFixed(1)}%</span>
       </div>
       <div class="pick-sub-row">
-        <span class="pick-sub-book">Book: ${pickBookHtml}</span>
-        <span class="pick-sub-conf">${conf}%</span>
+        <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
       ${activeAgentPills}
       <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>

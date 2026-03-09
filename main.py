@@ -113,7 +113,7 @@ LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
 SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
-ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "20") or 20)
+ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "15") or 15)
 ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "true")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
@@ -944,6 +944,7 @@ def _mark_user_activity(user_id: str):
     for k in stale:
         active.pop(k, None)
     _growth_db["active_users"] = active
+    _set_system_status("AWAKE", "heartbeat")
     _save_growth_db()
 
 
@@ -965,6 +966,20 @@ def _has_recent_active_users(window_minutes: Optional[int] = None) -> bool:
     if not isinstance(active, dict):
         return False
     return any(int(ts or 0) >= cutoff for ts in active.values())
+
+
+def _set_system_status(status: str, reason: str = ""):
+    target = "AWAKE" if str(status or "").upper() == "AWAKE" else "ASLEEP"
+    cur = _growth_db.get("system_status", {})
+    prev = str((cur or {}).get("status", "")).upper()
+    if prev == target and reason == str((cur or {}).get("reason", "")):
+        return
+    _growth_db["system_status"] = {
+        "status": target,
+        "updated_at": int(time.time()),
+        "reason": str(reason or "")[:80],
+        "active_window_minutes": int(ACTIVE_USER_WINDOW_MINUTES),
+    }
 
 
 def _find_user_by_ref_code(code: str) -> Optional[str]:
@@ -1170,8 +1185,11 @@ async def _smart_prefetch_worker():
                 await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
                 continue
             if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
+                _set_system_status("ASLEEP", "idle_no_active_sessions")
+                _save_growth_db()
                 await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
                 continue
+            _set_system_status("AWAKE", "prefetch_loop")
             now = time.time()
             for sport in SPORTS:
                 due = float(_smart_prefetch_due_by_sport.get(sport, 0.0) or 0.0)
@@ -1203,6 +1221,8 @@ async def fetch_odds_api_games(sport_key: str, force_fresh: bool = False) -> lis
         return cached
 
     if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
+        _set_system_status("ASLEEP", "idle_no_active_sessions")
+        _save_growth_db()
         if isinstance(stale_cached, list):
             print(f"[OddsAPI] No active users in last {ACTIVE_USER_WINDOW_MINUTES}m; serving stale cache for {sport_key}")
             return stale_cached
@@ -4824,6 +4844,7 @@ async def scan(request: Request):
             "updated_at": int(now_ts),
             "data_delay_seconds": _tier_data_delay_seconds(user_plan),
             "woke_from_idle": woke_from_idle,
+            "system_status": (_growth_db.get("system_status", {}) or {}).get("status", "AWAKE"),
         },
         "agent_health": _agent_health_snapshot(),
     }
