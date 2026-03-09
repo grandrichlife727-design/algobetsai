@@ -452,6 +452,8 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .btn-win:hover{background:rgba(0,229,160,.15);border-color:rgba(0,229,160,.35)}
 .btn-more{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--sub);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
 .btn-more:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-intel{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.28);border-radius:6px;color:var(--cyan);font-size:11px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+.btn-intel:hover{background:rgba(34,211,238,.16)}
 .tool-btn-label{display:inline-flex;align-items:center;gap:7px}
 .tool-btn-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;opacity:.9;flex-shrink:0}
 .tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -1401,6 +1403,18 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-sub"><strong>Automation:</strong> webhook alerts, watchlists, and weekly reports.</div>
           <div class="growth-sub"><strong>Community:</strong> private VIP Discord with live drops and discussion.</div>
           <div class="rf-row"><button class="paywall-cta" onclick="openUpgradePicker()">Upgrade to VIP</button><span class="vip-chip">VIP Discord</span><button class="pf-btn" onclick="go('tools')">Open Tools</button></div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">VIP Execution + Line Rush <span class="vip-chip" style="margin-left:6px">Locked</span></div>
+          <div style="position:relative;margin-top:6px">
+            <div style="filter:blur(4px);opacity:.92;user-select:none;pointer-events:none">
+              <div class="growth-sub">Execution signal: CLV window is open for 8 minutes.</div>
+              <div class="growth-sub">Line Rush Alert: market moved -3.5 to -5.0 in 6 minutes.</div>
+            </div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+              <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>
+            </div>
+          </div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
@@ -3460,7 +3474,7 @@ function normalizeAffiliateSource(el) {
   return 'app';
 }
 
-function buildTrackedAffiliateUrl(book, source = 'app') {
+function buildTrackedAffiliateUrl(book, source = 'app', context = null) {
   const base = String(affiliateLinks[book] || DEFAULT_AFFILIATE_LINKS[book] || '').trim();
   if (!base) return '#';
   try {
@@ -3471,6 +3485,12 @@ function buildTrackedAffiliateUrl(book, source = 'app') {
     u.searchParams.set('utm_content', source);
     if (AFFILIATE?.code) u.searchParams.set('affiliate_code', String(AFFILIATE.code));
     if (USER_ID) u.searchParams.set('alg_uid', USER_ID);
+    if (context && typeof context === 'object') {
+      if (context.sport) u.searchParams.set('ab_sport', String(context.sport).slice(0, 48));
+      if (context.game) u.searchParams.set('ab_game', String(context.game).slice(0, 96));
+      if (context.pick) u.searchParams.set('ab_pick', String(context.pick).slice(0, 96));
+      if (context.team) u.searchParams.set('ab_team', String(context.team).slice(0, 48));
+    }
     return u.toString();
   } catch (_) {
     return base;
@@ -3542,7 +3562,13 @@ function applyAffiliateLinks() {
     const book = String(link.getAttribute('data-book') || '').toLowerCase();
     if (!book) return;
     const source = normalizeAffiliateSource(link);
-    link.href = buildTrackedAffiliateUrl(book, source);
+    const ctx = {
+      sport: String(link.getAttribute('data-sport') || ''),
+      game: String(link.getAttribute('data-game') || ''),
+      pick: String(link.getAttribute('data-pick') || ''),
+      team: String(link.getAttribute('data-team') || ''),
+    };
+    link.href = buildTrackedAffiliateUrl(book, source, ctx);
     link.setAttribute('rel', 'noopener sponsored');
     if (link.dataset.afBound === '1') return;
     link.dataset.afBound = '1';
@@ -3550,6 +3576,10 @@ function applyAffiliateLinks() {
       const payload = {
         book,
         source,
+        sport: ctx.sport,
+        game: ctx.game,
+        pick: ctx.pick,
+        team: ctx.team,
         tab: currentTab,
         plan: normalizePlan(currentPlan),
         state: String(profileSettings?.state || 'auto'),
@@ -3560,7 +3590,9 @@ function applyAffiliateLinks() {
       saveAffiliateLocalState();
       renderAffiliateDashboard();
       trackEvent('affiliate_click', payload);
-      backendPost('/api/affiliate/click', payload).catch(() => {});
+      if (AFFILIATE?.code) {
+        backendPost(`/api/affiliate/click?code=${encodeURIComponent(String(AFFILIATE.code))}`, payload).catch(() => {});
+      }
     });
   });
 }
@@ -7046,8 +7078,9 @@ function renderOdds() {
         ${g.books.map(b => {
           const key = normalizeBookKey(b.book);
           const label = esc(bookLabel(key || b.book));
+          const gameLabel = `${esc(g.awayTeam)} @ ${esc(g.homeTeam)}`;
           const bookCell = AFFILIATE_BOOKS.includes(key)
-            ? `<a class="odds-book-link" data-book="${key}" href="#" target="_blank">${label} · Bet Now</a>`
+            ? `<a class="odds-book-link" data-book="${key}" data-sport="${esc(g.sport || '')}" data-game="${gameLabel}" href="#" target="_blank">${label} · Bet Now</a>`
             : `<div class="odds-book">${label}</div>`;
           return `${bookCell}<div class="odds-line">${b.away ? esc(String(b.away)) : '—'}</div><div class="odds-line">${b.home ? esc(String(b.home)) : '—'}</div>`;
         }).join('')}
@@ -7278,6 +7311,9 @@ async function doScan(silent = false) {
         }
         if (!activeOddsSport && ODDSGAMES.length) activeOddsSport = ODDSGAMES[0].sport || '';
         setScanCooldown(Number(raw?.scan_policy?.cooldown_remaining_seconds || 0));
+        if (raw?.scan_policy?.woke_from_idle && !silent) {
+          showToast('Users returned. Running fresh market sync now.');
+        }
         const noGamesReturned = !Array.isArray(raw.games) || raw.games.length === 0;
         const lowQuotaError = String(raw?.error || '').toLowerCase().includes('low api quota');
         quotaExhausted = (Number(raw?.quota_remaining) === 0 && noGamesReturned) || lowQuotaError || !!raw?.quota_soft_limited;
@@ -7640,8 +7676,12 @@ function renderPicks() {
     const bookLabelText = esc(bookLabel(bookKey || p.bookRaw || p.book || ''));
     const hasAffiliateBook = AFFILIATE_BOOKS.includes(bookKey);
     const lockEdgeLabel = `Lock in +${edgeVal.toFixed(1)}% Edge`;
+    const affSport = esc(String(p.sk || p.sport || ''));
+    const affGame = esc(String(matchupLabel || p.game || ''));
+    const affPick = esc(String(p.bet || ''));
+    const primaryTeam = esc(String(matchupLabel || '').split(' vs ')[0] || '');
     const pickBookHtml = hasAffiliateBook
-      ? `<a class="pick-book-link" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
+      ? `<a class="pick-book-link" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
       : `<strong>${bookLabelText}</strong>`;
     const publicPct = inferredPublicPct(p);
     const simHome = Math.round(102 + edgeVal + (conf - 55) * 0.22);
@@ -7679,7 +7719,7 @@ function renderPicks() {
         <span class="pick-sub-conf">${conf}%</span>
       </div>
       ${activeAgentPills}
-      <div class="pick-line" style="font-size:10px;color:var(--muted)">Tap card to view intelligence</div>
+      <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
         <div class="pick-analysis-body">${analysisHtml}</div>

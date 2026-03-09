@@ -1185,7 +1185,7 @@ async def _smart_prefetch_worker():
         await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
 
 
-async def fetch_odds_api_games(sport_key: str) -> list:
+async def fetch_odds_api_games(sport_key: str, force_fresh: bool = False) -> list:
     """
     Fetch games and odds from The Odds API.
     This is the PRIMARY data source in v5.
@@ -1199,7 +1199,7 @@ async def fetch_odds_api_games(sport_key: str) -> list:
         adaptive_ttl = _dynamic_refresh_interval_seconds(stale_cached)
     cached = cache_get(cache_key, ttl=max(30, int(adaptive_ttl)))
     # Don't trust empty cache payloads; they can come from transient API failures.
-    if cached is not None and len(cached) > 0:
+    if not force_fresh and cached is not None and len(cached) > 0:
         return cached
 
     if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
@@ -4660,11 +4660,12 @@ async def scan(request: Request):
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     user_id = _request_user_id(request) or "anon"
+    woke_from_idle = bool(ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users())
     _mark_user_activity(_request_activity_key(request, user_id))
     user_growth = _ensure_growth_user(user_id)
     agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
-    force_refresh = str(request.query_params.get("refresh", "false")).lower() == "true"
+    force_refresh = str(request.query_params.get("refresh", "false")).lower() == "true" or woke_from_idle
     tier_cache_ttl = _scan_tier_ttl_seconds(user_plan)
     tier_cache_key = _scan_cache_key_for_plan(user_plan, sport="all", ts=now_ts)
 
@@ -4755,7 +4756,7 @@ async def scan(request: Request):
 
     # Fetch games for each allowed sport
     for sport in allowed_sports:
-        games = await fetch_odds_api_games(sport)
+        games = await fetch_odds_api_games(sport, force_fresh=woke_from_idle)
         sport_fetch_counts[sport] = len(games)
         meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
         
@@ -4822,6 +4823,7 @@ async def scan(request: Request):
             "cache_ttl_seconds": tier_cache_ttl,
             "updated_at": int(now_ts),
             "data_delay_seconds": _tier_data_delay_seconds(user_plan),
+            "woke_from_idle": woke_from_idle,
         },
         "agent_health": _agent_health_snapshot(),
     }
