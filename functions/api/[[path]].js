@@ -340,6 +340,36 @@ export async function onRequest(context) {
     const finalUser = incomingUser || `u_${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
     const methodName = String(body?.method || "guest").trim().toLowerCase();
     const identifier = String(body?.identifier || "").trim().toLowerCase();
+    // Use upstream auth session so returned bearer token is valid for sensitive upstream routes.
+    try {
+      const upstreamRes = await fetch(`${UPSTREAM}/api/auth/session`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(String(env?.BACKEND_API_KEY || "").trim() ? { "x-api-key": String(env?.BACKEND_API_KEY || "").trim() } : {}),
+        },
+        body: JSON.stringify({
+          user_id: finalUser,
+          method: methodName || "guest",
+          identifier,
+        }),
+      });
+      if (upstreamRes.ok) {
+        const payload = await upstreamRes.json().catch(() => ({}));
+        if (!userState.has(finalUser)) userState.set(finalUser, { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false });
+        return json(
+          {
+            token: String(payload?.token || ""),
+            user_id: String(payload?.user_id || finalUser),
+            expires_in: Number(payload?.expires_in || AUTH_TTL_SECONDS),
+            profile: payload?.profile || { method: methodName || "guest", identifier },
+          },
+          200,
+          "cloudflare-auth",
+        );
+      }
+    } catch (_) {}
+    // Fallback local token if upstream auth session is unavailable.
     const tokenPayload = btoa(JSON.stringify({ sub: finalUser, iat: nowSec, exp: nowSec + AUTH_TTL_SECONDS }));
     if (!userState.has(finalUser)) userState.set(finalUser, { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false });
     return json(
