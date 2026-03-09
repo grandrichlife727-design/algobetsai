@@ -2363,6 +2363,7 @@ const VIP_LIVE_POLL_MS = 45000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
 const VIP_LIVE_DAILY_CALL_CAP = 180;
+const LIVE_PICKS_ENABLED = false;
 const HEARTBEAT_ACTIVITY_TTL_MS = 15 * 60 * 1000;
 const HEARTBEAT_ALLOWED_TABS = new Set(['picks', 'vip-execution']);
 const LIVE_TTL_MS = 5 * 60 * 1000;
@@ -3309,6 +3310,12 @@ function renderLive() {
   `).join('');
 }
 
+function renderLiveDisabled() {
+  const el = document.getElementById('live-list');
+  if (!el) return;
+  el.innerHTML = `<div class="empty"><div class="empty-icon">⏸️</div><div class="empty-title">Live picks are disabled</div><div class="empty-sub">Disabled to control API spend. Use Picks + Scan Now for current edges.</div></div>`;
+}
+
 function renderLiveVipGate() {
   const el = document.getElementById('live-list');
   if (!el) return;
@@ -3343,6 +3350,10 @@ function renderLiveVipGate() {
 }
 
 async function loadLive() {
+  if (!LIVE_PICKS_ENABLED) {
+    renderLiveDisabled();
+    return;
+  }
   if (!canUseVip()) {
     renderLiveVipGate();
     return;
@@ -3444,6 +3455,11 @@ function renderVipLivePlays() {
   const listEl = document.getElementById('vip-live-list');
   const noteEl = document.getElementById('vip-live-note');
   if (!listEl || !noteEl) return;
+  if (!LIVE_PICKS_ENABLED) {
+    noteEl.textContent = 'Live picks are disabled to control API usage.';
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏸️</div><div class="empty-title">Live picks disabled</div><div class="empty-sub">VIP Execution still includes CLV and timing context from regular scans.</div></div>`;
+    return;
+  }
   const execBook = preferredExecutionBook();
   const execBookCode = esc(bookShortCode(execBook));
   const execBookLabel = esc(bookLabel(execBook));
@@ -3528,6 +3544,7 @@ function renderVipLivePlays() {
 }
 
 async function refreshVipLivePlays(force = false) {
+  if (!LIVE_PICKS_ENABLED) return renderVipLivePlays();
   if (!canUseVip()) return renderVipLivePlays();
   const day = currentUtcDay();
   if (VIP_LIVE_STATE.day !== day) {
