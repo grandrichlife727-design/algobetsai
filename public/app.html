@@ -287,8 +287,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
   .stat-val{font-size:24px}
   .stat-label{font-size:12px}
   .filters-nav{display:inline-flex}
-  .filters-more{display:inline-flex}
-  .filters.mobile-collapsed .extra-sport{display:none}
   .filter{font-size:14px;padding:7px 14px}
   .pick-bet{font-size:17px}
   .pick-odds{font-size:16px}
@@ -355,12 +353,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .filters::-webkit-scrollbar{display:none}
 .filters-nav{display:none;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--sub);font-size:16px;line-height:1;cursor:pointer;flex-shrink:0}
 .filters-nav:hover{border-color:var(--border2);color:var(--text)}
-.filters-more{display:none;align-items:center;justify-content:center;height:28px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--sub);font-size:11px;font-weight:700;padding:0 10px;cursor:pointer;flex-shrink:0;font-family:var(--mono)}
-.filters-more:hover{border-color:var(--border2);color:var(--text)}
-.filters-overflow-hint{display:none;margin:-10px 2px 10px;font-size:10px;font-family:var(--mono);color:#ffe3a8;letter-spacing:.35px;align-items:center;gap:5px;padding:4px 8px;border:1px solid rgba(255,183,0,.28);border-radius:999px;background:rgba(255,183,0,.1);width:max-content}
-.filters-overflow-hint.on{display:inline-flex}
-.filters-overflow-hint .hint-arrow{display:inline-block;animation:hintNudge 1.2s ease-in-out infinite}
-@keyframes hintNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 .filter{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 .filter:hover{border-color:var(--border2);color:var(--text)}
 .filter.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
@@ -900,21 +892,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .lock-card{width:100%;max-width:380px;background:rgba(13,13,18,.96);border:1px solid var(--border2);border-radius:10px;padding:12px;text-align:center}
 .lock-title{font-size:13px;font-weight:800;color:var(--text)}
 .lock-sub{font-size:11px;color:var(--sub);margin:6px 0 10px;line-height:1.45}
-.vip-vault-potd{position:relative;overflow:hidden}
-.vip-vault-potd::after{
-  content:'';
-  position:absolute;
-  inset:-24% -30%;
-  background:linear-gradient(110deg,rgba(255,255,255,0) 38%,rgba(191,255,233,.12) 50%,rgba(255,255,255,0) 62%);
-  transform:translateX(-120%);
-  animation:vipVaultSheen 5.6s ease-in-out infinite;
-  pointer-events:none;
-}
-@keyframes vipVaultSheen{
-  0%{transform:translateX(-120%)}
-  58%{transform:translateX(-120%)}
-  100%{transform:translateX(120%)}
-}
 .fade-card{background:var(--card);border:1px solid rgba(255,183,0,.2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .fade-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .fade-game{font-size:11px;color:var(--sub)}
@@ -1288,19 +1265,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="filters-wrap">
         <button class="filters-nav" type="button" aria-label="Scroll sports left" onclick="scrollPicksFilters(-1)">‹</button>
-      <div class="filters mobile-collapsed" id="picks-filters">
+      <div class="filters" id="picks-filters">
         <div class="filter active" role="button" tabindex="0" onclick="setFilter(this,'all')">All Sports</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_nba')">🏀 NBA</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'basketball_ncaab')">🎓 NCAAB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
-        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer')">⚽ Soccer</div>
-        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer_epl')">⚽ EPL</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'a')">A-Grade Only</div>
       </div>
         <button class="filters-nav" type="button" aria-label="Scroll sports right" onclick="scrollPicksFilters(1)">›</button>
-        <button class="filters-more" type="button" id="picks-filters-toggle" aria-expanded="false" aria-label="Show more sports filters" onclick="toggleSportsFilters()">More</button>
       </div>
-      <div class="filters-overflow-hint" id="picks-filters-hint"><span class="hint-text">Swipe for more sports</span><span class="hint-arrow">→</span></div>
       <div class="pick-controls">
         <select id="picks-market" onchange="setPickMarket(this.value)">
           <option value="all">All markets</option>
@@ -1616,7 +1591,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title vip-title"><span class="vip-ico">📡</span>VIP Live Plays</div>
           <div class="growth-sub" id="vip-live-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:170px;vertical-align:middle"></span></div>
           <div class="picks-list" id="vip-live-list"></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('live')">Open Live Execution</button><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
           <div class="growth-note">Budget guard: capped games + throttled refresh + cache fallback.</div>
         </div>
       </div>
@@ -1763,7 +1738,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-live" style="display:none">
-      <div class="page-hdr"><div class="page-title">VIP Live <span>Execution</span></div><div class="page-sub">In-game and near-start windows with fast price shifts and execution timing</div></div>
+      <div class="page-hdr"><div class="page-title">In-Game <span>Mode</span></div><div class="page-sub">Near-kickoff and live windows with faster pricing shifts</div></div>
       <div class="picks-list" id="live-list"></div>
     </div>
 
@@ -2383,7 +2358,6 @@ const VIP_LIVE_POLL_MS = 45000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
 const VIP_LIVE_DAILY_CALL_CAP = 180;
-const LIVE_PICKS_ENABLED = false;
 const HEARTBEAT_ACTIVITY_TTL_MS = 15 * 60 * 1000;
 const HEARTBEAT_ALLOWED_TABS = new Set(['picks', 'vip-execution']);
 const LIVE_TTL_MS = 5 * 60 * 1000;
@@ -2463,8 +2437,6 @@ const SPORTS = [
   {key:'icehockey_nhl',    label:'NHL 🏒'},
   {key:'baseball_mlb',     label:'MLB ⚾'},
   {key:'soccer_epl',       label:'EPL ⚽'},
-  {key:'soccer_spain_la_liga', label:'La Liga ⚽'},
-  {key:'mma_mixed_martial_arts', label:'MMA 🥊'},
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -2883,10 +2855,7 @@ function loadState() {
       return;
     }
     const st = JSON.parse(raw);
-    if (typeof st.filter === 'string') {
-      const savedFilter = String(st.filter || '').trim().toLowerCase();
-      filter = (savedFilter === 'soccer_epl' || savedFilter === 'soccer_spain_la_liga') ? 'soccer' : savedFilter;
-    }
+    if (typeof st.filter === 'string') filter = st.filter;
     if (typeof st.currentTab === 'string') currentTab = st.currentTab === 'picks' ? 'home' : st.currentTab;
     if (st.oddsRange === 'today' || st.oddsRange === 'tomorrow' || st.oddsRange === 'week') oddsRange = st.oddsRange;
     if (Array.isArray(st.legs)) {
@@ -3330,54 +3299,7 @@ function renderLive() {
   `).join('');
 }
 
-function renderLiveDisabled() {
-  const el = document.getElementById('live-list');
-  if (!el) return;
-  el.innerHTML = `<div class="empty"><div class="empty-icon">⏸️</div><div class="empty-title">Live picks are disabled</div><div class="empty-sub">Disabled to control API spend. Use Picks + Scan Now for current edges.</div></div>`;
-}
-
-function renderLiveVipGate() {
-  const el = document.getElementById('live-list');
-  if (!el) return;
-  const preview = normalizeVipLiveRows(VIP_LIVE_STATE.cached).slice(0, 2);
-  const rows = preview.length
-    ? preview.map(r => `
-      <div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
-        <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
-        <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String((r.home_ml || 0) > 0 ? '+' + r.home_ml : r.home_ml || ''))} · ${esc(r.away_team || 'Away')} ${esc(String((r.away_ml || 0) > 0 ? '+' + r.away_ml : r.away_ml || ''))}</div>
-      </div>
-    `).join('')
-    : `<div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
-        <div class="live-top"><div><strong>NBA</strong> · Knicks @ Celtics</div><div class="live-min">12m live</div></div>
-        <div class="props-meta">Knicks +145 · Celtics -165</div>
-      </div>
-      <div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
-        <div class="live-top"><div><strong>NFL</strong> · Bills @ Chiefs</div><div class="live-min">9m to start</div></div>
-        <div class="props-meta">Bills +128 · Chiefs -148</div>
-      </div>`;
-  el.innerHTML = `
-    <div class="feature-lock" style="display:block;margin:0 0 10px">
-      <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
-        <div class="lock-card">
-          <div class="lock-title">VIP Live Execution - VIP Only</div>
-          <div class="lock-sub">Live picks, timing windows, and faster execution prompts are reserved for VIP.</div>
-          <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Upgrade to VIP</button>
-        </div>
-      </div>
-    </div>
-    ${rows}
-  `;
-}
-
 async function loadLive() {
-  if (!LIVE_PICKS_ENABLED) {
-    renderLiveDisabled();
-    return;
-  }
-  if (!canUseVip()) {
-    renderLiveVipGate();
-    return;
-  }
   if (demoMode && LIVEDATA.length) {
     renderLive();
     return;
@@ -3415,14 +3337,6 @@ function loadVipLiveState() {
 
 function saveVipLiveState() {
   try { localStorage.setItem(VIP_LIVE_STATE_KEY, JSON.stringify(VIP_LIVE_STATE)); } catch (_) {}
-}
-
-function clearLiveStateWhenDisabled() {
-  if (LIVE_PICKS_ENABLED) return;
-  LIVEDATA = [];
-  liveFetchedAt = 0;
-  VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
-  saveVipLiveState();
 }
 
 function currentUtcDay() {
@@ -3483,11 +3397,6 @@ function renderVipLivePlays() {
   const listEl = document.getElementById('vip-live-list');
   const noteEl = document.getElementById('vip-live-note');
   if (!listEl || !noteEl) return;
-  if (!LIVE_PICKS_ENABLED) {
-    noteEl.textContent = 'Live picks are disabled to control API usage.';
-    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⏸️</div><div class="empty-title">Live picks disabled</div><div class="empty-sub">VIP Execution still includes CLV and timing context from regular scans.</div></div>`;
-    return;
-  }
   const execBook = preferredExecutionBook();
   const execBookCode = esc(bookShortCode(execBook));
   const execBookLabel = esc(bookLabel(execBook));
@@ -3572,7 +3481,6 @@ function renderVipLivePlays() {
 }
 
 async function refreshVipLivePlays(force = false) {
-  if (!LIVE_PICKS_ENABLED) return renderVipLivePlays();
   if (!canUseVip()) return renderVipLivePlays();
   const day = currentUtcDay();
   if (VIP_LIVE_STATE.day !== day) {
@@ -4342,54 +4250,35 @@ function normalizePotdPick(pick) {
   };
 }
 
-function renderPotdCard(pick, opts = {}) {
+function renderPotdCard(pick) {
   if (!pick) return '';
-  const vipVault = !!opts.vipVault;
   const urgency = String(pick.clv_urgency || '').toLowerCase();
   const urgencyBadge = urgency === 'high' ? 'Bet Now' : (urgency === 'medium' ? 'Watch Line' : 'Stable');
   const grade = String(pick.grade || '').toUpperCase();
-  const shellBg = vipVault
-    ? 'linear-gradient(160deg,rgba(8,12,20,.98),rgba(12,20,30,.96) 55%,rgba(4,8,14,.99) 100%)'
-    : 'linear-gradient(145deg,rgba(255,209,102,.12),rgba(34,211,238,.06) 42%,rgba(8,10,18,.95) 100%)';
-  const shellBorder = vipVault ? 'rgba(0,229,160,.32)' : 'rgba(255,209,102,.38)';
-  const headBorder = vipVault ? 'rgba(0,229,160,.22)' : 'rgba(255,209,102,.22)';
-  const headBg = vipVault ? 'rgba(0,229,160,.08)' : 'rgba(8,10,18,.45)';
-  const headColor = vipVault ? '#bcffe9' : '#ffe3a8';
-  const sealBorder = vipVault ? 'rgba(0,229,160,.45)' : 'rgba(255,209,102,.45)';
-  const sealBg = vipVault ? 'rgba(0,229,160,.16)' : 'rgba(255,209,102,.15)';
-  const sealColor = vipVault ? '#d8fff1' : '#ffe9bf';
-  const oddsColor = vipVault ? '#8df2d0' : '#9ef5d2';
-  return `<div class="growth-card ${vipVault ? 'vip-vault-potd' : ''}" style="margin-bottom:10px;padding:0;overflow:hidden;border:1px solid ${shellBorder};background:${shellBg}">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid ${headBorder};background:${headBg}">
-      <div style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:${headColor}">
-        <span style="display:inline-grid;place-items:center;width:18px;height:18px;border-radius:999px;border:1px solid ${sealBorder};background:${sealBg};color:${sealColor}">♛</span>
-        VIP Pick of the Day
-      </div>
-      <span class="tier-tag" style="border-color:${vipVault ? 'rgba(0,229,160,.35)' : 'rgba(255,209,102,.4)'};color:${vipVault ? '#bcffe9' : '#ffe3a8'};background:${vipVault ? 'rgba(0,229,160,.11)' : 'rgba(255,209,102,.14)'}">${esc(grade || 'VIP')}</span>
-    </div>
-    <div style="padding:12px">
-      <div style="font-size:18px;font-weight:900;line-height:1.2;color:#fff;letter-spacing:-.2px">${esc(pick.bet || 'No pick')}${pick.odds ? ` <span style=\"color:${oddsColor};font-family:var(--mono)\">${esc(pick.odds)}</span>` : ''}</div>
-      <div style="font-size:12px;color:#d2d8e6;margin-top:5px">${esc(pick.game || '')}</div>
-      <div class="rf-row" style="margin-top:10px;gap:6px;flex-wrap:wrap">
-        <span class="tier-tag vip">Edge +${Number(pick.edge || 0).toFixed(1)}%</span>
-        <span class="tier-tag premium">Confidence ${Math.max(0, Math.round(Number(pick.confidence || 0)))}%</span>
-        <span class="tier-tag">${esc(urgencyBadge)}</span>
-        <span class="tier-tag">${Math.max(0, Number(pick.agents_fired || 0))}/5 Agents</span>
-        ${pick.book ? `<span class="tier-tag">${esc(pick.book)}</span>` : ''}
-      </div>
+  return `<div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,209,102,.26);background:linear-gradient(160deg,rgba(255,209,102,.08),rgba(34,211,238,.04))">
+    <div class="growth-title">⚡ Pick of the Day</div>
+    <div class="growth-sub"><strong>${esc(pick.bet || 'No pick')}</strong>${pick.odds ? ` ${esc(pick.odds)}` : ''}</div>
+    <div class="growth-note">${esc(pick.game || '')}</div>
+    <div class="rf-row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+      <span class="tier-tag vip">Edge +${Number(pick.edge || 0).toFixed(1)}%</span>
+      <span class="tier-tag premium">Conf ${Math.max(0, Math.round(Number(pick.confidence || 0)))}%</span>
+      <span class="tier-tag">${esc(grade || 'POTD')}</span>
+      <span class="tier-tag">${esc(urgencyBadge)}</span>
+      <span class="tier-tag">${Math.max(0, Number(pick.agents_fired || 0))}/5 agents</span>
+      ${pick.book ? `<span class="tier-tag">${esc(pick.book)}</span>` : ''}
     </div>
   </div>`;
 }
 
 function renderPotdLockedCard(pick) {
   if (!pick) return '';
-  const inner = renderPotdCard(pick, {vipVault: false});
+  const inner = renderPotdCard(pick);
   return `<div class="feature-lock" style="margin-bottom:10px">
-    <div class="blur-wrap" style="filter:blur(6px);opacity:.72">${inner}</div>
+    <div class="blur-wrap" style="filter:blur(5px)">${inner}</div>
     <div class="lock-overlay">
       <div class="lock-card">
         <div class="lock-title">🔒 VIP Pick of the Day</div>
-        <div class="lock-sub">Exclusive daily release with strongest edge and execution timing. Unlock to view full pick.</div>
+        <div class="lock-sub">Unlock full VIP POTD details and execution context.</div>
         <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP</button>
       </div>
     </div>
@@ -4412,17 +4301,8 @@ function renderPOTD(pick) {
   if (!pick) return;
   const dashEl = document.getElementById('potd-dashboard');
   if (dashEl) {
-    dashEl.innerHTML = canUseVip() ? renderPotdCard(pick, {vipVault: true}) : renderPotdLockedCard(pick);
+    dashEl.innerHTML = canUseVip() ? renderPotdCard(pick) : renderPotdLockedCard(pick);
   }
-}
-
-function isPotdFresh(data) {
-  const d = String(data?.date || '').trim();
-  const todayUtc = new Date().toISOString().slice(0, 10);
-  if (!d || d !== todayUtc) return false;
-  const gameTs = Number(new Date(String(data?.pick?.game_time || '')).getTime());
-  if (!Number.isFinite(gameTs) || gameTs <= 0) return true;
-  return gameTs >= (Date.now() - (45 * 60 * 1000));
 }
 
 async function loadPOTD() {
@@ -4433,7 +4313,6 @@ async function loadPOTD() {
     const date = String(data?.date || '').trim();
     const pick = data?.pick && typeof data.pick === 'object' ? data.pick : null;
     if (!date || !pick) return;
-    if (!isPotdFresh({date, pick})) return;
     POTD_DATA = {date, generated_at: String(data?.generated_at || ''), pick};
     renderPOTD(pick);
     if (currentTab === 'home') renderHomeModules();
@@ -4453,7 +4332,7 @@ function getVipPodPicks() {
 
 function getVipPickOfDay() {
   const potd = POTD_DATA?.pick ? normalizePotdPick(POTD_DATA.pick) : null;
-  return potd || null;
+  return potd || rankPicksForVip()[0] || null;
 }
 
 function getPremiumBestBetCards() {
@@ -7163,8 +7042,6 @@ const SPORT_LABELS = {
   baseball_mlb: 'MLB',
   icehockey_nhl: 'NHL',
   soccer_epl: 'EPL',
-  soccer_spain_la_liga: 'La Liga',
-  mma_mixed_martial_arts: 'MMA',
   soccer_uefa_champs_league: 'UCL',
 };
 
@@ -7374,15 +7251,14 @@ function parseActiveAgents(pick) {
 function renderAgentSignalBadges(activeAgents = []) {
   const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
   const plan = normalizePlan(currentPlan);
-  const ids = active.size ? [...active].sort((a, b) => a - b) : [1, 2];
-  const tags = ids.map((id) => {
-    if (id === 1) return {label: 'A1 Best-Line', cls: 'ev'};
-    if (id === 2) return {label: 'A2 De-vig', cls: 'ev'};
-    if (id === 3) return {label: 'A3 Steam', cls: 'steam', tier: 'premium'};
-    if (id === 4) return {label: 'A4 Fade', cls: 'fade', tier: 'premium'};
-    if (id === 5) return {label: 'A5 Entry', cls: 'entry', tier: 'vip'};
-    return {label: `A${id}`, cls: 'ev'};
-  });
+  const premiumOn = canUsePremium();
+  const vipOn = canUseVip();
+  const tags = [];
+  if (active.has(1) || active.has(2) || !active.size) tags.push({label: '+EV', cls: 'ev'});
+  if (active.has(3)) tags.push({label: 'Sharp Steam', cls: 'steam', tier: premiumOn ? '' : 'premium'});
+  if (active.has(4)) tags.push({label: 'Public Fade', cls: 'fade', tier: premiumOn ? '' : 'premium'});
+  if (active.has(5)) tags.push({label: 'Optimal Entry', cls: 'entry', tier: vipOn ? '' : 'vip'});
+  if (!tags.length) tags.push({label: '+EV', cls: 'ev'});
   return `<div class="agent-signal-row" aria-label="Agent intelligence signals">${tags.map((t) => {
     if (!t.tier) return `<span class="agent-signal-pill ${t.cls}">${esc(t.label)}</span>`;
     const tierName = t.tier === 'vip' ? 'VIP' : 'Premium';
@@ -7462,8 +7338,8 @@ function scanPolicyDetails() {
     return {
       plan: p,
       automated: true,
-      cadenceLabel: '~10-minute cadence',
-      note: '<strong>VIP:</strong> Auto scans run about every 10 minutes to reduce noise and API spend. Use Scan Now anytime.',
+      cadenceLabel: '~2-minute cadence',
+      note: '<strong>VIP:</strong> Auto scans run about every 2 minutes and updates auto-deliver in app. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'VIP auto-updates are active.',
       blockedFeedback: (left) => `VIP auto-sync runs continuously. Next sync in ${left}.`,
@@ -7475,8 +7351,8 @@ function scanPolicyDetails() {
     return {
       plan: p,
       automated: true,
-      cadenceLabel: '~20-minute cadence',
-      note: '<strong>Premium:</strong> Auto scans run every ~20 minutes to reduce noise and API spend. Use Scan Now anytime.',
+      cadenceLabel: '5-minute cadence',
+      note: '<strong>Premium:</strong> Auto scans run every 5 minutes and updates auto-deliver in app. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'Premium auto-updates are active.',
       blockedFeedback: (left) => `Premium auto-sync runs continuously. Next sync in ${left}.`,
@@ -8165,7 +8041,6 @@ function renderPicks() {
   const effectiveMinConf = Math.max(Number(pickMinConf || 0), Number(modeMinConf || 0));
   const pts = sourcePicks.filter(p => {
     if (filter === 'all') return true;
-    if (filter === 'soccer') return String(p.sk || '').includes('soccer_');
     if (filter === 'a') return p.grade === 'a';
     // Fix: Match substring in either direction to handle "nba" vs "basketball_nba"
     return p.sk === filter || p.sk.includes(filter) || filter.includes(p.sk);
@@ -8299,6 +8174,7 @@ function renderPicks() {
       <div class="empty-sub" style="margin-top:4px">${stats || 14} edges found in last scan</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="paywall-cta" style="background:var(--green);color:#032114" onclick="${liveOddsPaused ? '' : 'doScan()'}" ${liveOddsPaused ? 'disabled title="Live API unavailable"' : ''}>${liveOddsPaused ? 'Unavailable - try later' : 'Run Scan'}</button>
+        <button class="pf-btn" onclick="go('perf')">View Results</button>
       </div>
       ${renderTomorrowGamesBlock()}
     </div>`;
@@ -8376,7 +8252,7 @@ function renderPicks() {
       const dollars = bankroll >= 50 ? Math.max(1, Math.round((bankroll * rawStakePct) / 100)) : 0;
       return {pct: rawStakePct, dollars};
     })() : suggestedStakeMeta(edgeVal);
-    const activeAgentsCount = Array.isArray(p.activeAgents) ? p.activeAgents.length : 0;
+    const activeAgentsCount = parseActiveAgents(p).length;
     const stakeLine = stakeMeta.dollars > 0
       ? `Stake suggestion (Agent 5 Timing/CLV): <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
       : `Stake suggestion (Agent 5 Timing/CLV): <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
@@ -9213,9 +9089,6 @@ function go(name) {
 }
 
 function setFilter(el, k) {
-  if (window.matchMedia('(max-width:900px)').matches && el?.classList?.contains('extra-sport')) {
-    setSportsFiltersExpanded(true);
-  }
   document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
   if (el && typeof el.scrollIntoView === 'function') {
@@ -9224,94 +9097,6 @@ function setFilter(el, k) {
   filter = k;
   saveState();
   renderPicks();
-}
-
-function setSportsFiltersExpanded(expanded) {
-  const rail = document.getElementById('picks-filters');
-  const btn = document.getElementById('picks-filters-toggle');
-  if (!rail || !btn) return;
-  const hasExtra = !!rail.querySelector('.extra-sport');
-  if (!hasExtra) {
-    rail.classList.remove('mobile-collapsed');
-    btn.style.display = 'none';
-    btn.setAttribute('aria-expanded', 'false');
-    btn.textContent = 'More';
-    return;
-  }
-  const on = !!expanded;
-  rail.classList.toggle('mobile-collapsed', !on);
-  btn.setAttribute('aria-expanded', on ? 'true' : 'false');
-  btn.textContent = on ? 'Less' : 'More';
-  btn.style.display = '';
-}
-
-function toggleSportsFilters() {
-  const rail = document.getElementById('picks-filters');
-  if (!rail) return;
-  if (!rail.querySelector('.extra-sport')) return;
-  const collapsed = rail.classList.contains('mobile-collapsed');
-  setSportsFiltersExpanded(collapsed);
-  updateSportsOverflowHint();
-}
-
-function syncSportsFiltersForViewport() {
-  const mobile = window.matchMedia('(max-width:900px)').matches;
-  const rail = document.getElementById('picks-filters');
-  const btn = document.getElementById('picks-filters-toggle');
-  if (!rail) return;
-  const hasExtra = !!rail.querySelector('.extra-sport');
-  if (!mobile) {
-    rail.classList.remove('mobile-collapsed');
-    if (btn) {
-      btn.setAttribute('aria-expanded', 'false');
-      btn.textContent = 'More';
-      btn.style.display = hasExtra ? '' : 'none';
-    }
-    return;
-  }
-  if (!hasExtra) {
-    rail.classList.remove('mobile-collapsed');
-    if (btn) {
-      btn.style.display = 'none';
-      btn.setAttribute('aria-expanded', 'false');
-      btn.textContent = 'More';
-    }
-    updateSportsOverflowHint();
-    return;
-  }
-  const activeEl = document.querySelector('.filter.active');
-  const needsExpand = !!activeEl?.classList?.contains('extra-sport');
-  setSportsFiltersExpanded(needsExpand);
-  updateSportsOverflowHint();
-}
-
-function updateSportsOverflowHint() {
-  const rail = document.getElementById('picks-filters');
-  const hint = document.getElementById('picks-filters-hint');
-  if (!rail || !hint) return;
-  const mobile = window.matchMedia('(max-width:900px)').matches;
-  if (!mobile) {
-    hint.classList.remove('on');
-    return;
-  }
-  const hasOverflow = rail.scrollWidth > (rail.clientWidth + 10);
-  if (!hasOverflow) {
-    hint.classList.remove('on');
-    return;
-  }
-  const maxLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
-  const left = Math.max(0, rail.scrollLeft);
-  if (left < 8) {
-    hint.querySelector('.hint-text').textContent = 'More sports (MMA)';
-    hint.querySelector('.hint-arrow').textContent = '→';
-  } else if (left >= (maxLeft - 8)) {
-    hint.querySelector('.hint-text').textContent = 'More sports';
-    hint.querySelector('.hint-arrow').textContent = '←';
-  } else {
-    hint.querySelector('.hint-text').textContent = 'More sports';
-    hint.querySelector('.hint-arrow').textContent = '↔';
-  }
-  hint.classList.add('on');
 }
 
 function scrollPicksFilters(direction) {
@@ -9344,8 +9129,8 @@ function setPickSort(v) {
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
 function autoRefreshMsForPlan(plan = currentPlan) {
   const p = normalizePlan(plan);
-  if (p === 'vip') return LOW_DATA_MODE ? 20 * 60 * 1000 : 10 * 60 * 1000;
-  if (p === 'premium') return LOW_DATA_MODE ? 30 * 60 * 1000 : 20 * 60 * 1000;
+  if (p === 'vip') return LOW_DATA_MODE ? 3 * 60 * 1000 : 2 * 60 * 1000;
+  if (p === 'premium') return LOW_DATA_MODE ? 8 * 60 * 1000 : 5 * 60 * 1000;
   return 0;
 }
 
@@ -9423,13 +9208,6 @@ function applySavedSelections() {
   const filterEl = savedFilterEl || document.querySelector(`.filter[onclick="setFilter(this,'all')"]`);
   const activeFilter = savedFilterEl ? filter : 'all';
   if (filterEl) setFilter(filterEl, activeFilter);
-  syncSportsFiltersForViewport();
-  const rail = document.getElementById('picks-filters');
-  if (rail && !rail.dataset.hintBound) {
-    rail.addEventListener('scroll', updateSportsOverflowHint, {passive: true});
-    rail.dataset.hintBound = '1';
-  }
-  setTimeout(updateSportsOverflowHint, 120);
   go(currentTab);
   updateParlay();
 }
@@ -9441,7 +9219,6 @@ loadPickPrefs();
 loadPremiumSettings();
 loadVipSettings();
 loadVipLiveState();
-clearLiveStateWhenDisabled();
 loadFreeDelayState();
 loadTrialUiState();
 loadCoachState();
@@ -9459,7 +9236,6 @@ bindHeartbeatActivityTracking();
 bindMobileNavFeedback();
 bindAgentStatusCards();
 disableBrokenSettingsButtons();
-window.addEventListener('resize', syncSportsFiltersForViewport, {passive: true});
 bindHomeTracking();
 updateDemoToggleUi();
 applyThemeMode();
