@@ -559,6 +559,16 @@ export async function onRequest(context) {
 
   const url = toUpstreamUrl(request.url, rawPath);
   const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
+  let resolvedUserPlan = PLAN_FREE;
+  if (userId) {
+    try {
+      resolvedUserPlan = await stripePlanForUser(env, userId);
+    } catch (_) {
+      resolvedUserPlan = PLAN_FREE;
+    }
+    const trialActive = Number(user.trialUntil || 0) > nowSec;
+    if (trialActive && resolvedUserPlan === PLAN_FREE) resolvedUserPlan = PLAN_PREMIUM;
+  }
   const init = {
     method,
     headers: forwardHeaders(request),
@@ -566,6 +576,7 @@ export async function onRequest(context) {
   };
   const proxyApiKey = String(env?.BACKEND_API_KEY || "").trim();
   if (!hasApiKey && proxyApiKey) init.headers.set("x-api-key", proxyApiKey);
+  if (userId) init.headers.set("x-user-plan", normalizePlan(resolvedUserPlan));
   if (!["GET", "HEAD"].includes(method)) init.body = request.body;
 
   const upstream = await fetch(url, init);

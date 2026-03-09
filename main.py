@@ -523,9 +523,13 @@ async def _get_verified_plan(request: Request) -> str:
     if cached and cached["expires"] > now:
         return cached["plan"]
 
+    proxy_plan_hint = normalize_plan_name(request.headers.get("x-user-plan", ""))
     stripe_plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
     trial_plan = _referral_trial_plan(user_id)
     plan = stripe_plan if plan_rank(stripe_plan) >= plan_rank(trial_plan) else trial_plan
+    # Trust higher-tier plan hints forwarded by our authenticated Cloudflare proxy.
+    if plan_rank(proxy_plan_hint) > plan_rank(plan):
+        plan = proxy_plan_hint
     _plan_cache[user_id] = {"plan": plan, "expires": now + _PLAN_CACHE_TTL}
     return normalize_plan_name(plan)
 
