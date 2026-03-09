@@ -2401,7 +2401,7 @@ const START_TAB_ALLOW = new Set([
   'odds','offers','live','props','ev','steam','fades','parlay','boost','perf','history','community','profile','guide','more'
 ]);
 const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
-const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
+const FORCE_DEMO_MODE = false;
 const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
 const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
 const APP_BUILD = '2026-03-08-potd-static-1';
@@ -2498,7 +2498,7 @@ let pickPrefs = {sports: {}, bets: {}};
 let quotaData = null;
 let quotaExhausted = false;
 let LOW_DATA_MODE = true;
-let demoMode = FORCE_DEMO_MODE || localStorage.getItem(DEMO_MODE_KEY) === '1';
+let demoMode = false;
 let profileSettings = {state: 'auto', bankroll_mode: 'standard', bankroll_amount: 0};
 let LIVEDATA = [];
 let VIP_LIVE_STATE = {day: '', calls: 0, last_fetch_ts: 0, cached: []};
@@ -2743,7 +2743,7 @@ function resilientDemoPicksRaw() {
 function loadCachedPicksFirstPaint() {
   try {
     const cached = JSON.parse(localStorage.getItem(PICKS_CACHE_KEY) || '{}');
-    const rows = Array.isArray(cached?.picks) ? cached.picks : [];
+    const rows = Array.isArray(cached?.picks) ? cached.picks.filter(p => !p?.demo_data) : [];
     if (rows.length) {
       PICKS = rows.map((p, i) => normalizePick(p, i));
       const ts = Number(cached.ts || Date.now());
@@ -2752,7 +2752,7 @@ function loadCachedPicksFirstPaint() {
       return true;
     }
   } catch (_) {}
-  PICKS = samplePickSeed();
+  PICKS = [];
   lastRefresh = Date.now();
   picksCacheAgeMinutes = 0;
   return false;
@@ -2768,7 +2768,7 @@ function savePicksCache(rawPicks) {
 function showLiveUnavailableBanner() {
   const errBanner = document.getElementById('err-banner');
   if (!errBanner) return;
-  errBanner.innerHTML = `Live odds temporarily unavailable. Showing sample data. <button class="paywall-cta" style="margin-left:8px" onclick="retryLiveOdds()">Check for live odds</button>`;
+  errBanner.innerHTML = `Live odds temporarily unavailable. Keeping cached board only. <button class="paywall-cta" style="margin-left:8px" onclick="retryLiveOdds()">Retry live scan</button>`;
   errBanner.classList.add('on');
 }
 
@@ -6206,34 +6206,14 @@ function quickTrialAction() {
 function updateDemoToggleUi() {
   const btn = document.getElementById('demo-btn');
   if (!btn) return;
-  btn.textContent = `Preview: ${demoMode ? 'On' : 'Off'}`;
-  btn.style.borderColor = demoMode ? 'rgba(0,229,160,.3)' : '';
-  btn.style.color = demoMode ? 'var(--green)' : '';
+  btn.style.display = 'none';
 }
 
 function toggleDemoMode() {
-  demoMode = !demoMode;
-  localStorage.setItem(DEMO_MODE_KEY, demoMode ? '1' : '0');
+  demoMode = false;
+  localStorage.setItem(DEMO_MODE_KEY, '0');
   updateDemoToggleUi();
-  if (demoMode) {
-    liveOddsPaused = false;
-    applyDemoDataset(false);
-    lastRefresh = Date.now();
-    setApiStatus('ok');
-    renderPicks();
-    renderOdds();
-    renderLive();
-    renderProps();
-    renderEV();
-    renderSteam();
-    renderFades();
-    renderHomeModules();
-    showToast('Preview mode enabled');
-    return;
-  }
-  showToast('Preview mode disabled');
-  liveOddsPaused = false;
-  doScan(true);
+  showToast('Preview mode is disabled in live builds');
 }
 
 function loadHomeFlags() {
@@ -6347,6 +6327,7 @@ function renderHomeModules() {
   const resultEl = document.getElementById('home-results');
   const tomorrowEl = document.getElementById('home-tomorrow');
   const newsEl = document.getElementById('home-news');
+  loadHomeSportsNews(false);
   const freePlan = normalizePlan(currentPlan) === 'free';
   const applyFreeDelay = freePlan && !demoMode && !liveOddsPaused;
   const freeRelease = applyFreeDelay ? getFreeReleasedBoard() : {rows: [], remainingMs: 0};
@@ -6563,8 +6544,7 @@ function renderHomeModules() {
     `).join('');
     }
   }
-  const hasNews = !!(HOME_SPORTS_NEWS && HOME_SPORTS_NEWS.length);
-  setHomeCardVisible('home-card-news', !!homeFlags.show_news && (hasNews || HOME_SPORTS_NEWS_LOADING));
+  setHomeCardVisible('home-card-news', !!homeFlags.show_news);
   setHomeCardVisible('home-card-offers', !!homeFlags.show_offers);
 }
 
@@ -7777,11 +7757,6 @@ function renderProps() {
 }
 
 async function loadProps(force = false) {
-  if (demoMode && PROPSDATA.length && !force) {
-    propsError = null;
-    renderProps();
-    return;
-  }
   if (!canUsePremium()) {
     renderProps();
     return;
@@ -7845,39 +7820,6 @@ async function runFreeScanRevealFlow() {
 async function doScan(silent = false) {
   if (isScanning) return;
   if (silent && !canRunLiveHeartbeat()) {
-    return;
-  }
-  if (demoMode) {
-    applyDemoDataset(false);
-    lastRefresh = Date.now();
-    const stamp = new Date(lastRefresh).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-    setHomeScanFeedback(`Last scan: ${stamp}`, 'ok');
-    setApiStatus('ok');
-    document.getElementById('s-edge').textContent = '+5.7%';
-    document.getElementById('s-count').textContent = String(PICKS.length);
-    document.getElementById('nb-picks').textContent = String(PICKS.length);
-    renderPicks();
-    renderOdds();
-    renderLive();
-    renderProps();
-    renderEV();
-    renderSteam();
-    renderFades();
-    renderPremiumTools();
-    renderVipTools();
-    renderHomeModules();
-    updatePlanUi();
-    if (!silent) {
-      if (normalizePlan(currentPlan) === 'free') {
-        setHomeScanFeedback('Running 5-agent scan...', 'loading');
-        setApiStatus('loading');
-        await delayMs(2000);
-        setApiStatus('ok');
-        await runFreeScanRevealFlow();
-      } else {
-        showToast('Preview mode active');
-      }
-    }
     return;
   }
   if (scanCooldownRemaining > 0) {
@@ -7970,10 +7912,9 @@ async function doScan(silent = false) {
       maybePromptAuthNudge();
     } else {
       console.error("Picks request failed:", picksRes.reason);
-      applyDemoDataset(true);
       showLiveUnavailableBanner();
       setApiStatus('err');
-      setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
+      setHomeScanFeedback('Live odds unavailable. Retrying shortly.', 'err');
     }
 
     if (evRes.status === 'fulfilled') {
@@ -7996,15 +7937,11 @@ async function doScan(silent = false) {
     }
 
     if (PICKS.length === 0 && EVDATA.length === 0) {
-      if ((quotaExhausted || FORCE_DEMO_MODE) && ODDSGAMES.length === 0) {
-        applyDemoDataset(true);
-        showLiveUnavailableBanner();
-        setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
-      }
+      if (quotaExhausted && ODDSGAMES.length === 0) showLiveUnavailableBanner();
       await loadTomorrowGames();
       showLiveUnavailableBanner();
       if (!document.getElementById('home-scan-feedback')?.textContent) {
-        setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
+        setHomeScanFeedback('No live edges right now. Try again in a few minutes.', 'err');
       }
     } else {
       setApiStatus('ok');
@@ -8027,10 +7964,9 @@ async function doScan(silent = false) {
 
   } catch(err) {
     console.error('Scan error:', err);
-    applyDemoDataset(true);
     showLiveUnavailableBanner();
     setApiStatus('err');
-    setHomeScanFeedback('API limit reached. Showing sample board.', 'err');
+    setHomeScanFeedback('Live scan failed. Keeping cached board.', 'err');
   }
 
   renderPicks();
@@ -8063,7 +7999,7 @@ function renderPicks() {
   const sourcePicks = applyFreeDelay
     ? (Array.isArray(freeRelease.rows) ? freeRelease.rows.map((p, i) => normalizePick(p, i)) : [])
     : PICKS;
-  const usingDemoData = demoMode || liveOddsPaused || sourcePicks.some(p => p.demoData);
+  const usingDemoData = !!liveOddsPaused;
   if (picksRefreshedEl) {
     const modeLabel = bankrollMode();
     const delaySecs = Number(lastScanPolicy?.data_delay_seconds || 0);
@@ -8263,19 +8199,7 @@ function renderPicks() {
   `;
   let displayList = renderList;
   const canBackfillTeasers = filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
-  if (isFreePlan && canBackfillTeasers && renderList.length < freePreviewLimit) {
-    const fillers = getFreeTeaserList(samplePickSeed(), freeVisibleLimit, freeBlurredLimit);
-    const seen = new Set(renderList.map(p => `${String(p.game || '')}|${String(p.bet || '')}`));
-    const merged = renderList.slice();
-    for (const p of fillers) {
-      const key = `${String(p.game || '')}|${String(p.bet || '')}`;
-      if (seen.has(key)) continue;
-      merged.push(p);
-      seen.add(key);
-      if (merged.length >= freePreviewLimit) break;
-    }
-    displayList = merged.slice(0, freePreviewLimit);
-  }
+  if (isFreePlan && canBackfillTeasers && renderList.length < freePreviewLimit) displayList = renderList.slice(0, freePreviewLimit);
 
   const topVisiblePick = displayList[0] || null;
   const vipDuplicateTop = vipOn && vipPick && topVisiblePick && isSamePickSignature(vipPick, topVisiblePick);
@@ -9255,7 +9179,6 @@ updateDemoToggleUi();
 applyThemeMode();
 setupInstallPrompt();
 registerServiceWorker();
-if (demoMode) applyDemoDataset();
 loadCachedPicksFirstPaint();
 loadPOTD();
 applySavedSelections();
