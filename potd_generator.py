@@ -350,9 +350,18 @@ def main() -> None:
         return
 
     all_scored: list[dict[str, Any]] = []
+    now_utc = datetime.now(timezone.utc)
     for sport in SPORTS:
         games = fetch_odds(sport)
         for game in games:
+            commence_raw = str(game.get("commence_time") or "").strip()
+            if commence_raw:
+                try:
+                    commence_at = datetime.fromisoformat(commence_raw.replace("Z", "+00:00"))
+                    if commence_at < now_utc:
+                        continue
+                except Exception:
+                    pass
             odds_by_book, spreads_by_book = parse_odds_by_book(game)
             if len(odds_by_book) < 3 or "pinnacle" not in odds_by_book:
                 continue

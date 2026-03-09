@@ -4369,6 +4369,15 @@ function renderPOTD(pick) {
   }
 }
 
+function isPotdFresh(data) {
+  const d = String(data?.date || '').trim();
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  if (!d || d !== todayUtc) return false;
+  const gameTs = Number(new Date(String(data?.pick?.game_time || '')).getTime());
+  if (!Number.isFinite(gameTs) || gameTs <= 0) return true;
+  return gameTs >= (Date.now() - (45 * 60 * 1000));
+}
+
 async function loadPOTD() {
   try {
     const resp = await fetch(`./potd.json?t=${Date.now()}`);
@@ -4377,6 +4386,7 @@ async function loadPOTD() {
     const date = String(data?.date || '').trim();
     const pick = data?.pick && typeof data.pick === 'object' ? data.pick : null;
     if (!date || !pick) return;
+    if (!isPotdFresh({date, pick})) return;
     POTD_DATA = {date, generated_at: String(data?.generated_at || ''), pick};
     renderPOTD(pick);
     if (currentTab === 'home') renderHomeModules();
