@@ -124,6 +124,7 @@ ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "15") o
 ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "false")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
+STARTED_GAME_GRACE_MINUTES = int(os.getenv("STARTED_GAME_GRACE_MINUTES", "2") or 2)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
@@ -1280,6 +1281,20 @@ def _minutes_until_game_start(game: dict[str, Any]) -> Optional[float]:
         return None
 
 
+def _is_scan_eligible_game(game: dict[str, Any]) -> bool:
+    mins = _minutes_until_game_start(game)
+    if mins is None:
+        return False
+    # We do not surface live/finished games on the main scan board.
+    return mins >= -float(STARTED_GAME_GRACE_MINUTES)
+
+
+def _filter_scan_eligible_games(games: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not isinstance(games, list):
+        return []
+    return [g for g in games if isinstance(g, dict) and _is_scan_eligible_game(g)]
+
+
 def _dynamic_refresh_interval_seconds(games: list[dict[str, Any]]) -> int:
     """
     Variable refresh policy:
@@ -1335,14 +1350,16 @@ async def fetch_odds_api_games(sport_key: str, force_fresh: bool = False) -> lis
     global _quota_remaining, _quota_used_last
     
     cache_key = f"odds_{sport_key}"
-    stale_cached = cache_get(cache_key, ttl=3600 * 24 * 14)
+    stale_cached = _filter_scan_eligible_games(cache_get(cache_key, ttl=3600 * 24 * 14) or [])
     adaptive_ttl = _scan_tier_ttl_seconds(PLAN_PREMIUM)
     if isinstance(stale_cached, list) and stale_cached:
         adaptive_ttl = _dynamic_refresh_interval_seconds(stale_cached)
     cached = cache_get(cache_key, ttl=max(30, int(adaptive_ttl)))
     # Don't trust empty cache payloads; they can come from transient API failures.
     if not force_fresh and cached is not None and len(cached) > 0:
-        return cached
+        filtered_cached = _filter_scan_eligible_games(cached)
+        if filtered_cached:
+            return filtered_cached
 
     if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
         _set_system_status("ASLEEP", "idle_no_active_sessions")
@@ -1551,6 +1568,7 @@ async def fetch_odds_api_games(sport_key: str, force_fresh: bool = False) -> lis
             print(f"[OddsAPI] Error parsing game: {e}")
             continue
 
+    games = _filter_scan_eligible_games(games)
     cache_set(cache_key, games)
     print(f"[OddsAPI] Fetched {len(games)} games for {sport_key}")
     return games
@@ -5056,7 +5074,7 @@ async def scan(request: Request):
 
     # Fetch games for each allowed sport
     for sport in allowed_sports:
-        games = await fetch_odds_api_games(sport, force_fresh=woke_from_idle)
+        games = await fetch_odds_api_games(sport, force_fresh=force_refresh)
         sport_fetch_counts[sport] = len(games)
         meta = SPORT_META.get(sport, {"label": sport, "emoji": "🎯"})
         
