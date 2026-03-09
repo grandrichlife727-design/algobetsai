@@ -737,18 +737,25 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .paywall-copy{font-size:12px;color:var(--sub);line-height:1.45}
 .paywall-copy strong{color:var(--text)}
 .paywall-cta{background:var(--cyan);border:none;border-radius:6px;padding:6px 10px;color:#001722;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
-.tier-compare{display:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:0 0 14px}
+.tier-compare{display:none;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:12px;padding:12px;margin:0 0 14px}
 .tier-compare.on{display:block}
-.tier-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px}
-.tier-strip{display:flex;flex-wrap:wrap;gap:6px}
-.tier-tag{font-size:11px;color:var(--sub);padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02)}
-.tier-tag strong{color:var(--text)}
-.tier-tag.premium{border-color:rgba(0,212,255,.28)}
-.tier-tag.vip{border-color:rgba(0,229,160,.28)}
-.tier-tag.premium::after{content:"Most Popular";margin-left:6px;color:#001722;background:rgba(0,212,255,.9);padding:1px 6px;border-radius:999px;font-size:9px;box-shadow:0 0 14px rgba(0,212,255,.3)}
-.tier-tag.vip{border-image:linear-gradient(90deg,#e7be62,#8b5cf6) 1}
+.tier-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:.2px}
+.tier-sub{font-size:11px;color:var(--sub);margin-bottom:10px}
+.tier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tier-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.tier-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tier-card-k{font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.55px;text-transform:uppercase;color:var(--sub)}
+.tier-card-price{font-size:11px;font-family:var(--mono);color:var(--text)}
+.tier-card-copy{font-size:11px;color:var(--sub);line-height:1.45;min-height:34px}
+.tier-card.free{border-color:rgba(148,163,184,.28)}
+.tier-card.premium{border-color:rgba(34,211,238,.36);background:rgba(34,211,238,.08)}
+.tier-card.vip{border-color:rgba(255,183,0,.34);background:rgba(255,183,0,.08)}
+.tier-card-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:9px;font-family:var(--mono);font-weight:800;letter-spacing:.3px;text-transform:uppercase}
+.tier-card-badge.premium{background:rgba(34,211,238,.16);color:var(--cyan);border:1px solid rgba(34,211,238,.35)}
+.tier-card-badge.vip{background:rgba(255,183,0,.16);color:var(--amber);border:1px solid rgba(255,183,0,.35)}
+.tier-card-cta{margin-top:auto}
 .sticky-upgrade{position:sticky;top:10px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.22);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:12px;color:var(--sub)}
-@media(max-width:700px){.tier-strip{flex-direction:column}.tier-tag{border-radius:12px;padding:10px}.sticky-upgrade{flex-direction:column;align-items:flex-start}}
+@media(max-width:700px){.tier-grid{grid-template-columns:1fr}.sticky-upgrade{flex-direction:column;align-items:flex-start}}
 .home-plan-showcase{margin:0 0 14px;border:1px solid var(--border2);border-radius:12px;background:
   radial-gradient(1200px 240px at 100% -40%, rgba(0,212,255,.16), transparent 45%),
   radial-gradient(700px 220px at -20% 120%, rgba(124,58,237,.18), transparent 50%),
@@ -1270,12 +1277,34 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <button class="paywall-cta" onclick="openUpgradePicker()">Upgrade</button>
       </div>
       <div class="tier-compare" id="tier-compare">
-        <div class="tier-title">How Plans Work</div>
-      <div class="tier-strip">
-        <div class="tier-tag"><strong>Free</strong>: 3 delayed picks with 20-minute refresh.</div>
-        <div class="tier-tag premium"><strong>Premium</strong>: High-volume board, all sports/props, 2-minute auto refresh.</div>
-        <div class="tier-tag vip"><strong>VIP</strong>: VIP pick of the day, ~45-second auto refresh, better-line timing, alerts/recap, and Discord.</div>
-      </div>
+        <div class="tier-title">Plan Comparison</div>
+        <div class="tier-sub">Pick your speed: delayed preview, full board, or priority execution.</div>
+        <div class="tier-grid">
+          <div class="tier-card free">
+            <div class="tier-card-head">
+              <div class="tier-card-k">Free</div>
+              <div class="tier-card-price">$0</div>
+            </div>
+            <div class="tier-card-copy">3 delayed picks, limited sports, and slower refresh cadence.</div>
+            <div class="tier-card-cta"><button class="pf-btn" onclick="go('picks')">Current</button></div>
+          </div>
+          <div class="tier-card premium">
+            <div class="tier-card-head">
+              <div class="tier-card-k">Premium</div>
+              <span class="tier-card-badge premium">Most Popular</span>
+            </div>
+            <div class="tier-card-copy">Full board, all sports + props, steam/fades, and faster updates.</div>
+            <div class="tier-card-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
+          </div>
+          <div class="tier-card vip">
+            <div class="tier-card-head">
+              <div class="tier-card-k">VIP</div>
+              <span class="tier-card-badge vip">Execution</span>
+            </div>
+            <div class="tier-card-copy">VIP POTD, fastest refresh, line timing context, alerts, and Discord.</div>
+            <div class="tier-card-cta"><button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Go VIP</button></div>
+          </div>
+        </div>
       </div>
       <div class="filters-wrap">
         <button class="filters-nav" type="button" aria-label="Scroll sports left" onclick="scrollPicksFilters(-1)">‹</button>
