@@ -896,6 +896,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .lock-card{width:100%;max-width:380px;background:rgba(13,13,18,.96);border:1px solid var(--border2);border-radius:10px;padding:12px;text-align:center}
 .lock-title{font-size:13px;font-weight:800;color:var(--text)}
 .lock-sub{font-size:11px;color:var(--sub);margin:6px 0 10px;line-height:1.45}
+.vip-vault-potd{position:relative;overflow:hidden}
+.vip-vault-potd::after{
+  content:'';
+  position:absolute;
+  inset:-24% -30%;
+  background:linear-gradient(110deg,rgba(255,255,255,0) 38%,rgba(191,255,233,.12) 50%,rgba(255,255,255,0) 62%);
+  transform:translateX(-120%);
+  animation:vipVaultSheen 5.6s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes vipVaultSheen{
+  0%{transform:translateX(-120%)}
+  58%{transform:translateX(-120%)}
+  100%{transform:translateX(120%)}
+}
 .fade-card{background:var(--card);border:1px solid rgba(255,183,0,.2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .fade-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .fade-game{font-size:11px;color:var(--sub)}
@@ -4339,7 +4354,7 @@ function renderPotdCard(pick, opts = {}) {
   const sealBg = vipVault ? 'rgba(0,229,160,.16)' : 'rgba(255,209,102,.15)';
   const sealColor = vipVault ? '#d8fff1' : '#ffe9bf';
   const oddsColor = vipVault ? '#8df2d0' : '#9ef5d2';
-  return `<div class="growth-card" style="margin-bottom:10px;padding:0;overflow:hidden;border:1px solid ${shellBorder};background:${shellBg}">
+  return `<div class="growth-card ${vipVault ? 'vip-vault-potd' : ''}" style="margin-bottom:10px;padding:0;overflow:hidden;border:1px solid ${shellBorder};background:${shellBg}">
     <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid ${headBorder};background:${headBg}">
       <div style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:${headColor}">
         <span style="display:inline-grid;place-items:center;width:18px;height:18px;border-radius:999px;border:1px solid ${sealBorder};background:${sealBg};color:${sealColor}">♛</span>
