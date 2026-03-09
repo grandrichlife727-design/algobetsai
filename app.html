@@ -8345,7 +8345,7 @@ function renderPicks() {
       const dollars = bankroll >= 50 ? Math.max(1, Math.round((bankroll * rawStakePct) / 100)) : 0;
       return {pct: rawStakePct, dollars};
     })() : suggestedStakeMeta(edgeVal);
-    const activeAgentsCount = parseActiveAgents(p).length;
+    const activeAgentsCount = Array.isArray(p.activeAgents) ? p.activeAgents.length : 0;
     const stakeLine = stakeMeta.dollars > 0
       ? `Stake suggestion (Agent 5 Timing/CLV): <strong>$${stakeMeta.dollars}</strong> (${stakeMeta.pct.toFixed(2)}% of bankroll)`
       : `Stake suggestion (Agent 5 Timing/CLV): <strong>${stakeMeta.pct.toFixed(2)}%</strong> of bankroll`;
