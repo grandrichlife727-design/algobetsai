@@ -140,7 +140,9 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .book-arrow{font-size:12px;color:var(--muted);flex-shrink:0}
 .offer-link{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;text-decoration:none;background:rgba(255,255,255,.03);border:1px solid var(--border);transition:all .12s}
 .offer-link:hover{background:rgba(255,255,255,.06);border-color:var(--border2)}
+.offer-link.top-offer{border-color:rgba(0,212,255,.3);background:linear-gradient(120deg,rgba(0,212,255,.08),rgba(34,211,238,.05))}
 .offer-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0}
+.offer-rank{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:999px;font-size:10px;font-family:var(--mono);font-weight:800;background:rgba(0,212,255,.22);border:1px solid rgba(0,212,255,.45);color:var(--cyan)}
 .offer-info{min-width:0;flex:1}
 .offer-name{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
 .offer-promo{font-size:12px;color:var(--green);line-height:1.35;margin-top:3px}
@@ -1334,6 +1336,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="aff-disclosure" style="margin:0 0 10px"><strong>Affiliate Disclosure:</strong> We may earn commissions if you sign up through these partner links.</div>
+          <div class="growth-note" style="margin-bottom:10px">Top 3 books are ranked by your state + historical conversion value. One tap takes you to the tracked offer.</div>
           <a href="https://sportsbook.draftkings.com" target="_blank" rel="noopener" class="offer-link" data-book="draftkings">
             <div class="offer-icon" style="background:#53D338;color:#000">DK</div>
             <div class="offer-info"><div class="offer-name">DraftKings</div><div class="offer-promo">Bet $5, Get $150 in bonus bets</div></div>
@@ -2324,6 +2327,18 @@ const AFFILIATE_EPC_EST = {
   espnbet: 50,
   hardrock: 45,
 };
+const STATE_BOOK_PRIORITY = {
+  NY: ['fanduel', 'draftkings', 'caesars', 'betmgm', 'fanatics', 'betrivers', 'espnbet'],
+  NJ: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'betrivers', 'espnbet', 'hardrock'],
+  PA: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'betrivers', 'espnbet'],
+  IL: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'betrivers', 'espnbet', 'hardrock'],
+  AZ: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'hardrock', 'fanatics'],
+  CO: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'espnbet', 'fanatics'],
+  OH: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'betrivers', 'espnbet'],
+  MI: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'betrivers'],
+  VA: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'hardrock'],
+  MA: ['fanduel', 'draftkings', 'betmgm', 'caesars', 'espnbet'],
+};
 const VIP_LIVE_POLL_MS = 45000;
 const VIP_LIVE_CACHE_MS = 90000;
 const VIP_LIVE_MAX_GAMES = 8;
@@ -3146,19 +3161,13 @@ function applyStateBookOrdering() {
   if (!root) return;
   const links = Array.from(root.querySelectorAll('.book-link'));
   if (!links.length) return;
-  const rankByState = {
-    NY: ['fanduel', 'draftkings', 'caesars', 'betmgm'],
-    NJ: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
-    PA: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
-    IL: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
-    AZ: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
-    CO: ['fanduel', 'draftkings', 'betmgm', 'caesars'],
-  };
-  const pref = rankByState[state] || ['draftkings', 'fanduel', 'betmgm', 'caesars'];
+  const pref = STATE_BOOK_PRIORITY[state] || ['draftkings', 'fanduel', 'betmgm', 'caesars'];
   links.sort((a, b) => {
     const ab = String(a.getAttribute('data-book') || '');
     const bb = String(b.getAttribute('data-book') || '');
-    return pref.indexOf(ab) - pref.indexOf(bb);
+    const ai = pref.indexOf(ab);
+    const bi = pref.indexOf(bb);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
   });
   links.forEach(l => root.appendChild(l));
   applyAffiliateLinks();
@@ -3753,10 +3762,24 @@ function hydrateAffiliateInputs() {
 
 function normalizeAffiliateSource(el) {
   if (!el) return 'unknown';
+  if (el.classList.contains('pick-book-action')) return currentTab === 'vip-execution' ? 'vip_execution' : 'picks';
+  if (el.classList.contains('odds-book-link')) return 'odds';
   if (el.classList.contains('book-link')) return 'sidebar';
+  if (el.closest('#home-card-offers')) return 'home_offers';
   if (el.closest('#v-offers')) return 'offers';
   if (el.closest('#v-home')) return 'home';
   return 'app';
+}
+
+function normalizeAffiliatePlacement(el) {
+  if (!el) return 'default';
+  const explicit = String(el.getAttribute('data-placement') || '').trim().toLowerCase();
+  if (explicit) return explicit;
+  if (el.closest('#v-offers')) return 'offers_main';
+  if (el.closest('#home-card-offers')) return 'home_best_offers';
+  if (el.classList.contains('pick-book-action')) return currentTab === 'vip-execution' ? 'vip_card' : 'pick_card';
+  if (el.classList.contains('book-link')) return 'sidebar_books';
+  return 'in_app';
 }
 
 function buildTrackedAffiliateUrl(book, source = 'app', context = null) {
@@ -3767,7 +3790,8 @@ function buildTrackedAffiliateUrl(book, source = 'app', context = null) {
     u.searchParams.set('utm_source', 'algobets_ai');
     u.searchParams.set('utm_medium', 'affiliate');
     u.searchParams.set('utm_campaign', `${book}_offer`);
-    u.searchParams.set('utm_content', source);
+    const placement = String(context?.placement || 'default');
+    u.searchParams.set('utm_content', `${source}_${placement}`);
     if (AFFILIATE?.code) u.searchParams.set('affiliate_code', String(AFFILIATE.code));
     if (USER_ID) u.searchParams.set('alg_uid', USER_ID);
     if (context && typeof context === 'object') {
@@ -3775,6 +3799,8 @@ function buildTrackedAffiliateUrl(book, source = 'app', context = null) {
       if (context.game) u.searchParams.set('ab_game', String(context.game).slice(0, 96));
       if (context.pick) u.searchParams.set('ab_pick', String(context.pick).slice(0, 96));
       if (context.team) u.searchParams.set('ab_team', String(context.team).slice(0, 48));
+      if (context.placement) u.searchParams.set('ab_placement', String(context.placement).slice(0, 48));
+      if (context.rank) u.searchParams.set('ab_rank', String(context.rank).slice(0, 6));
     }
     return u.toString();
   } catch (_) {
@@ -3783,10 +3809,14 @@ function buildTrackedAffiliateUrl(book, source = 'app', context = null) {
 }
 
 function affiliateBookScore(book) {
+  const state = String(profileSettings?.state || 'auto').toUpperCase();
+  const pref = STATE_BOOK_PRIORITY[state] || [];
+  const prefIdx = pref.indexOf(book);
+  const stateBoost = prefIdx >= 0 ? Math.max(0, 8 - prefIdx) * 6 : 0;
   const clicks = Number((affiliateStats.by_book || {})[book] || 0);
   const convPct = Math.max(0, Number(AFFILIATE?.estimated_conversion_pct || 2.5));
   const epc = Number(AFFILIATE_EPC_EST[book] || 50);
-  return (clicks + 1) * (convPct / 100) * epc;
+  return ((clicks + 1) * (convPct / 100) * epc) + stateBoost;
 }
 
 function preferredExecutionBook() {
@@ -3800,11 +3830,36 @@ function preferredExecutionBook() {
 
 function reorderOfferLinks() {
   const scoreOf = (el) => affiliateBookScore(String(el.getAttribute('data-book') || '').toLowerCase());
+  const decorateLinks = (links) => {
+    links.forEach((link, idx) => {
+      const rank = idx + 1;
+      link.dataset.rank = String(rank);
+      const top = rank <= 3;
+      link.classList.toggle('top-offer', top);
+      const cta = link.querySelector('.offer-cta');
+      if (cta) cta.textContent = top ? 'Bet Now' : 'Claim';
+      const nameEl = link.querySelector('.offer-name');
+      if (!nameEl) return;
+      let badge = link.querySelector('.offer-rank');
+      if (top) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'offer-rank';
+          nameEl.prepend(document.createTextNode(' '));
+          nameEl.prepend(badge);
+        }
+        badge.textContent = `#${rank}`;
+      } else if (badge) {
+        badge.remove();
+      }
+    });
+  };
   const homeWrap = document.getElementById('home-card-offers');
   if (homeWrap) {
     const links = Array.from(homeWrap.querySelectorAll('a.offer-link[data-book]'));
     links.sort((a, b) => scoreOf(b) - scoreOf(a));
     links.forEach(l => homeWrap.appendChild(l));
+    decorateLinks(links);
   }
   const offersView = document.getElementById('v-offers');
   if (offersView) {
@@ -3813,8 +3868,10 @@ function reorderOfferLinks() {
       const links = Array.from(firstCard.querySelectorAll('a.offer-link[data-book]'));
       links.sort((a, b) => scoreOf(b) - scoreOf(a));
       links.forEach(l => firstCard.appendChild(l));
+      decorateLinks(links);
     }
   }
+  applyAffiliateLinks();
 }
 
 function renderAffiliateDashboard() {
@@ -3856,11 +3913,14 @@ function applyAffiliateLinks() {
     const book = String(link.getAttribute('data-book') || '').toLowerCase();
     if (!book) return;
     const source = normalizeAffiliateSource(link);
+    const placement = normalizeAffiliatePlacement(link);
     const ctx = {
       sport: String(link.getAttribute('data-sport') || ''),
       game: String(link.getAttribute('data-game') || ''),
       pick: String(link.getAttribute('data-pick') || ''),
       team: String(link.getAttribute('data-team') || ''),
+      placement,
+      rank: String(link.getAttribute('data-rank') || ''),
     };
     link.href = buildTrackedAffiliateUrl(book, source, ctx);
     link.setAttribute('rel', 'noopener sponsored');
@@ -3874,6 +3934,8 @@ function applyAffiliateLinks() {
         game: ctx.game,
         pick: ctx.pick,
         team: ctx.team,
+        placement,
+        offer_rank: Number(link.getAttribute('data-rank') || 0) || null,
         tab: currentTab,
         plan: normalizePlan(currentPlan),
         state: String(profileSettings?.state || 'auto'),
