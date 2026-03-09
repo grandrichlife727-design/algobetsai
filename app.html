@@ -494,6 +494,44 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tool-tile-sub{font-size:11px;color:var(--sub);line-height:1.35}
 .tool-tile-meta{font-size:10px;font-family:var(--mono);color:var(--muted);line-height:1.35;border-top:1px dashed var(--border);padding-top:6px;margin-top:auto;width:100%}
 @media(max-width:520px){.tools-grid{gap:8px}.tool-tile{padding:12px;min-height:116px}.tool-tile-title{font-size:13px}.tool-tile-sub{font-size:10px}}
+
+/* TOOLS WORKSPACE THEME */
+#v-tools{position:relative}
+#v-tools::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(34,211,238,.04),rgba(34,211,238,0) 38%),
+    linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(255,255,255,.02) 1px,transparent 1px);
+  background-size:100% 100%, 22px 22px, 22px 22px;
+  opacity:.42;
+  border-radius:12px;
+}
+#v-tools .page-title{letter-spacing:.5px}
+#v-tools .page-sub{font-size:12px;color:var(--muted)}
+#v-tools .tools-topline{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02)}
+#v-tools .tools-count{color:#9adcf0;border-color:rgba(148,163,184,.35);background:rgba(148,163,184,.12)}
+#v-tools .tools-section{padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(8,10,16,.62)}
+#v-tools .tools-section-title{color:#8ea0b8}
+#v-tools .tool-tile{
+  border-radius:12px;
+  border-color:rgba(148,163,184,.22);
+  background:linear-gradient(180deg,rgba(148,163,184,.08),rgba(148,163,184,.04));
+  min-height:122px;
+}
+#v-tools .tool-tile:hover{
+  border-color:rgba(148,163,184,.42);
+  background:linear-gradient(180deg,rgba(148,163,184,.12),rgba(148,163,184,.06));
+}
+#v-tools .tool-tile-ico{color:#9fb4cc;opacity:.95}
+#v-tools .tool-tile-title{font-size:13px;letter-spacing:.2px}
+#v-tools .tool-tile-sub{color:#aeb7c6}
+#v-tools .tool-tile-meta{color:#90a1b7;border-top-color:rgba(148,163,184,.25)}
+#v-tools .tool-badge.premium{background:rgba(148,163,184,.14);border-color:rgba(148,163,184,.35);color:#c9d3e2}
+#v-tools .tool-badge.vip{background:rgba(255,183,0,.14);border-color:rgba(255,183,0,.35);color:#ffe0a6}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
 .explain-toggle{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);padding:2px 4px}
