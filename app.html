@@ -1280,29 +1280,29 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="tier-title">Plan Comparison</div>
         <div class="tier-sub">Pick your speed: delayed preview, full board, or priority execution.</div>
         <div class="tier-grid">
-          <div class="tier-card free">
+          <div class="tier-card free" id="tier-card-free">
             <div class="tier-card-head">
               <div class="tier-card-k">Free</div>
               <div class="tier-card-price">$0</div>
             </div>
-            <div class="tier-card-copy">3 delayed picks, limited sports, and slower refresh cadence.</div>
-            <div class="tier-card-cta"><button class="pf-btn" onclick="go('picks')">Current</button></div>
+            <div class="tier-card-copy" id="tier-copy-free">3 delayed picks, limited sports, and slower refresh cadence.</div>
+            <div class="tier-card-cta"><button class="pf-btn" id="tier-btn-free" onclick="go('picks')">Current</button></div>
           </div>
-          <div class="tier-card premium">
+          <div class="tier-card premium" id="tier-card-premium">
             <div class="tier-card-head">
               <div class="tier-card-k">Premium</div>
-              <span class="tier-card-badge premium">Most Popular</span>
+              <span class="tier-card-badge premium" id="tier-badge-premium">Most Popular</span>
             </div>
-            <div class="tier-card-copy">Full board, all sports + props, steam/fades, and faster updates.</div>
-            <div class="tier-card-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
+            <div class="tier-card-copy" id="tier-copy-premium">Full board, all sports + props, steam/fades, and faster updates.</div>
+            <div class="tier-card-cta"><button class="paywall-cta" id="tier-btn-premium" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
           </div>
-          <div class="tier-card vip">
+          <div class="tier-card vip" id="tier-card-vip">
             <div class="tier-card-head">
               <div class="tier-card-k">VIP</div>
-              <span class="tier-card-badge vip">Execution</span>
+              <span class="tier-card-badge vip" id="tier-badge-vip">Execution</span>
             </div>
-            <div class="tier-card-copy">VIP POTD, fastest refresh, line timing context, alerts, and Discord.</div>
-            <div class="tier-card-cta"><button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Go VIP</button></div>
+            <div class="tier-card-copy" id="tier-copy-vip">VIP POTD, fastest refresh, line timing context, alerts, and Discord.</div>
+            <div class="tier-card-cta"><button class="paywall-cta" id="tier-btn-vip" onclick="openUpgradePicker(false,'vip')">Go VIP</button></div>
           </div>
         </div>
       </div>
@@ -6507,6 +6507,71 @@ function renderHomeModules() {
   setHomeCardVisible('home-card-offers', !!homeFlags.show_offers);
 }
 
+function updateTierCompareCards() {
+  const p = normalizePlan(currentPlan);
+  const wrap = document.getElementById('tier-compare');
+  const cardFree = document.getElementById('tier-card-free');
+  const cardPremium = document.getElementById('tier-card-premium');
+  const cardVip = document.getElementById('tier-card-vip');
+  const btnFree = document.getElementById('tier-btn-free');
+  const btnPremium = document.getElementById('tier-btn-premium');
+  const btnVip = document.getElementById('tier-btn-vip');
+  const copyPremium = document.getElementById('tier-copy-premium');
+  const copyVip = document.getElementById('tier-copy-vip');
+  const badgePremium = document.getElementById('tier-badge-premium');
+  const badgeVip = document.getElementById('tier-badge-vip');
+  if (!wrap || !cardFree || !cardPremium || !cardVip || !btnFree || !btnPremium || !btnVip) return;
+
+  cardFree.style.display = p === 'free' ? '' : 'none';
+  cardPremium.style.display = p === 'vip' ? 'none' : '';
+  cardVip.style.display = '';
+
+  if (btnFree) {
+    btnFree.textContent = p === 'free' ? 'Current Plan' : 'Free Included';
+    btnFree.disabled = true;
+    btnFree.style.opacity = '.7';
+    btnFree.style.cursor = 'default';
+  }
+
+  if (p === 'free') {
+    if (badgePremium) badgePremium.style.display = '';
+    if (copyPremium) copyPremium.textContent = 'Full board, all sports + props, steam/fades, and faster updates.';
+    btnPremium.textContent = 'Start 3-Day Trial';
+    btnPremium.onclick = () => claimFreeTrial();
+    if (badgeVip) badgeVip.style.display = '';
+    if (copyVip) copyVip.textContent = 'VIP POTD, fastest refresh, line timing context, alerts, and Discord.';
+    btnVip.textContent = 'Go VIP';
+    btnVip.onclick = () => openUpgradePicker(false, 'vip');
+    return;
+  }
+
+  if (p === 'premium') {
+    if (badgePremium) {
+      badgePremium.textContent = 'Active';
+      badgePremium.style.display = '';
+    }
+    if (copyPremium) copyPremium.textContent = 'Premium unlocked: full board, props, steam/fades, and fast updates.';
+    btnPremium.textContent = 'Current Plan';
+    btnPremium.onclick = () => go('premium');
+    if (badgeVip) {
+      badgeVip.textContent = 'Upgrade';
+      badgeVip.style.display = '';
+    }
+    if (copyVip) copyVip.textContent = 'Unlock VIP execution speed, line timing, alerts, and Discord.';
+    btnVip.textContent = 'Upgrade to VIP';
+    btnVip.onclick = () => openUpgradePicker(false, 'vip');
+    return;
+  }
+
+  if (badgeVip) {
+    badgeVip.textContent = 'Active';
+    badgeVip.style.display = '';
+  }
+  if (copyVip) copyVip.textContent = 'VIP active: POTD, execution timing, fastest refresh, alerts, and Discord unlocked.';
+  btnVip.textContent = 'VIP Active';
+  btnVip.onclick = () => go('vip');
+}
+
 function updatePaywallUi() {
   const card = document.getElementById('paywall-card');
   const copy = document.getElementById('paywall-copy');
@@ -6521,7 +6586,8 @@ function updatePaywallUi() {
   if (!nxt || total <= visible) {
     card.classList.remove('on');
     const cmp = document.getElementById('tier-compare');
-    if (cmp) cmp.classList.toggle('on', p !== 'premium');
+    if (cmp) cmp.classList.add('on');
+    updateTierCompareCards();
     if (sticky) sticky.style.display = 'none';
     return;
   }
@@ -6539,7 +6605,8 @@ function updatePaywallUi() {
     stickyCopy.textContent = `You're on Free. ${waiting} picks waiting in Premium.`;
   }
   const cmp = document.getElementById('tier-compare');
-  if (cmp) cmp.classList.toggle('on', p !== 'premium');
+  if (cmp) cmp.classList.add('on');
+  updateTierCompareCards();
 }
 
 function ensureBillingUser() {
