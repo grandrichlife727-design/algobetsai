@@ -380,6 +380,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .sport-tag{background:rgba(255,255,255,.05);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sub);white-space:nowrap}
 .game-label{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
 .game-time{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.game-date-tiny{font-size:9px;color:var(--muted);opacity:.88;font-family:var(--mono);white-space:nowrap}
 .grade-tag{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 5px;border-radius:4px;white-space:nowrap}
 .grade-tag.a{background:rgba(0,212,255,.1);color:var(--cyan)}.grade-tag.b{background:rgba(155,121,255,.1);color:var(--violet)}.grade-tag.c{background:rgba(255,183,0,.1);color:var(--amber)}
 
@@ -7516,6 +7517,15 @@ function formatOddsTime(iso) {
   }
 }
 
+function formatPickDateTiny(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  } catch (_) {
+    return '';
+  }
+}
+
 function normalizeOddsGames(games) {
   return (Array.isArray(games) ? games : []).map(g => {
     const sport = g.sport || g.sport_key || '';
@@ -8247,6 +8257,7 @@ function renderPicks() {
     const affGame = esc(String(matchupLabel || p.game || ''));
     const affPick = esc(String(p.bet || ''));
     const primaryTeam = esc(String(matchupLabel || '').split(' vs ')[0] || '');
+    const pickDateTiny = formatPickDateTiny(p.gameTimeRaw);
     const bookCode = esc(bookShortCode(bookKey));
     const pickBookHtml = hasAffiliateBook
       ? `<a class="pick-book-action" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}"><span class="pick-book-logo">${bookCode}</span><span class="pick-book-odds">${esc(String(p.odds || ''))}</span><span class="pick-book-cta">${lockEdgeLabel}</span></a>`
@@ -8265,6 +8276,7 @@ function renderPicks() {
       <div class="pick-sport-row">
         <span class="sport-tag">${p.sport}</span>
         <span class="game-time">${p.time}</span>
+        ${pickDateTiny ? `<span class="game-date-tiny">${esc(pickDateTiny)}</span>` : ''}
       </div>
       <div class="pick-game">${esc(matchupLabel)}</div>
       <div class="pick-primary-row">
