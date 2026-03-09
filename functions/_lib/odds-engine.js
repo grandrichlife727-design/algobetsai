@@ -58,6 +58,7 @@ function median(values) {
 
 function buildGameAndPicksFromEvent(sportKey, event) {
   const meta = SPORT_META[sportKey] || { label: sportKey, emoji: "🎯" };
+  const isSoccer = String(sportKey || "").toLowerCase().startsWith("soccer_");
   const homeTeam = String(event?.home_team || "").trim();
   const awayTeam = String(event?.away_team || "").trim();
   const commenceTime = String(event?.commence_time || "");
@@ -66,6 +67,7 @@ function buildGameAndPicksFromEvent(sportKey, event) {
   const moneylineByBook = {};
   const homeOddsByBook = [];
   const awayOddsByBook = [];
+  const drawOddsByBook = [];
   let bestHome = { odds: null, book: "" };
   let bestAway = { odds: null, book: "" };
 
@@ -76,13 +78,19 @@ function buildGameAndPicksFromEvent(sportKey, event) {
     if (!h2h || !Array.isArray(h2h.outcomes)) continue;
     const homeOutcome = h2h.outcomes.find((o) => o?.name === homeTeam);
     const awayOutcome = h2h.outcomes.find((o) => o?.name === awayTeam);
+    const drawOutcome = h2h.outcomes.find((o) => /draw|tie/i.test(String(o?.name || "").trim()));
     const homeOdds = Number(homeOutcome?.price);
     const awayOdds = Number(awayOutcome?.price);
+    const drawOdds = Number(drawOutcome?.price);
     if (!Number.isFinite(homeOdds) || !Number.isFinite(awayOdds)) continue;
 
     moneylineByBook[bookKey] = { home: homeOdds, away: awayOdds };
     homeOddsByBook.push(homeOdds);
     awayOddsByBook.push(awayOdds);
+    if (Number.isFinite(drawOdds)) {
+      moneylineByBook[bookKey].draw = drawOdds;
+      drawOddsByBook.push(drawOdds);
+    }
 
     if (pickBetterLine(bestHome.odds, homeOdds)) bestHome = { odds: homeOdds, book: bookKey };
     if (pickBetterLine(bestAway.odds, awayOdds)) bestAway = { odds: awayOdds, book: bookKey };
@@ -92,11 +100,16 @@ function buildGameAndPicksFromEvent(sportKey, event) {
 
   const homeMedian = median(homeOddsByBook);
   const awayMedian = median(awayOddsByBook);
+  const drawMedian = median(drawOddsByBook);
   const pHomeRaw = impliedProbability(homeMedian);
   const pAwayRaw = impliedProbability(awayMedian);
-  const total = (pHomeRaw || 0) + (pAwayRaw || 0);
+  const pDrawRaw = impliedProbability(drawMedian);
+  const total = (pHomeRaw || 0) + (pAwayRaw || 0) + (isSoccer ? (pDrawRaw || 0) : 0);
   const fairHome = total > 0 ? (pHomeRaw / total) : null;
   const fairAway = total > 0 ? (pAwayRaw / total) : null;
+  const drawRiskPenalty = isSoccer && Number.isFinite(pDrawRaw)
+    ? Math.max(0, Math.min(4.0, (pDrawRaw - 0.22) * 30))
+    : 0;
 
   const game = {
     id: String(event?.id || `${sportKey}_${awayTeam}_${homeTeam}_${commenceTime}`),
@@ -119,7 +132,9 @@ function buildGameAndPicksFromEvent(sportKey, event) {
 
   for (const c of candidates) {
     if (!Number.isFinite(c.best.odds) || !Number.isFinite(c.fair)) continue;
-    const ev = expectedValuePct(c.best.odds, c.fair);
+    if (isSoccer && Number(c.best.odds) < -180) continue;
+    const rawEv = expectedValuePct(c.best.odds, c.fair);
+    const ev = isSoccer ? (rawEv - drawRiskPenalty) : rawEv;
     if (!Number.isFinite(ev) || ev <= 0) continue;
     const confidence = Math.max(51, Math.min(89, Math.round(54 + ev * 1.6)));
     picks.push({
@@ -144,6 +159,10 @@ function buildGameAndPicksFromEvent(sportKey, event) {
       recommended_stake_pct: Number(Math.max(0.4, Math.min(2.5, ev * 0.18)).toFixed(2)),
       agents: ["Best-Line EV", "Consensus De-vig", "Market Timing"],
       active_agents: [1, 2, 5],
+      ...(isSoccer ? {
+        draw_risk_penalty: Number(drawRiskPenalty.toFixed(2)),
+        draw_prob_estimate: Number((Number.isFinite(pDrawRaw) ? pDrawRaw * 100 : 0).toFixed(1)),
+      } : {}),
     });
   }
 
