@@ -489,6 +489,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tool-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:2px 8px;font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.25px}
 .tool-badge.vip{background:rgba(255,183,0,.18);border:1px solid rgba(255,183,0,.4);color:var(--amber)}
 .tool-badge.premium{background:rgba(34,211,238,.16);border:1px solid rgba(34,211,238,.4);color:var(--cyan)}
+.tool-badge.free{background:rgba(255,183,0,.14);border:1px solid rgba(255,183,0,.34);color:var(--amber)}
 .tool-tile-ico{width:30px;height:30px;color:var(--cyan)}
 .tool-tile-title{font-size:14px;font-weight:800;color:var(--text)}
 .tool-tile-sub{font-size:11px;color:var(--sub);line-height:1.35}
@@ -1690,12 +1691,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="tool-tile-sub">Player-market edges with best available book pricing.</div>
             <div class="tool-tile-meta" id="tool-meta-props">Today: — props · Coverage: NBA/NFL</div>
           </button>
-          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">
-            <span class="tool-badge premium">Premium</span>
+          <button class="tool-tile" onclick="go('steam')">
+            <span class="tool-badge free">Free</span>
             <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l3-8 4 16 2-8h2"/></svg>
-            <div class="tool-tile-title">Steam Velocity Monitor</div>
-            <div class="tool-tile-sub">Sharp pressure and fast line movement alerts.</div>
-            <div class="tool-tile-meta" id="tool-meta-steam">Today: — moves · Status: market watch</div>
+            <div class="tool-tile-title">Line Watch</div>
+            <div class="tool-tile-sub">Track active line movement with delayed free preview.</div>
+            <div class="tool-tile-meta" id="tool-meta-steam">Free: 1 live watch card · Premium unlocks full feed</div>
           </button>
           <button class="tool-tile tool-gated" data-tier="vip" onclick="go('vip-execution')">
             <span class="tool-badge vip">VIP</span>
@@ -1755,7 +1756,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-steam" style="display:none">
-      <div class="page-hdr"><div class="page-title">Steam <span>Moves</span></div><div class="page-sub">Sharp line movement and best-line gaps by game</div></div>
+      <div class="page-hdr"><div class="page-title">Line <span>Watch</span></div><div class="page-sub">Sharp line movement and best-line gaps by game</div></div>
       <div class="sec-hdr"><span class="sec-title" id="steam-count">Ready</span><span class="sec-meta">Follow real market pressure</span></div>
       <div class="picks-list" id="steamlist"></div>
     </div>
@@ -8328,17 +8329,16 @@ function renderSteam() {
   const el = document.getElementById('steamlist');
   const countEl = document.getElementById('steam-count');
   if (!el || !countEl) return;
-  if (!canUsePremium()) {
-    countEl.textContent = `Premium feature`;
-    renderLockedFeature(el, 'Steam Moves are Premium', 'Preview is blurred. Upgrade to Premium for the full live feed.', 'premium');
-    return;
-  }
-  countEl.textContent = `${STEAMDATA.length} steam move${STEAMDATA.length !== 1 ? 's' : ''} found`;
-  if (!STEAMDATA.length) {
+  const premiumOn = canUsePremium();
+  const rows = premiumOn ? STEAMDATA : STEAMDATA.slice(0, 1);
+  countEl.textContent = premiumOn
+    ? `${rows.length} steam move${rows.length !== 1 ? 's' : ''} found`
+    : 'Line Watch free preview';
+  if (!rows.length) {
     el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No steam moves right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
     return;
   }
-  el.innerHTML = STEAMDATA.map((s, i) => `
+  const cards = rows.map((s, i) => `
     <div class="steam-card" style="animation-delay:${i*.05}s">
       <div class="steam-row">
         <div>
@@ -8351,6 +8351,15 @@ function renderSteam() {
       <div class="steam-meta">${esc(s.note)}</div>
     </div>
   `).join('');
+  if (!premiumOn) {
+    el.innerHTML = `${cards}
+      <div class="growth-note" style="margin-top:10px">
+        Free preview shows 1 delayed Line Watch card. Upgrade to Premium for the full real-time steam board.
+        <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker(false,'premium')">Unlock Premium</button>
+      </div>`;
+    return;
+  }
+  el.innerHTML = cards;
 }
 
 function computePublicFadesFromPicks(picks) {
@@ -8921,11 +8930,6 @@ function go(name) {
     showToast('VIP Discord is VIP-only');
     openUpgradePicker();
     return;
-  }
-  if (name === 'steam' && !canUsePremium()) {
-    showToast('Premium feature - Start 3-day trial');
-    growthNudges.steamLocks += 1;
-    if (growthNudges.steamLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
   }
   if (name === 'fades' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
