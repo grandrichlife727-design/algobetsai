@@ -122,7 +122,7 @@ SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
 VIP_WELCOME_EMAIL_ENABLED = VIP_WELCOME_EMAIL_ENABLED_RAW.lower() in {"1", "true", "yes", "on"}
 ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "15") or 15)
 ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
-SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "true")
+SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "false")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
@@ -559,7 +559,7 @@ CACHE_TTL          = int(os.getenv("CACHE_TTL", "3600") or 3600)
 CACHE_TTL_PINNACLE = int(os.getenv("CACHE_TTL_PINNACLE", "1800") or 1800)
 CACHE_TTL_INJURIES = int(os.getenv("CACHE_TTL_INJURIES", "900") or 900)
 ODDS_MIN_REMAINING_TO_SCAN = int(os.getenv("ODDS_MIN_REMAINING_TO_SCAN", "150") or 150)
-ODDS_MONTHLY_CREDIT_CAP = int(os.getenv("ODDS_MONTHLY_CREDIT_CAP", "12000") or 12000)
+ODDS_MONTHLY_CREDIT_CAP = int(os.getenv("ODDS_MONTHLY_CREDIT_CAP", "9000") or 9000)
 ODDS_ENABLE_LEGACY_FALLBACK = _bool_env("ODDS_ENABLE_LEGACY_FALLBACK", "false")
 ODDS_ENABLE_ALL_BOOKS_FALLBACK = _bool_env("ODDS_ENABLE_ALL_BOOKS_FALLBACK", "false")
 MODEL_MIN_EDGE_EV = float(os.getenv("MODEL_MIN_EDGE_EV", "1.0") or 1.0)
@@ -576,7 +576,7 @@ MODEL_MAX_STAKE_PCT = float(os.getenv("MODEL_MAX_STAKE_PCT", "2.0") or 2.0)
 ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada")
 PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
 PROPS_ENABLED = os.getenv("PROPS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
-PROPS_MONTHLY_CREDIT_CAP = int(os.getenv("PROPS_MONTHLY_CREDIT_CAP", "70000") or 70000)
+PROPS_MONTHLY_CREDIT_CAP = int(os.getenv("PROPS_MONTHLY_CREDIT_CAP", "6000") or 6000)
 PROPS_MAX_EVENTS_PER_SPORT = int(os.getenv("PROPS_MAX_EVENTS_PER_SPORT", "4") or 4)
 PROPS_CACHE_TTL = int(os.getenv("PROPS_CACHE_TTL", "1800") or 1800)
 
@@ -1051,9 +1051,9 @@ def _latest_cached_scan_payload(user_id: str = "") -> Optional[dict[str, Any]]:
 def _scan_tier_ttl_seconds(plan: str) -> int:
     p = normalize_plan_name(plan)
     if p == PLAN_VIP:
-        return 60
+        return 120
     if p == PLAN_PREMIUM:
-        return 150
+        return 300
     return 1200
 
 
@@ -1062,7 +1062,7 @@ def _tier_data_delay_seconds(plan: str) -> int:
     if p == PLAN_VIP:
         return 0
     if p == PLAN_PREMIUM:
-        return 150
+        return 300
     return 900
 
 
@@ -2899,15 +2899,15 @@ TIER_CONFIG = {
         "name": "Premium",
         "scan_pick_limit": 15,
         "sports_allowed": SPORTS,
-        "min_scan_interval_seconds": 150,
-        "features": ["15 picks per scan", "All sports", "+EV finder", "Refresh every 2.5 minutes"],
+        "min_scan_interval_seconds": 300,
+        "features": ["15 picks per scan", "All sports", "+EV finder", "Refresh every 5 minutes"],
     },
     PLAN_VIP: {
         "name": "VIP",
         "scan_pick_limit": 50,
         "sports_allowed": SPORTS,
-        "min_scan_interval_seconds": 60,
-        "features": ["50 picks per scan", "All sports", "+EV finder", "Steam feed", "Refresh every minute"],
+        "min_scan_interval_seconds": 120,
+        "features": ["50 picks per scan", "All sports", "+EV finder", "Steam feed", "Refresh every 2 minutes"],
     },
 }
 
