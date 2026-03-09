@@ -7343,6 +7343,22 @@ function renderAgentSignalBadges(activeAgents = []) {
   }).join('')}</div>`;
 }
 
+function renderPickAgentDots(activeAgents = []) {
+  const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
+  const dots = [1, 2, 3, 4, 5].map((id) => {
+    const isCore = id <= 2;
+    const on = active.has(id);
+    const cls = [
+      'agent-dot',
+      isCore ? 'core' : 'cond',
+      on ? 'active' : 'inactive',
+      (on && id === 5) ? 'neon' : '',
+    ].filter(Boolean).join(' ');
+    return `<span class="${cls}" title="Agent ${id}">${id}</span>`;
+  }).join('');
+  return `<div class="agent-fired"><span style="font-size:10px;color:var(--muted);font-family:var(--mono)">Agents</span><div class="agent-microdots">${dots}</div></div>`;
+}
+
 function hotAgentSet() {
   const cond = AGENT_HEALTH?.conditional || {};
   return new Set(Object.values(cond)
@@ -8322,6 +8338,7 @@ function renderPicks() {
     const cornerBadges = `<div class="pick-corner"><span class="corner-conf" title="Model confidence">Confidence ${conf}%</span></div>`;
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentSignalBadges = renderAgentSignalBadges(p.activeAgents);
+    const agentDots = renderPickAgentDots(p.activeAgents);
     const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
     const stakeMeta = rawStakePct > 0 ? (() => {
       const bankroll = Number(profileSettings?.bankroll_amount || 0);
@@ -8377,6 +8394,7 @@ function renderPicks() {
         <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
       ${agentSignalBadges}
+      ${agentDots}
       <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
