@@ -113,6 +113,10 @@ LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
 SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
+ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "20") or 20)
+ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
+SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "true")
+SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
@@ -240,8 +244,14 @@ _agent_health_cache: dict[str, Any] = {
     "hot_agents": [],
 }
 _agent_health_task: Optional[asyncio.Task] = None
+_smart_prefetch_task: Optional[asyncio.Task] = None
 _AGENT_HEALTH_WINDOW_SECONDS = int(os.getenv("AGENT_HEALTH_WINDOW_SECONDS", str(48 * 3600)) or (48 * 3600))
 _AGENT_HEALTH_REFRESH_SECONDS = int(os.getenv("AGENT_HEALTH_REFRESH_SECONDS", "300") or 300)
+_smart_prefetch_due_by_sport: dict[str, float] = {}
+_game_model_cache: dict[str, dict[str, Any]] = {}
+_GAME_MODEL_CACHE_TTL_SECONDS = int(os.getenv("GAME_MODEL_CACHE_TTL_SECONDS", str(6 * 3600)) or (6 * 3600))
+AGENT04_SIM_RETRIGGER_POINTS = float(os.getenv("AGENT04_SIM_RETRIGGER_POINTS", "1.5") or 1.5)
+AGENT_CONSENSUS_RETRIGGER_CENTS = int(os.getenv("AGENT_CONSENSUS_RETRIGGER_CENTS", "15") or 15)
 
 _AGENT_LABELS = {
     1: "Best-Line EV",
@@ -737,10 +747,12 @@ async def security_middleware(request: Request, call_next):
 
 @app.on_event("startup")
 async def start_background_services():
-    global _agent_health_task
+    global _agent_health_task, _smart_prefetch_task
     _refresh_agent_health_cache()
     if _agent_health_task is None or _agent_health_task.done():
         _agent_health_task = asyncio.create_task(_agent_health_worker())
+    if _smart_prefetch_task is None or _smart_prefetch_task.done():
+        _smart_prefetch_task = asyncio.create_task(_smart_prefetch_worker())
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -917,6 +929,33 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
     return rec
 
 
+def _mark_user_activity(user_id: str):
+    uid = str(user_id or "").strip().lower()
+    if not _is_registered_user_id(uid):
+        return
+    active = _growth_db.setdefault("active_users", {})
+    if not isinstance(active, dict):
+        active = {}
+    now = int(time.time())
+    active[uid] = now
+    # Prune old activity records to keep file size bounded.
+    cutoff = now - max(600, ACTIVE_USER_WINDOW_MINUTES * 60 * 12)
+    stale = [k for k, ts in active.items() if int(ts or 0) < cutoff]
+    for k in stale:
+        active.pop(k, None)
+    _growth_db["active_users"] = active
+    _save_growth_db()
+
+
+def _has_recent_active_users(window_minutes: Optional[int] = None) -> bool:
+    mins = max(1, int(window_minutes or ACTIVE_USER_WINDOW_MINUTES))
+    cutoff = int(time.time()) - (mins * 60)
+    active = _growth_db.get("active_users", {})
+    if not isinstance(active, dict):
+        return False
+    return any(int(ts or 0) >= cutoff for ts in active.values())
+
+
 def _find_user_by_ref_code(code: str) -> Optional[str]:
     code_u = (code or "").strip().upper()
     if not code_u:
@@ -981,7 +1020,7 @@ def _scan_tier_ttl_seconds(plan: str) -> int:
     if p == PLAN_VIP:
         return 60
     if p == PLAN_PREMIUM:
-        return 300
+        return 150
     return 1200
 
 
@@ -1071,6 +1110,61 @@ async def _send_sms_twilio(to_number: str, message: str) -> dict[str, Any]:
 # THE ODDS API - PRIMARY DATA SOURCE (v5)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _minutes_until_game_start(game: dict[str, Any]) -> Optional[float]:
+    raw = str(game.get("commence_time", "") or "").strip()
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        return (dt.timestamp() - time.time()) / 60.0
+    except Exception:
+        return None
+
+
+def _dynamic_refresh_interval_seconds(games: list[dict[str, Any]]) -> int:
+    """
+    Variable refresh policy:
+    - <60m to start: 60s
+    - 1h to 6h: 300s
+    - >6h: 1800s
+    - Next-day board (>=24h): 14400s
+    """
+    mins = [_minutes_until_game_start(g) for g in (games or [])]
+    mins = [m for m in mins if m is not None]
+    if not mins:
+        return max(300, CACHE_TTL)
+    nearest = min(mins)
+    if nearest <= 60:
+        return 60
+    if nearest <= 360:
+        return 300
+    if nearest >= 24 * 60:
+        return 14400
+    return 1800
+
+
+async def _smart_prefetch_worker():
+    while True:
+        try:
+            if not SMART_PREFETCH_ENABLED or not ODDS_API_KEY:
+                await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
+                continue
+            if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
+                await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
+                continue
+            now = time.time()
+            for sport in SPORTS:
+                due = float(_smart_prefetch_due_by_sport.get(sport, 0.0) or 0.0)
+                if due > now:
+                    continue
+                games = await fetch_odds_api_games(sport)
+                interval = _dynamic_refresh_interval_seconds(games)
+                _smart_prefetch_due_by_sport[sport] = now + max(60, int(interval))
+        except Exception:
+            pass
+        await asyncio.sleep(max(30, SMART_PREFETCH_LOOP_SECONDS))
+
+
 async def fetch_odds_api_games(sport_key: str) -> list:
     """
     Fetch games and odds from The Odds API.
@@ -1079,13 +1173,22 @@ async def fetch_odds_api_games(sport_key: str) -> list:
     global _quota_remaining, _quota_used_last
     
     cache_key = f"odds_{sport_key}"
-    cached = cache_get(cache_key, ttl=CACHE_TTL)
+    stale_cached = cache_get(cache_key, ttl=3600 * 24 * 14)
+    adaptive_ttl = _scan_tier_ttl_seconds(PLAN_PREMIUM)
+    if isinstance(stale_cached, list) and stale_cached:
+        adaptive_ttl = _dynamic_refresh_interval_seconds(stale_cached)
+    cached = cache_get(cache_key, ttl=max(30, int(adaptive_ttl)))
     # Don't trust empty cache payloads; they can come from transient API failures.
     if cached is not None and len(cached) > 0:
         return cached
 
+    if ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users():
+        if isinstance(stale_cached, list):
+            print(f"[OddsAPI] No active users in last {ACTIVE_USER_WINDOW_MINUTES}m; serving stale cache for {sport_key}")
+            return stale_cached
+        return []
+
     # Last-resort stale cache for API outages or missing key.
-    stale_cached = cache_get(cache_key, ttl=3600 * 24 * 14)
     if not _odds_budget_ok():
         if stale_cached is not None:
             print(f"[OddsAPI] Monthly budget soft cap reached; serving stale cache for {sport_key}")
@@ -2301,6 +2404,49 @@ def _build_model_v2_components(
     }
 
 
+def _game_model_cache_key(sport_key: str, game: dict[str, Any]) -> str:
+    gid = str(game.get("id") or "").strip()
+    if gid:
+        return f"{sport_key}:{gid}"
+    away = str(game.get("away_team") or "").strip().lower()
+    home = str(game.get("home_team") or "").strip().lower()
+    ct = str(game.get("commence_time") or "").strip()
+    return f"{sport_key}:{away}@{home}:{ct}"
+
+
+def _line_move_cents(prev_home: Any, prev_away: Any, cur_home: Any, cur_away: Any) -> int:
+    try:
+        ph = int(prev_home)
+        pa = int(prev_away)
+        ch = int(cur_home)
+        ca = int(cur_away)
+    except Exception:
+        return 999
+    return int(max(abs(ch - ph), abs(ca - pa)))
+
+
+def _spread_move_points(prev_home_spread: Any, cur_home_spread: Any) -> float:
+    try:
+        if prev_home_spread is None or cur_home_spread is None:
+            return 0.0
+        return abs(float(cur_home_spread) - float(prev_home_spread))
+    except Exception:
+        return 0.0
+
+
+def _build_simulation_projection(game: dict[str, Any], fair_home_prob: float) -> dict[str, Any]:
+    total = game.get("total")
+    try:
+        total_f = float(total) if total is not None else None
+    except Exception:
+        total_f = None
+    if total_f is None or total_f <= 0:
+        total_f = 214.0
+    home_pts = round((total_f * fair_home_prob), 1)
+    away_pts = round(total_f - home_pts, 1)
+    return {"home": home_pts, "away": away_pts, "total": round(total_f, 1)}
+
+
 async def generate_picks_for_sport(sport_key: str, games: list) -> list:
     """Generate picks using Bayesian market consensus, conservative EV gates, and risk-aware sizing."""
     picks = []
@@ -2319,7 +2465,39 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
         if home_ml is None or away_ml is None:
             continue
 
-        consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+        cache_key = _game_model_cache_key(sport_key, game)
+        cached_model = _game_model_cache.get(cache_key)
+        now_ts = time.time()
+        consensus_recomputed = True
+        sim_recomputed = True
+        if isinstance(cached_model, dict):
+            age = now_ts - float(cached_model.get("ts", 0.0) or 0.0)
+            if age <= _GAME_MODEL_CACHE_TTL_SECONDS:
+                cents_move = _line_move_cents(
+                    cached_model.get("home_ml"),
+                    cached_model.get("away_ml"),
+                    home_ml,
+                    away_ml,
+                )
+                spread_move = _spread_move_points(cached_model.get("home_spread"), game.get("home_spread"))
+                if cents_move < AGENT_CONSENSUS_RETRIGGER_CENTS:
+                    consensus_home = float(cached_model.get("consensus_home", 0.5) or 0.5)
+                    consensus_away = float(cached_model.get("consensus_away", 0.5) or 0.5)
+                    diag = dict(cached_model.get("diag") or {})
+                    consensus_recomputed = False
+                else:
+                    consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+                if spread_move <= AGENT04_SIM_RETRIGGER_POINTS:
+                    sim_projection = dict(cached_model.get("sim_projection") or {})
+                    sim_recomputed = False
+                else:
+                    sim_projection = _build_simulation_projection(game, consensus_home)
+            else:
+                consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+                sim_projection = _build_simulation_projection(game, consensus_home)
+        else:
+            consensus_home, consensus_away, diag = market_consensus_fair_prob(game)
+            sim_projection = _build_simulation_projection(game, consensus_home)
         home_ev = expected_value_pct(home_ml, consensus_home)
         away_ev = expected_value_pct(away_ml, consensus_away)
 
@@ -2428,12 +2606,35 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
                 "sharp_money": f"{books_count} books, disagreement {disagreement_pct:.2f} pts, CI width {ci_width_pct:.2f} pts.",
                 "confirms": "Bayesian de-vig consensus, conservative EV gate, uncertainty penalty, CLV gate, calibrated confidence",
             },
-            "agents_fired": ["best_line_ev", "market_consensus", "bayesian_posterior", "confidence_calibration", "kelly_sizing"],
+            "simulation_projection": sim_projection,
+            "agents_fired": [
+                "best_line_ev",
+                "market_consensus" if consensus_recomputed else "market_consensus_cached",
+                "bayesian_posterior",
+                "simulation_model" if sim_recomputed else "simulation_cached",
+                "confidence_calibration",
+                "kelly_sizing",
+            ],
             "data_source": "odds_api",
+        }
+        _game_model_cache[cache_key] = {
+            "ts": now_ts,
+            "home_ml": home_ml,
+            "away_ml": away_ml,
+            "home_spread": game.get("home_spread"),
+            "consensus_home": consensus_home,
+            "consensus_away": consensus_away,
+            "diag": diag,
+            "sim_projection": sim_projection,
         }
         picks.append(pick)
 
     picks.sort(key=lambda x: (float(x.get("model_v2", {}).get("ensemble_score", 0.0)), float(x.get("adjusted_edge", x.get("edge", 0.0)) or 0.0)), reverse=True)
+    if len(_game_model_cache) > 8000:
+        # Keep recent model snapshots only.
+        keys = sorted(_game_model_cache.keys(), key=lambda k: float((_game_model_cache.get(k) or {}).get("ts", 0.0)))
+        for k in keys[:-4000]:
+            _game_model_cache.pop(k, None)
     return picks[: max(1, MODEL_MAX_PICKS_PER_SPORT)]
 
 
@@ -2534,8 +2735,8 @@ TIER_CONFIG = {
         "name": "Premium",
         "scan_pick_limit": 15,
         "sports_allowed": SPORTS,
-        "min_scan_interval_seconds": 300,
-        "features": ["15 picks per scan", "All sports", "+EV finder", "Refresh every 5 minutes"],
+        "min_scan_interval_seconds": 150,
+        "features": ["15 picks per scan", "All sports", "+EV finder", "Refresh every 2.5 minutes"],
     },
     PLAN_VIP: {
         "name": "VIP",
@@ -2920,6 +3121,7 @@ async def auth_session(body: AuthSessionRequest, request: Request):
         method_to_store = method or "guest"
         identifier_to_store = identifier
     profile.update({"method": method_to_store, "identifier": identifier_to_store, "updated_at": int(time.time())})
+    _mark_user_activity(user_id)
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
     return {
@@ -2959,6 +3161,7 @@ async def auth_google(body: AuthGoogleRequest, request: Request):
     rec = _ensure_growth_user(user_id)
     profile = rec.setdefault("profile_identity", {})
     profile.update({"method": "google", "identifier": email, "updated_at": int(time.time())})
+    _mark_user_activity(user_id)
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
     return {
@@ -4437,6 +4640,7 @@ async def scan(request: Request):
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     user_id = _request_user_id(request) or "anon"
+    _mark_user_activity(user_id)
     user_growth = _ensure_growth_user(user_id)
     agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
@@ -4592,6 +4796,7 @@ async def scan(request: Request):
             "served_from_cache": False,
             "cache_key": tier_cache_key,
             "cache_ttl_seconds": tier_cache_ttl,
+            "updated_at": int(now_ts),
         },
         "agent_health": _agent_health_snapshot(),
     }
