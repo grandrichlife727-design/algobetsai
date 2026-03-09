@@ -7326,14 +7326,15 @@ function parseActiveAgents(pick) {
 function renderAgentSignalBadges(activeAgents = []) {
   const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
   const plan = normalizePlan(currentPlan);
-  const premiumOn = canUsePremium();
-  const vipOn = canUseVip();
-  const tags = [];
-  if (active.has(1) || active.has(2) || !active.size) tags.push({label: '+EV', cls: 'ev'});
-  if (active.has(3)) tags.push({label: 'Sharp Steam', cls: 'steam', tier: premiumOn ? '' : 'premium'});
-  if (active.has(4)) tags.push({label: 'Public Fade', cls: 'fade', tier: premiumOn ? '' : 'premium'});
-  if (active.has(5)) tags.push({label: 'Optimal Entry', cls: 'entry', tier: vipOn ? '' : 'vip'});
-  if (!tags.length) tags.push({label: '+EV', cls: 'ev'});
+  const ids = active.size ? [...active].sort((a, b) => a - b) : [1, 2];
+  const tags = ids.map((id) => {
+    if (id === 1) return {label: 'A1 Best-Line', cls: 'ev'};
+    if (id === 2) return {label: 'A2 De-vig', cls: 'ev'};
+    if (id === 3) return {label: 'A3 Steam', cls: 'steam', tier: 'premium'};
+    if (id === 4) return {label: 'A4 Fade', cls: 'fade', tier: 'premium'};
+    if (id === 5) return {label: 'A5 Entry', cls: 'entry', tier: 'vip'};
+    return {label: `A${id}`, cls: 'ev'};
+  });
   return `<div class="agent-signal-row" aria-label="Agent intelligence signals">${tags.map((t) => {
     if (!t.tier) return `<span class="agent-signal-pill ${t.cls}">${esc(t.label)}</span>`;
     const tierName = t.tier === 'vip' ? 'VIP' : 'Premium';
