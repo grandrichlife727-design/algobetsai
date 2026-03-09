@@ -7849,7 +7849,6 @@ function renderPicks() {
         ${vipPick ? `<strong>${esc(vipPick.bet || 'VIP Pick')}</strong> ${esc(String(vipPick.odds || ''))} · ${esc(String(vipPick.game || ''))}` : 'Run scan to load today’s VIP matchup.'}
       </div>
       <div class="growth-note">${vipPick ? `Current edge: +${Number(vipPick.ev || 0).toFixed(1)}%` : 'Waiting on fresh VIP signal.'}</div>
-      <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Open VIP Core</button><button class="pf-btn" onclick="go('vip-execution')">Open VIP Execution</button></div>
     </div>
   `
     : `
