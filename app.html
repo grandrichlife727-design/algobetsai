@@ -7794,14 +7794,12 @@ function renderPicks() {
       ? `<a class="pick-book-logo" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}">${bookCode}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
       : `<span class="pick-book-logo" title="${bookLabelText}">${bookCode}</span>`;
     const analysisHtml = showDetailed
-      ? `${agentSignalBadges}
-      <div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
+      ? `<div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">CLV forecast: <strong>${esc(clvCopy)}</strong></div>
       <div class="pick-line">${stakeLine}</div>
       <div class="pick-line">${stakeDetail}</div>`
-      : `${agentSignalBadges}
-      <div class="pick-line">Upgrade to reveal fair price, CLV forecast, and exact stake guidance.</div>`;
+      : `<div class="pick-line">Upgrade to reveal fair price, CLV forecast, and exact stake guidance.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${sampleTag}
   <div class="pick-inner">
@@ -7821,6 +7819,7 @@ function renderPicks() {
       <div class="pick-sub-row">
         <span class="pick-sub-book">${pickBookHtml}</span>
       </div>
+      ${agentSignalBadges}
       <div class="pick-line" style="font-size:10px;color:var(--muted)"><button class="btn-intel" onclick="event.stopPropagation();togglePickAnalysis(${p.id})">View Intelligence</button></div>
       <details class="pick-analysis" id="ana-${p.id}">
         <summary>Analysis</summary>
