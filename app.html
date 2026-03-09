@@ -1121,7 +1121,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="stat s-violet"><div class="stat-val" id="home-plan" style="color:var(--violet)">FREE</div><div class="stat-label">Current plan</div></div>
       </div>
       <div class="scan-policy-note" id="scan-policy-note"></div>
-      <div id="potd-dashboard"></div>
       <div class="home-plan-showcase" id="home-plan-showcase">
         <div class="hps-top">
           <div>
@@ -1169,6 +1168,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
         </div>
       </div>
+      <div id="potd-dashboard"></div>
       <details class="agent-accordion">
         <summary><span>How the 5-Agent Edge Engine works</span><span>View</span></summary>
         <div class="agent-body">
@@ -1206,11 +1206,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title">Today's Top Edges</div>
           <div id="home-top-picks" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:48%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:86%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:60%"></span></div>
           <div class="rf-row"><button class="pf-btn primary" data-home-cta="picks_preview" onclick="go('picks')">View All Picks</button></div>
-        </div>
-        <div class="growth-card" id="home-card-vip" data-home-card="vip_snapshot">
-          <div class="growth-title">VIP Pick of the Day</div>
-          <div id="home-vip" class="growth-sub"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:56%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:78%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:44%"></span></div>
-          <div class="rf-row"><button class="paywall-cta" data-home-cta="vip_snapshot" onclick="go('tools')">Open Tools</button> <span class="vip-chip">VIP Discord</span></div>
         </div>
       </div>
       <div class="home-secondary">
@@ -4179,6 +4174,21 @@ function renderPotdCard(pick) {
   </div>`;
 }
 
+function renderPotdLockedCard(pick) {
+  if (!pick) return '';
+  const inner = renderPotdCard(pick);
+  return `<div class="feature-lock" style="margin-bottom:10px">
+    <div class="blur-wrap" style="filter:blur(5px)">${inner}</div>
+    <div class="lock-overlay">
+      <div class="lock-card">
+        <div class="lock-title">🔒 VIP Pick of the Day</div>
+        <div class="lock-sub">Unlock full VIP POTD details and execution context.</div>
+        <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function isSamePickSignature(a, b) {
   if (!a || !b) return false;
   const betA = String(a.bet || '').trim().toLowerCase();
@@ -4193,9 +4203,10 @@ function isSamePickSignature(a, b) {
 
 function renderPOTD(pick) {
   if (!pick) return;
-  const html = renderPotdCard(pick);
   const dashEl = document.getElementById('potd-dashboard');
-  if (dashEl) dashEl.innerHTML = html;
+  if (dashEl) {
+    dashEl.innerHTML = canUseVip() ? renderPotdCard(pick) : renderPotdLockedCard(pick);
+  }
 }
 
 async function loadPOTD() {
@@ -6174,8 +6185,8 @@ function togglePlanCards() {
 function applyHomeExperimentLayout() {
   const grid = document.getElementById('home-grid');
   if (!grid) return;
-  const orderA = ['home-card-picks', 'home-card-vip', 'home-card-market'];
-  const orderB = ['home-card-picks', 'home-card-vip', 'home-card-market'];
+  const orderA = ['home-card-picks', 'home-card-market'];
+  const orderB = ['home-card-picks', 'home-card-market'];
   const order = HOME_AB === 'B' ? orderB : orderA;
   order.forEach(id => {
     const node = document.getElementById(id);
@@ -6238,9 +6249,9 @@ function setHomeScanFeedback(text, tone = '') {
 }
 
 function renderHomeModules() {
+  if (POTD_DATA?.pick) renderPOTD(POTD_DATA.pick);
   const topEl = document.getElementById('home-top-picks');
   const premiumEl = document.getElementById('home-premium');
-  const vipEl = document.getElementById('home-vip');
   const glanceEl = document.getElementById('home-market-kpis');
   const trendEl = document.getElementById('home-trending');
   const resultEl = document.getElementById('home-results');
@@ -6336,24 +6347,6 @@ function renderHomeModules() {
         </div>`;
     }
   }
-  if (vipEl) {
-    const pod = getVipPickOfDay();
-    const liveCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
-    if (canUseVip()) {
-      if (pod) {
-        vipEl.innerHTML = `<strong>${esc(pod.bet)} ${esc(pod.odds)}</strong> · +${Number(pod.ev || 0).toFixed(1)}% edge<div style="margin-top:4px">VIP live plays tracked: ${liveCt}</div>`;
-      } else {
-        vipEl.innerHTML = `Run scan to load your VIP Pick of the Day.<div style="margin-top:4px">VIP live plays tracked: ${liveCt}</div>`;
-      }
-    } else {
-      const teaser = pod ? `${esc(pod.bet)} ${esc(pod.odds)} · +${Number(pod.ev || 0).toFixed(1)}% edge` : 'VIP Pick of the Day';
-      vipEl.innerHTML = `<div style="position:relative"><div style="filter:blur(3px);opacity:.9;user-select:none;pointer-events:none"><div>${teaser}</div></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP PICK LOCKED</div><div style="font-size:12px;color:var(--sub)">Unlock the VIP Pick of the Day and Discord access</div><button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock VIP</button></div></div></div>`;
-    }
-  }
-  const vipBtn = document.querySelector('#home-card-vip [data-home-cta="vip_snapshot"]');
-  if (vipBtn) vipBtn.textContent = HOME_AB === 'B' ? 'Unlock VIP' : 'Open VIP';
-  setHomeCardVisible('home-card-vip', !!homeFlags.show_vip_snapshot);
-
   if (glanceEl) {
     glanceEl.innerHTML = `<span class="market-kpi">3 games</span><span class="market-kpi">2 books</span><span class="market-kpi">3 edges</span>`;
   }
