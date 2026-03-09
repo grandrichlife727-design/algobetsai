@@ -478,6 +478,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tool-btn-label{display:inline-flex;align-items:center;gap:7px}
 .tool-btn-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;opacity:.9;flex-shrink:0}
 .tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tools-topline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 10px}
+.tools-count{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.35px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(34,211,238,.32);background:rgba(34,211,238,.1)}
+.tools-section{margin-top:10px}
+.tools-section-title{font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
 .tool-tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;min-height:128px}
 .tool-tile:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
 .tool-tile.tool-lock{opacity:.72;position:relative}
@@ -487,6 +491,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tool-tile-ico{width:30px;height:30px;color:var(--cyan)}
 .tool-tile-title{font-size:14px;font-weight:800;color:var(--text)}
 .tool-tile-sub{font-size:11px;color:var(--sub);line-height:1.35}
+.tool-tile-meta{font-size:10px;font-family:var(--mono);color:var(--muted);line-height:1.35;border-top:1px dashed var(--border);padding-top:6px;margin-top:auto;width:100%}
 @media(max-width:520px){.tools-grid{gap:8px}.tool-tile{padding:12px;min-height:116px}.tool-tile-title{font-size:13px}.tool-tile-sub{font-size:10px}}
 .pick-explain{font-size:12px;color:var(--sub);line-height:1.6;padding:0 12px 12px 14px;display:none}
 .pick-explain.on{display:block}.pick-explain strong{color:var(--text)}
@@ -1667,43 +1672,68 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-tools" style="display:none">
-      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Tap a tile to open a focused workflow.</div></div>
-      <div class="tools-grid">
-        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">
-          <span class="tool-badge premium">Premium</span>
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <div class="tool-tile-title">+EV Finder</div>
-          <div class="tool-tile-sub">High-value pricing gaps and fair-value edges.</div>
-        </button>
-        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">
-          <span class="tool-badge premium">Premium</span>
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l3-8 4 16 2-8h2"/></svg>
-          <div class="tool-tile-title">Steam Moves</div>
-          <div class="tool-tile-sub">Sharp pressure and fast line movement alerts.</div>
-        </button>
-        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">
-          <span class="tool-badge premium">Premium</span>
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-          <div class="tool-tile-title">Public Fades</div>
-          <div class="tool-tile-sub">Contrarian entries when the crowd is heavy.</div>
-        </button>
-        <button class="tool-tile tool-gated" data-tier="vip" onclick="go('vip-execution')">
-          <span class="tool-badge vip">VIP</span>
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 10-13h-7z"/></svg>
-          <div class="tool-tile-title">VIP Execution</div>
-          <div class="tool-tile-sub">Timing, CLV tracking, and market-depth workflow.</div>
-        </button>
-        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">
-          <span class="tool-badge premium">Premium</span>
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-          <div class="tool-tile-title">Parlay Builder</div>
-          <div class="tool-tile-sub">Build tickets and check correlation risk before placing.</div>
-        </button>
-        <button class="tool-tile" onclick="go('boost')">
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
-          <div class="tool-tile-title">Odds Calculator</div>
-          <div class="tool-tile-sub">Compare normal vs boosted odds and see true value fast.</div>
-        </button>
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Use focused workflows for edge finding, execution timing, and sizing decisions.</div></div>
+      <div class="tools-topline">
+        <div class="growth-note" id="tools-af-note">Tracking tool usage...</div>
+        <span class="tools-count" id="tools-feature-count">12 Features Active</span>
+      </div>
+      <div class="tools-section">
+        <div class="tools-section-title">Core Tools</div>
+        <div class="tools-grid">
+          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">
+            <span class="tool-badge premium">Premium</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <div class="tool-tile-title">Market Edge Finder</div>
+            <div class="tool-tile-sub">High-value pricing gaps and fair-value edges.</div>
+            <div class="tool-tile-meta" id="tool-meta-ev">Today: — edges · Last sync: —</div>
+          </button>
+          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('props','premium')">
+            <span class="tool-badge premium">Premium</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>
+            <div class="tool-tile-title">Props Edge Lab</div>
+            <div class="tool-tile-sub">Player-market edges with best available book pricing.</div>
+            <div class="tool-tile-meta" id="tool-meta-props">Today: — props · Coverage: NBA/NFL</div>
+          </button>
+          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">
+            <span class="tool-badge premium">Premium</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l3-8 4 16 2-8h2"/></svg>
+            <div class="tool-tile-title">Steam Velocity Monitor</div>
+            <div class="tool-tile-sub">Sharp pressure and fast line movement alerts.</div>
+            <div class="tool-tile-meta" id="tool-meta-steam">Today: — moves · Status: market watch</div>
+          </button>
+          <button class="tool-tile tool-gated" data-tier="vip" onclick="go('vip-execution')">
+            <span class="tool-badge vip">VIP</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 10-13h-7z"/></svg>
+            <div class="tool-tile-title">VIP Execution Desk</div>
+            <div class="tool-tile-sub">Timing, CLV tracking, and market-depth workflow.</div>
+            <div class="tool-tile-meta" id="tool-meta-vip">Live windows: — · CLV ticker: active</div>
+          </button>
+        </div>
+      </div>
+      <div class="tools-section">
+        <div class="tools-section-title">Pro Labs</div>
+        <div class="tools-grid">
+          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">
+            <span class="tool-badge premium">Premium</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+            <div class="tool-tile-title">Contrarian Fade Radar</div>
+            <div class="tool-tile-sub">Contrarian entries when the crowd is heavy.</div>
+            <div class="tool-tile-meta" id="tool-meta-fades">Today: — fade spots · Crowd skew tracked</div>
+          </button>
+          <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">
+            <span class="tool-badge premium">Premium</span>
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+            <div class="tool-tile-title">Correlation Parlay Lab</div>
+            <div class="tool-tile-sub">Build tickets and check correlation risk before placing.</div>
+            <div class="tool-tile-meta" id="tool-meta-parlay">Current ticket: — legs · Risk check ready</div>
+          </button>
+          <button class="tool-tile" onclick="go('boost')">
+            <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+            <div class="tool-tile-title">Boost Edge Analyzer</div>
+            <div class="tool-tile-sub">Compare normal vs boosted odds and measure true value fast.</div>
+            <div class="tool-tile-meta" id="tool-meta-boost">Promo check: ready · EV delta in 1 tap</div>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -4095,6 +4125,30 @@ function renderPremiumTools() {
   if (noteEl) noteEl.textContent = PREMIUM_SETTINGS.recap_target
     ? `Daily recap saved to ${PREMIUM_SETTINGS.recap_channel}: ${PREMIUM_SETTINGS.recap_target}`
     : 'Not configured.';
+}
+
+function renderToolsWorkspace() {
+  const evCt = Array.isArray(EVDATA) ? EVDATA.length : 0;
+  const propsCt = Array.isArray(PROPSDATA) ? PROPSDATA.length : 0;
+  const steamCt = Array.isArray(STEAMDATA) ? STEAMDATA.length : 0;
+  const fadeCt = Array.isArray(FADESDATA) ? FADESDATA.length : 0;
+  const vipCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
+  const parlayCt = Array.isArray(legs) ? legs.length : 0;
+  const lastSync = lastRefresh ? timeAgo(lastRefresh) : 'not synced yet';
+  const featureCount = canUseVip() ? 12 : canUsePremium() ? 10 : 8;
+
+  const setText = (id, txt) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  };
+  setText('tool-meta-ev', `Today: ${evCt} edges · Last sync: ${lastSync}`);
+  setText('tool-meta-props', `Today: ${propsCt} props · Coverage: NBA/NFL`);
+  setText('tool-meta-steam', `Today: ${steamCt} moves · Status: market watch`);
+  setText('tool-meta-vip', `Live windows: ${vipCt} · CLV ticker: active`);
+  setText('tool-meta-fades', `Today: ${fadeCt} fade spots · Crowd skew tracked`);
+  setText('tool-meta-parlay', `Current ticket: ${parlayCt} legs · Risk check ready`);
+  setText('tool-meta-boost', 'Promo check: ready · EV delta in 1 tap');
+  setText('tools-feature-count', `${featureCount} Features Active`);
 }
 
 function loadVipSettings() {
@@ -7621,6 +7675,7 @@ async function doScan(silent = false) {
   renderSteam();
   renderFades();
   renderPremiumTools();
+  renderToolsWorkspace();
   renderHomeModules();
   renderVipTools();
   if (currentTab === 'perf') renderPerf();
@@ -8647,6 +8702,7 @@ function go(name) {
   if (name === 'props') loadProps();
   if (name === 'steam') renderSteam();
   if (name === 'fades') renderFades();
+  if (name === 'tools') renderToolsWorkspace();
   if (name === 'premium') renderPremiumTools();
   if (name === 'home') updateHomeSummary();
   if (name === 'perf') loadPerformance();
