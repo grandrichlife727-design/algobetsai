@@ -938,25 +938,17 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <span class="logo-name"><span class="brand-main">AlgoBets</span><span class="brand-ai">Ai</span></span>
   </div>
   <span class="nav-section">Navigation</span>
-  <button class="nav-item active" onclick="go('home')">
+  <button class="nav-item active" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-    Dashboard
-  </button>
-  <button class="nav-item" onclick="go('picks')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-    Picks <span class="nav-badge" id="nb-picks">0</span>
+    Feed <span class="nav-badge" id="nb-picks">0</span>
   </button>
   <button class="nav-item" onclick="go('tools')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M10 2h4v4h-4z"/></svg>
     Tools
   </button>
-  <button class="nav-item" onclick="go('offers')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
-    Offers
-  </button>
-  <button class="nav-item" onclick="go('history')">
+  <button class="nav-item" onclick="go('perf')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    History
+    Performance
   </button>
   <button class="nav-item" id="settings-btn" onclick="go('profile')" title="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
@@ -1081,7 +1073,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           </div>
         </div>
       </div>
-      <details class="agent-accordion">
+      <details class="agent-accordion" style="display:none">
         <summary><span>How the 5-Agent Edge Engine works</span><span>View</span></summary>
         <div class="agent-body">
           <div class="agent-sub">Context-aware engine: each pick can trigger a different subset of agents based on market conditions.</div>
@@ -1552,20 +1544,25 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-tools" style="display:none">
-      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Tools powered by the 5-Agent Edge Engine.</div></div>
+      <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Action-first layout: three buckets, less navigation clutter.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
-          <div class="growth-title">Core Tools</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg><span>Parlay Builder</span></span> <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('history')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg><span>Bet Tracker</span></span></button></div>
-          <div class="rf-row"><button class="pf-btn" onclick="go('boost')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg><span>Payout Calculator</span></span></button></div>
+          <div class="growth-title">Market Intelligence</div>
+          <div class="growth-sub">Merged flow for +EV, Steam, and Public Fades.</div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">+EV Finder</button><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">Steam</button></div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')">Public Fades</button><button class="pf-btn" onclick="go('odds')">Live Odds</button></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Market Tools</div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Steam Moves</span></span> <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('fades','premium')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M5 17c.8-2 2.2-3 3-3s2.2 1 3 3"/><path d="M13 17c.8-2 2.2-3 3-3s2.2 1 3 3"/><path d="M3 6h18"/></svg><span>Public Fades</span></span> <span class="nav-badge">Premium</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-alerts','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/><path d="M10 20a2 2 0 004 0"/></svg><span>Line Rush Alerts</span></span> <span class="nav-badge">VIP</span></button></div>
-          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="vip" onclick="openTierFeature('vip-execution','vip')"><span class="tool-btn-label"><svg class="tool-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Sharp Money Tracker</span></span> <span class="nav-badge">VIP</span></button></div>
+          <div class="growth-title">Bet Construction</div>
+          <div class="growth-sub">Parlay Builder + Boost Checker in one construction bucket.</div>
+          <div class="rf-row"><button class="pf-btn tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">Parlay Builder</button><button class="pf-btn" onclick="go('boost')">Boost Checker</button></div>
+          <div class="growth-note">Standalone payout calculator removed from nav. Use Parlay Builder for payout + correlation context.</div>
+        </div>
+        <div class="growth-card">
+          <div class="growth-title">Bet Tracker</div>
+          <div class="growth-sub">History + journal in one tracking flow.</div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('history')">Open Bet History</button><button class="pf-btn" onclick="go('perf')">Track Record</button></div>
+          <div class="growth-note">Performance view focuses on long-run ROI and edge realized.</div>
         </div>
       </div>
     </div>
@@ -1663,6 +1660,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="agent-row"><span>Sharp-Book Weighting</span><span style="color:var(--green);font-family:var(--mono);font-weight:700">+5.7%</span><span style="color:var(--cyan);font-family:var(--mono)">+3.6</span></div>
         <div class="agent-row"><span>Steam Moves</span><span style="color:var(--amber);font-family:var(--mono);font-weight:700">+3.9%</span><span style="color:var(--amber);font-family:var(--mono)">+8.0</span></div>
         <div class="agent-row"><span>Public Fades</span><span style="color:var(--sub);font-family:var(--mono);font-weight:700">+2.6%</span><span style="color:var(--sub);font-family:var(--mono)">+5.0</span></div>
+      </div>
+      <div class="growth-card" style="margin-top:10px">
+        <div class="growth-title">Bet Tracker Snapshot</div>
+        <div class="growth-sub" id="perf-history-preview">No tracked bets yet.</div>
+        <div class="rf-row"><button class="pf-btn" onclick="go('history')">Open Full Bet Tracker</button></div>
       </div>
       <div class="wf-grid">
         <div class="wf-card">
@@ -1924,68 +1926,23 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
 </div></main>
-</div><nav class="mobile-nav" id="mobile-nav">
-  <button class="mnav-btn active" id="mn-home" onclick="go('home')">
+</div><nav class="mobile-nav" id="mobile-nav" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+  <button class="mnav-btn active" id="mn-picks" onclick="go('picks')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-    <span class="mnav-label">Dashboard</span>
+    <span class="mnav-label">Feed</span>
   </button>
-  <button class="mnav-btn" id="mn-picks" onclick="go('picks')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-    <span class="mnav-label">Picks</span>
+  <button class="mnav-btn" id="mn-tools" onclick="go('tools')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+    <span class="mnav-label">Tools</span>
   </button>
-  <div class="mnav-premium-wrap">
-  <button class="mnav-btn" id="mn-tools" onclick="currentTab==='tools'?toggleMobilePremium(event):go('tools')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M10 2h4v4h-4z"/></svg>
-      <span class="mnav-label">Tools</span>
-    </button>
-    <div class="mnav-premium-panel" id="mnav-premium-panel" style="display:none">
-      <button class="mnav-more-item" onclick="go('premium')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Premium Home</button>
-      <button class="mnav-more-item" onclick="go('props')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 7h16M4 12h16M4 17h10'/></svg>Props Edge</button>
-      <button class="mnav-more-item" onclick="go('ev')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>+EV</button>
-      <button class="mnav-more-item" onclick="go('steam')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'/></svg>Steam</button>
-      <button class="mnav-more-item" onclick="go('fades')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='8' cy='10' r='2'/><circle cx='16' cy='10' r='2'/><path d='M5 17c.8-2 2.2-3 3-3s2.2 1 3 3'/><path d='M13 17c.8-2 2.2-3 3-3s2.2 1 3 3'/><path d='M3 6h18'/></svg>Fades</button>
-      <button class="mnav-more-item" onclick="go('parlay')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2v20M2 12h20'/></svg>Parlay</button>
-    </div>
-  </div>
-  <button class="mnav-btn" id="mn-offers" onclick="go('offers')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>
-    <span class="mnav-label">Offers</span>
+  <button class="mnav-btn" id="mn-perf" onclick="go('perf')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    <span class="mnav-label">Performance</span>
   </button>
-  <div class="mnav-vip-wrap">
-    <button class="mnav-btn" id="mn-settings" onclick="currentTab==='profile'?toggleMobileVip(event):go('profile')" title="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
-      <span class="mnav-label">Settings</span>
-    </button>
-    <div class="mnav-vip-panel" id="mnav-vip-panel" style="display:none">
-      <button class="mnav-more-item" onclick="go('vip')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 8l4.5 5L12 5l4.5 8L21 8l-2 11H5L3 8z'/><path d='M8 19h8'/></svg>VIP Home</button>
-      <button class="mnav-more-item" onclick="go('vip-core')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z'/></svg>Core Edge</button>
-      <button class="mnav-more-item" onclick="go('vip-execution')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>Execution</button>
-      <button class="mnav-more-item" onclick="go('vip-portfolio')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Portfolio</button>
-      <button class="mnav-more-item" onclick="go('vip-alerts')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5'/><path d='M10 20a2 2 0 004 0'/></svg>Alerts</button>
-      <button class="mnav-more-item" onclick="go('vip-discord')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/></svg>VIP Discord</button>
-      <button class="mnav-more-item" onclick="go('vip-reports')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5a2 2 0 012-2h11l3 3v13a2 2 0 01-2 2H6a2 2 0 01-2-2z'/><path d='M14 3v4h4'/><path d='M8 12h8M8 16h6'/></svg>Reports</button>
-    </div>
-  </div>
-  <button class="mnav-btn" id="mn-odds" onclick="go('odds')" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    <span class="mnav-label">Odds</span>
+  <button class="mnav-btn" id="mn-settings" onclick="go('profile')" title="Profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
+    <span class="mnav-label">Profile</span>
   </button>
-  <div class="mnav-more-wrap" style="display:none">
-    <button class="mnav-btn" id="mn-more" onclick="toggleMobileMore(event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-      <span class="mnav-label">More</span>
-    </button>
-    <div class="mnav-more-panel" id="mnav-more-panel">
-      <button class="mnav-more-item" onclick="go('more')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='5' r='1.5'/><circle cx='12' cy='12' r='1.5'/><circle cx='12' cy='19' r='1.5'/></svg>More Hub</button>
-      <div class="mnav-more-sec">Advanced</div>
-      <button class="mnav-more-item" onclick="go('boost')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>Boost</button>
-      <button class="mnav-more-item" onclick="go('perf')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 20V10M12 20V4M6 20v-6'/></svg>Record</button>
-      <button class="mnav-more-item" onclick="go('history')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 8v5l3 2'/><circle cx='12' cy='12' r='9'/></svg>History</button>
-      <button class="mnav-more-item" onclick="go('community')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>Social</button>
-      <button class="mnav-more-item" onclick="go('profile')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='8' r='4'/><path d='M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5'/></svg>Profile</button>
-      <button class="mnav-more-item" onclick="go('offers')"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 12v8H4v-8'/><path d='M2 7h20v5H2z'/><path d='M12 22V7'/></svg>Offers</button>
-    </div>
-  </div>
 </nav>
 <div class="mobile-fab" id="mobile-fab">
   <button class="fab-btn" id="fab-btn" onclick="toggleMobileFab(event)" aria-label="Quick actions" title="Quick actions">
@@ -2283,7 +2240,7 @@ let newsImpactFetchedAt = 0;
 let perfFetchedAt = 0;
 let lastRefresh = null;
 let isScanning = false;
-let currentTab = 'home';
+let currentTab = 'picks';
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
@@ -7838,6 +7795,18 @@ function renderPerf() {
   if (pfOpen) pfOpen.textContent = `${open}`;
   if (pfStreak) pfStreak.textContent = `${Number(streak.current_days || 0)}d`;
   if (pfGraded) pfGraded.textContent = `${graded}`;
+  const perfHistEl = document.getElementById('perf-history-preview');
+  if (perfHistEl) {
+    let tracked = [];
+    try {
+      tracked = JSON.parse(localStorage.getItem(SAVED_PICKS_KEY) || '[]');
+      if (!Array.isArray(tracked)) tracked = [];
+    } catch (_) {
+      tracked = [];
+    }
+    const rows = tracked.slice(0, 3).map((p, i) => `${i + 1}. ${String(p?.bet || 'Pick')} ${String(p?.odds || '')} · +${Number(p?.ev || 0).toFixed(1)}% EV`);
+    perfHistEl.innerHTML = rows.length ? rows.map(r => `<div style="margin-bottom:4px">${esc(r)}</div>`).join('') : 'No tracked bets yet.';
+  }
 
   const rows = Array.isArray(o.monthly_units) && o.monthly_units.length
     ? o.monthly_units
@@ -8274,6 +8243,7 @@ function openTierFeature(tab, tier = 'free') {
 }
 
 function go(name) {
+  if (name === 'home') name = 'picks';
   if (name === 'more') name = 'tools';
   if (!ALL_TABS.includes(name)) return;
   if (name === 'vip-discord' && !canUseVip()) {
