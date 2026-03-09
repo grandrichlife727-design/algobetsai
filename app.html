@@ -1518,6 +1518,27 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
     <div id="v-vip-execution" style="display:none">
       <div class="page-hdr"><div class="page-title">VIP <span>Execution</span></div><div class="page-sub">CLV tracking, timing engine, and market-depth context.</div></div>
+      <details class="agent-accordion" open>
+        <summary>
+          <span>Pro Tips: Mastering the VIP Execution Engine</span>
+          <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">How to use</span>
+        </summary>
+        <div class="agent-body">
+          <div class="agent-sub">
+            Long-term edge comes from price quality, not just pick quality. This panel helps you beat the closing line by executing faster and more selectively.
+          </div>
+          <div class="agent-sub" style="margin-top:8px"><strong>1. Line Rush Protocol</strong></div>
+          <div class="agent-sub">When a line starts moving fast (example: -3.5 to -5.0), the value window is closing. In most cases, you have roughly 60-120 seconds to act before retail books fully adjust.</div>
+          <div class="agent-sub" style="margin-top:8px"><strong>2. Read the CLV Ticker</strong></div>
+          <div class="agent-sub">If you bet at -110 and it closes -130, that is positive CLV. Use the ticker to identify which agent is currently beating the market and weight your next entries toward that signal cluster.</div>
+          <div class="agent-sub" style="margin-top:8px"><strong>3. Execution Status Signals</strong></div>
+          <div class="agent-sub">`Green (Bet Now)`: fair-value peak is fading, execute now.</div>
+          <div class="agent-sub">`Yellow (Hold)`: volatile window, likely rebound path, wait for better entry.</div>
+          <div class="agent-sub">`Red (Stale)`: move already happened, do not chase.</div>
+          <div class="agent-sub" style="margin-top:8px"><strong>4. One-Tap Presets</strong></div>
+          <div class="agent-sub">Use A-grade and +EV filters, then jump directly via one-tap sportsbook links. In execution windows, speed plus discipline is the advantage.</div>
+        </div>
+      </details>
       <div id="vip-execution-gate" class="feature-lock" style="display:none;margin-top:0">
         <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
           <div class="lock-card">
@@ -7813,7 +7834,18 @@ function renderPicks() {
         .trim()
     )
     : '';
-  const vipTeaser = !vipOn ? `
+  const vipTeaser = vipOn
+    ? `
+    <div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,183,0,.35);background:linear-gradient(135deg,rgba(255,183,0,.1),rgba(139,92,246,.09))">
+      <div class="growth-title vip-title"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;color:var(--amber);font-size:16px;line-height:1">♛</span>VIP Pick of the Day</div>
+      <div class="growth-sub" style="margin-top:6px">
+        ${vipPick ? `<strong>${esc(vipPick.bet || 'VIP Pick')}</strong> ${esc(String(vipPick.odds || ''))} · ${esc(String(vipPick.game || ''))}` : 'Run scan to load today’s VIP matchup.'}
+      </div>
+      <div class="growth-note">${vipPick ? `Current edge: +${Number(vipPick.ev || 0).toFixed(1)}%` : 'Waiting on fresh VIP signal.'}</div>
+      <div class="rf-row"><button class="pf-btn" onclick="go('vip-core')">Open VIP Core</button><button class="pf-btn" onclick="go('vip-execution')">Open VIP Execution</button></div>
+    </div>
+  `
+    : `
     <div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,183,0,.35);background:linear-gradient(135deg,rgba(255,183,0,.08),rgba(139,92,246,.07))">
       <div class="growth-title vip-title"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;color:var(--amber);font-size:16px;line-height:1">♛</span>VIP Pick of the Day</div>
       <div style="position:relative;margin-top:6px">
@@ -7824,12 +7856,12 @@ function renderPicks() {
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
           <div style="background:rgba(6,6,10,.9);border:1px solid var(--border2);border-radius:10px;padding:8px 10px;text-align:center">
             <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">VIP PICK LOCKED</div>
-            <button class="paywall-cta" onclick="openUpgradePicker()">Unlock VIP Pick</button>
+            <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Pick</button>
           </div>
         </div>
       </div>
     </div>
-  ` : '';
+  `;
   let displayList = renderList;
   const canBackfillTeasers = filter === 'all' && pickMarket === 'all' && Number(pickMinEdge || 0) === 0 && Number(pickMinConf || 0) === 0;
   if (isFreePlan && canBackfillTeasers && renderList.length < freePreviewLimit) {
