@@ -1591,7 +1591,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
           <div class="growth-title vip-title"><span class="vip-ico">📡</span>VIP Live Plays</div>
           <div class="growth-sub" id="vip-live-note"><span class="skeleton skeleton-shimmer" style="display:inline-block;height:10px;width:170px;vertical-align:middle"></span></div>
           <div class="picks-list" id="vip-live-list"></div>
-          <div class="rf-row"><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
+          <div class="rf-row"><button class="pf-btn" onclick="go('live')">Open Live Execution</button><button class="pf-btn" onclick="refreshVipLivePlays(true)">Refresh Live Plays</button></div>
           <div class="growth-note">Budget guard: capped games + throttled refresh + cache fallback.</div>
         </div>
       </div>
@@ -1738,7 +1738,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-live" style="display:none">
-      <div class="page-hdr"><div class="page-title">In-Game <span>Mode</span></div><div class="page-sub">Near-kickoff and live windows with faster pricing shifts</div></div>
+      <div class="page-hdr"><div class="page-title">VIP Live <span>Execution</span></div><div class="page-sub">In-game and near-start windows with fast price shifts and execution timing</div></div>
       <div class="picks-list" id="live-list"></div>
     </div>
 
@@ -3299,7 +3299,44 @@ function renderLive() {
   `).join('');
 }
 
+function renderLiveVipGate() {
+  const el = document.getElementById('live-list');
+  if (!el) return;
+  const preview = normalizeVipLiveRows(VIP_LIVE_STATE.cached).slice(0, 2);
+  const rows = preview.length
+    ? preview.map(r => `
+      <div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
+        <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
+        <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String((r.home_ml || 0) > 0 ? '+' + r.home_ml : r.home_ml || ''))} · ${esc(r.away_team || 'Away')} ${esc(String((r.away_ml || 0) > 0 ? '+' + r.away_ml : r.away_ml || ''))}</div>
+      </div>
+    `).join('')
+    : `<div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
+        <div class="live-top"><div><strong>NBA</strong> · Knicks @ Celtics</div><div class="live-min">12m live</div></div>
+        <div class="props-meta">Knicks +145 · Celtics -165</div>
+      </div>
+      <div class="live-card" style="filter:blur(2.2px);opacity:.82;user-select:none;pointer-events:none">
+        <div class="live-top"><div><strong>NFL</strong> · Bills @ Chiefs</div><div class="live-min">9m to start</div></div>
+        <div class="props-meta">Bills +128 · Chiefs -148</div>
+      </div>`;
+  el.innerHTML = `
+    <div class="feature-lock" style="display:block;margin:0 0 10px">
+      <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
+        <div class="lock-card">
+          <div class="lock-title">VIP Live Execution - VIP Only</div>
+          <div class="lock-sub">Live picks, timing windows, and faster execution prompts are reserved for VIP.</div>
+          <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Upgrade to VIP</button>
+        </div>
+      </div>
+    </div>
+    ${rows}
+  `;
+}
+
 async function loadLive() {
+  if (!canUseVip()) {
+    renderLiveVipGate();
+    return;
+  }
   if (demoMode && LIVEDATA.length) {
     renderLive();
     return;
