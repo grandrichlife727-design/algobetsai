@@ -113,7 +113,7 @@ LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
 SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
-ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "15") or 15)
+ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "20") or 20)
 ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "true")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
@@ -3161,7 +3161,8 @@ async def auth_session(body: AuthSessionRequest, request: Request):
         method_to_store = method or "guest"
         identifier_to_store = identifier
     profile.update({"method": method_to_store, "identifier": identifier_to_store, "updated_at": int(time.time())})
-    _mark_user_activity(user_id)
+    if method_to_store != "guest" and _is_registered_user_id(user_id):
+        _mark_user_activity(user_id)
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
     return {
@@ -3201,7 +3202,8 @@ async def auth_google(body: AuthGoogleRequest, request: Request):
     rec = _ensure_growth_user(user_id)
     profile = rec.setdefault("profile_identity", {})
     profile.update({"method": "google", "identifier": email, "updated_at": int(time.time())})
-    _mark_user_activity(user_id)
+    if _is_registered_user_id(user_id):
+        _mark_user_activity(user_id)
     _save_growth_db()
     token = _issue_hs256_jwt(user_id)
     return {
@@ -4681,7 +4683,9 @@ async def scan(request: Request):
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     user_id = _request_user_id(request) or "anon"
     woke_from_idle = bool(ACTIVE_USER_GUARD_ENABLED and not _has_recent_active_users())
-    _mark_user_activity(_request_activity_key(request, user_id))
+    # Budget guard: only authenticated/registered sessions wake the backend.
+    if _is_registered_user_id(user_id):
+        _mark_user_activity(user_id)
     user_growth = _ensure_growth_user(user_id)
     agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
