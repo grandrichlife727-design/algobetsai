@@ -1142,7 +1142,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
               <div>2-minute auto refresh</div>
               <div>Parlay builder</div>
             </div>
-            <div class="hps-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial (Card Required)</button></div>
+            <div class="hps-cta"><button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button></div>
           </div>
           <div class="hps-col vip">
             <div class="hps-k">VIP</div>
@@ -1245,10 +1245,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
       </div>
       <div class="error-banner" id="err-banner" role="status" aria-live="polite"></div>
       <div class="trial-card" id="trial-card">
-        <div class="trial-copy" id="trial-copy"><strong>Start Premium 3-day trial</strong> with card on file. Cancel before trial ends to avoid charges.</div>
+        <div class="trial-copy" id="trial-copy"><strong>Start Premium 3-day trial</strong>. Cancel before trial ends to avoid charges.</div>
         <div class="trial-actions">
           <button class="trial-dismiss" onclick="dismissTrialCard()">Later</button>
-          <button class="trial-claim" onclick="claimFreeTrial()">Start 3-Day Trial (Card Required)</button>
+          <button class="trial-claim" onclick="claimFreeTrial()">Start 3-Day Trial</button>
         </div>
       </div>
       <div class="paywall-card" id="paywall-card">
@@ -2156,7 +2156,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
   <div class="auth-modal">
     <div class="auth-topline">
       <div class="auth-title" id="auth-title">Sign In or Create Account</div>
-      <div class="auth-chip">No card required</div>
+      <div class="auth-chip">Instant access</div>
     </div>
     <div class="auth-sub" id="auth-sub">Save your picks, alerts, and billing across devices.</div>
     <div class="auth-methods">
@@ -6587,7 +6587,7 @@ function updateTrialCard() {
     const dismissBtn = card.querySelector('.trial-dismiss');
 
     if (trialActive) {
-      copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. Card on file will be charged unless you cancel before trial ends.`;
+      copy.innerHTML = `<strong>Premium Trial Active:</strong> ${fmtCountdown(secs)} left. Charges begin unless you cancel before trial ends.`;
       if (claimBtn) {
         claimBtn.disabled = false;
         claimBtn.textContent = 'Manage Billing';
@@ -6614,11 +6614,11 @@ function updateTrialCard() {
     } else {
       copy.innerHTML = registered
         ? `<strong>Try Premium free for 3 days.</strong> Card required at checkout. Cancel before day 3 to avoid charges.`
-        : `<strong>Create your free account</strong>, then start a 3-day Premium trial with card on file.`;
+        : `<strong>Create your free account</strong>, then start a 3-day Premium trial.`;
     }
     if (claimBtn) {
       claimBtn.disabled = false;
-      claimBtn.textContent = !eligible ? 'Upgrade Premium' : (registered ? 'Start 3-Day Trial (Card Required)' : 'Create Account');
+      claimBtn.textContent = !eligible ? 'Upgrade Premium' : (registered ? 'Start 3-Day Trial' : 'Create Account');
       claimBtn.style.opacity = '1';
       claimBtn.onclick = !eligible ? () => openUpgradePicker() : () => claimFreeTrial();
     }
@@ -8261,7 +8261,7 @@ function renderPicks() {
         <div class="lock-card">
           <div class="lock-title">🔒 Premium pick preview</div>
           <div class="lock-sub">Unlock full side, line, and fair value.</div>
-          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial (Card Required)</button>
+          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button>
         </div>
       </div>
     </div>`;
@@ -8273,7 +8273,7 @@ function renderPicks() {
         <div class="lock-card">
           <div class="lock-title">🔒 ${hiddenCount} more picks locked</div>
           <div class="lock-sub">Upgrade to Premium to unlock full board access.</div>
-          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial (Card Required)</button>
+          <button class="paywall-cta" onclick="claimFreeTrial()">Start 3-Day Trial</button>
         </div>
       </div>
     </div>`;
