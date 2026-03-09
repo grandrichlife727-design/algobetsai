@@ -7766,10 +7766,11 @@ function renderProps() {
         <div style="margin-top:10px"><button class="paywall-cta" onclick="joinVipWaitlistPrompt('props_cap')">Join Waitlist</button></div>
       </div>`;
     } else if (propsError.type === 'plan') {
+      const vipUi = normalizePlan(currentPlan) === 'vip';
       listEl.innerHTML = `<div class="empty">
         <div class="empty-icon">🔒</div>
-        <div class="empty-title">Props are Premium+</div>
-        <div class="empty-sub">Upgrade to unlock player props.</div>
+        <div class="empty-title">${vipUi ? 'VIP session not verified' : 'Props are Premium+'}</div>
+        <div class="empty-sub">${vipUi ? 'Sign in on this device with your VIP account, then refresh Props.' : 'Upgrade to unlock player props.'}</div>
       </div>`;
     } else {
       listEl.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Props unavailable right now</div><div class="empty-sub">Budget guard or API limit may be active.</div></div>`;
