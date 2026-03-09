@@ -5598,7 +5598,7 @@ function updatePlanUi() {
     pill.className = `plan-pill ${p}`;
     pill.textContent = planLabel(p);
   }
-  if (homeShowcase) homeShowcase.style.display = p === 'free' ? '' : 'none';
+  if (homeShowcase) homeShowcase.style.display = '';
   const up = document.getElementById('upgrade-btn');
   const manage = document.getElementById('manage-btn');
   const trialBtn = document.getElementById('trial-btn');
