@@ -404,14 +404,16 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-line{font-size:11px;color:var(--sub);line-height:1.45;white-space:normal;overflow-wrap:anywhere}
 .pick-game{font-size:16px;font-weight:800;letter-spacing:-.2px;color:var(--text);margin-bottom:6px}
 .pick-primary-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
-.pick-primary-metrics{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:112px}
-.edge-metric{display:inline-flex;align-items:flex-end;gap:4px;line-height:1}
-.edge-metric-value{font-size:22px;font-family:var(--mono);font-weight:900;letter-spacing:-.6px}
-.edge-metric-unit{font-size:12px;font-family:var(--mono);font-weight:900;opacity:.92}
-.edge-metric-label{font-size:9px;font-family:var(--mono);font-weight:800;letter-spacing:.45px;text-transform:uppercase;opacity:.86;margin-bottom:2px}
-.edge-metric.high .edge-metric-value,.edge-metric.high .edge-metric-unit,.edge-metric.high .edge-metric-label{color:var(--green)}
-.edge-metric.mid .edge-metric-value,.edge-metric.mid .edge-metric-unit,.edge-metric.mid .edge-metric-label{color:var(--cyan)}
-.edge-metric.low .edge-metric-value,.edge-metric.low .edge-metric-unit,.edge-metric.low .edge-metric-label{color:var(--amber)}
+.pick-primary-metrics{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:92px}
+.edge-metric{display:inline-flex;flex-direction:column;align-items:flex-end;justify-content:center;line-height:1;padding:6px 8px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.04);min-width:78px}
+.edge-metric-value{font-size:24px;font-family:var(--mono);font-weight:900;letter-spacing:-.7px}
+.edge-metric-label{font-size:9px;font-family:var(--mono);font-weight:800;letter-spacing:.45px;text-transform:uppercase;opacity:.9;margin-top:2px}
+.edge-metric.high{border-color:rgba(0,229,160,.34);background:rgba(0,229,160,.1)}
+.edge-metric.mid{border-color:rgba(34,211,238,.34);background:rgba(34,211,238,.1)}
+.edge-metric.low{border-color:rgba(255,183,0,.34);background:rgba(255,183,0,.1)}
+.edge-metric.high .edge-metric-value,.edge-metric.high .edge-metric-label{color:var(--green)}
+.edge-metric.mid .edge-metric-value,.edge-metric.mid .edge-metric-label{color:var(--cyan)}
+.edge-metric.low .edge-metric-value,.edge-metric.low .edge-metric-label{color:var(--amber)}
 .pick-main{font-size:14px;font-weight:700;color:var(--text);line-height:1.35}
 .pick-sub-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--sub);margin-bottom:7px}
 .pick-sub-book{white-space:normal;overflow:visible;text-overflow:clip;max-width:100%;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -444,7 +446,12 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .agent-dot.locked::after{content:'\1F512';position:absolute;top:-6px;right:-5px;font-size:8px;line-height:1;background:#0c1018;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:1px}
 .system-slam{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(0,229,160,.42);background:linear-gradient(135deg,rgba(0,229,160,.22),rgba(34,211,238,.18));color:#d8fff2;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.45px;text-transform:uppercase;box-shadow:0 0 12px rgba(0,229,160,.24)}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
-.sample-corner{position:absolute;top:8px;right:8px;z-index:2}
+.sample-corner{position:static}
+.pick-corner{position:absolute;top:8px;right:8px;z-index:2;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:44%}
+.corner-conf{font-size:9px;font-weight:800;font-family:var(--mono);padding:1px 6px;border-radius:999px;line-height:1.2}
+.corner-conf.high{color:var(--green);border:1px solid rgba(0,229,160,.3);background:rgba(0,229,160,.12)}
+.corner-conf.mid{color:var(--cyan);border:1px solid rgba(34,211,238,.3);background:rgba(34,211,238,.12)}
+.corner-conf.low{color:var(--amber);border:1px solid rgba(255,183,0,.3);background:rgba(255,183,0,.12)}
 
 .chips{display:flex;gap:3px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono)}
@@ -7886,6 +7893,7 @@ function renderPicks() {
     const conf = Math.max(50, Math.min(95, Number(p.conf || 50)));
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">SAMPLE</span>` : '';
+    const cornerBadges = `<div class="pick-corner"><span class="corner-conf ${edgeClass}" title="Model confidence">${conf}%</span>${sampleTag}</div>`;
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
     const agentSignalBadges = renderAgentSignalBadges(p.activeAgents);
     const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
@@ -7922,7 +7930,7 @@ function renderPicks() {
       <div class="pick-line">${stakeDetail}</div>`
       : `<div class="pick-line">Upgrade to reveal fair price, CLV forecast, and exact stake guidance.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
-  ${sampleTag}
+  ${cornerBadges}
   <div class="pick-inner">
     <div class="pick-left">
       <div class="pick-sport-row">
@@ -7935,10 +7943,8 @@ function renderPicks() {
         <div class="pick-primary-metrics">
           <div class="edge-metric ${edgeClass}" title="Advantage over fair market price">
             <span class="edge-metric-value">${edgeVal.toFixed(1)}</span>
-            <span class="edge-metric-unit">%</span>
             <span class="edge-metric-label">Edge</span>
           </div>
-          <span class="conf-pill ${edgeClass}" title="Edge score">${edgeVal.toFixed(1)}</span>
         </div>
       </div>
       <div class="pick-sub-row">
