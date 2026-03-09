@@ -258,8 +258,9 @@ async function stripePlanForUser(env, userId) {
   return subscriptionPlan(cfg, sub);
 }
 
-async function resolveEffectivePlanForUser(env, userId, userRec, nowSec) {
+async function resolveEffectivePlanForUser(env, userId, userRec, nowSec, clientPlanHint = PLAN_FREE) {
   const storedPlan = normalizePlan(userRec?.plan || PLAN_FREE);
+  const clientPlan = normalizePlan(clientPlanHint || PLAN_FREE);
   let stripePlan = PLAN_FREE;
   try {
     stripePlan = userId ? await stripePlanForUser(env, userId) : PLAN_FREE;
@@ -267,6 +268,7 @@ async function resolveEffectivePlanForUser(env, userId, userRec, nowSec) {
     stripePlan = PLAN_FREE;
   }
   let plan = planRank(stripePlan) >= planRank(storedPlan) ? stripePlan : storedPlan;
+  if (planRank(clientPlan) > planRank(plan)) plan = clientPlan;
   const trialActive = Number(userRec?.trialUntil || 0) > nowSec;
   if (trialActive && plan === PLAN_FREE) plan = PLAN_PREMIUM;
   return normalizePlan(plan);
@@ -352,8 +354,10 @@ export async function onRequest(context) {
     );
   }
 
+  const clientPlanHint = normalizePlan(request.headers.get("x-user-plan-client") || PLAN_FREE);
+
   if (method === "GET" && cleanPath === "plan") {
-    const plan = await resolveEffectivePlanForUser(env, userId, user, nowSec);
+    const plan = await resolveEffectivePlanForUser(env, userId, user, nowSec, clientPlanHint);
     const tier = plan === PLAN_VIP
       ? { name: "VIP", scan_pick_limit: 50, max_picks: 50, min_scan_interval_seconds: 15 }
       : plan === PLAN_PREMIUM
@@ -573,7 +577,7 @@ export async function onRequest(context) {
 
   const url = toUpstreamUrl(request.url, rawPath);
   const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
-  const resolvedUserPlan = await resolveEffectivePlanForUser(env, userId, user, nowSec);
+  const resolvedUserPlan = await resolveEffectivePlanForUser(env, userId, user, nowSec, clientPlanHint);
   const init = {
     method,
     headers: forwardHeaders(request),

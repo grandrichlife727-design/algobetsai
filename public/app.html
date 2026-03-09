@@ -5816,6 +5816,7 @@ async function saveAlertSubscription() {
 // Increased timeout to 60000ms (60 seconds) to allow Render free tier to wake up
 function buildAuthHeaders(base = {}) {
   const hdrs = Object.assign({}, base || {}, {'x-user-id': USER_ID});
+  hdrs['x-user-plan-client'] = normalizePlan(currentPlan);
   if (AUTH_TOKEN) hdrs.authorization = `Bearer ${AUTH_TOKEN}`;
   if (BACKEND_KEY) hdrs['x-api-key'] = BACKEND_KEY;
   return hdrs;
