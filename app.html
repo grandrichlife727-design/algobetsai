@@ -416,13 +416,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-analysis[open] .pick-analysis-body{display:block}
 .agent-fired{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:7px 0 4px}
 .agent-microdots{display:inline-flex;align-items:center;gap:5px}
-.agent-dot{width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;font-size:9px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);color:#7d889b;transition:all .14s ease}
+.agent-dot{width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;font-size:9px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);color:#7d889b;transition:all .14s ease;position:relative}
 .agent-dot.inactive{opacity:.5}
 .agent-dot.core{border-color:rgba(34,211,238,.28)}
 .agent-dot.cond{border-color:rgba(255,183,0,.3)}
 .agent-dot.active.core{color:#b8f7ff;background:rgba(34,211,238,.2);box-shadow:0 0 8px rgba(34,211,238,.32)}
 .agent-dot.active.cond{color:#ffe3a5;background:rgba(255,183,0,.16);box-shadow:0 0 8px rgba(255,183,0,.28)}
 .agent-dot.active.neon{color:#d9fff7;border-color:rgba(0,229,160,.55);background:rgba(0,229,160,.25);box-shadow:0 0 0 1px rgba(0,229,160,.25),0 0 12px rgba(0,229,160,.45)}
+.agent-dot.locked{cursor:pointer;opacity:.62;border-style:dashed;color:#8a90a1;background:rgba(255,255,255,.02)}
+.agent-dot.locked::after{content:'\1F512';position:absolute;top:-6px;right:-5px;font-size:8px;line-height:1;background:#0c1018;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:1px}
 .system-slam{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(0,229,160,.42);background:linear-gradient(135deg,rgba(0,229,160,.22),rgba(34,211,238,.18));color:#d8fff2;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.45px;text-transform:uppercase;box-shadow:0 0 12px rgba(0,229,160,.24)}
 .sample-badge{font-size:9px;font-weight:800;font-family:var(--mono);color:var(--amber);border:1px solid rgba(255,183,0,.3);padding:1px 6px;border-radius:999px;background:rgba(255,183,0,.08)}
 .sample-corner{position:absolute;top:8px;right:8px;z-index:2}
@@ -455,6 +457,10 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .tool-tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;min-height:128px}
 .tool-tile:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
+.tool-tile.tool-lock{opacity:.72;position:relative}
+.tool-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:2px 8px;font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.25px}
+.tool-badge.vip{background:rgba(255,183,0,.18);border:1px solid rgba(255,183,0,.4);color:var(--amber)}
+.tool-badge.premium{background:rgba(34,211,238,.16);border:1px solid rgba(34,211,238,.4);color:var(--cyan)}
 .tool-tile-ico{width:30px;height:30px;color:var(--cyan)}
 .tool-tile-title{font-size:14px;font-weight:800;color:var(--text)}
 .tool-tile-sub{font-size:11px;color:var(--sub);line-height:1.35}
@@ -499,7 +505,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .odds-grid{display:grid;grid-template-columns:88px 1fr 1fr;gap:3px;font-family:var(--mono);font-size:11px}
 .odds-head{color:var(--muted)}
 .odds-book{color:var(--sub);font-size:10px}
+.odds-book-link{color:var(--sub);font-size:10px;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.odds-book-link:hover{color:var(--cyan)}
 .odds-line{color:var(--green)}
+.pick-book-link{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(34,211,238,.35)}
+.pick-book-link:hover{color:#7ae9ff;border-bottom-color:rgba(34,211,238,.55)}
+.pick-book-cta{font-size:10px;margin-left:6px;color:var(--green);text-decoration:none;border:1px solid rgba(0,229,160,.25);padding:1px 6px;border-radius:999px;background:rgba(0,229,160,.08)}
+.pick-book-cta:hover{background:rgba(0,229,160,.14);border-color:rgba(0,229,160,.4)}
 .props-sports{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
 .props-sport{flex-shrink:0;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
 .props-sport.active{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.1);color:var(--cyan)}
@@ -1559,26 +1571,34 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div id="v-tools" style="display:none">
       <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Tap a tile to open a focused workflow.</div></div>
       <div class="tools-grid">
-        <button class="tool-tile" onclick="openTierFeature('ev','premium')">
+        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('ev','premium')">
+          <span class="tool-badge premium">Premium</span>
           <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <div class="tool-tile-title">Market Intelligence</div>
-          <div class="tool-tile-sub">+EV, Steam, and Fades in one analysis path.</div>
+          <div class="tool-tile-title">+EV Finder</div>
+          <div class="tool-tile-sub">High-value lines by fair price and confidence.</div>
         </button>
-        <button class="tool-tile" onclick="openTierFeature('parlay','premium')">
+        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('steam','premium')">
+          <span class="tool-badge premium">Premium</span>
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h7l3-8 4 16 2-8h2"/></svg>
+          <div class="tool-tile-title">Steam Moves</div>
+          <div class="tool-tile-sub">Track sharp-book line pressure in real time.</div>
+        </button>
+        <button class="tool-tile tool-gated" data-tier="premium" onclick="openTierFeature('parlay','premium')">
+          <span class="tool-badge premium">Premium</span>
           <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-          <div class="tool-tile-title">Bet Construction</div>
-          <div class="tool-tile-sub">Parlay Builder plus Boost Checker logic.</div>
+          <div class="tool-tile-title">Parlay Builder</div>
+          <div class="tool-tile-sub">Build slips with boost and correlation guardrails.</div>
         </button>
-        <button class="tool-tile" onclick="go('perf')">
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          <div class="tool-tile-title">Results</div>
-          <div class="tool-tile-sub">Track record + bet history in one place.</div>
+        <button class="tool-tile tool-gated" data-tier="vip" onclick="openTierFeature('vip-exec','vip')">
+          <span class="tool-badge vip">VIP</span>
+          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M8 16h8M7 8h10"/><path d="M6 3l2 3h8l2-3"/></svg>
+          <div class="tool-tile-title">Line Rush Alerts</div>
+          <div class="tool-tile-sub">Fast execution windows and timing alerts.</div>
         </button>
-        <button class="tool-tile" onclick="go('profile')">
-          <svg class="tool-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"/></svg>
-          <div class="tool-tile-title">Profile & Billing</div>
-          <div class="tool-tile-sub">Settings, plans, and account controls.</div>
-        </button>
+      </div>
+      <div class="rf-row" style="margin-top:10px">
+        <button class="pf-btn" onclick="go('perf')">Open Results</button>
+        <button class="pf-btn" onclick="go('profile')">Open Profile</button>
       </div>
     </div>
 
@@ -2587,6 +2607,19 @@ function skeletonList(count = 2) {
 function bookLabel(bk) {
   const map = {draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',caesars:'Caesars',pinnacle:'Pinnacle',pointsbet:'PointsBet',bet365:'Bet365'};
   return map[bk] || bk;
+}
+
+function normalizeBookKey(raw) {
+  const v = String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!v) return '';
+  if (v === 'draftkings' || v === 'dk') return 'draftkings';
+  if (v === 'fanduel' || v === 'fd') return 'fanduel';
+  if (v === 'betmgm' || v === 'mgm') return 'betmgm';
+  if (v === 'caesars' || v === 'czr') return 'caesars';
+  if (v === 'pinnacle') return 'pinnacle';
+  if (v === 'pointsbet') return 'pointsbet';
+  if (v === 'bet365') return 'bet365';
+  return v;
 }
 
 function loadState() {
@@ -5467,6 +5500,7 @@ function renderToolLocks() {
     const tier = String(btn.getAttribute('data-tier') || 'free');
     const locked = (tier === 'vip' && !canUseVip()) || (tier === 'premium' && !canUsePremium());
     btn.classList.toggle('tool-lock', locked);
+    btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
   });
 }
 
@@ -6577,10 +6611,15 @@ function renderActiveAgentPills(activeAgents = []) {
   const vals = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
   const activeCount = vals.size;
   const slamBadge = activeCount === 5 ? `<span class="system-slam" title="All 5 agents fired">System Slam</span>` : '';
+  const freeTier = !canUsePremium();
   return `<div class="agent-fired">${slamBadge}<span class="agent-microdots" aria-label="Agent signals">${[1,2,3,4,5].map(id => {
     const meta = AGENT_UI[id] || {abbr: `A${id}`, label: `Agent ${id}`, cls: 'cond'};
     const on = vals.has(id);
+    const locked = freeTier && id >= 3;
     const neon = on && (id === 3 || id === 4) ? 'neon' : '';
+    if (locked) {
+      return `<span role="button" tabindex="0" class="agent-dot ${meta.cls} locked inactive" title="${esc(meta.label)} (VIP locked)" onclick="event.stopPropagation();openUpgradePicker()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openUpgradePicker();}">${id}</span>`;
+    }
     return `<span class="agent-dot ${meta.cls} ${on ? 'active' : 'inactive'} ${neon}" title="${esc(meta.label)}">${id}</span>`;
   }).join('')}</span></div>`;
 }
@@ -6743,7 +6782,8 @@ function normalizePick(p, idx) {
   const betText = esc(p.bet || '—');
   const gameText = esc(p.game || `${p.awayTeam || ''} vs ${p.homeTeam || ''}`);
   const oddsText = esc(p.odds || '—');
-  const bookText = esc(bookLabel(p.best_book || ''));
+  const bookKey = normalizeBookKey(p.best_book || p.book || '');
+  const bookText = esc(bookLabel(bookKey || p.best_book || p.book || ''));
 
   const chips = [];
   if (p.edge_source === 'pinnacle_clv' || p.clv_edge) chips.push({t:'clv', l:`CLV +${ev}%`});
@@ -6809,7 +6849,8 @@ function normalizePick(p, idx) {
     demoData: !!p.demo_data,
     mScore: Number(p.model_v2?.ensemble_score || p.agent_score || 0),
     book: bookText,
-    bookRaw: bookLabel(p.best_book || ''),
+    bookRaw: bookLabel(bookKey || p.best_book || p.book || ''),
+    bookKey,
     sh:   Math.round(p.sharpPct  || 0),
     pu:   Math.round(p.publicPct || 0),
     lm:   p.lineMove   || 0,
@@ -7008,10 +7049,18 @@ function renderOdds() {
       <div class="odds-game">${esc(g.awayTeam)} @ ${esc(g.homeTeam)}</div>
       <div class="odds-grid">
         <div class="odds-head">Book</div><div class="odds-head">${esc(g.awayTeam.split(' ').pop() || 'Away')}</div><div class="odds-head">${esc(g.homeTeam.split(' ').pop() || 'Home')}</div>
-        ${g.books.map(b => `<div class="odds-book">${esc(bookLabel(b.book))}</div><div class="odds-line">${b.away ? esc(String(b.away)) : '—'}</div><div class="odds-line">${b.home ? esc(String(b.home)) : '—'}</div>`).join('')}
+        ${g.books.map(b => {
+          const key = normalizeBookKey(b.book);
+          const label = esc(bookLabel(key || b.book));
+          const bookCell = AFFILIATE_BOOKS.includes(key)
+            ? `<a class="odds-book-link" data-book="${key}" href="#" target="_blank">${label} · Bet Now</a>`
+            : `<div class="odds-book">${label}</div>`;
+          return `${bookCell}<div class="odds-line">${b.away ? esc(String(b.away)) : '—'}</div><div class="odds-line">${b.home ? esc(String(b.home)) : '—'}</div>`;
+        }).join('')}
       </div>
     </div>
   `).join('');
+  applyAffiliateLinks();
 }
 
 function setOddsSport(sport) {
@@ -7590,7 +7639,12 @@ function renderPicks() {
     const stakeDetail = `Entry quality: <strong>${entryLabel || 'STANDARD'}</strong>${timingModel > 0 ? ` · Timing model ${timingModel.toFixed(1)}` : ''}`;
     const matchupLabel = cleanMatchupLabel(p.game || p.bet);
     const betLabel = showDetailed ? `${p.bet} ${p.odds}` : freeTeaserBetLabel(p);
-    const bookLabelText = esc(bookLabel(p.bookRaw || p.book || ''));
+    const bookKey = normalizeBookKey(p.bookKey || p.bookRaw || p.book || '');
+    const bookLabelText = esc(bookLabel(bookKey || p.bookRaw || p.book || ''));
+    const hasAffiliateBook = AFFILIATE_BOOKS.includes(bookKey);
+    const pickBookHtml = hasAffiliateBook
+      ? `<a class="pick-book-link" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">Bet Now</a>`
+      : `<strong>${bookLabelText}</strong>`;
     const publicPct = inferredPublicPct(p);
     const simHome = Math.round(102 + edgeVal + (conf - 55) * 0.22);
     const simAway = Math.round(99 + (100 - conf) * 0.18);
@@ -7623,7 +7677,7 @@ function renderPicks() {
         <span class="edge-badge ${edgeClass} edge-main" title="Advantage over fair market price">+${edgeVal.toFixed(1)}%</span>
       </div>
       <div class="pick-sub-row">
-        <span class="pick-sub-book">Book: <strong>${bookLabelText}</strong></span>
+        <span class="pick-sub-book">Book: ${pickBookHtml}</span>
         <span class="pick-sub-conf">${conf}%</span>
       </div>
       ${activeAgentPills}
@@ -7667,6 +7721,7 @@ function renderPicks() {
       </div>
     </div>`;
   }
+  applyAffiliateLinks();
 }
 
 function togglePickAnalysis(id) {
