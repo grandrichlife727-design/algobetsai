@@ -2324,6 +2324,8 @@ const MARKETING_OPT_IN_KEY = 'algobets-marketing-optin-v1';
 const PICKS_CACHE_KEY = 'algobets-picks-cache-v1';
 const FREE_DELAY_STATE_KEY = 'algobets-free-delay-v1';
 const SAVED_PICKS_KEY = 'algobets-saved-picks-v1';
+const TRACKER_WINDOW_DAYS = 7;
+const TRACKER_WINDOW_MS = TRACKER_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const REF_TRACK_KEY = 'algobets-ref-track-v1';
 const DEMO_MODE_KEY = 'algobets-demo-mode-v1';
 const VIP_SETTINGS_KEY = 'algobets-vip-settings-v1';
@@ -5501,6 +5503,28 @@ function fmtTs(ts) {
   }
 }
 
+function trackerRowTimestampMs(row) {
+  if (!row || typeof row !== 'object') return 0;
+  const gameRaw = String(row.game_time || row.gameTimeRaw || '').trim();
+  if (gameRaw) {
+    const t = new Date(gameRaw).getTime();
+    if (Number.isFinite(t) && t > 0) return t;
+  }
+  const settledRaw = Number(row.settled_ts || 0);
+  if (Number.isFinite(settledRaw) && settledRaw > 0) return settledRaw * 1000;
+  const tsRaw = Number(row.ts || 0);
+  if (Number.isFinite(tsRaw) && tsRaw > 0) return tsRaw > 1e12 ? tsRaw : tsRaw * 1000;
+  return 0;
+}
+
+function filterTrackerWindow(rows) {
+  const now = Date.now();
+  return (Array.isArray(rows) ? rows : []).filter(r => {
+    const t = trackerRowTimestampMs(r);
+    return Number.isFinite(t) && t > 0 && Math.abs(now - t) <= TRACKER_WINDOW_MS;
+  });
+}
+
 function renderHistory() {
   const el = document.getElementById('history-list');
   const ct = document.getElementById('history-count');
@@ -5512,6 +5536,8 @@ function renderHistory() {
   } catch (_) {
     tracked = [];
   }
+  tracked = filterTrackerWindow(tracked);
+  try { localStorage.setItem(SAVED_PICKS_KEY, JSON.stringify(tracked)); } catch (_) {}
   const freeCap = normalizePlan(currentPlan) === 'free' ? 10 : Infinity;
   const visible = tracked.slice(0, freeCap);
   ct.textContent = `${visible.length} tracked bet${visible.length !== 1 ? 's' : ''}`;
@@ -5556,6 +5582,7 @@ function exportHistoryCsv() {
   } catch (_) {
     tracked = [];
   }
+  tracked = filterTrackerWindow(tracked);
   if (!tracked.length) {
     showToast('No tracked bets to export');
     return;
@@ -5658,7 +5685,7 @@ function savePickToTracker(id) {
       showToast('Pick already saved');
       return;
     }
-    const next = [{
+    const next = filterTrackerWindow([{
       id: p.id,
       bet: p.bet,
       game: p.game,
@@ -5668,7 +5695,7 @@ function savePickToTracker(id) {
       clvExp: p.clvExp || 0,
       sport: p.sport,
       ts: Date.now(),
-    }, ...list].slice(0, 100);
+    }, ...list]).slice(0, 100);
     localStorage.setItem(SAVED_PICKS_KEY, JSON.stringify(next));
     showToast('Saved to tracker');
   } catch (_) {
@@ -8669,6 +8696,7 @@ function renderPerf() {
     } catch (_) {
       tracked = [];
     }
+    tracked = filterTrackerWindow(tracked);
     const rows = tracked.slice(0, 3).map((p, i) => `${i + 1}. ${String(p?.bet || 'Pick')} ${String(p?.odds || '')} · +${Number(p?.ev || 0).toFixed(1)}% EV`);
     perfHistEl.innerHTML = rows.length ? rows.map(r => `<div style="margin-bottom:4px">${esc(r)}</div>`).join('') : 'No tracked bets yet.';
   }
