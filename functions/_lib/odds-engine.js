@@ -56,6 +56,12 @@ function median(values) {
   return arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
 }
 
+function formatLinePoint(point) {
+  const n = Number(point);
+  if (!Number.isFinite(n)) return "";
+  return n.toFixed(2).replace(/\.?0+$/, "");
+}
+
 function buildGameAndPicksFromEvent(sportKey, event) {
   const meta = SPORT_META[sportKey] || { label: sportKey, emoji: "🎯" };
   const isSoccer = String(sportKey || "").toLowerCase().startsWith("soccer_");
@@ -98,7 +104,7 @@ function buildGameAndPicksFromEvent(sportKey, event) {
       const overOdds = Number(over?.price);
       const underOdds = Number(under?.price);
       if (!Number.isFinite(point) || !Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
-      const key = point.toFixed(1);
+      const key = point.toFixed(2);
       if (!totalsByPoint.has(key)) {
         totalsByPoint.set(key, {
           point,
@@ -162,7 +168,7 @@ function buildGameAndPicksFromEvent(sportKey, event) {
           emoji: meta.emoji,
           game: gameLabel,
           game_time: commenceTime,
-          bet: `${c.side} ${Number(targetTotals.point).toFixed(1)}`,
+          bet: `${c.side} ${formatLinePoint(targetTotals.point)}`,
           market: "total",
           odds: String(c.best.odds > 0 ? `+${c.best.odds}` : c.best.odds),
           edge: Number(ev.toFixed(2)),
