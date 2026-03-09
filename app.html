@@ -1070,7 +1070,6 @@ img,svg,video,canvas{max-width:100%;height:auto}
     <div class="topbar-right">
       <div class="plan-pill free" id="plan-pill">FREE</div>
       <div class="api-status">
-        <div class="api-dot loading" id="api-dot"></div>
         <span class="api-lbl" id="api-lbl">Connecting</span>
         <span class="api-hot" id="api-hot"></span>
       </div>
@@ -6601,7 +6600,7 @@ async function cancelTrialSubscription() {
 function setApiStatus(state) {
   const dot = document.getElementById('api-dot');
   const lbl = document.getElementById('api-lbl');
-  dot.className = 'api-dot ' + state;
+  if (dot) dot.className = 'api-dot ' + state;
   lbl.textContent = state === 'ok' ? 'Live' : state === 'err' ? 'Paused' : 'Syncing';
   lbl.style.color = state === 'ok' ? 'var(--green)' : state === 'err' ? 'var(--red)' : 'var(--muted)';
   setAgentPulseWorking(state === 'loading');
