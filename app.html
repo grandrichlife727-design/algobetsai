@@ -1742,7 +1742,11 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-props" style="display:none">
-      <div class="page-hdr"><div class="page-title">Props <span>Edge</span></div><div class="page-sub">Budget-safe player props (NBA/NFL) with limited markets and best available book</div></div>
+      <div class="page-hdr"><div class="page-title">Props <span>Edge</span></div><div class="page-sub">Budget-safe player props (NBA/NFL) with limited windows, rotated markets, and best available book.</div></div>
+      <div class="rf-row" style="margin:0 0 10px">
+        <button class="pf-btn" onclick="loadProps(true)">Refresh Props</button>
+        <div class="growth-note">Props refresh on tab-open or manual refresh only.</div>
+      </div>
       <div class="props-sports" id="props-sports"></div>
       <div class="picks-list" id="props-list"></div>
     </div>
@@ -2601,7 +2605,7 @@ function getFreeReleasedBoard() {
 }
 function newsImpactTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : NEWS_IMPACT_TTL_MS; }
 function perfTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : PERF_TTL_MS; }
-function propsTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : 20 * 60 * 1000; }
+function propsTtlMs() { return LOW_DATA_MODE ? 60 * 60 * 1000 : 45 * 60 * 1000; }
 function vipLiveCacheMs() { return LOW_DATA_MODE ? 5 * 60 * 1000 : VIP_LIVE_CACHE_MS; }
 function vipLiveDailyCap() { return LOW_DATA_MODE ? 40 : VIP_LIVE_DAILY_CALL_CAP; }
 function vipLivePollMs() { return LOW_DATA_MODE ? 8 * 60 * 1000 : VIP_LIVE_POLL_MS; }

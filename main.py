@@ -577,8 +577,8 @@ ODDS_BOOKMAKERS = os.getenv("ODDS_BOOKMAKERS", "draftkings,fanduel,betmgm,pinnac
 PROPS_BOOKMAKERS = os.getenv("PROPS_BOOKMAKERS", "draftkings,fanduel,betmgm")
 PROPS_ENABLED = os.getenv("PROPS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 PROPS_MONTHLY_CREDIT_CAP = int(os.getenv("PROPS_MONTHLY_CREDIT_CAP", "6000") or 6000)
-PROPS_MAX_EVENTS_PER_SPORT = int(os.getenv("PROPS_MAX_EVENTS_PER_SPORT", "4") or 4)
-PROPS_CACHE_TTL = int(os.getenv("PROPS_CACHE_TTL", "1800") or 1800)
+PROPS_MAX_EVENTS_PER_SPORT = int(os.getenv("PROPS_MAX_EVENTS_PER_SPORT", "2") or 2)
+PROPS_CACHE_TTL = int(os.getenv("PROPS_CACHE_TTL", "3600") or 3600)
 
 _quota_remaining: int = 5000
 _quota_used_last: int = 0
@@ -5470,11 +5470,11 @@ async def props_lite(
         raise HTTPException(status_code=400, detail="Props currently supported for NBA and NFL.")
     if not _props_budget_ok():
         raise HTTPException(status_code=402, detail="Props budget limit reached for this month.")
-    effective_max_events = min(PROPS_MAX_EVENTS_PER_SPORT, 1) if LOW_DATA_MODE_GLOBAL else PROPS_MAX_EVENTS_PER_SPORT
+    effective_max_events = min(PROPS_MAX_EVENTS_PER_SPORT, 1) if LOW_DATA_MODE_GLOBAL else min(PROPS_MAX_EVENTS_PER_SPORT, 2)
     rows = await fetch_props_lite_for_sport(
         sport_key=sport,
         max_events=effective_max_events,
-        markets=PROPS_MARKETS_BY_SPORT.get(sport, []),
+        markets=None,
     )
     return {
         "sport": sport,
