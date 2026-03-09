@@ -6598,7 +6598,7 @@ function ensureBillingUser() {
 }
 
 async function fetchPlan() {
-  if (FORCE_DEMO_MODE && MOCK_PLAN_QP) {
+  if (MOCK_PLAN_QP) {
     currentPlan = MOCK_PLAN_QP;
     updatePlanUi();
     return;
