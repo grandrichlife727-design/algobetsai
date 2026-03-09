@@ -4180,13 +4180,27 @@ function renderPotdCard(pick) {
   </div>`;
 }
 
+function isSamePickSignature(a, b) {
+  if (!a || !b) return false;
+  const betA = String(a.bet || '').trim().toLowerCase();
+  const betB = String(b.bet || '').trim().toLowerCase();
+  const gameA = String(a.game || '').trim().toLowerCase();
+  const gameB = String(b.game || '').trim().toLowerCase();
+  if (!betA || !betB) return false;
+  if (betA !== betB) return false;
+  if (gameA && gameB && gameA !== gameB) return false;
+  return true;
+}
+
 function renderPOTD(pick) {
   if (!pick) return;
   const html = renderPotdCard(pick);
   const dashEl = document.getElementById('potd-dashboard');
   const picksEl = document.getElementById('potd-picks');
+  const topPick = rankPicksForVip()[0] || null;
+  const duplicateTop = isSamePickSignature(pick, topPick);
   if (dashEl) dashEl.innerHTML = html;
-  if (picksEl) picksEl.innerHTML = html;
+  if (picksEl) picksEl.innerHTML = duplicateTop ? '' : html;
 }
 
 async function loadPOTD() {
@@ -8146,7 +8160,7 @@ function renderPicks() {
         .trim()
     )
     : '';
-  const vipTeaser = vipOn
+  let vipTeaser = vipOn
     ? `
     <div class="growth-card" style="margin-bottom:10px;border-color:rgba(255,183,0,.35);background:linear-gradient(135deg,rgba(255,183,0,.1),rgba(139,92,246,.09))">
       <div class="growth-title vip-title"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;color:var(--amber);font-size:16px;line-height:1">♛</span>VIP Pick of the Day</div>
@@ -8187,6 +8201,14 @@ function renderPicks() {
       if (merged.length >= freePreviewLimit) break;
     }
     displayList = merged.slice(0, freePreviewLimit);
+  }
+
+  const topVisiblePick = displayList[0] || null;
+  const vipDuplicateTop = vipPick && topVisiblePick && isSamePickSignature(vipPick, topVisiblePick);
+  if (vipDuplicateTop) {
+    vipTeaser = `<div class="growth-note" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,183,0,.05)">VIP Pick of the Day aligns with today’s #1 edge. No duplicate card shown.</div>`;
+    const picksPotdEl = document.getElementById('potd-picks');
+    if (picksPotdEl) picksPotdEl.innerHTML = '';
   }
 
   el.innerHTML = vipTeaser + displayList.map((p, i) => {
