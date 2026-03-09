@@ -414,6 +414,13 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-analysis>summary{display:none}
 .pick-analysis-body{display:none;padding:8px 10px 9px}
 .pick-analysis[open] .pick-analysis-body{display:block}
+.agent-signal-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.agent-signal-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);font-size:10px;font-family:var(--mono);font-weight:800;letter-spacing:.35px;color:var(--text);text-transform:uppercase}
+.agent-signal-pill.ev{border-color:rgba(34,211,238,.34);color:#b8f7ff;background:rgba(34,211,238,.12)}
+.agent-signal-pill.steam{border-color:rgba(0,229,160,.34);color:#d2ffe9;background:rgba(0,229,160,.12)}
+.agent-signal-pill.fade{border-color:rgba(255,183,0,.34);color:#ffe7b7;background:rgba(255,183,0,.12)}
+.agent-signal-pill.entry{border-color:rgba(167,139,250,.34);color:#e8deff;background:rgba(139,92,246,.12)}
+.agent-signal-pill.locked{cursor:pointer;opacity:.95}
 .agent-fired{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:7px 0 4px}
 .agent-microdots{display:inline-flex;align-items:center;gap:5px}
 .agent-dot{width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;font-size:9px;font-family:var(--mono);font-weight:800;line-height:1;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);color:#7d889b;transition:all .14s ease;position:relative}
@@ -1475,6 +1482,15 @@ img,svg,video,canvas{max-width:100%;height:auto}
 
     <div id="v-vip-execution" style="display:none">
       <div class="page-hdr"><div class="page-title">VIP <span>Execution</span></div><div class="page-sub">CLV tracking, timing engine, and market-depth context.</div></div>
+      <div id="vip-execution-gate" class="feature-lock" style="display:none;margin-top:0">
+        <div class="lock-overlay" style="position:relative;inset:auto;min-height:0">
+          <div class="lock-card">
+            <div class="lock-title">VIP Execution - VIP Only</div>
+            <div class="lock-sub">Live trading-floor view: line holding, line dropping (bet now), and rebound timing windows.</div>
+            <button class="paywall-cta" onclick="openUpgradePicker(false,'vip')">Unlock VIP Execution</button>
+          </div>
+        </div>
+      </div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title vip-title"><span class="vip-ico">⚡</span>Execution Intelligence</div>
@@ -4205,6 +4221,8 @@ function renderVipTools() {
   const releaseWindowEl = document.getElementById('vip-release-window');
   const podEl = document.getElementById('vip-pod');
   const timingEl = document.getElementById('vip-timing');
+  const executionGateEl = document.getElementById('vip-execution-gate');
+  const executionGridEl = document.querySelector('#v-vip-execution .growth-grid');
   const coreListEl = document.getElementById('vip-core-list');
   const discordEl = document.getElementById('vip-discord-status');
   const discordTeaseEl = document.getElementById('vip-discord-tease');
@@ -4221,6 +4239,13 @@ function renderVipTools() {
   const portEl = document.getElementById('vip-portfolio');
 
   if (!vipOn) {
+    if (executionGateEl) executionGateEl.style.display = '';
+    if (executionGridEl) {
+      executionGridEl.style.filter = 'blur(4px)';
+      executionGridEl.style.opacity = '.58';
+      executionGridEl.style.pointerEvents = 'none';
+      executionGridEl.style.userSelect = 'none';
+    }
     if (discordTeaseEl) discordTeaseEl.style.display = '';
     if (clvEl) clvEl.innerHTML = `VIP-only metrics. Upgrade to unlock CLV tracking and execution stats. <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker()">Go VIP</button>`;
     if (clvScoreEl) clvScoreEl.textContent = 'CLV scorecard is locked for VIP.';
@@ -4244,7 +4269,7 @@ function renderVipTools() {
     if (depthEl) depthEl.textContent = 'Market depth is locked for VIP.';
     if (watchEl) watchEl.value = '';
     if (watchNoteEl) watchNoteEl.textContent = 'Watchlist is locked for VIP.';
-    if (timingEl) timingEl.innerHTML = `<div style="color:var(--muted)">Timing engine is locked for VIP.</div>`;
+    if (timingEl) timingEl.innerHTML = `<div style="color:var(--muted)">Timing engine is locked for VIP. Unlock to see line status: Line Holding, Line Dropping (Bet Now), and Line Moving Away (Wait for Rebound).</div>`;
     if (portEl) portEl.textContent = 'Portfolio builder is locked for VIP.';
     if (webhookEl) webhookEl.value = '';
     if (steamEl) steamEl.checked = false;
@@ -4252,6 +4277,13 @@ function renderVipTools() {
     if (note) note.textContent = 'VIP alerts are locked until upgrade.';
     renderVipLivePlays();
     return;
+  }
+  if (executionGateEl) executionGateEl.style.display = 'none';
+  if (executionGridEl) {
+    executionGridEl.style.filter = '';
+    executionGridEl.style.opacity = '';
+    executionGridEl.style.pointerEvents = '';
+    executionGridEl.style.userSelect = '';
   }
   if (discordTeaseEl) discordTeaseEl.style.display = 'none';
 
@@ -4326,11 +4358,17 @@ function renderVipTools() {
       timingEl.innerHTML = PICKS.slice(0, 4).map(p => {
         const ev = Number(p.ev || 0);
         const conf = Number(p.conf || 50);
-        const rec = ev >= 6.5 || conf >= 68 ? 'Bet Now' : ev >= 4 ? 'Watch Line' : 'Wait';
-        const col = rec === 'Bet Now' ? 'var(--green)' : rec === 'Watch Line' ? 'var(--amber)' : 'var(--muted)';
+        let rec = 'Line Holding';
+        if (ev >= 6.5 || conf >= 68) rec = 'Line Dropping (Bet Now)';
+        else if (ev < 4 || conf < 58) rec = 'Line Moving Away (Wait for Rebound)';
+        const col = rec.includes('Bet Now')
+          ? 'var(--green)'
+          : rec.includes('Wait for Rebound')
+            ? 'var(--amber)'
+            : 'var(--cyan)';
         return `<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
           <span>${esc(p.bet)} ${esc(p.odds)}</span>
-          <span class="timing-chip" style="color:${col};border-color:${rec === 'Bet Now' ? 'rgba(0,229,160,.35)' : 'rgba(255,183,0,.34)'};background:${rec === 'Bet Now' ? 'rgba(0,229,160,.13)' : 'rgba(255,183,0,.14)'}">${rec}</span>
+          <span class="timing-chip" style="color:${col};border-color:${rec.includes('Bet Now') ? 'rgba(0,229,160,.35)' : rec.includes('Wait for Rebound') ? 'rgba(255,183,0,.34)' : 'rgba(34,211,238,.34)'};background:${rec.includes('Bet Now') ? 'rgba(0,229,160,.13)' : rec.includes('Wait for Rebound') ? 'rgba(255,183,0,.14)' : 'rgba(34,211,238,.14)'}">${rec}</span>
         </div>`;
       }).join('');
     }
@@ -6685,22 +6723,24 @@ function parseActiveAgents(pick) {
   return [...new Set(out)].sort((a, b) => a - b);
 }
 
-function renderActiveAgentPills(activeAgents = []) {
-  const vals = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
-  const activeCount = vals.size;
-  const slamBadge = activeCount === 5 ? `<span class="system-slam" title="All 5 agents fired">System Slam</span>` : '';
-  const freeTier = !canUsePremium();
-  return `<div class="agent-fired">${slamBadge}<span class="agent-microdots" aria-label="Agent signals">${[1,2,3,4,5].map(id => {
-    const meta = AGENT_UI[id] || {abbr: `A${id}`, label: `Agent ${id}`, cls: 'cond'};
-    const on = vals.has(id);
-    const locked = freeTier && id >= 3;
-    const neon = on && (id === 3 || id === 4) ? 'neon' : '';
-    if (locked) {
-      const targetTier = id === 5 ? 'vip' : 'premium';
-      return `<span role="button" tabindex="0" class="agent-dot ${meta.cls} locked inactive" title="${esc(meta.label)} (${targetTier.toUpperCase()} locked)" onclick="event.stopPropagation();openUpgradePicker(false,'${targetTier}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openUpgradePicker(false,'${targetTier}');}">${id}</span>`;
-    }
-    return `<span class="agent-dot ${meta.cls} ${on ? 'active' : 'inactive'} ${neon}" title="${esc(meta.label)}">${id}</span>`;
-  }).join('')}</span></div>`;
+function renderAgentSignalBadges(activeAgents = []) {
+  const active = new Set(Array.isArray(activeAgents) ? activeAgents.map(v => Number(v)).filter(v => Number.isInteger(v) && v >= 1 && v <= 5) : []);
+  const plan = normalizePlan(currentPlan);
+  const premiumOn = canUsePremium();
+  const vipOn = canUseVip();
+  const tags = [];
+  if (active.has(1) || active.has(2) || !active.size) tags.push({label: '+EV', cls: 'ev'});
+  if (active.has(3)) tags.push({label: 'Sharp Steam', cls: 'steam', tier: premiumOn ? '' : 'premium'});
+  if (active.has(4)) tags.push({label: 'Public Fade', cls: 'fade', tier: premiumOn ? '' : 'premium'});
+  if (active.has(5)) tags.push({label: 'Optimal Entry', cls: 'entry', tier: vipOn ? '' : 'vip'});
+  if (!tags.length) tags.push({label: '+EV', cls: 'ev'});
+  return `<div class="agent-signal-row" aria-label="Agent intelligence signals">${tags.map((t) => {
+    if (!t.tier) return `<span class="agent-signal-pill ${t.cls}">${esc(t.label)}</span>`;
+    const tierName = t.tier === 'vip' ? 'VIP' : 'Premium';
+    const lock = plan === 'free' || (plan === 'premium' && t.tier === 'vip');
+    if (!lock) return `<span class="agent-signal-pill ${t.cls}">${esc(t.label)}</span>`;
+    return `<span role="button" tabindex="0" class="agent-signal-pill ${t.cls} locked" title="${esc(t.label)} (${tierName} locked)" onclick="event.stopPropagation();openUpgradePicker(false,'${t.tier}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openUpgradePicker(false,'${t.tier}');}">${esc(t.label)} \uD83D\uDD12</span>`;
+  }).join('')}</div>`;
 }
 
 function hotAgentSet() {
@@ -7710,7 +7750,7 @@ function renderPicks() {
     const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
     const edgeTier = edgeVal > 5 ? 'High' : edgeVal >= 2 ? 'Medium' : 'Low';
     const teaserMarket = freeMarketLabel(p);
-    const activeAgentPills = renderActiveAgentPills(p.activeAgents);
+    const agentSignalBadges = renderAgentSignalBadges(p.activeAgents);
     const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
     const stakeMeta = rawStakePct > 0 ? (() => {
       const bankroll = Number(profileSettings?.bankroll_amount || 0);
@@ -7744,7 +7784,7 @@ function renderPicks() {
     const a4 = agentStatusFor(4).body;
     const a5 = agentStatusFor(5).body;
     const analysisHtml = showDetailed
-      ? `${activeAgentPills}
+      ? `${agentSignalBadges}
       <div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
       <div class="pick-line">Public betting skew: <strong>${publicPct}%</strong> on listed side</div>
@@ -7756,7 +7796,7 @@ function renderPicks() {
       <div class="pick-line">${stakeLine}</div>
       <div class="pick-line">${stakeDetail}</div>
       ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
-      : `${activeAgentPills}
+      : `${agentSignalBadges}
       <div class="pick-line">Upgrade to reveal de-vig price, public %, CLV forecast, and full agent intelligence.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${sampleTag}
