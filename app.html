@@ -3328,10 +3328,45 @@ function normalizeVipLiveRows(rows) {
     const liveWindowScore = mins >= -15 && mins <= 35 ? 18 : mins > 35 ? 10 : 6;
     const priceScore = Math.max(4, 22 - Math.min(18, spread / 10));
     const momentum = mins >= 0 ? 12 : 7;
-    const score = Math.max(40, Math.min(95, Math.round(52 + liveWindowScore + priceScore + momentum)));
-    const timing = mins >= 0 ? (mins <= 10 ? 'Now' : mins <= 35 ? 'Monitor' : 'Late window') : (Math.abs(mins) <= 10 ? 'Pre-start' : 'Watch');
-    return {...r, vip_score: score, vip_timing: timing};
+    const heuristicScore = Math.max(40, Math.min(95, Math.round(52 + liveWindowScore + priceScore + momentum)));
+    const heuristicTiming = mins >= 0 ? (mins <= 10 ? 'Now' : mins <= 35 ? 'Monitor' : 'Late window') : (Math.abs(mins) <= 10 ? 'Pre-start' : 'Watch');
+    const backendScore = Number(r.vip_execution_score);
+    const actionState = String(r.vip_action_state || '').trim().toLowerCase();
+    const confidenceBand = String(r.vip_confidence_band || '').trim().toLowerCase();
+    const timing = String(r.vip_timing_state || '').trim() || heuristicTiming;
+    const score = Number.isFinite(backendScore) && backendScore > 0 ? Math.round(backendScore) : heuristicScore;
+    const reasonCodes = Array.isArray(r.vip_reason_codes)
+      ? r.vip_reason_codes.map(v => String(v || '').trim()).filter(Boolean).slice(0, 4)
+      : [];
+    return {
+      ...r,
+      vip_score: score,
+      vip_timing: timing,
+      vip_action_state: actionState || (score >= 76 ? 'bet_now' : score >= 60 ? 'monitor' : 'wait'),
+      vip_confidence_band: confidenceBand || (score >= 76 ? 'high' : score >= 60 ? 'medium' : 'low'),
+      vip_reason_codes: reasonCodes,
+    };
   }).sort((a, b) => Number(b.vip_score || 0) - Number(a.vip_score || 0));
+}
+
+function vipActionLabel(action) {
+  const a = String(action || '').toLowerCase();
+  if (a === 'bet_now') return 'Bet now';
+  if (a === 'monitor') return 'Monitor';
+  return 'Wait';
+}
+
+function vipReasonLabel(code) {
+  const map = {
+    kickoff_window: 'Kickoff window',
+    book_divergence: 'Book divergence',
+    line_velocity: 'Line velocity',
+    clv_drift: 'CLV drift',
+    market_depth: 'Market depth',
+    wide_market: 'Wide market',
+    baseline_signal: 'Baseline signal',
+  };
+  return map[String(code || '').toLowerCase()] || String(code || '').replace(/_/g, ' ');
 }
 
 function renderVipLivePlays() {
@@ -3363,6 +3398,7 @@ function renderVipLivePlays() {
         <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
         <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
         <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+        <div class="growth-note" style="margin-top:4px">Action: <strong>${esc(vipActionLabel(r.vip_action_state))}</strong> · Confidence: <strong>${esc(String(r.vip_confidence_band || 'medium').toUpperCase())}</strong>${Array.isArray(r.vip_reason_codes) && r.vip_reason_codes.length ? ` · ${esc(r.vip_reason_codes.slice(0,2).map(vipReasonLabel).join(' · '))}` : ''}</div>
         <div class="pick-sub-row" style="margin-top:8px">
           <span class="pick-sub-book">
             <a class="pick-book-action" data-book="${execBook}" data-sport="${esc(String(r.sport || ''))}" data-game="${esc(String(r.game || ''))}" data-pick="VIP Execution Window" data-team="${esc(String(r.home_team || ''))}" href="#" target="_blank" onclick="event.stopPropagation()" title="${execBookLabel}">
@@ -3406,6 +3442,7 @@ function renderVipLivePlays() {
       <div class="live-top"><div><strong>${esc(r.sport || 'Sport')}</strong> · ${esc(r.game || 'Game')}</div><div class="live-min">${Number(r.minutes_since_start) >= 0 ? `${r.minutes_since_start}m live` : `${Math.abs(r.minutes_since_start)}m to start`}</div></div>
       <div class="props-meta">${esc(r.home_team || 'Home')} ${esc(String(Number(r.home_ml || 0) > 0 ? '+' + Number(r.home_ml || 0) : Number(r.home_ml || 0)))} · ${esc(r.away_team || 'Away')} ${esc(String(Number(r.away_ml || 0) > 0 ? '+' + Number(r.away_ml || 0) : Number(r.away_ml || 0)))}</div>
       <div class="growth-sub">VIP Score: <strong>${Number(r.vip_score || 0)}</strong> · Timing: <strong>${esc(r.vip_timing || 'Watch')}</strong></div>
+      <div class="growth-note" style="margin-top:4px">Action: <strong>${esc(vipActionLabel(r.vip_action_state))}</strong> · Confidence: <strong>${esc(String(r.vip_confidence_band || 'medium').toUpperCase())}</strong>${Array.isArray(r.vip_reason_codes) && r.vip_reason_codes.length ? ` · ${esc(r.vip_reason_codes.slice(0,2).map(vipReasonLabel).join(' · '))}` : ''}</div>
       <div class="pick-sub-row" style="margin-top:8px">
         <span class="pick-sub-book">
           <a class="pick-book-action" data-book="${execBook}" data-sport="${esc(String(r.sport || ''))}" data-game="${esc(String(r.game || ''))}" data-pick="VIP Execution Window" data-team="${esc(String(r.home_team || ''))}" href="#" target="_blank" onclick="event.stopPropagation()" title="${execBookLabel}">

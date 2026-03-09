@@ -4601,6 +4601,79 @@ async def arb_detect(plan: str = Depends(get_user_plan)):
     }
 
 
+def _vip_execution_payload(game: dict[str, Any], minutes_since_start: int) -> dict[str, Any]:
+    """Build server-side VIP execution signals for live rows."""
+    home_ml = game.get("home_ml")
+    away_ml = game.get("away_ml")
+    spread_cents = abs(int(home_ml) - int(away_ml)) if home_ml is not None and away_ml is not None else 120
+    by_book = game.get("moneyline_by_book") or {}
+    home_lines = [int(v.get("home")) for v in by_book.values() if isinstance(v, dict) and v.get("home") is not None]
+    away_lines = [int(v.get("away")) for v in by_book.values() if isinstance(v, dict) and v.get("away") is not None]
+    home_disp = (max(home_lines) - min(home_lines)) if len(home_lines) >= 2 else 0
+    away_disp = (max(away_lines) - min(away_lines)) if len(away_lines) >= 2 else 0
+    market_dispersion = home_disp + away_disp
+    books_count = max(1, len(by_book))
+
+    if -8 <= minutes_since_start <= 12:
+        timing_bonus = 24.0
+    elif -20 <= minutes_since_start <= 30:
+        timing_bonus = 16.0
+    elif -45 <= minutes_since_start <= 60:
+        timing_bonus = 9.0
+    else:
+        timing_bonus = 4.0
+
+    price_bonus = max(0.0, 20.0 - min(20.0, spread_cents / 4.0))
+    dispersion_bonus = min(18.0, market_dispersion / 3.0)
+    depth_bonus = min(8.0, books_count * 1.5)
+    raw_score = 38.0 + timing_bonus + price_bonus + dispersion_bonus + depth_bonus
+    score = int(max(35, min(96, round(raw_score))))
+
+    if score >= 78 and -10 <= minutes_since_start <= 20 and spread_cents <= 55:
+        action_state = "bet_now"
+    elif score >= 60 and -30 <= minutes_since_start <= 60:
+        action_state = "monitor"
+    else:
+        action_state = "wait"
+
+    timing_state = {
+        "bet_now": "Optimal Window",
+        "monitor": "Monitor Window",
+        "wait": "Hold Window",
+    }.get(action_state, "Monitor Window")
+
+    if score >= 78:
+        confidence_band = "high"
+    elif score >= 60:
+        confidence_band = "medium"
+    else:
+        confidence_band = "low"
+
+    reason_codes: list[str] = []
+    if -10 <= minutes_since_start <= 20:
+        reason_codes.append("kickoff_window")
+    if market_dispersion >= 24:
+        reason_codes.append("book_divergence")
+    if market_dispersion >= 36:
+        reason_codes.append("line_velocity")
+    if spread_cents <= 40 and abs(minutes_since_start) <= 35:
+        reason_codes.append("clv_drift")
+    if books_count >= 4:
+        reason_codes.append("market_depth")
+    if spread_cents >= 90:
+        reason_codes.append("wide_market")
+    if not reason_codes:
+        reason_codes.append("baseline_signal")
+
+    return {
+        "vip_execution_score": score,
+        "vip_timing_state": timing_state,
+        "vip_reason_codes": reason_codes[:4],
+        "vip_confidence_band": confidence_band,
+        "vip_action_state": action_state,
+    }
+
+
 @app.get("/api/live")
 async def live_mode(request: Request):
     user_plan = await _get_verified_plan(request)
@@ -4627,6 +4700,7 @@ async def live_mode(request: Request):
                     "away_ml": g.get("away_ml"),
                     "home_team": g.get("home_team"),
                     "away_team": g.get("away_team"),
+                    **_vip_execution_payload(g, minutes),
                 }
             )
     rows.sort(key=lambda x: abs(int(x.get("minutes_since_start", 0))))
