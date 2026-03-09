@@ -7764,11 +7764,6 @@ function renderPicks() {
     const fairLine = p.fairLine || p.fair || p.fair_odds || `${p.odds}`;
     const sampleTag = p.demoData ? `<span class="sample-badge sample-corner">SAMPLE</span>` : '';
     const clvCopy = Number(p.clvExp || 0) > 0 ? `Beat closing line by ${Number(p.clvExp || 0).toFixed(1)} points` : 'Closing-line data pending';
-    const agentCount = Array.isArray(p.agents) ? p.agents.length : 0;
-    const consensusVotes = Math.max(1, Math.min(5, agentCount || Math.round((Number(p.conf || 60) / 100) * 5)));
-    const agentLine = Array.isArray(p.agents) && p.agents.length ? `Agents: ${p.agents.join(', ')}` : '';
-    const edgeTier = edgeVal > 5 ? 'High' : edgeVal >= 2 ? 'Medium' : 'Low';
-    const teaserMarket = freeMarketLabel(p);
     const agentSignalBadges = renderAgentSignalBadges(p.activeAgents);
     const rawStakePct = Number(p.stakeSuggestion?.pct || 0);
     const stakeMeta = rawStakePct > 0 ? (() => {
@@ -7796,27 +7791,15 @@ function renderPicks() {
     const pickBookHtml = hasAffiliateBook
       ? `<a class="pick-book-logo" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()" title="${bookLabelText}">${bookCode}</a><a class="pick-book-cta" data-book="${bookKey}" data-sport="${affSport}" data-game="${affGame}" data-pick="${affPick}" data-team="${primaryTeam}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
       : `<span class="pick-book-logo" title="${bookLabelText}">${bookCode}</span>`;
-    const publicPct = inferredPublicPct(p);
-    const simHome = Math.round(102 + edgeVal + (conf - 55) * 0.22);
-    const simAway = Math.round(99 + (100 - conf) * 0.18);
-    const a3 = agentStatusFor(3).body;
-    const a4 = agentStatusFor(4).body;
-    const a5 = agentStatusFor(5).body;
     const analysisHtml = showDetailed
       ? `${agentSignalBadges}
       <div class="pick-line">Model confidence: <strong>${conf}%</strong></div>
       <div class="pick-line">De-vig fair price: <strong>${esc(String(fairLine))}</strong></div>
-      <div class="pick-line">Public betting skew: <strong>${publicPct}%</strong> on listed side</div>
-      <div class="pick-line">Simulation projected score: <strong>${simAway}-${simHome}</strong></div>
       <div class="pick-line">CLV forecast: <strong>${esc(clvCopy)}</strong></div>
-      <div class="pick-line">Agent 03: ${esc(a3)}</div>
-      <div class="pick-line">Agent 04: ${esc(a4)}</div>
-      <div class="pick-line">Agent 05: ${esc(a5)}</div>
       <div class="pick-line">${stakeLine}</div>
-      <div class="pick-line">${stakeDetail}</div>
-      ${agentLine ? `<div class="pick-line">${esc(agentLine)}</div>` : ''}`
+      <div class="pick-line">${stakeDetail}</div>`
       : `${agentSignalBadges}
-      <div class="pick-line">Upgrade to reveal de-vig price, public %, CLV forecast, and full agent intelligence.</div>`;
+      <div class="pick-line">Upgrade to reveal fair price, CLV forecast, and exact stake guidance.</div>`;
     const card = `<div class="pick grade-${p.grade}" style="animation-delay:${i*.05}s" onclick="togglePickAnalysis(${p.id})">
   ${sampleTag}
   <div class="pick-inner">
