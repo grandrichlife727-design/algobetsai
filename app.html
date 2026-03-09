@@ -7461,8 +7461,8 @@ function scanPolicyDetails() {
     return {
       plan: p,
       automated: true,
-      cadenceLabel: '~2-minute cadence',
-      note: '<strong>VIP:</strong> Auto scans run about every 2 minutes and updates auto-deliver in app. Use Scan Now anytime.',
+      cadenceLabel: '~10-minute cadence',
+      note: '<strong>VIP:</strong> Auto scans run about every 10 minutes to reduce noise and API spend. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'VIP auto-updates are active.',
       blockedFeedback: (left) => `VIP auto-sync runs continuously. Next sync in ${left}.`,
@@ -7474,8 +7474,8 @@ function scanPolicyDetails() {
     return {
       plan: p,
       automated: true,
-      cadenceLabel: '5-minute cadence',
-      note: '<strong>Premium:</strong> Auto scans run every 5 minutes and updates auto-deliver in app. Use Scan Now anytime.',
+      cadenceLabel: '~20-minute cadence',
+      note: '<strong>Premium:</strong> Auto scans run every ~20 minutes to reduce noise and API spend. Use Scan Now anytime.',
       readyPill: 'Auto updates active',
       readyFeedback: 'Premium auto-updates are active.',
       blockedFeedback: (left) => `Premium auto-sync runs continuously. Next sync in ${left}.`,
@@ -9343,8 +9343,8 @@ function setPickSort(v) {
 // ─── AUTO REFRESH ─────────────────────────────────────────────────────────────
 function autoRefreshMsForPlan(plan = currentPlan) {
   const p = normalizePlan(plan);
-  if (p === 'vip') return LOW_DATA_MODE ? 3 * 60 * 1000 : 2 * 60 * 1000;
-  if (p === 'premium') return LOW_DATA_MODE ? 8 * 60 * 1000 : 5 * 60 * 1000;
+  if (p === 'vip') return LOW_DATA_MODE ? 20 * 60 * 1000 : 10 * 60 * 1000;
+  if (p === 'premium') return LOW_DATA_MODE ? 30 * 60 * 1000 : 20 * 60 * 1000;
   return 0;
 }
 

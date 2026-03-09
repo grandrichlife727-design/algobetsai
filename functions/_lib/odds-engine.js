@@ -11,7 +11,7 @@ const SPORT_META = {
 
 const DEFAULT_SPORTS = Object.keys(SPORT_META);
 const DEFAULT_BOOKMAKERS = "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada";
-const TTL_MS = 90 * 1000;
+const TTL_MS = 8 * 60 * 1000;
 const cacheStore = new Map();
 
 function impliedProbability(americanOdds) {
