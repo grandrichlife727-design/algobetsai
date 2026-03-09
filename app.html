@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AlgoBets Ai App | Sports Betting Picks & Predictions Dashboard</title>
-<meta name="description" content="Sports betting picks and predictions dashboard with +EV picks, props, steam moves, fades, and VIP tools across major leagues."/>
-<meta name="keywords" content="sports betting picks app, sports betting predictions app, +EV picks, player props picks, steam moves, fades"/>
+<meta name="description" content="Sports betting picks and predictions dashboard with +EV picks, props, line movement signals, fades, and VIP tools across major leagues."/>
+<meta name="keywords" content="sports betting picks app, sports betting predictions app, +EV picks, player props picks, line movement signals, fades"/>
 <link rel="canonical" href="https://grandrichlife727-design.github.io/algobetsai/app/"/>
 <meta name="robots" content="index,follow,max-image-preview:large"/>
 <meta property="og:type" content="website"/>
@@ -1138,7 +1138,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
             <div class="hps-price">$19.99/mo</div>
             <div class="hps-list">
               <div>High-volume board</div>
-              <div>All sports + props + steam + fades</div>
+              <div>All sports + props + Line Watch + fades</div>
               <div>Full 5-agent breakdown</div>
               <div>2-minute auto refresh</div>
               <div>Parlay builder</div>
@@ -1402,17 +1402,16 @@ img,svg,video,canvas{max-width:100%;height:auto}
     </div>
 
     <div id="v-premium" style="display:none">
-      <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Props, +EV, steam, fades, and parlay tools in one workspace.</div></div>
+      <div class="page-hdr"><div class="page-title">Premium <span>Features</span></div><div class="page-sub">Higher volume picks plus full tools access and faster updates.</div></div>
       <div class="growth-grid" style="margin-top:0;max-width:100%">
         <div class="growth-card">
           <div class="growth-title">Premium Signals</div>
           <div class="growth-sub" id="premium-bestbets"><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:62%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:88%;margin-bottom:8px"></span><span class="skeleton skeleton-shimmer" style="display:block;height:9px;width:52%"></span></div>
         </div>
         <div class="growth-card">
-          <div class="growth-title">Premium Tools</div>
-          <div class="rf-row"><button class="paywall-cta" onclick="go('props')">Props Edge</button><button class="paywall-cta" onclick="go('ev')">+EV</button></div>
-          <div class="rf-row"><button class="paywall-cta" onclick="go('steam')">Steam</button><button class="paywall-cta" onclick="go('fades')">Fades</button></div>
-          <div class="rf-row"><button class="paywall-cta" onclick="go('parlay')">Parlay</button></div>
+          <div class="growth-title">Workspace Access</div>
+          <div class="growth-sub">Use Tools Workspace for +EV, Props, Line Watch, Fades, and Parlay workflows.</div>
+          <div class="rf-row"><button class="paywall-cta" onclick="go('tools')">Open Tools Workspace</button></div>
         </div>
         <div class="growth-card">
           <div class="growth-title">Prop Model Packs</div>
@@ -1473,7 +1472,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="growth-card">
           <div class="growth-title">Feature Matrix</div>
           <div class="growth-sub">Free: 3 picks preview.</div>
-          <div class="growth-sub">Premium: Props, +EV, Steam, Fades, and higher pick volume.</div>
+          <div class="growth-sub">Premium: Props, +EV, Line Watch, Fades, and higher pick volume.</div>
           <div class="growth-sub">VIP: Premium + execution tools + line-rush alerts + VIP Discord.</div>
         </div>
       </div>
@@ -1672,7 +1671,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
       <div class="page-hdr"><div class="page-title">Tools <span>Workspace</span></div><div class="page-sub">Use focused workflows for edge finding, execution timing, and sizing decisions.</div></div>
       <div class="tools-topline">
         <div class="growth-note" id="tools-af-note">Tracking tool usage...</div>
-        <span class="tools-count" id="tools-feature-count">12 Features Active</span>
+        <span class="tools-count" id="tools-feature-count">Tools Active</span>
       </div>
       <div class="tools-section">
         <div class="tools-section-title">Core Tools</div>
@@ -4281,7 +4280,12 @@ function renderToolsWorkspace() {
   const vipCt = Array.isArray(VIP_LIVE_STATE?.cached) ? VIP_LIVE_STATE.cached.length : 0;
   const parlayCt = Array.isArray(legs) ? legs.length : 0;
   const lastSync = lastRefresh ? timeAgo(lastRefresh) : 'not synced yet';
-  const featureCount = canUseVip() ? 12 : canUsePremium() ? 10 : 8;
+  const featureCount = Array.from(document.querySelectorAll('#v-tools .tool-tile')).filter((btn) => {
+    const tier = String(btn.getAttribute('data-tier') || 'free');
+    if (tier === 'vip') return canUseVip();
+    if (tier === 'premium') return canUsePremium();
+    return true;
+  }).length;
 
   const setText = (id, txt) => {
     const el = document.getElementById(id);
@@ -4289,12 +4293,12 @@ function renderToolsWorkspace() {
   };
   setText('tool-meta-ev', `Today: ${evCt} edges · Last sync: ${lastSync}`);
   setText('tool-meta-props', `Today: ${propsCt} props · Coverage: NBA/NFL`);
-  setText('tool-meta-steam', `Today: ${steamCt} moves · Status: market watch`);
+  setText('tool-meta-steam', `Today: ${steamCt} line moves · Status: market watch`);
   setText('tool-meta-vip', `Live windows: ${vipCt} · CLV ticker: active`);
   setText('tool-meta-fades', `Today: ${fadeCt} fade spots · Crowd skew tracked`);
   setText('tool-meta-parlay', `Current ticket: ${parlayCt} legs · Risk check ready`);
   setText('tool-meta-boost', 'Promo check: ready · EV delta in 1 tap');
-  setText('tools-feature-count', `${featureCount} Features Active`);
+  setText('tools-feature-count', `${featureCount} Tools Active`);
 }
 
 function loadVipSettings() {
@@ -6311,7 +6315,7 @@ function renderHomeModules() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="tier-tag premium">Props Edge <strong>${propsCt}</strong></div>
         <div class="tier-tag premium">+EV <strong>${evCt}</strong></div>
-        <div class="tier-tag premium">Steam <strong>${steamCt}</strong></div>
+        <div class="tier-tag premium">Line Watch <strong>${steamCt}</strong></div>
         <div class="tier-tag premium">Fades <strong>${fadeCt}</strong></div>
       </div>`;
     if (on) {
@@ -6323,7 +6327,7 @@ function renderHomeModules() {
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
             <div style="background:rgba(6,6,10,.92);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;text-align:center">
               <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">PREMIUM TEASE</div>
-              <div style="font-size:12px;color:var(--sub)">Includes: Props · +EV filter · Steam moves · Public fades · Parlay builder</div>
+              <div style="font-size:12px;color:var(--sub)">Includes: Props · +EV filter · Line Watch moves · Public fades · Parlay builder</div>
               <button class="paywall-cta" style="margin-top:8px" onclick="openUpgradePicker()">Unlock Premium</button>
             </div>
           </div>
@@ -6611,10 +6615,10 @@ function updateTrialCard() {
     }
 
     if (!eligible) {
-      copy.innerHTML = `<strong>3-day trial already used</strong> on this account. Upgrade to Premium to unlock +EV plays, props, steam moves, and 2-minute auto refresh.`;
+      copy.innerHTML = `<strong>3-day trial already used</strong> on this account. Upgrade to Premium to unlock +EV plays, props, Line Watch signals, and 2-minute auto refresh.`;
     } else {
       copy.innerHTML = registered
-        ? `<strong>Try Premium free for 3 days.</strong> Card required at checkout. Cancel before day 3 to avoid charges.`
+        ? `<strong>Try Premium free for 3 days.</strong> Cancel before day 3 to avoid charges.`
         : `<strong>Create your free account</strong>, then start a 3-day Premium trial.`;
     }
     if (claimBtn) {
@@ -6765,7 +6769,7 @@ function openUpgradePicker(force = false, preferredTier = '') {
   }
   let opts = p === 'free'
     ? [
-        {tier: 'premium', title: 'Premium', desc: 'Props Edge, EV board, Steam, Fade, and premium picks'},
+        {tier: 'premium', title: 'Premium', desc: 'Props Edge, EV board, Line Watch, Fade, and premium picks'},
         {tier: 'vip', title: 'VIP', desc: 'Everything in Premium + VIP Pick, live plays, alerts, and VIP Discord'},
       ]
     : [
@@ -8332,10 +8336,10 @@ function renderSteam() {
   const premiumOn = canUsePremium();
   const rows = premiumOn ? STEAMDATA : STEAMDATA.slice(0, 1);
   countEl.textContent = premiumOn
-    ? `${rows.length} steam move${rows.length !== 1 ? 's' : ''} found`
+    ? `${rows.length} line move${rows.length !== 1 ? 's' : ''} found`
     : 'Line Watch free preview';
   if (!rows.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No steam moves right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🌊</div><div class="empty-title">No Line Watch signals right now</div><div class="empty-sub">Run another scan after lines move.</div></div>`;
     return;
   }
   const cards = rows.map((s, i) => `
@@ -8354,7 +8358,7 @@ function renderSteam() {
   if (!premiumOn) {
     el.innerHTML = `${cards}
       <div class="growth-note" style="margin-top:10px">
-        Free preview shows 1 delayed Line Watch card. Upgrade to Premium for the full real-time steam board.
+        Free preview shows 1 delayed Line Watch card. Upgrade to Premium for the full real-time Line Watch board.
         <button class="paywall-cta" style="margin-left:8px" onclick="openUpgradePicker(false,'premium')">Unlock Premium</button>
       </div>`;
     return;
@@ -8933,13 +8937,13 @@ function go(name) {
   }
   if (name === 'fades' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
-    growthNudges.fadeLocks += 1;
-    if (growthNudges.fadeLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
+    openUpgradePicker(false, 'premium');
+    return;
   }
   if (name === 'props' && !canUsePremium()) {
     showToast('Premium feature - Start 3-day trial');
-    growthNudges.fadeLocks += 1;
-    if (growthNudges.fadeLocks >= 2) setTimeout(() => openUpgradePicker(), 180);
+    openUpgradePicker(false, 'premium');
+    return;
   }
   currentTab = name;
   closeMobilePremium();
