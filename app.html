@@ -990,6 +990,22 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .install-step b{color:var(--cyan)}
 .install-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
 .btn-ico{width:15px;height:15px;display:inline-block;vertical-align:-2px;margin-right:6px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.coach-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:760}
+.coach-ov.on{display:block}
+.coach-pop{position:fixed;width:min(340px,calc(100vw - 24px));background:linear-gradient(180deg,#151822,#10131b);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.coach-kicker{font-size:10px;color:var(--cyan);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.coach-title{font-size:15px;font-weight:900;color:var(--text);margin-top:4px}
+.coach-sub{font-size:12px;color:var(--sub);line-height:1.45;margin-top:6px}
+.coach-foot{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.coach-step{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.coach-actions{display:flex;align-items:center;gap:8px}
+.coach-skip{background:none;border:none;color:#a7a7b7;font-size:11px;font-weight:700;cursor:pointer;padding:0}
+.coach-skip:hover{color:#fff}
+.coach-target{position:relative;z-index:761;box-shadow:0 0 0 2px rgba(34,211,238,.65),0 0 0 8px rgba(34,211,238,.16);border-radius:10px}
+@media(max-width:560px){
+  .coach-pop{width:min(320px,calc(100vw - 20px));padding:11px}
+  .coach-title{font-size:14px}
+}
 
 /* API STATUS */
 .api-status{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
@@ -2219,6 +2235,21 @@ img,svg,video,canvas{max-width:100%;height:auto}
   </div>
 </div>
 
+<div class="coach-ov" id="coach-ov" onclick="onCoachOverlayClick(event)">
+  <div class="coach-pop" id="coach-pop" role="dialog" aria-modal="true" aria-label="Quick tour">
+    <div class="coach-kicker">Quick Tour</div>
+    <div class="coach-title" id="coach-title">Scan in one tap</div>
+    <div class="coach-sub" id="coach-sub">Use Scan Now to pull the newest edge board.</div>
+    <div class="coach-foot">
+      <div class="coach-step" id="coach-step">1 / 3</div>
+      <div class="coach-actions">
+        <button class="coach-skip" id="coach-skip" type="button">Skip</button>
+        <button class="paywall-cta" id="coach-next" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -2282,6 +2313,7 @@ const AFFILIATE_STATS_KEY = 'algobets-affiliate-stats-v1';
 const THEME_KEY = 'algobets-theme-v1';
 const VIP_DISCORD_UNLOCK_TOAST_KEY = 'algobets-vip-discord-unlock-toast-v1';
 const AGENT_DOT_HINT_KEY = 'algobets-agent-dot-hint-v1';
+const ONBOARDING_KEY = 'algobets-onboarding-v1';
 const AFFILIATE_BOOKS = ['draftkings','fanduel','betmgm','caesars','betrivers','fanatics','espnbet','hardrock'];
 const DEFAULT_AFFILIATE_LINKS = {
   draftkings: 'https://sportsbook.draftkings.com',
@@ -2360,7 +2392,7 @@ const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
 const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
-const APP_BUILD = '2026-03-08-dashboard-restore-1';
+const APP_BUILD = '2026-03-08-onboarding-tour-1';
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');
@@ -2412,6 +2444,24 @@ let lastRefresh = null;
 let lastScanPolicy = {};
 let isScanning = false;
 let currentTab = 'home';
+let coachState = {done: false, active: false, stepIndex: 0, targetEl: null};
+const COACH_STEPS = [
+  {
+    title: 'Scan in one tap',
+    body: 'Use Scan Now to refresh the current board.',
+    selectors: ['#scan-btn']
+  },
+  {
+    title: 'Find top edges',
+    body: 'Open Picks for the latest ranked edges and execution cards.',
+    selectors: ['.sidebar .nav-item[onclick="go(\'picks\')"]', '#mn-picks']
+  },
+  {
+    title: 'Open the toolset',
+    body: 'Use Tools for calculators, market maps, and execution helpers.',
+    selectors: ['.sidebar .nav-item[onclick="go(\'tools\')"]', '#mn-tools']
+  }
+];
 let currentPlan = 'free';
 let planConfig = {};
 let paywallMeta = null;
@@ -4899,6 +4949,141 @@ function skipAuthNudge() {
 
 function maybePromptAuthNudge() {
   return;
+}
+
+function loadCoachState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ONBOARDING_KEY) || '{}');
+    coachState.done = !!raw.done;
+  } catch (_) {
+    coachState.done = false;
+  }
+}
+
+function saveCoachState() {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, JSON.stringify({done: !!coachState.done, completed_at: Date.now()}));
+  } catch (_) {}
+}
+
+function clearCoachTarget() {
+  if (coachState.targetEl) coachState.targetEl.classList.remove('coach-target');
+  coachState.targetEl = null;
+}
+
+function resolveCoachTarget(step) {
+  if (!step || !Array.isArray(step.selectors)) return null;
+  for (const sel of step.selectors) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) return el;
+  }
+  return null;
+}
+
+function closeCoachTour(markDone = false) {
+  const ov = document.getElementById('coach-ov');
+  if (ov) ov.classList.remove('on');
+  clearCoachTarget();
+  coachState.active = false;
+  coachState.stepIndex = 0;
+  if (markDone) {
+    coachState.done = true;
+    saveCoachState();
+  }
+}
+
+function renderCoachStep() {
+  if (!coachState.active || coachState.done || currentTab !== 'home') return;
+  const step = COACH_STEPS[coachState.stepIndex];
+  if (!step) {
+    closeCoachTour(true);
+    return;
+  }
+  const ov = document.getElementById('coach-ov');
+  const pop = document.getElementById('coach-pop');
+  const title = document.getElementById('coach-title');
+  const sub = document.getElementById('coach-sub');
+  const stepEl = document.getElementById('coach-step');
+  const next = document.getElementById('coach-next');
+  if (!ov || !pop || !title || !sub || !stepEl || !next) return;
+
+  const target = resolveCoachTarget(step);
+  if (!target) {
+    coachState.stepIndex += 1;
+    renderCoachStep();
+    return;
+  }
+
+  clearCoachTarget();
+  coachState.targetEl = target;
+  coachState.targetEl.classList.add('coach-target');
+  title.textContent = step.title;
+  sub.textContent = step.body;
+  stepEl.textContent = `${coachState.stepIndex + 1} / ${COACH_STEPS.length}`;
+  next.textContent = coachState.stepIndex === COACH_STEPS.length - 1 ? 'Done' : 'Next';
+  ov.classList.add('on');
+
+  requestAnimationFrame(() => {
+    const rect = target.getBoundingClientRect();
+    const popW = pop.offsetWidth || 320;
+    const popH = pop.offsetHeight || 140;
+    const margin = 10;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    let top = rect.bottom + margin;
+    if (spaceBelow < popH + margin) top = rect.top - popH - margin;
+    top = Math.max(margin, Math.min(top, window.innerHeight - popH - margin));
+    let left = rect.left + (rect.width / 2) - (popW / 2);
+    left = Math.max(margin, Math.min(left, window.innerWidth - popW - margin));
+    pop.style.top = `${Math.round(top)}px`;
+    pop.style.left = `${Math.round(left)}px`;
+  });
+}
+
+function startCoachTour(force = false) {
+  if (!force && coachState.done) return;
+  if (currentTab !== 'home') return;
+  if (coachState.active) return;
+  coachState.active = true;
+  coachState.stepIndex = 0;
+  renderCoachStep();
+}
+
+function nextCoachStep() {
+  if (!coachState.active) return;
+  if (coachState.stepIndex >= COACH_STEPS.length - 1) {
+    closeCoachTour(true);
+    return;
+  }
+  coachState.stepIndex += 1;
+  renderCoachStep();
+}
+
+function skipCoachTour() {
+  closeCoachTour(true);
+}
+
+function onCoachOverlayClick(e) {
+  const ov = document.getElementById('coach-ov');
+  if (!ov) return;
+  if (e && e.target === ov) skipCoachTour();
+}
+
+function bindCoachTour() {
+  const next = document.getElementById('coach-next');
+  const skip = document.getElementById('coach-skip');
+  if (next && next.dataset.bound !== '1') {
+    next.dataset.bound = '1';
+    next.addEventListener('click', nextCoachStep);
+  }
+  if (skip && skip.dataset.bound !== '1') {
+    skip.dataset.bound = '1';
+    skip.addEventListener('click', skipCoachTour);
+  }
+  window.addEventListener('resize', () => {
+    if (coachState.active) renderCoachStep();
+  });
 }
 
 async function submitAuthProfile() {
@@ -8724,6 +8909,8 @@ function go(name) {
     loadProfileSettings();
     loadAlertPacks();
   }
+  if (name !== 'home' && coachState.active) closeCoachTour(false);
+  if (name === 'home') setTimeout(() => startCoachTour(), 320);
   saveState();
 }
 
@@ -8807,6 +8994,8 @@ function bindUiAccessibility() {
       if (auth && auth.classList.contains('on')) auth.classList.remove('on');
       const nudge = document.getElementById('auth-nudge-ov');
       if (nudge && nudge.classList.contains('on')) nudge.classList.remove('on');
+      const coach = document.getElementById('coach-ov');
+      if (coach && coach.classList.contains('on')) skipCoachTour();
       closeMobilePremium();
       closeMobileMore();
       closeMobileVip();
@@ -8858,6 +9047,7 @@ loadVipSettings();
 loadVipLiveState();
 loadFreeDelayState();
 loadTrialUiState();
+loadCoachState();
 loadProfile();
 updateLowDataUi();
 loadAffiliateLocalState();
@@ -8867,6 +9057,7 @@ applyAffiliateLinks();
 applyHomeExperimentLayout();
 renderAffiliateDashboard();
 bindUiAccessibility();
+bindCoachTour();
 bindHeartbeatActivityTracking();
 bindMobileNavFeedback();
 bindAgentStatusCards();
@@ -8879,6 +9070,7 @@ registerServiceWorker();
 if (demoMode) applyDemoDataset();
 loadCachedPicksFirstPaint();
 applySavedSelections();
+setTimeout(() => startCoachTour(), 400);
 updateFabQuickActions();
 updateScanCooldownUi();
 renderPerf();
