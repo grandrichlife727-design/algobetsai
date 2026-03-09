@@ -4354,7 +4354,13 @@ function renderPremiumTools() {
   if (bestEl) {
     const {cards, vipCoreIds} = getPremiumBestBetCards();
     bestEl.innerHTML = cards.length
-      ? cards.map((p, i) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<cards.length-1?'1px solid var(--border)':'none'}"><span>${vipCoreIds.has(p.id) ? '<span class="chip up" style="margin-right:6px">VIP</span>' : ''}${esc(p.bet)} ${esc(p.odds)}</span><strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong></div>`).join('')
+      ? cards.map((p, i) => {
+        const d = formatPickDateTiny(p.gameTimeRaw || p.game_time || '');
+        return `<div style="display:flex;justify-content:space-between;gap:8px;padding:${i?'8px':'0'} 0;border-bottom:${i<cards.length-1?'1px solid var(--border)':'none'}">
+          <span>${vipCoreIds.has(p.id) ? '<span class="chip up" style="margin-right:6px">VIP</span>' : ''}${esc(p.bet)} ${esc(p.odds)}${d ? `<span class="game-date-tiny" style="margin-left:6px">${esc(d)}</span>` : ''}</span>
+          <strong style="color:var(--cyan)">+${Number(p.ev || 0).toFixed(1)}%</strong>
+        </div>`;
+      }).join('')
       : 'Run scan to load best bet cards.';
   }
   if (packsEl) {
@@ -7502,6 +7508,7 @@ function normalizeEV(e) {
   return {
     bet:  esc(e.bet  || '—'),
     game: esc(e.game || '—'),
+    gameTimeRaw: e.game_time || e.gameTimeRaw || null,
     ev:   Math.round(parseFloat(e.ev || 0) * 10) / 10,
     best: esc(e.books_compared ? `${e.books_compared} books` : '—'),
     bo:   esc(e.bookOdds || '—'),
@@ -7645,6 +7652,7 @@ function computeSteamSignals(games) {
       signals.push({
         sport: g.label || g.sport || '',
         game: `${g.away_team || 'Away'} @ ${g.home_team || 'Home'}`,
+        game_time: g.commence_time || g.commence || '',
         side: s.team,
         book: bookLabel(best.book),
         odds: best.price > 0 ? `+${best.price}` : String(best.price),
@@ -8351,7 +8359,7 @@ function renderEV() {
   }
   el.innerHTML = EVDATA.slice(0, 20).map(e => `
     <div class="ev-row">
-      <div><div class="ev-bet">${e.bet}</div><div class="ev-game">${e.game}</div></div>
+      <div><div class="ev-bet">${e.bet}</div><div class="ev-game">${e.game}${formatPickDateTiny(e.gameTimeRaw) ? ` <span class="game-date-tiny">${esc(formatPickDateTiny(e.gameTimeRaw))}</span>` : ''}</div></div>
       <div class="ev-pct" style="color:${evColor(e.ev)}">+${e.ev}%</div>
       <div class="ev-book" style="color:var(--text)">${e.best}</div>
       <div class="ev-odds" style="color:var(--cyan)">${e.bo}</div>
@@ -8395,7 +8403,7 @@ function renderSteam() {
     <div class="steam-card" style="animation-delay:${i*.05}s">
       <div class="steam-row">
         <div>
-          <div class="steam-game">${esc(s.sport)} · ${esc(s.game)}</div>
+          <div class="steam-game">${esc(s.sport)} · ${esc(s.game)}${formatPickDateTiny(s.game_time) ? ` <span class="game-date-tiny">${esc(formatPickDateTiny(s.game_time))}</span>` : ''}</div>
           <div class="steam-signal">${esc(s.side)} ${esc(s.odds)}</div>
         </div>
         <div class="steam-chip">${esc(s.confidence)} ${s.gap}%</div>
@@ -8424,6 +8432,7 @@ function computePublicFadesFromPicks(picks) {
       .map(p => ({
         sport: p.sport || '',
         game: p.game || '',
+        game_time: p.gameTimeRaw || p.game_time || '',
         bet: p.bet || '',
         odds: p.odds || '',
         publicPct: Number(p.pu || 0),
@@ -8450,6 +8459,7 @@ function computePublicFadesFromPicks(picks) {
       return {
         sport: p.sport || '',
         game: p.game || '',
+        game_time: p.gameTimeRaw || p.game_time || '',
         bet: p.bet || '',
         odds: p.odds || '',
         publicPct,
@@ -8494,7 +8504,7 @@ function renderFades() {
   el.innerHTML = FADESDATA.map((f, i) => `
     <div class="fade-card" style="animation-delay:${i*.04}s">
       <div class="fade-top">
-        <div><div class="fade-game">${esc(f.sport)} · ${esc(f.game)}</div><div class="fade-bet">${esc(f.bet)} ${esc(f.odds)}</div></div>
+        <div><div class="fade-game">${esc(f.sport)} · ${esc(f.game)}${formatPickDateTiny(f.game_time) ? ` <span class="game-date-tiny">${esc(formatPickDateTiny(f.game_time))}</span>` : ''}</div><div class="fade-bet">${esc(f.bet)} ${esc(f.odds)}</div></div>
         <div class="fade-chip">Public ${f.publicPct}%</div>
       </div>
       <div class="fade-meta">Sharp ${f.sharpPct}% · +${f.ev}% EV</div>

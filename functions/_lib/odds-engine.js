@@ -243,6 +243,7 @@ export function evFinderRows(scanPayload) {
     rows.push({
       bet: p.bet,
       game: p.game,
+      game_time: p.game_time || "",
       ev: p.ev,
       bookOdds: p.odds,
       book: p.best_book || p.book || "",
