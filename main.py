@@ -931,7 +931,7 @@ def _ensure_growth_user(user_id: str) -> dict[str, Any]:
 
 def _mark_user_activity(user_id: str):
     uid = str(user_id or "").strip().lower()
-    if not _is_registered_user_id(uid):
+    if not uid:
         return
     active = _growth_db.setdefault("active_users", {})
     if not isinstance(active, dict):
@@ -945,6 +945,17 @@ def _mark_user_activity(user_id: str):
         active.pop(k, None)
     _growth_db["active_users"] = active
     _save_growth_db()
+
+
+def _request_activity_key(request: Request, user_id: str = "") -> str:
+    uid = str(user_id or "").strip().lower()
+    if _is_registered_user_id(uid):
+        return uid
+    ip = _client_ip(request)
+    if not ip:
+        return ""
+    digest = hashlib.sha1(ip.encode("utf-8")).hexdigest()[:16]
+    return f"guest_{digest}"
 
 
 def _has_recent_active_users(window_minutes: Optional[int] = None) -> bool:
@@ -1022,6 +1033,15 @@ def _scan_tier_ttl_seconds(plan: str) -> int:
     if p == PLAN_PREMIUM:
         return 150
     return 1200
+
+
+def _tier_data_delay_seconds(plan: str) -> int:
+    p = normalize_plan_name(plan)
+    if p == PLAN_VIP:
+        return 0
+    if p == PLAN_PREMIUM:
+        return 150
+    return 900
 
 
 def _scan_cache_bucket(ts: float, ttl: int) -> int:
@@ -4640,7 +4660,7 @@ async def scan(request: Request):
     user_plan = await _get_verified_plan(request)
     tier = TIER_CONFIG.get(user_plan, TIER_CONFIG[PLAN_FREE])
     user_id = _request_user_id(request) or "anon"
-    _mark_user_activity(user_id)
+    _mark_user_activity(_request_activity_key(request, user_id))
     user_growth = _ensure_growth_user(user_id)
     agent_weights = user_growth.get("agent_weights", {})
     now_ts = time.time()
@@ -4659,6 +4679,7 @@ async def scan(request: Request):
             scan_policy["served_from_cache"] = True
             scan_policy["cache_key"] = tier_cache_key
             scan_policy["cache_ttl_seconds"] = tier_cache_ttl
+            scan_policy["data_delay_seconds"] = _tier_data_delay_seconds(user_plan)
             payload["scan_policy"] = scan_policy
             payload["agent_health"] = _agent_health_snapshot()
             return payload
@@ -4681,6 +4702,7 @@ async def scan(request: Request):
                 "min_interval_seconds": min_interval,
                 "cooldown_remaining_seconds": cooldown_remaining,
                 "served_from_cache": True,
+                "data_delay_seconds": _tier_data_delay_seconds(user_plan),
             }
             payload["agent_health"] = _agent_health_snapshot()
             return payload
@@ -4695,6 +4717,7 @@ async def scan(request: Request):
                     "min_interval_seconds": min_interval,
                     "cooldown_remaining_seconds": cooldown_remaining,
                     "served_from_cache": True,
+                    "data_delay_seconds": _tier_data_delay_seconds(user_plan),
                 }
                 payload["agent_health"] = _agent_health_snapshot()
                 return payload
@@ -4714,6 +4737,7 @@ async def scan(request: Request):
             scan_policy = dict(payload.get("scan_policy") or {})
             scan_policy["served_from_cache"] = True
             scan_policy["quota_soft_limited"] = True
+            scan_policy["data_delay_seconds"] = _tier_data_delay_seconds(user_plan)
             payload["scan_policy"] = scan_policy
             payload["quota_remaining"] = _quota_remaining
             payload["quota_soft_limited"] = True
@@ -4797,6 +4821,7 @@ async def scan(request: Request):
             "cache_key": tier_cache_key,
             "cache_ttl_seconds": tier_cache_ttl,
             "updated_at": int(now_ts),
+            "data_delay_seconds": _tier_data_delay_seconds(user_plan),
         },
         "agent_health": _agent_health_snapshot(),
     }

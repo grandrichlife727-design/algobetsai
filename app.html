@@ -406,7 +406,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
 .pick-primary-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
 .pick-main{font-size:14px;font-weight:700;color:var(--text);line-height:1.35}
 .pick-sub-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--sub);margin-bottom:7px}
-.pick-sub-book{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.pick-sub-book{white-space:normal;overflow:visible;text-overflow:clip;max-width:100%;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .pick-sub-conf{font-family:var(--mono);font-weight:800;color:var(--cyan);white-space:nowrap}
 .edge-badge.edge-main{font-size:16px;padding:5px 10px;line-height:1;font-weight:900}
 .edge-badge.edge-main{background:rgba(0,229,160,.16)!important;color:var(--green)!important;border:1px solid rgba(0,229,160,.28)!important}
@@ -2277,6 +2277,7 @@ let tomorrowFetchedAt = 0;
 let newsImpactFetchedAt = 0;
 let perfFetchedAt = 0;
 let lastRefresh = null;
+let lastScanPolicy = {};
 let isScanning = false;
 let currentTab = 'picks';
 let currentPlan = 'free';
@@ -7266,6 +7267,7 @@ async function doScan(silent = false) {
         }
         if (raw.fallback_mode) showToast('Showing best available picks while market edges are thin');
         paywallMeta = raw.paywall ? { ...raw.paywall, total_picks: Number(raw.picks_total || arr.length) } : null;
+        lastScanPolicy = (raw && typeof raw.scan_policy === 'object') ? raw.scan_policy : {};
         ODDSGAMES = normalizeOddsGames(raw.games || []);
         STEAMDATA = computeSteamSignals(raw.games || []);
         if (raw.performance || raw.streak) {
@@ -7404,9 +7406,11 @@ function renderPicks() {
   const usingDemoData = demoMode || liveOddsPaused || sourcePicks.some(p => p.demoData);
   if (picksRefreshedEl) {
     const modeLabel = bankrollMode();
+    const delaySecs = Number(lastScanPolicy?.data_delay_seconds || 0);
+    const delayLabel = delaySecs > 0 ? ` · Delay ${Math.round(delaySecs / 60)}m` : '';
     picksRefreshedEl.textContent = usingDemoData
       ? 'Live odds paused'
-      : (lastRefresh ? `Updated ${timeAgo(lastRefresh)} · Mode: ${modeLabel}` : `Mode: ${modeLabel}`);
+      : (lastRefresh ? `Updated ${timeAgo(lastRefresh)} · Mode: ${modeLabel}${delayLabel}` : `Mode: ${modeLabel}${delayLabel}`);
   }
   const modeMinConf = bankrollModeMinConf();
   const effectiveMinConf = Math.max(Number(pickMinConf || 0), Number(modeMinConf || 0));
@@ -7635,8 +7639,9 @@ function renderPicks() {
     const bookKey = normalizeBookKey(p.bookKey || p.bookRaw || p.book || '');
     const bookLabelText = esc(bookLabel(bookKey || p.bookRaw || p.book || ''));
     const hasAffiliateBook = AFFILIATE_BOOKS.includes(bookKey);
+    const lockEdgeLabel = `Lock in +${edgeVal.toFixed(1)}% Edge`;
     const pickBookHtml = hasAffiliateBook
-      ? `<a class="pick-book-link" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">Bet Now</a>`
+      ? `<a class="pick-book-link" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${bookLabelText}</a><a class="pick-book-cta" data-book="${bookKey}" href="#" target="_blank" onclick="event.stopPropagation()">${lockEdgeLabel}</a>`
       : `<strong>${bookLabelText}</strong>`;
     const publicPct = inferredPublicPct(p);
     const simHome = Math.round(102 + edgeVal + (conf - 55) * 0.22);
