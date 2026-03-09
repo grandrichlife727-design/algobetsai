@@ -12,7 +12,22 @@ const SPORT_META = {
 const DEFAULT_SPORTS = Object.keys(SPORT_META);
 const DEFAULT_BOOKMAKERS = "draftkings,fanduel,betmgm,pinnacle,williamhill_us,bovada";
 const TTL_MS = 8 * 60 * 1000;
+const MAX_UPCOMING_DAYS = 7;
+const STARTED_GRACE_MINUTES = 2;
 const cacheStore = new Map();
+
+function minutesUntil(isoTime) {
+  const t = Date.parse(String(isoTime || ""));
+  if (!Number.isFinite(t)) return null;
+  return (t - Date.now()) / 60000;
+}
+
+function withinUpcomingWindow(isoTime, maxDays = MAX_UPCOMING_DAYS) {
+  const mins = minutesUntil(isoTime);
+  if (mins == null) return false;
+  const maxAhead = Math.max(1, Number(maxDays || MAX_UPCOMING_DAYS)) * 24 * 60;
+  return mins >= -STARTED_GRACE_MINUTES && mins <= maxAhead;
+}
 
 function impliedProbability(americanOdds) {
   const o = Number(americanOdds);
@@ -262,6 +277,7 @@ export async function getScanPayload(env, options = {}) {
   const sports = Array.isArray(options?.sports) && options.sports.length ? options.sports : DEFAULT_SPORTS;
   const cacheKey = `scan:${sports.join(",")}`;
   const force = !!options?.force;
+  const maxUpcomingDays = Math.max(1, Number(env?.MAX_UPCOMING_GAME_DAYS || MAX_UPCOMING_DAYS));
 
   if (!force && cacheStore.has(cacheKey)) {
     const cached = cacheStore.get(cacheKey);
@@ -285,19 +301,21 @@ export async function getScanPayload(env, options = {}) {
     if (Number.isFinite(oddsPack.remaining)) quotaRemaining = oddsPack.remaining;
 
     for (const event of oddsPack.rows) {
+      if (!withinUpcomingWindow(event?.commence_time, maxUpcomingDays)) continue;
       const { game, picks } = buildGameAndPicksFromEvent(sport, event);
       if (game) allGames.push(game);
       if (picks.length) allPicks.push(...picks);
     }
   }
 
+  const filteredPicks = allPicks.filter((p) => withinUpcomingWindow(p?.game_time, maxUpcomingDays));
   allGames.sort((a, b) => String(a.commence_time || "").localeCompare(String(b.commence_time || "")));
-  allPicks.sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0));
+  filteredPicks.sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0));
 
-  const visible = allPicks.slice(0, 8);
+  const visible = filteredPicks.slice(0, 8);
   const payload = {
     picks: visible,
-    picks_total: allPicks.length,
+    picks_total: filteredPicks.length,
     games: allGames,
     games_total: allGames.length,
     fallback_mode: false,
