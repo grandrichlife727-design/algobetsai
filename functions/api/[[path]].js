@@ -1,10 +1,38 @@
 import { evFinderRows, getScanPayload } from "../_lib/odds-engine.js";
+
 const UPSTREAM = "https://algobetsai.onrender.com";
+const STRIPE_BASE = "https://api.stripe.com";
 const PLAN_FREE = "free";
 const PLAN_PREMIUM = "premium";
 const PLAN_VIP = "vip";
 const AUTH_TTL_SECONDS = 30 * 24 * 3600;
+const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
 const userState = new Map();
+
+function normalizePlan(plan) {
+  const p = String(plan || "").trim().toLowerCase();
+  if (p === "vip" || p === "sharp") return PLAN_VIP;
+  if (p === "premium" || p === "pro") return PLAN_PREMIUM;
+  return PLAN_FREE;
+}
+
+function splitCsvEnv(value) {
+  return String(value || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function json(body, status = 200, origin = "cloudflare-api") {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "x-algobets-origin": origin,
+    },
+  });
+}
 
 function toUpstreamUrl(requestUrl, pathParam) {
   const source = new URL(requestUrl);
@@ -32,6 +60,136 @@ function forwardHeaders(request) {
   return headers;
 }
 
+function stripeConfigured(env) {
+  const secret = String(env?.STRIPE_SECRET_KEY || "").trim();
+  const premium = splitCsvEnv(env?.STRIPE_PREMIUM_PRICE_IDS);
+  const vip = splitCsvEnv(env?.STRIPE_VIP_PRICE_IDS);
+  const premiumAnnual = splitCsvEnv(env?.STRIPE_PREMIUM_ANNUAL_PRICE_IDS);
+  const vipAnnual = splitCsvEnv(env?.STRIPE_VIP_ANNUAL_PRICE_IDS);
+  const enabledFlag = String(env?.BILLING_ENABLED || "true").trim().toLowerCase() !== "false";
+  return {
+    enabled: enabledFlag && !!secret,
+    secret,
+    premium,
+    vip,
+    premiumAnnual,
+    vipAnnual,
+  };
+}
+
+function defaultReturnBase(env) {
+  return String(env?.FRONTEND_URL || "https://algobetsai.pages.dev/app.html").trim();
+}
+
+function allowedBillingOrigins(env) {
+  const configured = splitCsvEnv(env?.BILLING_RETURN_ORIGINS);
+  if (configured.length) return configured.map((x) => x.replace(/\/+$/, "").toLowerCase());
+  return [
+    "https://algobetsai.pages.dev",
+    "https://algobetsai.onrender.com",
+    "https://grandrichlife727-design.github.io",
+  ];
+}
+
+function isAllowedReturnUrl(rawUrl, env) {
+  try {
+    const u = new URL(String(rawUrl || "").trim());
+    if (!["https:", "http:"].includes(u.protocol)) return false;
+    if (["localhost", "127.0.0.1"].includes(u.hostname)) return true;
+    const origin = `${u.protocol}//${u.host}`.replace(/\/+$/, "").toLowerCase();
+    return allowedBillingOrigins(env).includes(origin);
+  } catch (_) {
+    return false;
+  }
+}
+
+function priceIdForTierCycle(cfg, tier, cycle = "monthly") {
+  const c = String(cycle || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+  const t = normalizePlan(tier);
+  if (t === PLAN_PREMIUM) {
+    if (c === "annual") return cfg.premiumAnnual[0] || "";
+    return cfg.premium[0] || "";
+  }
+  if (t === PLAN_VIP) {
+    if (c === "annual") return cfg.vipAnnual[0] || "";
+    return cfg.vip[0] || "";
+  }
+  return "";
+}
+
+function planFromPriceId(cfg, priceId) {
+  const id = String(priceId || "").trim();
+  if (!id) return PLAN_FREE;
+  if (cfg.vip.includes(id) || cfg.vipAnnual.includes(id)) return PLAN_VIP;
+  if (cfg.premium.includes(id) || cfg.premiumAnnual.includes(id)) return PLAN_PREMIUM;
+  return PLAN_FREE;
+}
+
+async function stripeRequest(env, path, method = "GET", form = null) {
+  const cfg = stripeConfigured(env);
+  if (!cfg.secret) throw new Error("Stripe secret is not configured.");
+  const headers = {
+    Authorization: `Bearer ${cfg.secret}`,
+  };
+  const init = { method, headers };
+  if (form && method !== "GET") {
+    headers["content-type"] = "application/x-www-form-urlencoded";
+    init.body = new URLSearchParams(form).toString();
+  }
+  const res = await fetch(`${STRIPE_BASE}${path}`, init);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const detail = String(data?.error?.message || `Stripe error (${res.status})`);
+    const err = new Error(detail);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+async function stripeFindCustomerByUserId(env, userId) {
+  const q = encodeURIComponent(`metadata['userId']:'${String(userId || "").replace(/'/g, "")}'`);
+  const out = await stripeRequest(env, `/v1/customers/search?query=${q}&limit=1`, "GET");
+  const arr = Array.isArray(out?.data) ? out.data : [];
+  return arr[0] || null;
+}
+
+async function stripeFindOrCreateCustomer(env, userId) {
+  const uid = String(userId || "").trim().toLowerCase();
+  let customer = await stripeFindCustomerByUserId(env, uid);
+  if (customer) return customer;
+  const email = `${uid || "user"}@users.algobets.local`;
+  customer = await stripeRequest(env, "/v1/customers", "POST", {
+    email,
+    "metadata[userId]": uid,
+  });
+  return customer;
+}
+
+async function stripeActiveSubscription(env, customerId) {
+  if (!customerId) return null;
+  const out = await stripeRequest(env, `/v1/subscriptions?customer=${encodeURIComponent(customerId)}&status=all&limit=20`, "GET");
+  const list = (Array.isArray(out?.data) ? out.data : []).filter((s) => ACTIVE_SUB_STATUSES.has(String(s?.status || "").toLowerCase()));
+  if (!list.length) return null;
+  list.sort((a, b) => Number(b?.created || 0) - Number(a?.created || 0));
+  return list[0];
+}
+
+function subscriptionPlan(cfg, sub) {
+  const priceId = sub?.items?.data?.[0]?.price?.id || "";
+  return planFromPriceId(cfg, priceId);
+}
+
+async function stripePlanForUser(env, userId) {
+  const cfg = stripeConfigured(env);
+  if (!cfg.enabled || !userId) return PLAN_FREE;
+  const customer = await stripeFindCustomerByUserId(env, userId);
+  if (!customer?.id) return PLAN_FREE;
+  const sub = await stripeActiveSubscription(env, customer.id);
+  if (!sub) return PLAN_FREE;
+  return subscriptionPlan(cfg, sub);
+}
+
 export async function onRequest(context) {
   const { request, params, env } = context;
   const method = request.method.toUpperCase();
@@ -40,16 +198,7 @@ export async function onRequest(context) {
   const nowSec = Math.floor(Date.now() / 1000);
   const userId = String(request.headers.get("x-user-id") || "").trim().toLowerCase();
   const user = userState.get(userId) || { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false };
-
-  const json = (body, status = 200, origin = "cloudflare-api") =>
-    new Response(JSON.stringify(body), {
-      status,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "x-algobets-origin": origin,
-      },
-    });
+  const billing = stripeConfigured(env);
 
   if (method === "GET" && cleanPath === "ev-finder") {
     try {
@@ -66,7 +215,7 @@ export async function onRequest(context) {
       {
         vip_discord_url: String(env?.VIP_DISCORD_URL || ""),
         google_client_id: String(env?.GOOGLE_CLIENT_ID || ""),
-        billing_enabled: String(env?.BILLING_ENABLED || "false").toLowerCase() === "true",
+        billing_enabled: billing.enabled,
         auth_required: true,
         discord_role_sync_enabled: false,
         low_data_mode_global: true,
@@ -97,8 +246,14 @@ export async function onRequest(context) {
   }
 
   if (method === "GET" && cleanPath === "plan") {
+    let plan = PLAN_FREE;
+    try {
+      plan = userId ? await stripePlanForUser(env, userId) : PLAN_FREE;
+    } catch (_) {
+      plan = PLAN_FREE;
+    }
     const trialActive = Number(user.trialUntil || 0) > nowSec;
-    const plan = trialActive ? PLAN_PREMIUM : (user.plan || PLAN_FREE);
+    if (trialActive && plan === PLAN_FREE) plan = PLAN_PREMIUM;
     const tier = plan === PLAN_VIP
       ? { name: "VIP", scan_pick_limit: 50, max_picks: 50, min_scan_interval_seconds: 15 }
       : plan === PLAN_PREMIUM
@@ -108,14 +263,13 @@ export async function onRequest(context) {
   }
 
   if (method === "GET" && cleanPath === "pricing") {
-    const billingEnabled = String(env?.BILLING_ENABLED || "false").toLowerCase() === "true";
     return json(
       {
-        billing_enabled: billingEnabled,
+        billing_enabled: billing.enabled,
         tiers: {
           free: { billing: { monthly_configured: false, annual_configured: false } },
-          premium: { billing: { monthly_configured: billingEnabled, annual_configured: billingEnabled } },
-          vip: { billing: { monthly_configured: billingEnabled, annual_configured: billingEnabled } },
+          premium: { billing: { monthly_configured: !!billing.premium[0], annual_configured: !!billing.premiumAnnual[0] } },
+          vip: { billing: { monthly_configured: !!billing.vip[0], annual_configured: !!billing.vipAnnual[0] } },
         },
       },
       200,
@@ -124,9 +278,22 @@ export async function onRequest(context) {
   }
 
   if (method === "GET" && cleanPath === "trial/status") {
-    const trialUntil = Number(user.trialUntil || 0);
+    let trialUntil = Number(user.trialUntil || 0);
+    let claimed = !!user.trialClaimed;
+    if (billing.enabled && userId) {
+      try {
+        const customer = await stripeFindCustomerByUserId(env, userId);
+        const sub = await stripeActiveSubscription(env, customer?.id || "");
+        const status = String(sub?.status || "").toLowerCase();
+        const trialEnd = Number(sub?.trial_end || 0);
+        if (status === "trialing" && trialEnd > nowSec) {
+          trialUntil = Math.max(trialUntil, trialEnd);
+          claimed = true;
+          userState.set(userId, { ...user, trialUntil, trialClaimed: true });
+        }
+      } catch (_) {}
+    }
     const secs = Math.max(0, trialUntil - nowSec);
-    const claimed = !!user.trialClaimed;
     return json(
       {
         eligible: !claimed || secs > 0,
@@ -144,19 +311,103 @@ export async function onRequest(context) {
     if (!userId) return json({ detail: "x-user-id is required." }, 400, "cloudflare-trial");
     const trialUntil = nowSec + (72 * 3600);
     userState.set(userId, { ...user, trialUntil, trialClaimed: true, plan: user.plan || PLAN_FREE });
-    return json(
-      { ok: true, granted_hours: 72, trial_plan: PLAN_PREMIUM, trial_until: trialUntil },
-      200,
-      "cloudflare-trial",
-    );
+    return json({ ok: true, granted_hours: 72, trial_plan: PLAN_PREMIUM, trial_until: trialUntil }, 200, "cloudflare-trial");
   }
 
-  if (method === "POST" && (cleanPath === "billing/checkout" || cleanPath === "billing/portal" || cleanPath === "billing/cancel-trial")) {
-    const billingEnabled = String(env?.BILLING_ENABLED || "false").toLowerCase() === "true";
-    if (!billingEnabled) {
-      return json({ detail: "Billing is temporarily disabled on Cloudflare environment." }, 503, "cloudflare-billing");
+  if (method === "POST" && cleanPath === "billing/checkout") {
+    if (!billing.enabled) return json({ detail: "Billing is temporarily disabled." }, 503, "cloudflare-billing");
+    if (!userId) return json({ detail: "Authenticated user required." }, 401, "cloudflare-billing");
+    const body = await request.json().catch(() => ({}));
+    const tier = normalizePlan(body?.tier || "");
+    if (tier === PLAN_FREE) return json({ detail: "Free plan does not require checkout." }, 400, "cloudflare-billing");
+    let cycle = String(body?.billing_cycle || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+    let priceId = priceIdForTierCycle(billing, tier, cycle);
+    if (!priceId && cycle === "annual") {
+      cycle = "monthly";
+      priceId = priceIdForTierCycle(billing, tier, cycle);
     }
-    return json({ detail: "Billing migration in progress. Endpoint available but not configured." }, 503, "cloudflare-billing");
+    if (!priceId) return json({ detail: "Checkout is not configured for this plan." }, 400, "cloudflare-billing");
+
+    const successUrl = String(body?.success_url || `${defaultReturnBase(env)}?checkout=success`);
+    const cancelUrl = String(body?.cancel_url || `${defaultReturnBase(env)}?checkout=cancel`);
+    if (!isAllowedReturnUrl(successUrl, env) || !isAllowedReturnUrl(cancelUrl, env)) {
+      return json({ detail: "Invalid checkout redirect URL." }, 400, "cloudflare-billing");
+    }
+
+    try {
+      const customer = await stripeFindOrCreateCustomer(env, userId);
+      const form = {
+        mode: "subscription",
+        customer: String(customer.id),
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        allow_promotion_codes: "true",
+        "line_items[0][price]": priceId,
+        "line_items[0][quantity]": "1",
+        "metadata[userId]": userId,
+        "metadata[tier]": tier,
+        "metadata[billing_cycle]": cycle,
+      };
+      const trialRequested = !!body?.trial_days && Number(body?.trial_days || 0) > 0 && tier === PLAN_PREMIUM;
+      if (trialRequested) {
+        const td = Math.max(1, Math.min(7, Number(body?.trial_days || 3)));
+        form["subscription_data[trial_period_days]"] = String(td);
+        form["subscription_data[metadata][userId]"] = userId;
+        form["subscription_data[metadata][trial_mode]"] = String(body?.trial_mode || "card_required_auto_charge");
+        form["payment_method_collection"] = "always";
+      }
+      const session = await stripeRequest(env, "/v1/checkout/sessions", "POST", form);
+      return json({ checkout_url: session?.url || "", session_id: session?.id || "", billing_cycle: cycle, tier }, 200, "cloudflare-billing");
+    } catch (err) {
+      return json({ detail: String(err?.message || "Checkout unavailable") }, Number(err?.status || 500), "cloudflare-billing");
+    }
+  }
+
+  if (method === "POST" && cleanPath === "billing/portal") {
+    if (!billing.enabled) return json({ detail: "Billing is temporarily disabled." }, 503, "cloudflare-billing");
+    if (!userId) return json({ detail: "Authenticated user required." }, 401, "cloudflare-billing");
+    const body = await request.json().catch(() => ({}));
+    const returnUrl = String(body?.return_url || defaultReturnBase(env));
+    if (!isAllowedReturnUrl(returnUrl, env)) return json({ detail: "Invalid portal return URL." }, 400, "cloudflare-billing");
+    try {
+      const customer = await stripeFindOrCreateCustomer(env, userId);
+      const session = await stripeRequest(env, "/v1/billing_portal/sessions", "POST", {
+        customer: String(customer.id),
+        return_url: returnUrl,
+      });
+      return json({ portal_url: session?.url || "" }, 200, "cloudflare-billing");
+    } catch (err) {
+      return json({ detail: String(err?.message || "Billing portal unavailable") }, Number(err?.status || 500), "cloudflare-billing");
+    }
+  }
+
+  if (method === "POST" && cleanPath === "billing/cancel-trial") {
+    if (!billing.enabled) return json({ detail: "Billing is temporarily disabled." }, 503, "cloudflare-billing");
+    if (!userId) return json({ detail: "Authenticated user required." }, 401, "cloudflare-billing");
+    try {
+      const customer = await stripeFindCustomerByUserId(env, userId);
+      if (!customer?.id) return json({ detail: "No active subscription found." }, 404, "cloudflare-billing");
+      const sub = await stripeActiveSubscription(env, customer.id);
+      if (!sub?.id) return json({ detail: "No active subscription found." }, 404, "cloudflare-billing");
+      const updated = await stripeRequest(env, `/v1/subscriptions/${encodeURIComponent(sub.id)}`, "POST", {
+        cancel_at_period_end: "true",
+      });
+      const trialEnd = Number(updated?.trial_end || 0);
+      if (trialEnd > nowSec && userId) userState.set(userId, { ...user, trialUntil: trialEnd, trialClaimed: true });
+      return json(
+        {
+          ok: true,
+          subscription_id: updated?.id || sub.id,
+          status: updated?.status || sub.status,
+          cancel_at_period_end: !!updated?.cancel_at_period_end,
+          trial_end: trialEnd || null,
+        },
+        200,
+        "cloudflare-billing",
+      );
+    } catch (err) {
+      return json({ detail: String(err?.message || "Could not cancel trial.") }, Number(err?.status || 500), "cloudflare-billing");
+    }
   }
 
   const url = toUpstreamUrl(request.url, rawPath);
@@ -167,10 +418,7 @@ export async function onRequest(context) {
     redirect: "follow",
   };
   const proxyApiKey = String(env?.BACKEND_API_KEY || "").trim();
-  // This function only handles /api/* routes in Pages, so always inject when missing.
-  if (!hasApiKey && proxyApiKey) {
-    init.headers.set("x-api-key", proxyApiKey);
-  }
+  if (!hasApiKey && proxyApiKey) init.headers.set("x-api-key", proxyApiKey);
   if (!["GET", "HEAD"].includes(method)) init.body = request.body;
 
   const upstream = await fetch(url, init);
