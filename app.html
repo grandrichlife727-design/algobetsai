@@ -2377,6 +2377,22 @@ window.setAlgobetsUserId = function(uid) {
   USER_ID = next;
   localStorage.setItem('algobets-user-id', USER_ID);
 };
+const _emailUidFromQp = String(_qp.get('uid') || '').trim().toLowerCase();
+const _emailAuthFromQp = String(_qp.get('eauth') || '').trim();
+if (/^[a-z0-9:_-]{6,64}$/.test(_emailUidFromQp)) {
+  USER_ID = _emailUidFromQp;
+  localStorage.setItem('algobets-user-id', USER_ID);
+}
+if (_emailAuthFromQp) {
+  AUTH_TOKEN = _emailAuthFromQp;
+  localStorage.setItem(AUTH_TOKEN_KEY, AUTH_TOKEN);
+}
+if (_qp.has('uid') || _qp.has('eauth')) {
+  const clean = new URL(window.location.href);
+  clean.searchParams.delete('uid');
+  clean.searchParams.delete('eauth');
+  history.replaceState({}, '', clean.toString());
+}
 
 const _checkoutStatus = String(_qp.get('checkout') || '').trim().toLowerCase();
 const _upgradeFromQp = String(_qp.get('upgrade') || '').trim().toLowerCase();
@@ -2392,7 +2408,7 @@ const START_TAB_QP = START_TAB_ALLOW.has(_tabFromQp) ? _tabFromQp : '';
 const FORCE_DEMO_MODE = ['1', 'true', 'yes', 'y'].includes(String(_qp.get('demo') || '').trim().toLowerCase());
 const MOCK_PLAN_QP = ['premium', 'vip'].includes(_mockPlanFromQp) ? _mockPlanFromQp : '';
 const SHOT_SCROLL_Y = Number.isFinite(_shotScrollRaw) ? Math.max(0, Math.floor(_shotScrollRaw)) : 0;
-const APP_BUILD = '2026-03-08-onboarding-tour-1';
+const APP_BUILD = '2026-03-08-vip-welcome-email-1';
 const DEMO_QP_SET = _qp.has('demo');
 if (DEMO_QP_SET) {
   localStorage.setItem(DEMO_MODE_KEY, FORCE_DEMO_MODE ? '1' : '0');

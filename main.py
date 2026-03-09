@@ -43,7 +43,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse, FileResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse, FileResponse, RedirectResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -59,6 +59,7 @@ ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "").strip()
 STRIPE_SECRET   = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK  = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 FRONTEND_URL    = os.getenv("FRONTEND_URL", "https://algobets.ai").strip()
+BACKEND_PUBLIC_BASE_URL = os.getenv("BACKEND_PUBLIC_BASE_URL", "https://algobetsai.onrender.com").strip()
 BACKEND_API_KEY = os.getenv("BACKEND_API_KEY", "").strip()
 JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
 JWT_ISSUER = os.getenv("JWT_ISSUER", "").strip()
@@ -74,6 +75,11 @@ DISCORD_VIP_ROLE_ID = os.getenv("DISCORD_VIP_ROLE_ID", "").strip()
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "").strip()
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "").strip()
+SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "").strip()
+SENDGRID_FROM_NAME = os.getenv("SENDGRID_FROM_NAME", "AlgoBets Ai").strip() or "AlgoBets Ai"
+VIP_WELCOME_EMAIL_ENABLED_RAW = os.getenv("VIP_WELCOME_EMAIL_ENABLED", "true").strip()
+VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS = int(os.getenv("VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 
 # Persistent disk on Render
 DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
@@ -113,6 +119,7 @@ LOW_DATA_MODE_GLOBAL = _bool_env("LOW_DATA_MODE_GLOBAL", "true")
 BILLING_ENABLED = _bool_env("BILLING_ENABLED", "true")
 SCAN_ENABLED = _bool_env("SCAN_ENABLED", "true")
 SMS_ALERTS_ENABLED = _bool_env("SMS_ALERTS_ENABLED", "true")
+VIP_WELCOME_EMAIL_ENABLED = VIP_WELCOME_EMAIL_ENABLED_RAW.lower() in {"1", "true", "yes", "on"}
 ACTIVE_USER_WINDOW_MINUTES = int(os.getenv("ACTIVE_USER_WINDOW_MINUTES", "15") or 15)
 ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "true")
@@ -1139,6 +1146,123 @@ async def _send_sms_twilio(to_number: str, message: str) -> dict[str, Any]:
         "status": str(payload.get("status", "queued")),
         "to": to_e164,
     }
+
+
+def _is_valid_email(value: str) -> bool:
+    return bool(re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", str(value or "").strip().lower()))
+
+
+def _vip_welcome_email_ready() -> bool:
+    return VIP_WELCOME_EMAIL_ENABLED and bool(SENDGRID_API_KEY and SENDGRID_FROM_EMAIL)
+
+
+def _frontend_app_base_url() -> str:
+    raw = str(FRONTEND_URL or "https://algobets.ai").strip() or "https://algobets.ai"
+    try:
+        parsed = urllib.parse.urlparse(raw)
+        scheme = parsed.scheme or "https"
+        netloc = parsed.netloc
+        path = parsed.path or ""
+        if not netloc and parsed.path:
+            parsed2 = urllib.parse.urlparse(f"https://{raw}")
+            scheme = parsed2.scheme or "https"
+            netloc = parsed2.netloc
+            path = parsed2.path or ""
+        path = path.rstrip("/")
+        if path.endswith("/app.html"):
+            path = path[:-5]
+        if not path.endswith("/app"):
+            path = f"{path}/app"
+        if not path.endswith("/"):
+            path = f"{path}/"
+        return urllib.parse.urlunparse((scheme, netloc, path, "", "", ""))
+    except Exception:
+        return "https://algobets.ai/app/"
+
+
+def _vip_welcome_links(user_id: str, email_token: str) -> dict[str, str]:
+    app_base = _frontend_app_base_url()
+    common = {
+        "uid": str(user_id or "").strip().lower(),
+        "eauth": str(email_token or "").strip(),
+        "src": "vip_welcome_email",
+    }
+    execution_qs = urllib.parse.urlencode({**common, "tab": "vip-execution"})
+    discord_tab_qs = urllib.parse.urlencode({**common, "tab": "vip-discord"})
+    invite_qs = urllib.parse.urlencode({"uid": common["uid"], "eauth": common["eauth"], "src": common["src"]})
+    backend = str(BACKEND_PUBLIC_BASE_URL or "").rstrip("/")
+    if not backend:
+        backend = str(FRONTEND_URL or "").rstrip("/")
+    invite_link = f"{backend}/api/vip/discord/invite-link?{invite_qs}"
+    return {
+        "execution_tab": f"{app_base}?{execution_qs}",
+        "discord_tab": f"{app_base}?{discord_tab_qs}",
+        "discord_invite": invite_link,
+    }
+
+
+async def _send_sendgrid_html_email(to_email: str, subject: str, html: str, text: str = "") -> dict[str, Any]:
+    if not _vip_welcome_email_ready():
+        return {"sent": False, "reason": "provider_not_configured"}
+    to_addr = str(to_email or "").strip().lower()
+    if not _is_valid_email(to_addr):
+        return {"sent": False, "reason": "invalid_to"}
+    payload = {
+        "personalizations": [{"to": [{"email": to_addr}]}],
+        "from": {"email": SENDGRID_FROM_EMAIL, "name": SENDGRID_FROM_NAME},
+        "subject": str(subject or "AlgoBets Ai Update")[:120],
+        "content": [
+            {"type": "text/plain", "value": str(text or "").strip()[:9000] or "Your VIP access is now active."},
+            {"type": "text/html", "value": str(html or "").strip()[:30000] or "<p>Your VIP access is now active.</p>"},
+        ],
+    }
+    headers = {"Authorization": f"Bearer {SENDGRID_API_KEY}", "Content-Type": "application/json"}
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        res = await client.post("https://api.sendgrid.com/v3/mail/send", headers=headers, json=payload)
+    if res.status_code in {200, 201, 202}:
+        return {"sent": True, "status_code": res.status_code}
+    detail = f"sendgrid_http_{res.status_code}"
+    try:
+        data = res.json()
+        errs = data.get("errors") if isinstance(data, dict) else None
+        if isinstance(errs, list) and errs:
+            first = errs[0] if isinstance(errs[0], dict) else {}
+            msg = str(first.get("message") or "").strip()
+            if msg:
+                detail = msg[:180]
+    except Exception:
+        pass
+    return {"sent": False, "reason": detail}
+
+
+async def _send_vip_welcome_email(user_id: str, to_email: str) -> dict[str, Any]:
+    uid = _normalize_user_id(user_id)
+    email = str(to_email or "").strip().lower()
+    if not uid:
+        return {"sent": False, "reason": "missing_user"}
+    if not _is_valid_email(email):
+        return {"sent": False, "reason": "invalid_email"}
+    token = _issue_hs256_jwt(uid, ttl_seconds=VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS)
+    links = _vip_welcome_links(uid, token)
+    subject = "VIP Activated: Execution + Discord Access"
+    html = (
+        "<div style='font-family:Arial,sans-serif;color:#111;line-height:1.5'>"
+        "<h2 style='margin:0 0 12px'>Welcome to AlgoBets Ai VIP</h2>"
+        "<p style='margin:0 0 10px'>Your VIP subscription is active. Use the links below to jump in instantly.</p>"
+        f"<p style='margin:0 0 8px'><a href='{links['execution_tab']}' style='color:#0a66ff'>Open VIP Execution Tab</a></p>"
+        f"<p style='margin:0 0 8px'><a href='{links['discord_tab']}' style='color:#0a66ff'>Open VIP Discord Access Tab</a></p>"
+        f"<p style='margin:0 0 8px'><a href='{links['discord_invite']}' style='color:#0a66ff'>Open Discord Invite</a></p>"
+        "<p style='margin:12px 0 0;color:#666;font-size:12px'>For account safety, this secure access link expires automatically.</p>"
+        "</div>"
+    )
+    text = (
+        "Welcome to AlgoBets Ai VIP.\n"
+        f"VIP Execution: {links['execution_tab']}\n"
+        f"VIP Discord Access: {links['discord_tab']}\n"
+        f"Discord Invite: {links['discord_invite']}\n"
+    )
+    out = await _send_sendgrid_html_email(email, subject, html, text)
+    return {"sent": bool(out.get("sent")), "links": links, **out}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -4250,9 +4374,16 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
     obj = event.get("data", {}).get("object", {})
     user_id = ""
     resolved_plan = PLAN_FREE
+    previous_plan = PLAN_FREE
+    resolved_email = ""
+    subscription_id = ""
 
     if event_type == "checkout.session.completed":
         user_id = _normalize_user_id(obj.get("client_reference_id") or obj.get("metadata", {}).get("userId") or "")
+        customer_details = obj.get("customer_details", {}) if isinstance(obj.get("customer_details"), dict) else {}
+        resolved_email = str(customer_details.get("email") or "").strip().lower()
+        if not _is_valid_email(resolved_email):
+            resolved_email = ""
         meta_tier = normalize_plan_name(obj.get("metadata", {}).get("tier", ""))
         meta_trial_mode = str(obj.get("metadata", {}).get("trial_mode", "")).strip().lower()
         try:
@@ -4271,10 +4402,15 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
                 rec["free_trial_claimed_at"] = now
     elif event_type.startswith("customer.subscription."):
         customer_id = obj.get("customer")
+        subscription_id = str(obj.get("id") or "").strip()
+        customer = {}
         try:
             if customer_id:
                 customer = await asyncio.to_thread(stripe.Customer.retrieve, customer_id)
                 user_id = _normalize_user_id(customer.get("metadata", {}).get("userId") or "")
+                maybe_email = str(customer.get("email") or "").strip().lower()
+                if _is_valid_email(maybe_email):
+                    resolved_email = maybe_email
         except Exception:
             user_id = ""
         status = str(obj.get("status") or "").strip().lower()
@@ -4293,6 +4429,12 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
 
     if user_id:
         rec = _ensure_growth_user(user_id)
+        previous_plan = normalize_plan_name(_get_billing_entitlement(user_id))
+        if not resolved_email:
+            identity = rec.get("profile_identity", {}) if isinstance(rec, dict) else {}
+            maybe_identifier = str((identity or {}).get("identifier", "")).strip().lower()
+            if _is_valid_email(maybe_identifier):
+                resolved_email = maybe_identifier
         if event_type.startswith("customer.subscription."):
             status = str(obj.get("status") or "").strip().lower()
             if status == "trialing":
@@ -4316,10 +4458,70 @@ async def billing_webhook(request: Request, stripe_signature: str = Header(defau
                 str(discord_sync.get("reason") or "partial_failure"),
                 user_id=user_id,
             )
+        should_send_vip_welcome = (
+            plan_rank(resolved_plan) >= plan_rank(PLAN_VIP)
+            and plan_rank(previous_plan) < plan_rank(PLAN_VIP)
+            and _vip_welcome_email_ready()
+            and _is_valid_email(resolved_email)
+        )
+        if should_send_vip_welcome:
+            vip_mail = await _send_vip_welcome_email(user_id, resolved_email)
+            welcome_meta = rec.setdefault("vip_welcome_email", {})
+            welcome_meta["last_attempt_ts"] = now_ts
+            welcome_meta["last_event_id"] = event_id
+            welcome_meta["last_subscription_id"] = subscription_id
+            welcome_meta["last_target"] = resolved_email
+            welcome_meta["last_sent"] = bool(vip_mail.get("sent"))
+            welcome_meta["last_error"] = "" if vip_mail.get("sent") else str(vip_mail.get("reason") or "send_failed")[:180]
+            if vip_mail.get("sent"):
+                welcome_meta["last_sent_ts"] = now_ts
+            _audit_security_event(
+                request,
+                "billing.vip_welcome_email",
+                "sent" if vip_mail.get("sent") else str(vip_mail.get("reason") or "failed"),
+                user_id=user_id,
+            )
     _audit_security_event(request, "billing.webhook_processed", event_type, user_id=user_id)
     _save_growth_db()
 
     return {"received": True, "event_type": event_type}
+
+
+@app.get("/api/vip/discord/invite-link")
+@limiter.limit("40/minute")
+async def vip_discord_invite_link(request: Request, uid: str = "", eauth: str = "", src: str = "vip_welcome_email"):
+    if not VIP_DISCORD_URL:
+        raise HTTPException(status_code=503, detail="VIP Discord invite is not configured.")
+    user_id = _normalize_user_id(uid)
+    token = str(eauth or "").strip()
+    if not user_id or not token:
+        raise HTTPException(status_code=400, detail="uid and eauth are required.")
+    try:
+        claims = _verify_hs256_jwt(token)
+    except Exception:
+        raise HTTPException(status_code=403, detail="Invalid or expired session link.")
+    token_sub = _normalize_user_id(str(claims.get("sub") or ""))
+    if token_sub != user_id:
+        raise HTTPException(status_code=403, detail="Session link user mismatch.")
+
+    stripe_plan = await asyncio.to_thread(_verify_plan_stripe_sync, user_id)
+    trial_plan = _referral_trial_plan(user_id)
+    effective_plan = stripe_plan if plan_rank(stripe_plan) >= plan_rank(trial_plan) else trial_plan
+    if plan_rank(effective_plan) < plan_rank(PLAN_VIP):
+        raise HTTPException(status_code=403, detail="VIP plan required for Discord invite.")
+
+    _mark_user_activity(user_id)
+    invite_url = str(VIP_DISCORD_URL).strip()
+    try:
+        parsed = urllib.parse.urlparse(invite_url)
+        qs = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
+        qs["utm_source"] = str(src or "vip_welcome_email")[:48]
+        qs["utm_medium"] = "vip_email"
+        qs["alg_uid"] = user_id
+        invite_url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, urllib.parse.urlencode(qs), parsed.fragment))
+    except Exception:
+        pass
+    return RedirectResponse(url=invite_url, status_code=302)
 
 
 @app.get("/api/discord/link")
