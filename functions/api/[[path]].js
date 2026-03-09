@@ -335,53 +335,25 @@ export async function onRequest(context) {
   }
 
   if (method === "POST" && cleanPath === "auth/session") {
-    const body = await request.json().catch(() => ({}));
-    const incomingUser = String(body?.user_id || "").trim().toLowerCase();
-    const finalUser = incomingUser || `u_${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
-    const methodName = String(body?.method || "guest").trim().toLowerCase();
-    const identifier = String(body?.identifier || "").trim().toLowerCase();
-    // Use upstream auth session so returned bearer token is valid for sensitive upstream routes.
-    try {
-      const upstreamRes = await fetch(`${UPSTREAM}/api/auth/session`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(String(env?.BACKEND_API_KEY || "").trim() ? { "x-api-key": String(env?.BACKEND_API_KEY || "").trim() } : {}),
-        },
-        body: JSON.stringify({
-          user_id: finalUser,
-          method: methodName || "guest",
-          identifier,
-        }),
-      });
-      if (upstreamRes.ok) {
-        const payload = await upstreamRes.json().catch(() => ({}));
-        if (!userState.has(finalUser)) userState.set(finalUser, { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false });
-        return json(
-          {
-            token: String(payload?.token || ""),
-            user_id: String(payload?.user_id || finalUser),
-            expires_in: Number(payload?.expires_in || AUTH_TTL_SECONDS),
-            profile: payload?.profile || { method: methodName || "guest", identifier },
-          },
-          200,
-          "cloudflare-auth",
-        );
-      }
-    } catch (_) {}
-    // Fallback local token if upstream auth session is unavailable.
-    const tokenPayload = btoa(JSON.stringify({ sub: finalUser, iat: nowSec, exp: nowSec + AUTH_TTL_SECONDS }));
-    if (!userState.has(finalUser)) userState.set(finalUser, { plan: PLAN_FREE, trialUntil: 0, trialClaimed: false });
-    return json(
-      {
-        token: `cf.${tokenPayload}.sig`,
-        user_id: finalUser,
-        expires_in: AUTH_TTL_SECONDS,
-        profile: { method: methodName || "guest", identifier },
-      },
-      200,
-      "cloudflare-auth",
-    );
+    // Always passthrough to upstream auth/session so bearer token validates on upstream protected routes.
+    const url = toUpstreamUrl(request.url, rawPath);
+    const init = {
+      method,
+      headers: forwardHeaders(request),
+      redirect: "follow",
+      body: request.body,
+    };
+    const hasApiKey = !!String(request.headers.get("x-api-key") || "").trim();
+    const proxyApiKey = String(env?.BACKEND_API_KEY || "").trim();
+    if (!hasApiKey && proxyApiKey) init.headers.set("x-api-key", proxyApiKey);
+    const upstream = await fetch(url, init);
+    const outHeaders = new Headers(upstream.headers);
+    outHeaders.set("x-algobets-proxy", "cloudflare-pages");
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: outHeaders,
+    });
   }
 
   const clientPlanHint = normalizePlan(request.headers.get("x-user-plan-client") || PLAN_FREE);
