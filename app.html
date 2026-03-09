@@ -1295,7 +1295,7 @@ img,svg,video,canvas{max-width:100%;height:auto}
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'icehockey_nhl')">🏒 NHL</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'baseball_mlb')">⚾ MLB</div>
         <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'soccer')">⚽ Soccer</div>
-        <div class="filter extra-sport" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
+        <div class="filter" role="button" tabindex="0" onclick="setFilter(this,'mma_mixed_martial_arts')">🥊 MMA</div>
       </div>
         <button class="filters-nav" type="button" aria-label="Scroll sports right" onclick="scrollPicksFilters(1)">›</button>
         <button class="filters-more" type="button" id="picks-filters-toggle" aria-expanded="false" aria-label="Show more sports filters" onclick="toggleSportsFilters()">More</button>
@@ -9230,15 +9230,25 @@ function setSportsFiltersExpanded(expanded) {
   const rail = document.getElementById('picks-filters');
   const btn = document.getElementById('picks-filters-toggle');
   if (!rail || !btn) return;
+  const hasExtra = !!rail.querySelector('.extra-sport');
+  if (!hasExtra) {
+    rail.classList.remove('mobile-collapsed');
+    btn.style.display = 'none';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = 'More';
+    return;
+  }
   const on = !!expanded;
   rail.classList.toggle('mobile-collapsed', !on);
   btn.setAttribute('aria-expanded', on ? 'true' : 'false');
   btn.textContent = on ? 'Less' : 'More';
+  btn.style.display = '';
 }
 
 function toggleSportsFilters() {
   const rail = document.getElementById('picks-filters');
   if (!rail) return;
+  if (!rail.querySelector('.extra-sport')) return;
   const collapsed = rail.classList.contains('mobile-collapsed');
   setSportsFiltersExpanded(collapsed);
   updateSportsOverflowHint();
@@ -9249,12 +9259,24 @@ function syncSportsFiltersForViewport() {
   const rail = document.getElementById('picks-filters');
   const btn = document.getElementById('picks-filters-toggle');
   if (!rail) return;
+  const hasExtra = !!rail.querySelector('.extra-sport');
   if (!mobile) {
     rail.classList.remove('mobile-collapsed');
     if (btn) {
       btn.setAttribute('aria-expanded', 'false');
       btn.textContent = 'More';
+      btn.style.display = hasExtra ? '' : 'none';
     }
+    return;
+  }
+  if (!hasExtra) {
+    rail.classList.remove('mobile-collapsed');
+    if (btn) {
+      btn.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = 'More';
+    }
+    updateSportsOverflowHint();
     return;
   }
   const activeEl = document.querySelector('.filter.active');
