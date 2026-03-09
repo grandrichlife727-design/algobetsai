@@ -4322,21 +4322,33 @@ function normalizePotdPick(pick) {
   };
 }
 
-function renderPotdCard(pick) {
+function renderPotdCard(pick, opts = {}) {
   if (!pick) return '';
+  const vipVault = !!opts.vipVault;
   const urgency = String(pick.clv_urgency || '').toLowerCase();
   const urgencyBadge = urgency === 'high' ? 'Bet Now' : (urgency === 'medium' ? 'Watch Line' : 'Stable');
   const grade = String(pick.grade || '').toUpperCase();
-  return `<div class="growth-card" style="margin-bottom:10px;padding:0;overflow:hidden;border:1px solid rgba(255,209,102,.38);background:linear-gradient(145deg,rgba(255,209,102,.12),rgba(34,211,238,.06) 42%,rgba(8,10,18,.95) 100%)">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,209,102,.22);background:rgba(8,10,18,.45)">
-      <div style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:#ffe3a8">
-        <span style="display:inline-grid;place-items:center;width:18px;height:18px;border-radius:999px;border:1px solid rgba(255,209,102,.45);background:rgba(255,209,102,.15);color:#ffe9bf">♛</span>
+  const shellBg = vipVault
+    ? 'linear-gradient(160deg,rgba(8,12,20,.98),rgba(12,20,30,.96) 55%,rgba(4,8,14,.99) 100%)'
+    : 'linear-gradient(145deg,rgba(255,209,102,.12),rgba(34,211,238,.06) 42%,rgba(8,10,18,.95) 100%)';
+  const shellBorder = vipVault ? 'rgba(0,229,160,.32)' : 'rgba(255,209,102,.38)';
+  const headBorder = vipVault ? 'rgba(0,229,160,.22)' : 'rgba(255,209,102,.22)';
+  const headBg = vipVault ? 'rgba(0,229,160,.08)' : 'rgba(8,10,18,.45)';
+  const headColor = vipVault ? '#bcffe9' : '#ffe3a8';
+  const sealBorder = vipVault ? 'rgba(0,229,160,.45)' : 'rgba(255,209,102,.45)';
+  const sealBg = vipVault ? 'rgba(0,229,160,.16)' : 'rgba(255,209,102,.15)';
+  const sealColor = vipVault ? '#d8fff1' : '#ffe9bf';
+  const oddsColor = vipVault ? '#8df2d0' : '#9ef5d2';
+  return `<div class="growth-card" style="margin-bottom:10px;padding:0;overflow:hidden;border:1px solid ${shellBorder};background:${shellBg}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid ${headBorder};background:${headBg}">
+      <div style="display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:${headColor}">
+        <span style="display:inline-grid;place-items:center;width:18px;height:18px;border-radius:999px;border:1px solid ${sealBorder};background:${sealBg};color:${sealColor}">♛</span>
         VIP Pick of the Day
       </div>
-      <span class="tier-tag" style="border-color:rgba(255,209,102,.4);color:#ffe3a8;background:rgba(255,209,102,.14)">${esc(grade || 'VIP')}</span>
+      <span class="tier-tag" style="border-color:${vipVault ? 'rgba(0,229,160,.35)' : 'rgba(255,209,102,.4)'};color:${vipVault ? '#bcffe9' : '#ffe3a8'};background:${vipVault ? 'rgba(0,229,160,.11)' : 'rgba(255,209,102,.14)'}">${esc(grade || 'VIP')}</span>
     </div>
     <div style="padding:12px">
-      <div style="font-size:18px;font-weight:900;line-height:1.2;color:#fff;letter-spacing:-.2px">${esc(pick.bet || 'No pick')}${pick.odds ? ` <span style=\"color:#9ef5d2;font-family:var(--mono)\">${esc(pick.odds)}</span>` : ''}</div>
+      <div style="font-size:18px;font-weight:900;line-height:1.2;color:#fff;letter-spacing:-.2px">${esc(pick.bet || 'No pick')}${pick.odds ? ` <span style=\"color:${oddsColor};font-family:var(--mono)\">${esc(pick.odds)}</span>` : ''}</div>
       <div style="font-size:12px;color:#d2d8e6;margin-top:5px">${esc(pick.game || '')}</div>
       <div class="rf-row" style="margin-top:10px;gap:6px;flex-wrap:wrap">
         <span class="tier-tag vip">Edge +${Number(pick.edge || 0).toFixed(1)}%</span>
@@ -4351,7 +4363,7 @@ function renderPotdCard(pick) {
 
 function renderPotdLockedCard(pick) {
   if (!pick) return '';
-  const inner = renderPotdCard(pick);
+  const inner = renderPotdCard(pick, {vipVault: false});
   return `<div class="feature-lock" style="margin-bottom:10px">
     <div class="blur-wrap" style="filter:blur(6px);opacity:.72">${inner}</div>
     <div class="lock-overlay">
@@ -4380,7 +4392,7 @@ function renderPOTD(pick) {
   if (!pick) return;
   const dashEl = document.getElementById('potd-dashboard');
   if (dashEl) {
-    dashEl.innerHTML = canUseVip() ? renderPotdCard(pick) : renderPotdLockedCard(pick);
+    dashEl.innerHTML = canUseVip() ? renderPotdCard(pick, {vipVault: true}) : renderPotdLockedCard(pick);
   }
 }
 
