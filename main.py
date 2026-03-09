@@ -125,7 +125,7 @@ ACTIVE_USER_GUARD_ENABLED = _bool_env("ACTIVE_USER_GUARD_ENABLED", "true")
 SMART_PREFETCH_ENABLED = _bool_env("SMART_PREFETCH_ENABLED", "false")
 SMART_PREFETCH_LOOP_SECONDS = int(os.getenv("SMART_PREFETCH_LOOP_SECONDS", "30") or 30)
 STARTED_GAME_GRACE_MINUTES = int(os.getenv("STARTED_GAME_GRACE_MINUTES", "2") or 2)
-TRACKED_PICK_WINDOW_DAYS = int(os.getenv("TRACKED_PICK_WINDOW_DAYS", "7") or 7)
+TRACKED_PICK_FUTURE_DAYS = int(os.getenv("TRACKED_PICK_FUTURE_DAYS", "7") or 7)
 CHECKOUT_MAX_PER_HOUR = int(os.getenv("CHECKOUT_MAX_PER_HOUR", "6") or 6)
 TRIAL_MAX_PER_DAY = int(os.getenv("TRIAL_MAX_PER_DAY", "2") or 2)
 WAITLIST_MAX_PER_HOUR = int(os.getenv("WAITLIST_MAX_PER_HOUR", "10") or 10)
@@ -1959,12 +1959,12 @@ def _tracked_row_reference_ts(row: dict[str, Any]) -> float:
     return ts if ts > 0 else 0.0
 
 
-def _prune_tracked_picks_window(user_rec: dict[str, Any], days: int = TRACKED_PICK_WINDOW_DAYS) -> list[dict[str, Any]]:
+def _prune_tracked_picks_window(user_rec: dict[str, Any], days: int = TRACKED_PICK_FUTURE_DAYS) -> list[dict[str, Any]]:
     rows = list(user_rec.get("tracked_picks", []))
     if not rows:
         user_rec["tracked_picks"] = []
         return []
-    keep_days = max(1, min(int(days or TRACKED_PICK_WINDOW_DAYS), 30))
+    keep_days = max(1, min(int(days or TRACKED_PICK_FUTURE_DAYS), 30))
     window_sec = keep_days * 86400
     now = time.time()
     pruned = []
@@ -1972,7 +1972,7 @@ def _prune_tracked_picks_window(user_rec: dict[str, Any], days: int = TRACKED_PI
         ts_ref = _tracked_row_reference_ts(r)
         if ts_ref <= 0:
             continue
-        if abs(now - ts_ref) <= window_sec:
+        if now <= ts_ref <= (now + window_sec):
             pruned.append(r)
     user_rec["tracked_picks"] = pruned[-700:]
     return user_rec["tracked_picks"]
