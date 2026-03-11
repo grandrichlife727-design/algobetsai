@@ -28,6 +28,7 @@ import math
 import time
 import base64
 import hmac
+import random
 import secrets
 import urllib.parse
 import httpx
@@ -1165,6 +1166,10 @@ def _vip_welcome_email_ready() -> bool:
     return VIP_WELCOME_EMAIL_ENABLED and bool(SENDGRID_API_KEY and SENDGRID_FROM_EMAIL)
 
 
+def _email_verification_ready() -> bool:
+    return bool(SENDGRID_API_KEY and SENDGRID_FROM_EMAIL)
+
+
 def _frontend_app_base_url() -> str:
     raw = str(FRONTEND_URL or "https://algobets.ai").strip() or "https://algobets.ai"
     try:
@@ -1242,6 +1247,52 @@ async def _send_sendgrid_html_email(to_email: str, subject: str, html: str, text
     except Exception:
         pass
     return {"sent": False, "reason": detail}
+
+
+def _email_verification_store() -> dict[str, Any]:
+    return _growth_db.setdefault("email_verifications", {})
+
+
+def _email_verification_key(email: str) -> str:
+    return str(email or "").strip().lower()
+
+
+def _email_verification_status(email: str, user_id: str = "") -> dict[str, Any]:
+    key = _email_verification_key(email)
+    rec = _email_verification_store().get(key) or {}
+    verified_ts = int(rec.get("verified_ts") or 0)
+    expires_ts = int(rec.get("expires_ts") or 0)
+    pending = bool(rec.get("code") and (expires_ts > int(time.time())))
+    verified = verified_ts > 0
+    if user_id and str(rec.get("user_id") or "") != str(user_id or ""):
+        verified = False
+    return {
+        "email": key,
+        "verified": verified,
+        "verified_ts": verified_ts or None,
+        "pending": pending,
+        "expires_ts": expires_ts or None,
+    }
+
+
+def _generate_email_verification_code() -> str:
+    return f"{random.randint(100000, 999999)}"
+
+
+async def _send_email_verification(email: str, code: str) -> dict[str, Any]:
+    if not _email_verification_ready():
+        return {"sent": False, "reason": "provider_not_configured"}
+    subject = "Your AlgoBets Ai verification code"
+    html = (
+        "<div style='font-family:Arial,sans-serif;color:#111;line-height:1.5'>"
+        "<h2 style='margin:0 0 10px'>Verify your email</h2>"
+        f"<p style='margin:0 0 12px'>Your verification code is:</p>"
+        f"<div style='font-size:22px;font-weight:800;letter-spacing:2px;margin:0 0 12px'>{code}</div>"
+        "<p style='margin:0;color:#666;font-size:12px'>This code expires in 15 minutes.</p>"
+        "</div>"
+    )
+    text = f"Your AlgoBets Ai verification code is {code}. It expires in 15 minutes."
+    return await _send_sendgrid_html_email(email, subject, html, text)
 
 
 async def _send_vip_welcome_email(user_id: str, to_email: str) -> dict[str, Any]:
@@ -3044,6 +3095,18 @@ class AuthGoogleRequest(BaseModel):
     id_token: str
 
 
+class EmailVerifyRequest(BaseModel):
+    user_id: str
+    email: str
+    source: Optional[str] = None
+
+
+class EmailVerifyConfirmRequest(BaseModel):
+    user_id: str
+    email: str
+    code: str
+
+
 class ReferralRedeemRequest(BaseModel):
     code: str
 
@@ -3387,6 +3450,12 @@ async def auth_session(body: AuthSessionRequest, request: Request):
         method_to_store = method or "guest"
         identifier_to_store = identifier
     profile.update({"method": method_to_store, "identifier": identifier_to_store, "updated_at": int(time.time())})
+    if method_to_store == "email":
+        verified_email = str(rec.get("email_verified_email") or "").strip().lower()
+        if not verified_email or verified_email != identifier_to_store:
+            rec["email_verified"] = False
+            rec["email_verified_email"] = identifier_to_store
+            rec["email_verified_ts"] = 0
     if method_to_store != "guest" and _is_registered_user_id(user_id):
         _mark_user_activity(user_id)
     _save_growth_db()
@@ -3438,6 +3507,96 @@ async def auth_google(body: AuthGoogleRequest, request: Request):
         "expires_in": AUTH_TOKEN_TTL_SECONDS,
         "profile": {"method": "google", "identifier": email},
     }
+
+
+@app.post("/api/auth/email/verify/request")
+@limiter.limit("20/hour")
+async def email_verify_request(body: EmailVerifyRequest, request: Request):
+    user_id = _normalize_user_id(body.user_id)
+    email = str(body.email or "").strip().lower()
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid user_id.")
+    if not _is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Valid email is required.")
+    if not _email_verification_ready():
+        raise HTTPException(status_code=503, detail="Email verification provider not configured.")
+    store = _email_verification_store()
+    key = _email_verification_key(email)
+    rec = store.get(key) or {}
+    now_ts = int(time.time())
+    last_sent = int(rec.get("last_sent_ts") or 0)
+    if now_ts - last_sent < 30:
+        raise HTTPException(status_code=429, detail="Please wait before requesting another code.")
+    code = _generate_email_verification_code()
+    expires_ts = now_ts + 15 * 60
+    store[key] = {
+        "code": code,
+        "expires_ts": expires_ts,
+        "user_id": user_id,
+        "last_sent_ts": now_ts,
+        "verified_ts": int(rec.get("verified_ts") or 0),
+    }
+    rec_user = _ensure_growth_user(user_id)
+    profile = rec_user.setdefault("profile_identity", {})
+    profile.update({"method": "email", "identifier": email, "updated_at": now_ts})
+    rec_user["email_verified"] = False
+    rec_user["email_verified_email"] = email
+    rec_user["email_verified_ts"] = 0
+    _save_growth_db()
+    out = await _send_email_verification(email, code)
+    if not out.get("sent"):
+        raise HTTPException(status_code=503, detail=f"Verification email failed: {out.get('reason')}")
+    return {"sent": True, "expires_in": 15 * 60}
+
+
+@app.post("/api/auth/email/verify/confirm")
+@limiter.limit("40/hour")
+async def email_verify_confirm(body: EmailVerifyConfirmRequest, request: Request):
+    user_id = _normalize_user_id(body.user_id)
+    email = str(body.email or "").strip().lower()
+    code = str(body.code or "").strip()
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid user_id.")
+    if not _is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Valid email is required.")
+    if not code or len(code) < 4:
+        raise HTTPException(status_code=400, detail="Verification code is required.")
+    store = _email_verification_store()
+    key = _email_verification_key(email)
+    rec = store.get(key) or {}
+    now_ts = int(time.time())
+    expires_ts = int(rec.get("expires_ts") or 0)
+    if not rec or str(rec.get("code") or "") != code:
+        raise HTTPException(status_code=400, detail="Invalid verification code.")
+    if expires_ts and expires_ts < now_ts:
+        raise HTTPException(status_code=400, detail="Verification code expired.")
+    if str(rec.get("user_id") or "") != user_id:
+        raise HTTPException(status_code=400, detail="Verification code does not match user.")
+    rec["verified_ts"] = now_ts
+    rec["code"] = ""
+    rec["expires_ts"] = 0
+    store[key] = rec
+    rec_user = _ensure_growth_user(user_id)
+    rec_user["email_verified"] = True
+    rec_user["email_verified_email"] = email
+    rec_user["email_verified_ts"] = now_ts
+    _save_growth_db()
+    return {"verified": True, "email": email, "verified_ts": now_ts}
+
+
+@app.get("/api/auth/email/verify/status")
+@limiter.limit("120/hour")
+async def email_verify_status(request: Request, user_id: str = "", email: str = ""):
+    uid = _normalize_user_id(user_id)
+    addr = str(email or "").strip().lower()
+    if uid and not addr:
+        rec = _growth_db.get("users", {}).get(uid, {}) if isinstance(_growth_db.get("users", {}), dict) else {}
+        profile = rec.get("profile_identity") if isinstance(rec, dict) else {}
+        addr = str(profile.get("identifier") or "").strip().lower()
+    if not addr or not _is_valid_email(addr):
+        return {"email": addr, "verified": False, "pending": False}
+    status = _email_verification_status(addr, uid)
+    return status
 
 
 @app.get("/api/legal/terms")

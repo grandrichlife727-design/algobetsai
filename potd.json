@@ -1,5 +1,1 @@
-{
-  "date": "2026-03-09",
-  "generated_at": "2026-03-09T04:58:16.121288+00:00",
-  "pick": null
-}
+{"date":"2026-03-09","generated_at":"2026-03-09T23:56:22.769Z","pick":{"sport":"basketball_ncaab","label":"NCAAB","emoji":"🎓","game":"Oregon St Beavers @ Gonzaga Bulldogs","game_time":"2026-03-10T01:00:00Z","bet":"Oregon St Beavers ML","odds":"+1800","edge":1.99,"ev":1.99,"confidence_calibrated":57,"best_book":"draftkings","book":"draftkings","data_source":"odds_api","model_v2":{"ensemble_score":1.99,"timing_model":0.2},"clv_expectation":0.36,"recommended_stake_pct":0.4,"agents":["Best-Line EV","Consensus De-vig","Market Timing"],"active_agents":[1,2,5]}}
