@@ -1,0 +1,16 @@
+name = "algobetsai"
+compatibility_date = "2024-03-15"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "algobetsai"
+
+# Pages Functions configuration
+pages_build_output_dir = "."
+
+# Environment variables (these should be set in Cloudflare dashboard)
+# STRIPE_SECRET_KEY = ""
+# STRIPE_WEBHOOK_SECRET = ""
+# BACKEND_API_KEY = ""
+# FRONTEND_URL = ""
+# BILLING_ENABLED = ""
