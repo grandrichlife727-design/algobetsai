@@ -22,6 +22,7 @@ COST OPTIMIZATION
 """
 
 import os
+import tempfile
 import re
 import json
 import math
@@ -82,7 +83,7 @@ VIP_WELCOME_EMAIL_ENABLED_RAW = os.getenv("VIP_WELCOME_EMAIL_ENABLED", "true").s
 VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS = int(os.getenv("VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 
 # Persistent disk on Render
-DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
+DATA_DIR  = os.getenv("DATA_DIR", os.path.join(tempfile.gettempdir(), "algobets_data"))
 CACHE_DIR = os.path.join(DATA_DIR, "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 GROWTH_DB_PATH = os.path.join(DATA_DIR, "growth_db.json")
@@ -5740,4 +5741,4 @@ async def performance(request: Request, settle: bool = True):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
+    uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=int(os.getenv("PORT", "8000")))
