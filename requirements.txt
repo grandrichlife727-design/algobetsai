@@ -6,3 +6,4 @@ numpy==2.1.0
 slowapi==0.1.9
 pydantic==2.9.0
 google-auth==2.35.0
+schedule==1.2.0
