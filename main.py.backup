@@ -2510,31 +2510,13 @@ def market_consensus_fair_prob(game: dict) -> tuple[float, float, dict]:
         return devig_two_way_probabilities(game.get("home_ml"), game.get("away_ml")) + ({},)
 
     weighted_rows: list[tuple[float, float]] = []
-    current_time = time.time()
-    
     for book, lines in by_book.items():
         home_o = lines.get("home")
         away_o = lines.get("away")
         if home_o is None or away_o is None:
             continue
         h, a = devig_two_way_probabilities(home_o, away_o)
-        
-        # Base sharp book weight
         w = sharp_weight_for_book(book)
-        
-        # IMPROVEMENT #3: Recency weighting
-        # Apply recency bonus - odds updated in last 5 mins get 1.15x weight
-        # Odds 5-15 mins old get 1.05x weight, older odds get no bonus
-        odds_timestamp = lines.get("last_update", current_time)
-        age_minutes = (current_time - odds_timestamp) / 60.0
-        if age_minutes < 5:
-            recency_multiplier = 1.15
-        elif age_minutes < 15:
-            recency_multiplier = 1.05
-        else:
-            recency_multiplier = 1.0
-        
-        w = w * recency_multiplier
         weighted_rows.append((h, w))
 
     if not weighted_rows:
@@ -2660,58 +2642,21 @@ def _build_model_v2_components(
     disagreement_pct: float,
     line_gap_pct: float,
     ci_width_pct: float,
-    public_bet_pct: float = 50.0,
-    line_velocity: float = 0.0,
-    hours_to_game: float = 24.0,
 ) -> dict[str, float]:
-    """
-    Bounded component models blended into a single ensemble quality score.
-    
-    IMPROVEMENTS:
-    - Enhanced timing model with game proximity and line velocity
-    - Public betting integration (fade the public bonus)
-    - Line movement velocity bonus
-    """
+    # Bounded component models blended into a single ensemble quality score.
     market_score = max(0.0, min(100.0, 45.0 + conservative_edge_ev * 6.0))
     value_score = max(0.0, min(100.0, 45.0 + edge_ev * 4.0))
     liquidity_score = max(0.0, min(100.0, 35.0 + books_count * 8.0))
     stability_score = max(0.0, min(100.0, 92.0 - disagreement_pct * 2.4))
     uncertainty_score = max(0.0, min(100.0, 95.0 - ci_width_pct * 8.0))
-    
-    # IMPROVEMENT #4: Enhanced timing model
-    # Base timing from CLV gap
-    timing_base = 50.0 + line_gap_pct * 4.0
-    
-    # Bonus for games closer to start time (better CLV opportunity)
-    # Games within 6 hours get up to +10 points
-    proximity_bonus = max(0.0, min(10.0, (24.0 - hours_to_game) / 2.0))
-    
-    # Bonus for fast line movement (sharp money indicator)
-    # Velocity > 5 cents/min gets up to +8 points
-    velocity_bonus = max(0.0, min(8.0, line_velocity * 1.6))
-    
-    timing_score = max(0.0, min(100.0, timing_base + proximity_bonus + velocity_bonus))
-    
-    # IMPROVEMENT #2: Public betting integration
-    # Fade the public: when public is >65% on one side, boost score
-    # When public is <35%, also boost (contrarian indicator)
-    public_score = 50.0
-    if public_bet_pct >= 65.0:
-        # Fading heavy public - good sign
-        public_score = max(0.0, min(100.0, 50.0 + (public_bet_pct - 65.0) * 2.0))
-    elif public_bet_pct <= 35.0:
-        # Also fading public on other side
-        public_score = max(0.0, min(100.0, 50.0 + (35.0 - public_bet_pct) * 2.0))
-    
-    # Reweight ensemble to include public score (reduce timing weight slightly)
+    timing_score = max(0.0, min(100.0, 50.0 + line_gap_pct * 4.0))
     ensemble = round(
-        market_score * 0.26
+        market_score * 0.28
         + value_score * 0.20
-        + liquidity_score * 0.15
-        + stability_score * 0.15
-        + uncertainty_score * 0.10
-        + timing_score * 0.08
-        + public_score * 0.06,
+        + liquidity_score * 0.16
+        + stability_score * 0.16
+        + uncertainty_score * 0.12
+        + timing_score * 0.08,
         2,
     )
     return {
@@ -2721,7 +2666,6 @@ def _build_model_v2_components(
         "stability_model": round(stability_score, 2),
         "uncertainty_model": round(uncertainty_score, 2),
         "timing_model": round(timing_score, 2),
-        "public_model": round(public_score, 2),  # fade the public
         "ensemble_score": ensemble,
     }
 
@@ -2755,24 +2699,6 @@ def _spread_move_points(prev_home_spread: Any, cur_home_spread: Any) -> float:
     except Exception:
         return 0.0
 
-
-
-def _line_move_velocity(prev_home: Any, prev_away: Any, cur_home: Any, cur_away: Any, time_diff_seconds: float) -> float:
-    """
-    Calculate line movement velocity in cents per minute.
-    Fast movement = sharp money = higher quality signal.
-    
-    IMPROVEMENT #1: Line movement velocity tracking
-    """
-    if time_diff_seconds <= 0:
-        return 0.0
-    cents_move = _line_move_cents(prev_home, prev_away, cur_home, cur_away)
-    if cents_move >= 999:  # Invalid data
-        return 0.0
-    minutes = time_diff_seconds / 60.0
-    if minutes <= 0:
-        return 0.0
-    return cents_move / minutes
 
 def _build_simulation_projection(game: dict[str, Any], fair_home_prob: float) -> dict[str, Any]:
     total = game.get("total")
@@ -2897,36 +2823,6 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             continue
         if confidence < MODEL_MIN_CONFIDENCE:
             continue
-        
-        # IMPROVEMENT: Calculate new model parameters
-        # Public betting percentage (default 50% if not available)
-        public_bet_pct = float(game.get("public_pct", 50.0) or 50.0)
-        
-        # Line movement velocity (cents per minute)
-        line_velocity = 0.0
-        if isinstance(cached_model, dict):
-            cache_age = now_ts - float(cached_model.get("ts", 0.0) or 0.0)
-            if cache_age > 0:
-                line_velocity = _line_move_velocity(
-                    cached_model.get("home_ml"),
-                    cached_model.get("away_ml"),
-                    home_ml,
-                    away_ml,
-                    cache_age
-                )
-        
-        # Hours until game starts
-        hours_to_game = 24.0
-        try:
-            game_time_str = game.get("commence_time", "")
-            if game_time_str:
-                from datetime import datetime
-                game_dt = datetime.fromisoformat(game_time_str.replace('Z', '+00:00'))
-                time_diff = (game_dt.timestamp() - now_ts) / 3600.0
-                hours_to_game = max(0.0, time_diff)
-        except Exception:
-            pass
-        
         model_v2 = _build_model_v2_components(
             edge_ev=adjusted_edge,
             conservative_edge_ev=conservative_edge,
@@ -2934,9 +2830,6 @@ async def generate_picks_for_sport(sport_key: str, games: list) -> list:
             disagreement_pct=disagreement_pct,
             line_gap_pct=line_gap_pct,
             ci_width_pct=ci_width_pct,
-            public_bet_pct=public_bet_pct,
-            line_velocity=line_velocity,
-            hours_to_game=hours_to_game,
         )
         if float(model_v2.get("ensemble_score", 0.0) or 0.0) < MODEL_MIN_ENSEMBLE_SCORE:
             continue
