@@ -22,6 +22,7 @@ COST OPTIMIZATION
 """
 
 import os
+import tempfile
 import re
 import json
 import math
@@ -82,7 +83,7 @@ VIP_WELCOME_EMAIL_ENABLED_RAW = os.getenv("VIP_WELCOME_EMAIL_ENABLED", "true").s
 VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS = int(os.getenv("VIP_WELCOME_SESSION_TOKEN_TTL_SECONDS", str(7 * 24 * 3600)) or (7 * 24 * 3600))
 
 # Persistent disk on Render
-DATA_DIR  = os.getenv("DATA_DIR", "/tmp/algobets_data")
+DATA_DIR  = os.getenv("DATA_DIR", os.path.join(tempfile.gettempdir(), "algobets_data"))
 CACHE_DIR = os.path.join(DATA_DIR, "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 GROWTH_DB_PATH = os.path.join(DATA_DIR, "growth_db.json")
@@ -778,7 +779,7 @@ async def start_background_services():
 _cache: dict = {}
 
 def _disk_path(key: str) -> str:
-    return os.path.join(CACHE_DIR, f"{hashlib.md5(key.encode()).hexdigest()}.json")
+    return os.path.join(CACHE_DIR, f"{hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()}.json")
 
 def cache_get(key: str, ttl: int = None):
     effective_ttl = ttl or CACHE_TTL
@@ -896,7 +897,7 @@ def _velocity_allow(scope: str, key: str, limit: int, window_seconds: int) -> tu
 
 
 def _user_referral_code(user_id: str) -> str:
-    h = hashlib.sha1(user_id.encode("utf-8")).hexdigest().upper()
+    h = hashlib.sha1(user_id.encode("utf-8"), usedforsecurity=False).hexdigest().upper()
     return f"ALGO{h[:8]}"
 
 
@@ -971,7 +972,7 @@ def _request_activity_key(request: Request, user_id: str = "") -> str:
     ip = _client_ip(request)
     if not ip:
         return ""
-    digest = hashlib.sha1(ip.encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha1(ip.encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
     return f"guest_{digest}"
 
 
@@ -1772,7 +1773,7 @@ async def fetch_props_lite_for_sport(
 def _pick_tracking_key(p: dict[str, Any]) -> str:
     return hashlib.md5(
         f"{p.get('sport')}|{p.get('game')}|{p.get('bet')}|{p.get('odds')}|{p.get('game_time')}".encode("utf-8")
-    ).hexdigest()[:20]
+    , usedforsecurity=False).hexdigest()[:20]
 
 
 def _normalize_team_label(value: Any) -> str:
@@ -2151,7 +2152,7 @@ async def _maybe_send_premium_sms_alert(
     candidates.sort(key=lambda x: float(x.get("ev", 0.0) or 0.0), reverse=True)
     top = candidates[:2]
     key_parts = [str(t.get("key") or t.get("id") or t.get("bet")) for t in top]
-    sig = hashlib.md5("|".join(key_parts).encode("utf-8")).hexdigest()[:16]
+    sig = hashlib.md5("|".join(key_parts).encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
     now_ts = int(time.time())
     last_ts = int(cfg.get("last_sms_sent_ts", 0) or 0)
     if str(cfg.get("last_sms_sig", "")) == sig and (now_ts - last_ts) < 900:
@@ -4152,7 +4153,7 @@ async def community_create_post(body: CommunityPostRequest, request: Request):
         masked_user = f"{user_id[:4]}***"
 
     post = {
-        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8")).hexdigest()[:12],
+        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:12],
         "ts": int(time.time()),
         "user": masked_user,
         "mode": mode,
@@ -5008,7 +5009,7 @@ async def journal_add(body: JournalEntryRequest, request: Request):
     if result not in {"open", "win", "loss", "push"}:
         result = "open"
     entry = {
-        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8")).hexdigest()[:14],
+        "id": hashlib.md5(f"{user_id}|{time.time_ns()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:14],
         "ts": int(time.time()),
         "game": str(body.game or "").strip()[:120],
         "bet": str(body.bet or "").strip()[:140],
@@ -5740,4 +5741,4 @@ async def performance(request: Request, settle: bool = True):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
+    uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=int(os.getenv("PORT", "8000")))
